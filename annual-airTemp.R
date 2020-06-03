@@ -6,9 +6,10 @@ setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
-qntl = c(0.9) #, 0.8) 
+qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
 currentCol <- c("red", "magenta")
+currentCol <- "red"
 SWMP <- TRUE
 SWMP <- FALSE
 
@@ -41,7 +42,7 @@ tDay <- prepDF (varName = "atempF", dat = hmr, maO = maO, qntl = qntl)
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width = 9, height = 6)
 pdf (paste0 ("~/tmp/LCI_noaa/media/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 
-aPlot (tDay, "atempF" 
+aPlot (tDay, "atempF"
        #, ylab = paste0 ("air temperature [", expression (~degree~F), "]")
        , ylab = expression('air'~'temperature'~'['*degree~'F'*']')
        #, ylab = "air temperature [̊F]"
@@ -68,7 +69,7 @@ if (0){
 if (1){
   yL <- levels (factor (hmr$year))
   pdf ("~/tmp/LCI_noaa/media/precipX.pdf", width = 9, height = 6)
-  
+
   for (i in 1:length (yL)){
     tDay <- prepDF (varName = "totprcp", dat = subset (hmr, hmr$year != yL [i])  # but but year in Q
                     , maO = 31, qntl = c(0.5, 0.75)

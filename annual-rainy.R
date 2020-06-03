@@ -6,15 +6,15 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
-qntl = c(0.9) #, 0.8) 
+qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c("blue", "lightblue")
-# currentCol <- "blue"
+currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
 
 
-source ("annualPlotFct.R") # important to call after defining currentCol! 
+source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
 }else{
@@ -45,7 +45,7 @@ if (SWMP){
 }else{
   aF <- 1 ## NOAA comes in as daily sums
 }
-tDay [,which (names (tDay) == "totprcp"):ncol (tDay)] <- 
+tDay [,which (names (tDay) == "totprcp"):ncol (tDay)] <-
   apply (tDay [,which (names (tDay) == "totprcp"):ncol (tDay)], 2, function (x){x*aF})
 
 
@@ -81,7 +81,7 @@ if (1){ # mark big rain events (yes) OR plot 1/10 or daily rain
   # with (tRain, rasterImage (img, xleft = jday - 6, ybottom = pYMA_totprcp + 0.1
   #              , xright = jday - 6 + wdh, ytop = pYMA_totprcp + 0.1 + hgt))
   # rm (hgt, wdh)
-  
+
   bP <- cLegend (x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
                  , qntl = qntl, title = paste (maO, "day moving average")
                  , title.adj = 0.5, currentYear = currentYear
@@ -113,7 +113,7 @@ text (xAl + 35, yAl
       , col = "darkgray", pos = 4)
 # box()
  dev.off()
- 
+
 rm (bP, xAl, yAl)
 
 
@@ -131,7 +131,7 @@ rm (bP, xAl, yAl)
 ##################################################################################################
 
 
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R 
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 # load from NOAA ??
 
 maO <- 31
@@ -139,7 +139,7 @@ qntl <- 0.9
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c ("red", "pink")
 
-source ("annualPlotFct.R") # important to call after defining currentCol! 
+source ("annualPlotFct.R") # important to call after defining currentCol!
 
 
 tDay <- prepDF (varName = "rh", dat = hmr, maO = maO, qntl = qntl)
@@ -161,7 +161,7 @@ if (0){
 if (1){
   yL <- levels (factor (hmr$year))
   pdf ("~/tmp/LCI_noaa/media/precipX.pdf", width = 9, height = 6)
-  
+
   for (i in 1:length (yL)){
     tDay <- prepDF (varName = "totprcp", dat = subset (hmr, hmr$year != yL [i])  # but but year in Q
                     , maO = 31, qntl = c(0.5, 0.75)

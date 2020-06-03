@@ -1,4 +1,4 @@
-## use Seldovia and Homer TS data to plot stratification 
+## use Seldovia and Homer TS data to plot stratification
 ## throughout the year
 ## calc difference in density between upper and lower TS
 
@@ -8,7 +8,7 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c ("blue", "lightblue")
+currentCol <- c ("blue") #, "lightblue")
 
 
 source ("annualPlotFct.R")

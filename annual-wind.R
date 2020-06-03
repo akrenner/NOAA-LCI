@@ -9,7 +9,7 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 ## location of data -- best to curl it
-if (0){ ## start over with new data set? 
+if (0){ ## start over with new data set?
   # tF <- tempfile()
   # download.file ("http://cdmo.baruch.sc.edu/aqs/output/528292.zip", tF)
   # ## list needed files
@@ -34,7 +34,8 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 40
 galeT <- 30
-currentCol <- c ("blue", "lightblue")
+# currentCol <- c ("blue", "lightblue")
+currentCol <- "blue"
 # currentCol <- "red"
 # currentCol <- c ("red", "magenta")
 ## leave code below as-is
@@ -42,7 +43,7 @@ currentCol <- c ("blue", "lightblue")
 
 
 
-# also try max, sum of h over gale, N gale days... 
+# also try max, sum of h over gale, N gale days...
 ## alternative approach: gales per month with gale = max_wspd > 30 knots
 ## also consider: sd on a log-scale
 
@@ -66,7 +67,7 @@ meanNA <- function (x){mean (x, na.rm = TRUE)}
 
 
 
-## apply QCQA -- ask Steve, check Seldovia -- not working as-is! 
+## apply QCQA -- ask Steve, check Seldovia -- not working as-is!
 # summary (factor (hmr$f_wspd))
 qaqcM <- function (fVar, tVar){
   fVar <- gsub ("[<>]", "", fVar)
@@ -90,7 +91,7 @@ rm (qaqcM)
 ## find missing values, gaps in TS
 # summary (as.numeric (diff (hmr$datetimestamp)))
 # which (as.numeric (diff (hmr$datetimestamp)) > 15)
-hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc. 
+hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 
 
 # save (hmr.... file = ....)
@@ -222,7 +223,7 @@ save.image ("~/tmp/LCI_noaa/cache/WindTrouble.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/WindTrouble.RData")
 
 
-if (0){ ## circular spline of climatology, long-term mean. 
+if (0){ ## circular spline of climatology, long-term mean.
 tD1 <- tDay
 tD1$jday <- tD1$jday - 365
 tD2 <- tDay
@@ -318,9 +319,9 @@ if (1){
   require ("openair")
   hmrS <- hmr
   hmrS$date <- hmrS$datetimestamp
-  
+
   iMonth <- 11 # picked as an interesting example for 2019
-  
+
   hmrS <- subset (hmr, (year < 2020)&month %in% c(iMonth))
   hmrS$date <- as.POSIXct(hmrS$datetimestamp)
   hmrS$yClass <- factor (ifelse (hmrS$year < currentYear
@@ -328,7 +329,7 @@ if (1){
                                  , paste (month.abb [iMonth], currentYear)))
   rm (iMonth) # arbitrarily pick a month to tell the story
   windR <- function (){
-    wR <- windRose (hmrS, ws = "wspd", wd = "wdir" 
+    wR <- windRose (hmrS, ws = "wspd", wd = "wdir"
                     , type = "yClass"
                     #, type = c("season") #, "yClass")
                     , auto.text = FALSE, paddle = FALSE, annotate = FALSE
@@ -341,11 +342,11 @@ if (1){
     print (wR); rm (wR)
   }
   #  par (fig = c(0.25,0.5,0.75,1))
-  
+
   tF <- tempdir()
   # postscript (paste0 (tF, "ltc.ps"), width = 9,height = 6, paper = "special")
-  ## PostScriptTrace (file, outfile, ....)   ## XXX do this eventually XXX 
-  # readPicture or grImport 
+  ## PostScriptTrace (file, outfile, ....)   ## XXX do this eventually XXX
+  # readPicture or grImport
   # see https://cran.r-project.org/web/packages/grImport/vignettes/import.pdf
   png (paste0 (tF, "ltc.png"), width = 11*200,height = 6*200, res = 400)
   #  par (mar = c())
@@ -368,9 +369,9 @@ with (tDay, addGraphs (longMean = smoothWindMA, percL = lowPerMA, percU = uppPer
 ))
 
 ## add gale pictogram into this graph (in margin or within?)
-# with (subset (tDay, p365galDay > 0), 
+# with (subset (tDay, p365galDay > 0),
 #       text (jday, rep (c (5.9, 7.1), length.out = length (jday)), labels = p365wCar))
-with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)), 
+with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
       text (jday, p365ma + 0.5, labels = p365wCar, srt = 0, cex = 0.8))
 # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels = p365wCar))
 require ("png")
@@ -414,8 +415,8 @@ rm (xGrenz, bP, img, pCo)
 
 # openair:windRose -- lattice-plot; struggling with type for class other than times
 require ("openair")
-pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)  
-# pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)  
+pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)
+# pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
 # hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
 for (i in 1:12){
@@ -425,7 +426,7 @@ hmrS$date <- as.POSIXct(hmrS$datetimestamp)
 hmrS$yClass <- factor (ifelse (hmrS$year < currentYear, paste0 ("mean-", i)
                                , paste0 (currentYear, "-", i)))
 
-windRose(hmrS, ws = "wspd", wd = "wdir" 
+windRose(hmrS, ws = "wspd", wd = "wdir"
          , type = "yClass"
          , auto.text = TRUE, paddle = FALSE, annotate = TRUE
          , breaks = c (0, 5, 10, 15,20,30,60)
@@ -436,14 +437,14 @@ windRose(hmrS, ws = "wspd", wd = "wdir"
 }
 dev.off()
 
-# pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)  
-pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)  
+# pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
   hmrS <- subset (hmr, year < 2020)
   hmrS <- subset (hmrS, month == 12)
   hmrS$date <- as.POSIXct(hmrS$datetimestamp)
   hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
-  windRose(hmrS, ws = "wspd", wd = "wdir" 
+  windRose(hmrS, ws = "wspd", wd = "wdir"
            , type = "yClass"
            , auto.text = TRUE, paddle = FALSE, annotate = TRUE
            , breaks = c (0, 5, 10, 15,20,30,60)
@@ -459,7 +460,7 @@ hmrS$date <- as.POSIXct(hmrS$datetimestamp)
 hmrS$yClass <- factor (ifelse (hmrS$year < currentYear, "average", currentYear))
 
 pdf ("~/tmp/LCI_noaa/media/windRose.pdf", width = 9, height = 6)
-windRose(hmrS, ws = "wspd", wd = "wdir" 
+windRose(hmrS, ws = "wspd", wd = "wdir"
          # , type = "yClass"
          , type = c("season", "yClass")
 #         , type = c("month", "yClass")
@@ -489,7 +490,7 @@ windR <- function (subsV, ...){
   names (wndfr) <- gsub ("Freq.", "", names (wndfr))
   rosavent (as.data.frame (wndfr), uni = vUnit, key = TRUE, flab = 1)
 }
-# require("Hmisc") # subplot incompatible with layout() :( 
+# require("Hmisc") # subplot incompatible with layout() :(
 # spSi <- 1.7
 # subplot (windR (dM$year < currentYear)
 #          , x = 160, y = 12.8, vadj = 1, size = c(spSi, spSi))

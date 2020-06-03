@@ -6,11 +6,33 @@ rm (list = ls())
 
 sT <- Sys.time()
 
-if (0){
+
+if (0){ ## 2017 contract
+  ## BUGS:
+  ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
+  ## Breaking this reference would be desirable, although it would increase file size of all temporary
+  ## cache files.
+
+  ## clear tmp directory first? CAREFUL with this!
+  # rm -r ~/tmp/LCI_noaa/
+
+  # source ("metaExtraction.R")
+  source ("SeldoviaTemp.R")
+  source ("dataSetup.R")
+  source ("anaCTD.R")
+  source ("ecoAn.R")
+  source ("plotMaps.R")
+  source ("commMap.R")
+
+
+}
+
+
+if (0){ # Dec 2019 seasonality
   source ("dataSetup.R")
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
-  
+
   source ("physOcean.R")
   q()
   source ("consensusTree.R")

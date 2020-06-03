@@ -5,7 +5,7 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9)
 maO <- 31 # moving average window
 pMA <- TRUE
-currentCol <- c ("darkblue", "blue")
+currentCol <- c ("darkblue") #, "blue")
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -50,15 +50,15 @@ if (0){
   lP (MA_sal~jday, tDayS, col = "darkblue", lty = "dashed")
   # lP (maL1_sal~jday, tDayS, col = "darkblue", lty= "dotted")
   # lP (maU1_sal~jday, tDayS, col = "darkblue", lty= "dotted")
-  
+
   lP (pYMA_sal~jday, tDayH, col = "lightblue")
   lP (MA_sal~jday, tDayH, col = "lightblue", lty = "dashed")
   # lP (maL1_sal~jday, tDayH, col = "lightblue", lty= "dotted")
   # lP (maU1_sal~jday, tDayH, col = "lightblue", lty= "dotted")
-  
+
   # lines (sal~jday, tDayH, col = "lightblue", lwd = 2, lty = "dashed")
   # lines (pYMA_sal~jday, tDayH, col = "lightblue", lwd = 2, lty = "solid")
-  
+
   legend ("bottomleft", bty= "n"
           , legend = c(paste0 ("Seldovia-", currentYear)
                        , "Seldovia-mean"

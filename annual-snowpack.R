@@ -9,7 +9,7 @@ fetchNew <- TRUE  # get fresh data from server? takes longer
 fetchNew <- FALSE  # get fresh data from server? takes longer
 maO <- 31
 qntl <- c (0.9, 0.8)
-currentCol <- c ("lightblue", "aquamarine")
+currentCol <- c ("lightblue") #, "aquamarine")
 
 
 # require ("snotelr")
@@ -47,41 +47,41 @@ for (sitePickNo in c(1003, 1062, 987)){
     x <- snotel_info()
     x$lat <- x$latitude
     x$lon <- x$longitude
-    
+
     xK <- x [grep ("Kenai", x$county),]
     xK [,c(3,9,11)]
-    
+
     # require ("leaflet")
     # leaflet(data = xK) %>%
     #   addTiles() %>%
     #   addCircles()
-    
-    
+
+
     snowMc <- snotel_download (site = sitePickNo
                                , path = "~/tmp/LCI_noaa/cache/"
                                , internal = TRUE
     )
     siteN <- x$site_name [which (x$site_id == sitePickNo)]
-    
-    
+
+
     save (snowMc, siteN, file = paste0 ("~/tmp/LCI_noaa/cache/snow1_", sitePickNo, ".RData"))
   }else{
     load (paste0 ("~/tmp/LCI_noaa/cache/snow1_", sitePickNo, ".RData"))
   }
-  
-  
+
+
   ## cleanup and helpers
-  # fixGaps!? 
+  # fixGaps!?
   snowMc$datetimestamp <- as.POSIXct(snowMc$date)
   snowMc$jday <- as.numeric (format (snowMc$datetimestamp, "%j"))
   snowMc$year <- as.numeric (format (snowMc$datetimestamp, "%Y"))
   snowMc$month <- as.numeric (format (snowMc$datetimestamp, "%M"))
-  
+
   # 1991 seems to be missing, with only one year before that
   snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
   # snowMc <- fixGap(snowMc, intvl = 24 * 60 * 60)
-  
-  
+
+
   ## from example in ?toupper
   capwords <- function(s, strict = FALSE) {
     cap <- function(s) paste(toupper(substring(s, 1, 1)),
@@ -90,9 +90,9 @@ for (sitePickNo in c(1003, 1062, 987)){
     capO <- sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
     gsub ("Mcn", "McN", capO)
   }
-  
-  
-  
+
+
+
   ## one site at a time
   if (length (levels (factor (snowMc$site_id))) > 1){
     stop ("work on only one site at a time!")
@@ -101,17 +101,17 @@ for (sitePickNo in c(1003, 1062, 987)){
                , currentYear = currentYear
                #             , currentYear = 2012
   )
-  
-  
+
+
   ## ColorBrewer for pretty colors
-  
+
   ## plotting
   pdf (paste0 ("~/tmp/LCI_noaa/media/sa-snowPack", sitePickNo, ".pdf"), width = 9, height = 6)
   aPlot (df, "snow_water_equivalent", MA = FALSE, currentCol = currentCol #"lightblue"
          , ylab = "snow-water equivalent [mm]"
          , ylim = c (0, max (snowMc$snow_water_equivalent, na.rm = TRUE))
   )
-  
+
   ## add min and max years
   phy <- snotel_phenology(snowMc)
   minY <- phy$year [which.min (phy$max_swe)]
@@ -124,27 +124,27 @@ for (sitePickNo in c(1003, 1062, 987)){
   # for (i in 1:length (yL)){
   #   lines (snow_water_equivalent~jday, subset (snowMc, year == yL [i]), col = i)
   # }
-  
+
   cLegend ("topright"
            , mRange = c (min (snowMc$year, na.rm = TRUE), currentYear -1)
            , currentYear = currentYear, cYcol = currentCol #"lightblue"
            , qntl = qntl [1]
            , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
            , sLwd = c(2, 2)
-           , sLty = c(2, 3) 
+           , sLty = c(2, 3)
            , sLcol = c("black", "darkblue")
   )
-  
+
   title (main = capwords (siteN))
   dev.off()
   rm (phy, minY, maxY)
-  
-  
+
+
   # plot (snow_water_equivalent~timestamp, snowMc, type = "l")
-  
-  ### swe for 2019 -- where is that max value of 493??? XXX 
-  
-  
+
+  ### swe for 2019 -- where is that max value of 493??? XXX
+
+
   phy <- snotel_phenology(snowMc)
   summary (phy)
   phy [which (phy$year == currentYear),]
@@ -186,7 +186,7 @@ snowMc$month <- as.numeric (format (snowMc$datetimestamp, "%M"))
 snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
 
 
-## impute somewhere here! 
+## impute somewhere here!
 # Dray & Josse 2015: ipca is best way:  library (missMDA)
 require ("missMDA")
 iDF <- imputePCA (snowMc [,2:(length (sites)+1)], method = "EM", ncp =2)
@@ -203,7 +203,7 @@ rm (snowPCA, iDF)
 snowMc$snow_water_equivalent <- snowMc$PCA1
 snowMc$temperature_min <- 0 # place-holder dummy for snotel check
 # XXXX ---- is this legit ????? XXXX
-## ensure there are no negative values! 
+## ensure there are no negative values!
 # snowMc$snow_water_equivalent <- ifelse (snowMc$snow_water_equivalent < 0
 #                                         , 0, snowMc$snow_water_equivalent)
 # snowMc$snow_water_equivalent <- snowMc$snow_water_equivalent - min (snowMc$snow_water_equivalent)
@@ -236,7 +236,7 @@ cLegend ("topright"
          , sLwd = c(2, 2)
          , sLty = c(2, 3)
          , sLcol = c("black", "darkblue")
-)         
+)
 title (main = "Imputed PCA of 3 Kachemak Bay sites")
 dev.off()
 rm (sMax, minY, maxY)
