@@ -9,7 +9,7 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
 currentCol <- c("red", "magenta")
-currentCol <- "red"
+# currentCol <- "red"
 SWMP <- TRUE
 SWMP <- FALSE
 

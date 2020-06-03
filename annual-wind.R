@@ -34,8 +34,8 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 40
 galeT <- 30
-# currentCol <- c ("blue", "lightblue")
-currentCol <- "blue"
+currentCol <- c ("blue", "lightblue")
+# currentCol <- "blue"
 # currentCol <- "red"
 # currentCol <- c ("red", "magenta")
 ## leave code below as-is

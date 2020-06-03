@@ -9,7 +9,7 @@ fetchNew <- TRUE  # get fresh data from server? takes longer
 fetchNew <- FALSE  # get fresh data from server? takes longer
 maO <- 31
 qntl <- c (0.9, 0.8)
-currentCol <- c ("lightblue") #, "aquamarine")
+currentCol <- c ("lightblue", "aquamarine")
 
 
 # require ("snotelr")

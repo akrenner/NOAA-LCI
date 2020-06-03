@@ -5,7 +5,7 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9)
 maO <- 31 # moving average window
 pMA <- TRUE
-currentCol <- c ("darkblue") #, "blue")
+currentCol <- c ("darkblue", "blue")
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 setwd("~/myDocs/amyfiles/NOAA-LCI/")
