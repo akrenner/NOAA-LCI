@@ -24,7 +24,6 @@ if (0){ ## 2017 contract
   source ("plotMaps.R")
   source ("commMap.R")
 
-
 }
 
 
@@ -37,6 +36,9 @@ if (0){ # Dec 2019 seasonality
   q()
   source ("consensusTree.R")
 }
+
+
+## State of the Bay Report 2019
 
 ## plot SWMP weather data for annual state of the bay report
 source ("SeldoviaTemp.R")

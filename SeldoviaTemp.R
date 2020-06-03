@@ -11,8 +11,16 @@
 
 
 ## set-up parameters
+
+if (.Platform$OS.type == "windows"){
+  require ("R.utils")
+  SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
+}else{ # MacOS or Linux
+  SMPfile <- "~/GISdata/LCI/SWMP/current"
+}
+
 # SMPfile <- paste0 ("~/GISdata/LCI/SeloviaWaterTemp/", "528292.zip") # "http://cdmo.baruch.sc.edu/aqs/output/528292.zip"
-SMPfile <- paste0 ("~/GISdata/LCI/SWMP/", "528292.zip") # "http://cdmo.baruch.sc.edu/aqs/output/528292.zip"
+# SMPfile <- paste0 ("~/GISdata/LCI/SWMP/", "528292.zip") # "http://cdmo.baruch.sc.edu/aqs/output/528292.zip"
 
 
 ## set-up local environment and load functions
@@ -44,7 +52,7 @@ homer <- rbind (homer1, homer); rm (homer1)
 homer$station <- "kachdwq"
 homer$station <- "HomerDeep"
 
-# homerDL <- import_local (SMPfile, "kacdlwq") # Homer Dolphin -- deep/shallow?? 
+# homerDL <- import_local (SMPfile, "kacdlwq") # Homer Dolphin -- deep/shallow??
 homerS <- import_local (SMPfile, "kachswq") # Homer Dolphin shallow
 homerS1 <- import_local (SMPfile, "kach3wq") # Homer Dolphin surface 3
 homerS <- rbind (homerS, homerS1); rm (homerS1)
@@ -197,7 +205,7 @@ rm (seaStd)
 # }
 # save (maT, file = "~/tmp/LCI_noaa/cache/MAfunction.RData")
 require ("SWMPr")
-maT <- function (df, maO){unlist (smoother (df, maO))}  # XXX move to annualPlotFct.R 
+maT <- function (df, maO){unlist (smoother (df, maO))}  # XXX move to annualPlotFct.R
 
 lagV <- c(1,7,30,60,90, 180, 365, 730)
 ## lgMx <- sapply (lagV, FUN = function (x){maT (sldvia)})
