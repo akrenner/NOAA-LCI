@@ -4,8 +4,10 @@
 
 ## load data
 ## start with file from dataSetup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
+
+
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
 ## should be poSS and stn -- check!
 
@@ -14,9 +16,12 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 
 ## plot CTD-profiles along transect
 require ("oce")
-#for (i in length (levels (stn$Line))){
+physOc$transDate <- factor (with (physOc, paste (Date, Transect, sep = "-")))
+
+for (i in length (levels (physOc$transDate))){
 # xC <- subset (physOc, stn$Line == )
-#}
+
+}
 
 
 
