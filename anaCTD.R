@@ -60,7 +60,7 @@ physOc$season <- Seasonal (physOc$month)
 plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
         , fn = "T9653")
 
-        
+
 plotTS (physOc$season == "spring", "year", fn = "spring_year")
 plotTS (physOc$season == "summer", "year", fn = "summer_year")
 plotTS (physOc$season == "fall", "year", fn = "fall_year")
@@ -114,14 +114,14 @@ plotCTDprof <- function (i){
             plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
 #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)
             dev.off()
-            ## next page, plot: 
+            ## next page, plot:
             ## O2 over depth
             ## fluorescence
             ## Irradiance
             PDF (paste ("CTDprofiles/"
                       , levels (physOc$File.Name)[i]
                       , "_additions.pdf", sep = ""))
-            
+
             par (mfrow = c(2,2))
             plotProfile (ctdF, xtype = "O2", ytype = "depth")
             plotProfile (ctdF, xtype = "fluorescence", ytype = "depth")
@@ -159,6 +159,10 @@ system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
                                  , sep = "", collapse = " ")
              , "~/tmp/LCI_noaa/media/CTDprofiles.pdf"))
 }
+
+# require ("zip")
+# R-internal zip file generation -- still troubled
+
 system ("zip -mjr ~/tmp/LCI_noaa/media/CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles")  ## XXX Error
 # system ("zip -m -b ~/tmp/LCI_noaa/media/ --junk-paths CTDprofiles.zip CTDprofiles/*.pdf")
 # system ("zip -m -b ~/tmp/LCI_noaa/media/ CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles/*.pdf CTD.zip")
@@ -178,7 +182,7 @@ if (0){                           # use oce -- not flexible enouth
                            , pressure = Pressure..Strain.Gauge..db.
                            , longitude = longitude_DD
                            , latitude = latitude_DD
-                             )                  
+                             )
                  )
     plot (ctd, which="TS")
     plotTS (ctd, col = season, pch = 19)
@@ -197,7 +201,7 @@ if (0){                           # use oce -- not flexible enouth
 ## Kachemak Bay: Along vs across transect ##
 ############################################
 
-## this is analysis --- more it into a separate script!
+## this is analysis --- move it into a separate script!
 
 if (0){
 KBay <- subset (physOc, Transect %in% c("9", "AlongBay", "9andTutka"
@@ -220,13 +224,13 @@ Require ("oce")
     ctdS$File.Name <- factor (ctdS$File.Name)
 #    for (i in 1:length (levels (ctdS$File.Name))){
 i <- 1
-ctdX <- subset (ctdS, (File.Name == levels (ctdS$File.Name)[i]))        
+ctdX <- subset (ctdS, (File.Name == levels (ctdS$File.Name)[i]))
         ctdF <- with (ctdX, as.ctd (salinity = Salinity_PSU
                                   , temperature = Temperature_ITS90_DegC
                                   , pressure = Pressure..Strain.Gauge..db.
                                   , longitude = longitude_DD
                                   , latitude = latitude_DD
-                                    )                  
+                                    )
                       )
         plot (ctdF) # , mar = c(2,1.5,4,1.5))
         title (paste (ctdX$Match_Name, ctdX$isoTime)[1], outer = FALSE, line = 3)
@@ -240,7 +244,7 @@ for (j in 1:length (levels (KBay$season))){
               , ".pdf", sep = ""))
     ctdS <- subset (KBay, season == levels (KBay$season)[j])
     ## sort (summary (factor (KBay$Match_Name)))
-    ctdS <- subset (ctdS, Match_Name %in% c("9_2", "9_6", "AlongBay_1", "AlongBay_12")) # extreme ends, but still frequently sampled 
+    ctdS <- subset (ctdS, Match_Name %in% c("9_2", "9_6", "AlongBay_1", "AlongBay_12")) # extreme ends, but still frequently sampled
     ctdS$Match_Name<- factor (ctdS$Match_Name)
     ##  average all samples
     ctdS$pressC <- cut (ctdS$Pressure..Strain.Gauge..db., 20, labels = FALSE)
@@ -248,13 +252,13 @@ for (j in 1:length (levels (KBay$season))){
     ctdS <- with (ctdS, aggregate (cbind (Salinity_PSU, Temperature_ITS90_DegC, longitude_DD, latitude_DD) ~ pressC+Match_Name, FUN = mean))
 
     for (i in 1:length (levels (ctdS$Match_Name))){
-        ctdX <- subset (ctdS, (Match_Name == levels (ctdS$Match_Name)[i]))        
+        ctdX <- subset (ctdS, (Match_Name == levels (ctdS$Match_Name)[i]))
         ctdF <- with (ctdX, as.ctd (salinity = Salinity_PSU
                                   , temperature = Temperature_ITS90_DegC
                                   , pressure = pressC
                                   , longitude = longitude_DD
                                   , latitude = latitude_DD
-                                    )                  
+                                    )
                       )
         plot (ctdF) # , mar = c(2,1.5,4,1.5))
         title (paste (ctdX$Match_Name, ctdX$isoTime)[1], outer = FALSE, line = 3)

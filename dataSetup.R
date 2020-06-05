@@ -345,7 +345,7 @@ for (i in 1:length (fN)){
         physOc <- rbind (physOc, agF)
     }
 }
-rm (agF, i, fN)
+rm (agF, i, fN, j)
 
 
 ## this is what field names look like after importing CSV file into R
@@ -1328,6 +1328,7 @@ for (i in (1:nrow (poSS))[order (poSS$distOff, decreasing = TRUE)]){
   )
 }
 dev.off()
+rm (i)
 
 if (any (badPO)){
   poSS <- subset (poSS, !badPO)
