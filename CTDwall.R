@@ -21,6 +21,17 @@ physOc$transDate <- factor (with (physOc, paste (Date, Transect, sep = "-")))
 for (i in length (levels (physOc$transDate))){
 # xC <- subset (physOc, stn$Line == )
 
+## find ctd data and arrange them into sections
+
+
+   # "section" -- that's what I want there
+    define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
+    plot (ctdSection)
+
+    oceColorsTemperature(n)
+    oce.colorsSalinity
+    oce.colorsPAR
+
 }
 
 
