@@ -12,14 +12,19 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- 
 
 ## set-up plot and paper size
 ## bathymetry and coastline
-# tD  <- tempdir()
-# bF <- download.topo (west=-154, east=-150, south=58.5, north=60.3
-#                    , resolution =1
-#                      , destdir = tD
-#                          )
-# bathy <- read.topo (bF)
-# unlink (tD)
-# rm (tD, bF)
+if (0){
+ tD  <- tempdir()
+ bF <- download.topo (west=-154, east=-150, south=58.5, north=60.3
+                    , resolution =1
+                      , destdir = tD
+                          )
+ bathy <- read.topo (bF)
+ unlink (tD)
+ rm (tD, bF)
+}
+require ("ocedata")
+#mapPlot (coastlineWorld, type = "l", col = "gray")
+
 
 ### data prep
 require ("oce")
@@ -90,9 +95,9 @@ pdf ("CTDtime.pdf")
 # for (i in 1:length (levels (physOc$Match_Name))){
 for (i in 1:6){
     ## section over time? or wrap by hand?
-    xC <- subset (physOc, Match_Name == levels (physOc$Match_Name)[i])
+    xCp <- subset (physOc, Match_Name == levels (physOc$Match_Name)[i])
     if (length (levels (as.factor (xC$Date))) > 1){
-        xC <- with (xC, as.section (salinity = Salinity_PSU
+        xC <- with (xCp, as.section (salinity = Salinity_PSU
                                , temperature = Temperature_ITS90_DegC
                                , pressure = Pressure..Strain.Gauge..db.
                                , longitude = Lon_decDegree
@@ -100,12 +105,18 @@ for (i in 1:6){
                                , station = paste0 (Match_Name, DateISO)
                                , sectionId = transDate
                                  ))
+        ## need to add/supply time,
+        xC@metadata$time <- xCp$isoTime
+
         sG <- sectionGrid (xC, p = 'levitus')
 
-        ## plot (xC                        # subscript out of bound
-        ##     , xtype = "time"
-        ##     , coastline = "best"
-        ##       )
+        if (0){
+        plot (xC                        # subscript out of bound
+            , xtype = "time"
+              ## need to define proper z-matrix!
+            , coastline = "best"
+              )
+        }
     }
  #   plot (xC, xtype = "time")
 }
