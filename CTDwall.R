@@ -50,12 +50,17 @@ bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 
 ## reproject?  crop?
 # nGrid <- .... ## define new grid -- the missing link
-# bR <- resample (bR, nGrid)
-# bRg <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first
-# ...
-# bathy <- as.topo (as.bathy (bRg)); rm (bR, bRg)
-# positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
-bathy <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+if (.Platform$OS.type == "unix"){
+##  bR <- resample (bR, nGrid)
+  bRg <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first
+  bRb <- as.bathy (bRg)
+  bathy <- as.topo (as.bathy (bRg)); rm (bR, bRg)  # still not right
+  # bathy <- as.topo (z = bRg [[1]][,,1])
+  save (bathy, file = "~/tmp/LCI_noaa/cache/bathymetryZ.RData")
+}else{
+  # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
+  bathy <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+}
 
 
 require ("ocedata")
