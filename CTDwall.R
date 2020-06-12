@@ -91,14 +91,15 @@ for (i in 1:length (levels (physOc$transDate))){
                               , sectionId = transDate
                 ))
 
-    par (mfrow = c(2,2))
-    plot (xC, which = 1, showBottom = bathy, axes = TRUE
-          , ztype = 'image', zcol = oceColorsTemperature, showStations = TRUE) # XXX zlim ?!?
-    plot (xC, which = 2, showBottom = bathy, axes = TRUE
-          , ztype = 'image', zcol = oceColorsSalinity)
-    plot (xC, which = 3, showBottom = bathy, axes = TRUE
-          , ztype = 'image', zcol = oceColorsDensity)
-    plot (xC, which = 99, showStations = TRUE, axes = TRUE, coastline = "coastlineWorldFine")
+    pSec <- function (N, zC, ...){
+      plot (xC, which = N, showBottom = bathy, axes = TRUE, ztype = 'image', zcol = zC
+            , stationTicks = TRUE, ...) # zlim?
+    }
+    # par (mfrow = c(2,2))
+    # pSec (1, oceColorsTemperature)
+    # pSec (2, oceColorsSalinity)
+    # pSec (3, oceColorsDensity)
+    pSec (99, showStations = TRUE, coastline = "coastlineWorldFine")
     if (0){
       plot (xC
             , which = c (1,2,3,99) # temp, sal, sigmaTheta, map
@@ -161,5 +162,25 @@ for (i in 1:6){
 dev.off()
 }
 
+
+
+
+## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
+library(ocedata) #for the coastlineWorldFine data
+data(coastlineWorldFine)
+
+mp <- function() {
+  mapPlot(coastlineWorldFine, projection=proj4string (bR),
+          longitudelim = c(-154.2, -150.5),
+          latitudelim = c(58.5, 60.5), col='grey')
+}
+
+pdf ("~/tmp/LCI_noaa/media/studyareaMap.pdf")
+mp()
+# mapImage (bathy, col = oceColorsGebco, breaks = seq (-500, 0, 500))
+mapImage (bathy, col = oceColorsGebco, breaks = c (seq (-300, 0, 20), 2000))
+mapPolygon (coastlineWorldFine, col = "gray")
+mapGrid()
+dev.off()
 
 # EOF
