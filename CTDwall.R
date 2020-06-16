@@ -20,6 +20,7 @@ physOc$DateISO <- format (physOc$isoTime, "%Y-%m-%d")
 # physOc$transDate <- factor (with (physOc, paste (DateISO, Transect, sep = " T-")))
 physOc$transDate <- factor (with (physOc, paste0 ("T-", Transect, " ", DateISO)))
 physOc$Transect <- factor (physOc$Transect)
+physOc$year <- factor (format (physOc$isoTime, "%Y"))
 ## combine CTD and station meta-data
 physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through the cracks??
 ## stn <- stn [,which (names (stn) %in%
@@ -68,39 +69,62 @@ require ("ocedata") # coastlineWorldFine
 
 
 poAll <- physOc
+poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Gauge..db.)),]
 
-for (j in 1:length (levels (poAll$Transect))){
-  physOc <- subset (poAll, Transect == levels (poAll$Transect)[j])
-  physOc$transDate <- factor (physOc$transDate)
+
+
+## either collate PDF-pages on wall manualy, or piece things together using LaTeX
+# or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
+#
+# add flourescence to other variables. To do that, need to make section from oce-ctd object
+
+for (j in 1:length (levels (poAll$Transect))){ # by transect
+  physOcY <- subset (poAll, Transect == levels (poAll$Transect)[j])
+  physOcY$year <- factor  (physOcY$year)
+  for (k in 1:length (levels (physOcY$year))){ # by year
+    physOc <- subset (physOcY, year == levels (physOcY$year)[k])
+    physOc$transDate <- factor (physOc$transDate)
+
 
   # pdf ("~/tmp/LCI_noaa/media/ctdWall_spSections%02d.pdf" # doesn't work in Rterm.exe, ok with RStudio
   #      , height = 11, width = 8.5
   #      )
-  pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall_", j, "_T-", levels (poAll$Transect)[j], ".pdf")
+  pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall_"
+               , "_T-", levels (poAll$Transect)[j]
+               , "_", levels (physOcY$year)[k]
+               , ".pdf")
        , height = 11, width = 8.5)
-  # par (mfrow = c(6,2))
-  layout (matrix (1:6, 3))
+#  layout (matrix (1:6, 3)) # to control down, then across
+ layout (matrix (1:8, 4)) # to control down, then across
 
   ## define and plot sections
   cat ("Sections to process: ", length (levels (physOc$transDate)), "\n")
   for (i in 1:length (levels (physOc$transDate))){
     xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
     if (length (levels (factor (xC$Match_Name))) > 1){ ## shouldn't be necessary -- what's up with Transect = NA??
-      xC <- xC [order (xC$isoTime, xC$Pressure..Strain.Gauge..db.),]
+#      xC <- xC [order (xC$isoTime, xC$Pressure..Strain.Gauge..db.),]
       ## arrange ctd data into sections
       ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
       #if (nrow (xC) > 1){ ## better than unreliable test above
 
-      xC <- with (xC # subset (physOc, transDate == levels (physOc$transDate)[i])
-                  , as.section (salinity = Salinity_PSU
-                                , temperature = Temperature_ITS90_DegC
-                                , pressure = Pressure..Strain.Gauge..db.
-                                , longitude = Lon_decDegree
-                                , latitude = Lat_decDegree
-                                , station = Match_Name
-                                , sectionId = transDate
-                  ))
+      xC$Match_Name <- factor (xC$Match_Name)
+      xC <- as.section (lapply (1:length (levels (xC$Match_Name)) # XX rewrite with %>% pipes?
+                                , FUN = function (x){
+                                  sCTD <- subset (xC, Match_Name == levels (Match_Name)[x])
+                                  with (sCTD,
+                                        as.ctd (salinity = Salinity_PSU
+                                                , temperature = Temperature_ITS90_DegC
+                                                , pressure = Pressure..Strain.Gauge..db.
+                                                , longitude = Lon_decDegree
+                                                , latitude = Lat_decDegree
+                                                , station = Match_Name
+                                                #, sectionId = transDate
+                                                , time = isoTime
+                                                , other = list (flourescence = Fluorescence_mg_m3)
+                                        )
+                                  )
+                                }))
 
       pSec <- function (N, zC, ...){
         plot (xC, which = N
@@ -111,12 +135,10 @@ for (j in 1:length (levels (poAll$Transect))){
       }
       #    par (mfrow = c(2,2))
       pSec (1, oceColorsTemperature)
-#      mtext (levels (physOc$transDate)[i], side = 3, outer = FALSE, col = "blue")
       title (main = levels (physOc$transDate)[i], col = "blue")
       pSec (2, oceColorsSalinity)
-#      title (main = levels (physOc$transDate)[i], col = "blue")
       pSec (3, oceColorsDensity)
-#      title (main = levels (physOc$transDate)[i], col = "blue")
+      pSec ("flourescence", oceColorsChlorophyll)  ## flourescence not included here yet -- have to go back to dataSetup.R
       # pSec (99, showStations = TRUE, coastline = "coastlineWorldFine")
       if (0){
         plot (xC
@@ -140,9 +162,10 @@ for (j in 1:length (levels (poAll$Transect))){
   }
   dev.off()
   cat ("\n")
+  }
 }
 physOc <- poAll
-rm (xC, i, poAll)
+rm (xC, i, poAll, pSec)
 
 
 
