@@ -109,6 +109,7 @@ if (0){                                 # read in cnv files for turbidity
   ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
   fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
+#  fN <- list.files ("~/GISdata/LCI/CTD")
   print (length (fN))
 
   readCNV <- function (i){
@@ -136,10 +137,16 @@ if (0){                                 # read in cnv files for turbidity
     ## best: manually inspect and read-in from separate table
     # ?plotScan
 
-    ctdF <- ctdTrim (ctdF, method = "downcast") # there's also a method seabird
+     ctdF <- ctdTrim (ctdF, method = "downcast") # there's also a method seabird
+    # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
+    # could/should specify min soak times, soak depth
+    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+
 
     ## aggregate
-    ctdF <- handleFlags (ctdF)
+    # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
+    # ctdF <- handleFlags (ctdF)
+#    ctdF <- handleFlags (ctdF, flags = defaultFlags(ctdF))
     ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later?
 
     if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
@@ -183,7 +190,9 @@ if (0){                                 # read in cnv files for turbidity
   ## CTD1 <- readCNV (235)
   ## CTD1 <- readCNV (236)
 
-  CTD1 <- mclapply (1:length (fN), readCNV, mc.cores = nCPUs)
+  for (k in 1:length (fN)){print (k); readCNV (k)}  ## for troubleshooting
+
+    CTD1 <- mclapply (1:length (fN), readCNV, mc.cores = nCPUs)
   # require (dplyr)
   # CTD1 <- bind_rows (CTD1, id = fN)
   CTD1 <- as.data.frame (do.call (rbind, CTD1))
@@ -294,74 +303,74 @@ if (0){                                 # read in cnv files for turbidity
   )
   # print (summary (physOc))
 
-}
+}else{
 
 
-###########################
-## read aggregated files ##
-###########################
+  ###########################
+  ## read aggregated files ##
+  ###########################
 
-fN <- list.files ("~/GISdata/LCI/CTD/4_aggregated/", "_LowerCookInlet_ProcessedCTD.csv", full.names = TRUE)
-fN <- c (fN, list.files ("~/GISdata/LCI/CTD/2017-21/4_ctd-aggregated-files/", "_Aggregatedfiles.csv", full.names = TRUE))
+  fN <- list.files ("~/GISdata/LCI/CTD/4_aggregated/", "_LowerCookInlet_ProcessedCTD.csv", full.names = TRUE)
+  fN <- c (fN, list.files ("~/GISdata/LCI/CTD/2017-21/4_ctd-aggregated-files/", "_Aggregatedfiles.csv", full.names = TRUE))
 
-## field names in _Aggregatedfiles.csv are not consistent, neither is their order consistent.
-## reduce all field names to make the consistent, then sort by field names to get order right
-## algorithm: last one is always O2 saturation. Others should be diagnostic by first 3 letters
-regStr <- "^([a-zA-Z.0]{3})([a-zA-Z0-9_.]+)"
+  ## field names in _Aggregatedfiles.csv are not consistent, neither is their order consistent.
+  ## reduce all field names to make the consistent, then sort by field names to get order right
+  ## algorithm: last one is always O2 saturation. Others should be diagnostic by first 3 letters
+  regStr <- "^([a-zA-Z.0]{3})([a-zA-Z0-9_.]+)"
 
-# agF <- read.csv (fN [4])
-fieldNames <- sapply (1:length (fN), FUN = function (x){
+  # agF <- read.csv (fN [4])
+  fieldNames <- sapply (1:length (fN), FUN = function (x){
     names (read.csv (fN [x], na.strings = "N/A"))
-})
+  })
 
- sapply (1:length (fN), FUN = function (x){  # should this go somewhere? just for info or del?
+  sapply (1:length (fN), FUN = function (x){  # should this go somewhere? just for info or del?
     fnms <- names (read.csv (fN [x], na.strings = "N/A"))
     c (grep ("Sat", fnms, value = TRUE), fN [x])
-#    c (grep ("Temperature", fnms, value = TRUE), fN [x])
-})
+    #    c (grep ("Temperature", fnms, value = TRUE), fN [x])
+  })
 
 
-# fieldNames
-# print (gsub (regStr, "\\1",fieldNames))
+  # fieldNames
+  # print (gsub (regStr, "\\1",fieldNames))
 
-for (i in 1:length (fN)){
+  for (i in 1:length (fN)){
     agF <- read.csv (fN [i], na.strings = "N/A")
-#    plot (Oxygen.Saturation..Garcia...Gordon..mg.l. ~ Temperature..ITS.90..deg.C., agF)
+    #    plot (Oxygen.Saturation..Garcia...Gordon..mg.l. ~ Temperature..ITS.90..deg.C., agF)
     names (agF) <- gsub (regStr, "\\1",names (agF))
     names (agF)[ncol(agF)] <- "O2Sat"
     ## agF <- data.frame (FNag = fN [i], agF) -- not needed
     if (i == 1){
-        physOc <- agF
+      physOc <- agF
     }else{
-        ## print (names (agF))
-        for (j in 1:length (names (physOc))){
-            if (!names (physOc)[j] %in% names (agF)){
-                print (names (physOc [j]))
-                print (fN [i])
-                print (names (agF))
-            }
+      ## print (names (agF))
+      for (j in 1:length (names (physOc))){
+        if (!names (physOc)[j] %in% names (agF)){
+          print (names (physOc [j]))
+          print (fN [i])
+          print (names (agF))
         }
-        agF <- agF [,match (names (agF),names (physOc))] # fix mixed-up column orders
-        physOc <- rbind (physOc, agF)
+      }
+      agF <- agF [,match (names (agF),names (physOc))] # fix mixed-up column orders
+      physOc <- rbind (physOc, agF)
     }
+  }
+  rm (agF, i, fN, j)
 }
-rm (agF, i, fN, j)
-
 
 ## this is what field names look like after importing CSV file into R
 ## apply these names again to keep export consistent and to avoid having to
 ## change names throughout this script now.
 newNames <- c ("File.Name", "Date", "Transect", "Station", "Time", "CTD.serial"
-             , "latitude_DD", "longitude_DD", "Bottom.Depth", "Depth.saltwater..m."
-             , "Temperature_ITS90_DegC", "Salinity_PSU", "Density_sigma.theta.kg.m.3"
-             , "Fluorescence_mg_m3"
-             , "Oxygen_SBE.43..mg.l.", "PAR.Irradiance", "Pressure..Strain.Gauge..db."
-             , "Oxygen.Saturation.Garcia.Gordon.mg.l.")
+               , "latitude_DD", "longitude_DD", "Bottom.Depth", "Depth.saltwater..m."
+               , "Temperature_ITS90_DegC", "Salinity_PSU", "Density_sigma.theta.kg.m.3"
+               , "Fluorescence_mg_m3"
+               , "Oxygen_SBE.43..mg.l.", "PAR.Irradiance", "Pressure..Strain.Gauge..db."
+               , "Oxygen.Saturation.Garcia.Gordon.mg.l.")
 if (all (gsub (regStr, "\\1",newNames)[1:17] == names (physOc)[1:17])){
-    names (physOc) <- newNames
+  names (physOc) <- newNames
 }else{
-    print (cbind (gsub (regStr, "\\1", newNames), names (physOc)))
-    error ("Field names don't match") # in case of future troubles
+  print (cbind (gsub (regStr, "\\1", newNames), names (physOc)))
+  error ("Field names don't match") # in case of future troubles
 }
 rm (fieldNames, newNames, regStr)
 # }
@@ -375,11 +384,11 @@ physOc$Time <- ifelse (is.na (physOc$Time), "12:00", as.character (physOc$Time))
 physOc$Time <- ifelse (physOc$Time == "", "12:00", as.character (physOc$Time)) # avoid bad timestamps
 
 if (!exists ("physOc$isoTime")){
-physOc <- cbind (isoTime = as.POSIXlt (paste (physOc$Date, physOc$Time)
-                                     , format = "%m/%d/%Y %H:%M"
-#                     , tz = "AKDT")
-                                     , tz = "America/Anchorage")
-               , physOc)
+  physOc <- cbind (isoTime = as.POSIXlt (paste (physOc$Date, physOc$Time)
+                                         , format = "%m/%d/%Y %H:%M"
+                                         #                     , tz = "AKDT")
+                                         , tz = "America/Anchorage")
+                   , physOc)
 }
 
 

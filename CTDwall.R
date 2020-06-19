@@ -121,9 +121,10 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
                                                 , station = Match_Name
                                                 #, sectionId = transDate
                                                 , time = isoTime
-                                                , other = list (flourescence = Fluorescence_mg_m3)
-                                        )
-                                  )
+                                                , other = list (flourescence = Fluorescence_mg_m3
+                                                                # add other variables here as needed
+                                                                )
+                                        ))
                                 }))
 
       pSec <- function (N, zC, ...){
@@ -133,12 +134,11 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
               , axes = TRUE, ztype = 'image', zcol = zC
               , stationTicks = TRUE, ...) # zlim?
       }
-      #    par (mfrow = c(2,2))
-      pSec (1, oceColorsTemperature)
+      pSec (1, oceColorsTemperature) #, zlim = c(-1, 15.4))
       title (main = levels (physOc$transDate)[i], col = "blue")
-      pSec (2, oceColorsSalinity)
-      pSec (3, oceColorsDensity)
-      pSec ("flourescence", oceColorsChlorophyll)  ## flourescence not included here yet -- have to go back to dataSetup.R
+      pSec (2, oceColorsSalinity) #, zlim = c(15.97, 33.22)) # non-linear scaleing?
+      pSec (3, oceColorsDensity) #, zlim = c(11.58, 26.63))
+      pSec ("flourescence", oceColorsChlorophyll) #+, zlim = c(-1.6, 33.96)) # should NOT have negative flourescence XXX
       # pSec (99, showStations = TRUE, coastline = "coastlineWorldFine")
       if (0){
         plot (xC
@@ -165,7 +165,7 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
   }
 }
 physOc <- poAll
-rm (xC, i, poAll, pSec)
+rm (xC, i, poAll, pSec, physOcY)
 
 
 
