@@ -203,6 +203,9 @@ if (0){                                 # read in cnv files for turbidity
   # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
 
 
+  ## start-over this part -- read metadata/field notes from KBRR ACCESS database
+  Require ("RODBC")
+
 
   ## read in metadata and match based on File.Name
   ## metadata currently harvested from aggregated files.
@@ -302,6 +305,10 @@ if (0){                                 # read in cnv files for turbidity
                        , "turbidity"
   )
   # print (summary (physOc))
+
+  ## link with ACCESS (c) database (migrate enventually), to get actual coordinates
+
+
 
 }else{
 
