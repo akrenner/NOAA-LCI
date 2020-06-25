@@ -204,7 +204,9 @@ if (0){                                 # read in cnv files for turbidity
 
 
   ## start-over this part -- read metadata/field notes from KBRR ACCESS database
-  Require ("RODBC")
+  Require ("odbc")
+  Require ("DBI")
+  odbc <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess")
 
 
   ## read in metadata and match based on File.Name
