@@ -101,217 +101,220 @@ if (.Platform$OS.type != "unix"){
 ## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
 
 
-### read cnv files for turbidity
 
 if (0){                                 # read in cnv files for turbidity
-  Require (oce)
-  ## read in processed files of individual CTD casts
-  ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
-
-  fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
-#  fN <- list.files ("~/GISdata/LCI/CTD")
-  print (length (fN))
-
-  readCNV <- function (i){
-    Require (oce)
-    cN <- fN [i]
-    ctdF <- suppressMessages (read.ctd (paste ("~/GISdata/LCI/CTD/6\ DERIVE/", cN, sep = "")))# NAs introduced by coercion... = ?
-    ## cat (i, " ")
-    ## if (i %% 10 == 0){cat ("\n")}
-
-    ## if ("station" %in% names (ctdF@metadata)) if (grepl ("Air", ctdF@metadata$station)){
-    ##     cat ("Air Cast:", i, fN [i], "\n")
-    ##     return()
-    ## }
-
-    ## more CTD import processing steps
-    ## zero-depth
-    ## cut-out surface, up-cast?
-    # cut bad flags!
-    ## aggregate depth bins
-    ## derived variables ??
-    ## add metadata from elsewhere (later -- latlon, Match_Name, tide,..)
-    ## most should be here (paste into aggregated data or separate table)
-    ##   .... find others!
-
-    ## best: manually inspect and read-in from separate table
-    # ?plotScan
-
-     ctdF <- ctdTrim (ctdF, method = "downcast") # there's also a method seabird
-    # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
-    # could/should specify min soak times, soak depth
-    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+  ### read cnv files for turbidity
+  load (paste0 (dirL[4], "/CNV1.RData")) # get file from CTD_cnv-Import.R
 
 
-    ## aggregate
-    # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
-    # ctdF <- handleFlags (ctdF)
-#    ctdF <- handleFlags (ctdF, flags = defaultFlags(ctdF))
-    ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later?
-
-    if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
-      names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
-    }
-    if (!"fluorescence" %in% names (ctdF@data)){
-      ctdF@data$fluorescence <- rep (NA, length (ctdF@data$sigmaTheta))
-      # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
-    }
-
-    meta <- function (x){rep (x, length (ctdF@data$sigmaTheta))}
-
-    cDF <- data.frame (File.Name = gsub (".cnv$", "", fN [i])
-                       ## , latitude = meta (ctdF@metadata$latitude)
-                       ## , longitude = meta (ctdF@metadata$longitude)
-                       , timestamp = meta (ctdF@metadata$startTime)
-                       , depth_bottom = meta (ctdF@metadata$waterDepth)
-                       ## , transect = meta (ctdF@metadata$station)
-                       ## , Match_Name = meta (ctdF@metadata$station)
-                       #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
-                       , density = ctdF@data$sigmaTheta
-                       , depth = ctdF@data$depth
-                       , O2 = ctdF@data$oxygen
-                       , par = ctdF@data$par
-                       , salinity = ctdF@data$salinity
-                       , temperature = ctdF@data$temperature
-                       , pressure = ctdF@data$pressure
-                       , fluorescence = ctdF@data$fluorescence ## often missing
-                       , turbidity = ctdF@data$upoly
-                       #                        , conductivity = ctdF@data$conductivity
-                       # , depth2 = ctdF@data$depth2
-    )
-    cDF <- subset (cDF, density > 0)
-    return (cDF)
-  }
-
-
-  ## CTD1 <- readCNV (120)                   # Air Cast
-  ## CTD1 <- readCNV (520)                   # missing station metadata
-  ## for (i in 1:length (fN)){cat (i, "\n"); CTD1 <- readCNV (i)}
-  ## CTD1 <- readCNV (235)
-  ## CTD1 <- readCNV (236)
-
-  for (k in 1:length (fN)){print (k); readCNV (k)}  ## for troubleshooting
-
-    CTD1 <- mclapply (1:length (fN), readCNV, mc.cores = nCPUs)
-  # require (dplyr)
-  # CTD1 <- bind_rows (CTD1, id = fN)
-  CTD1 <- as.data.frame (do.call (rbind, CTD1))
-  rm (fN, readCNV)
-
-  # "bad" in station?
-  save.image ("~/tmp/LCI_noaa/cache/CNV1.RData")
-  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
-
-
-  ## start-over this part -- read metadata/field notes from KBRR ACCESS database
-  Require ("odbc")
-  Require ("DBI")
-  odbc <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess")
-
-
-  ## read in metadata and match based on File.Name
-  ## metadata currently harvested from aggregated files.
-  ## In future, should be kept from field-notes DB
-  mdata <- read.csv ("~/GISdata/LCI/CTD/ctd_metadata_m.csv")
-
-  dim (mdata)
-  dim (CTD1)
-  head (CTD1$File.Name)
-  head (mdata$File.Name)
-
-  summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
-  summary (as.factor (format (CTD1$timestamp, "%Y")))
-
-  needCNV <- mdata$File.Name [!mdata$File.Name %in% CTD1$File.Name]
-  print (length (needCNV))
-  print (length (levels (factor (CTD1$File.Name))))
-  print (nrow (mdata))
-
-
-  xmatch <- match (as.character (CTD1$File.Name), as.character (mdata$File.Name))
-  ## finding bad matches
-  summary (xmatch)
-  badFileNames <- as.character (unique (CTD1$File.Name [which (is.na (xmatch))]))
-  length (badFileNames)                   # < 26 -- not too bad
-
-  print (badFileNames)
-
-  mBad <- function (fstr){
-    cat ("non-matching File.Names of CNV files\n")
-    print (grep (fstr, badFileNames, value = TRUE))
-    cat ("\nNames in aggregated\n")
-    print (grep (fstr, mdata$File.Name, value = TRUE))
-  }
-
-  ## failed to turn-off CTD?  field notes?
-  # mBad ("2012_04-26_T9_S")
-
-  ## bad casts?  No metadata available?  Field notes?
-  mBad ("2012_05-31")
-  # mBad ("2017_12-14_T9_S04south_cast123"
-
-
-  # mBad ("2012_08-15_AlongBay")
-
-  ## PARTIAL -- bad, del
-  # mBad ("2014_03-28_AlongBay")
-
-  ## bad casts repeated, keep both?
-  # mBad ("2015_06-26_T9")
-
-  # mBad ("2015_08-14_AlongBay")
-  # mBad ("2015_11-03_T4")
-  # mBad ("2015_11-04_T3_S03")
-
-  ## missing metadata? field notes?
-  # mBad ("2015_11-04")
-
-  ## Station KB10 or KB09?
-  # mBad ("2016_06-16_AlongBay")
-
-  # mBad ("2016_01-07_AlongBay")
-
-
-
-  # print (summary (mdata))
-  # print (summary (CTD1))
-
-  physOc <- data.frame (mdata [xmatch,], CTD1) # watch out for isoTime
-  # physOc <- data.frame (mdata [xmatch,2:ncol (mdata)], CTD1)
-  rm (xmatch)
-  # print (summary (physOc))
-
-  names (physOc)
-  testFN <- as.character (physOc$File.Name) == as.character (physOc$File.Name.1)
-  summary (testFN)
-  physOc <- subset (physOc, testFN, select = -File.Name.1)
-  rm (testFN, CTD1, mBad, mdata)
-  # print (summary (physOc))
-
-  save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")
-  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
-
-  names (physOc) <- c ("isoTime",
-                       "File.Name", "Date", "Transect", "Station"
-                       , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
-                       , "Bottom.Depth", "comments"
-                       , "timestamp", "depth_bottom" # , "CTDserial"
-                       , "Density_sigma.theta.kg.m.3"
-                       , "Depth.saltwater..m."
-                       , "Oxygen_SBE.43..mg.l."
-                       , "PAR.Irradiance"
-                       , "Salinity_PSU"
-                       , "Temperature_ITS90_DegC"
-                       , "Pressure..Strain.Gauge..db."
-                       , "Fluorescence_mg_m3"
-                       , "turbidity"
-  )
-  # print (summary (physOc))
-
-  ## link with ACCESS (c) database (migrate enventually), to get actual coordinates
-
-
-
+#       Require (oce)
+#   ## read in processed files of individual CTD casts
+#   ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
+#
+#   fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
+# #  fN <- list.files ("~/GISdata/LCI/CTD")
+#   print (length (fN))
+#
+#   readCNV <- function (i){
+#     Require (oce)
+#     cN <- fN [i]
+#     ctdF <- suppressMessages (read.ctd (paste ("~/GISdata/LCI/CTD/6\ DERIVE/", cN, sep = "")))# NAs introduced by coercion... = ?
+#     ## cat (i, " ")
+#     ## if (i %% 10 == 0){cat ("\n")}
+#
+#     ## if ("station" %in% names (ctdF@metadata)) if (grepl ("Air", ctdF@metadata$station)){
+#     ##     cat ("Air Cast:", i, fN [i], "\n")
+#     ##     return()
+#     ## }
+#
+#     ## more CTD import processing steps
+#     ## zero-depth
+#     ## cut-out surface, up-cast?
+#     # cut bad flags!
+#     ## aggregate depth bins
+#     ## derived variables ??
+#     ## add metadata from elsewhere (later -- latlon, Match_Name, tide,..)
+#     ## most should be here (paste into aggregated data or separate table)
+#     ##   .... find others!
+#
+#     ## best: manually inspect and read-in from separate table
+#     # ?plotScan
+#
+#      ctdF <- ctdTrim (ctdF, method = "downcast") # there's also a method seabird
+#     # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
+#     # could/should specify min soak times, soak depth
+#     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+#
+#
+#     ## aggregate
+#     # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
+#     # ctdF <- handleFlags (ctdF)
+# #    ctdF <- handleFlags (ctdF, flags = defaultFlags(ctdF))
+#     ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later?
+#
+#     if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
+#       names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
+#     }
+#     if (!"fluorescence" %in% names (ctdF@data)){
+#       ctdF@data$fluorescence <- rep (NA, length (ctdF@data$sigmaTheta))
+#       # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
+#     }
+#
+#     meta <- function (x){rep (x, length (ctdF@data$sigmaTheta))}
+#
+#     cDF <- data.frame (File.Name = gsub (".cnv$", "", fN [i])
+#                        ## , latitude = meta (ctdF@metadata$latitude)
+#                        ## , longitude = meta (ctdF@metadata$longitude)
+#                        , timestamp = meta (ctdF@metadata$startTime)
+#                        , depth_bottom = meta (ctdF@metadata$waterDepth)
+#                        ## , transect = meta (ctdF@metadata$station)
+#                        ## , Match_Name = meta (ctdF@metadata$station)
+#                        #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
+#                        , density = ctdF@data$sigmaTheta
+#                        , depth = ctdF@data$depth
+#                        , O2 = ctdF@data$oxygen
+#                        , par = ctdF@data$par
+#                        , salinity = ctdF@data$salinity
+#                        , temperature = ctdF@data$temperature
+#                        , pressure = ctdF@data$pressure
+#                        , fluorescence = ctdF@data$fluorescence ## often missing
+#                        , turbidity = ctdF@data$upoly
+#                        #                        , conductivity = ctdF@data$conductivity
+#                        # , depth2 = ctdF@data$depth2
+#     )
+#     cDF <- subset (cDF, density > 0)
+#     return (cDF)
+#   }
+#
+#
+#   ## CTD1 <- readCNV (120)                   # Air Cast
+#   ## CTD1 <- readCNV (520)                   # missing station metadata
+#   ## for (i in 1:length (fN)){cat (i, "\n"); CTD1 <- readCNV (i)}
+#   ## CTD1 <- readCNV (235)
+#   ## CTD1 <- readCNV (236)
+#
+#   for (k in 1:length (fN)){print (k); readCNV (k)}  ## for troubleshooting
+#
+#     CTD1 <- mclapply (1:length (fN), readCNV, mc.cores = nCPUs)
+#   # require (dplyr)
+#   # CTD1 <- bind_rows (CTD1, id = fN)
+#   CTD1 <- as.data.frame (do.call (rbind, CTD1))
+#   rm (fN, readCNV)
+#
+#   # "bad" in station?
+#   save.image ("~/tmp/LCI_noaa/cache/CNV1.RData")
+#   # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
+#
+#
+#   ## start-over this part -- read metadata/field notes from KBRR ACCESS database
+#   Require ("odbc")
+#   Require ("DBI")
+#   odbc <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess")
+#
+#
+#   ## read in metadata and match based on File.Name
+#   ## metadata currently harvested from aggregated files.
+#   ## In future, should be kept from field-notes DB
+#   mdata <- read.csv ("~/GISdata/LCI/CTD/ctd_metadata_m.csv")
+#
+#   dim (mdata)
+#   dim (CTD1)
+#   head (CTD1$File.Name)
+#   head (mdata$File.Name)
+#
+#   summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
+#   summary (as.factor (format (CTD1$timestamp, "%Y")))
+#
+#   needCNV <- mdata$File.Name [!mdata$File.Name %in% CTD1$File.Name]
+#   print (length (needCNV))
+#   print (length (levels (factor (CTD1$File.Name))))
+#   print (nrow (mdata))
+#
+#
+#   xmatch <- match (as.character (CTD1$File.Name), as.character (mdata$File.Name))
+#   ## finding bad matches
+#   summary (xmatch)
+#   badFileNames <- as.character (unique (CTD1$File.Name [which (is.na (xmatch))]))
+#   length (badFileNames)                   # < 26 -- not too bad
+#
+#   print (badFileNames)
+#
+#   mBad <- function (fstr){
+#     cat ("non-matching File.Names of CNV files\n")
+#     print (grep (fstr, badFileNames, value = TRUE))
+#     cat ("\nNames in aggregated\n")
+#     print (grep (fstr, mdata$File.Name, value = TRUE))
+#   }
+#
+#   ## failed to turn-off CTD?  field notes?
+#   # mBad ("2012_04-26_T9_S")
+#
+#   ## bad casts?  No metadata available?  Field notes?
+#   mBad ("2012_05-31")
+#   # mBad ("2017_12-14_T9_S04south_cast123"
+#
+#
+#   # mBad ("2012_08-15_AlongBay")
+#
+#   ## PARTIAL -- bad, del
+#   # mBad ("2014_03-28_AlongBay")
+#
+#   ## bad casts repeated, keep both?
+#   # mBad ("2015_06-26_T9")
+#
+#   # mBad ("2015_08-14_AlongBay")
+#   # mBad ("2015_11-03_T4")
+#   # mBad ("2015_11-04_T3_S03")
+#
+#   ## missing metadata? field notes?
+#   # mBad ("2015_11-04")
+#
+#   ## Station KB10 or KB09?
+#   # mBad ("2016_06-16_AlongBay")
+#
+#   # mBad ("2016_01-07_AlongBay")
+#
+#
+#
+#   # print (summary (mdata))
+#   # print (summary (CTD1))
+#
+#   physOc <- data.frame (mdata [xmatch,], CTD1) # watch out for isoTime
+#   # physOc <- data.frame (mdata [xmatch,2:ncol (mdata)], CTD1)
+#   rm (xmatch)
+#   # print (summary (physOc))
+#
+#   names (physOc)
+#   testFN <- as.character (physOc$File.Name) == as.character (physOc$File.Name.1)
+#   summary (testFN)
+#   physOc <- subset (physOc, testFN, select = -File.Name.1)
+#   rm (testFN, CTD1, mBad, mdata)
+#   # print (summary (physOc))
+#
+#   save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")
+#   # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
+#
+#   names (physOc) <- c ("isoTime",
+#                        "File.Name", "Date", "Transect", "Station"
+#                        , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
+#                        , "Bottom.Depth", "comments"
+#                        , "timestamp", "depth_bottom" # , "CTDserial"
+#                        , "Density_sigma.theta.kg.m.3"
+#                        , "Depth.saltwater..m."
+#                        , "Oxygen_SBE.43..mg.l."
+#                        , "PAR.Irradiance"
+#                        , "Salinity_PSU"
+#                        , "Temperature_ITS90_DegC"
+#                        , "Pressure..Strain.Gauge..db."
+#                        , "Fluorescence_mg_m3"
+#                        , "turbidity"
+#   )
+#   # print (summary (physOc))
+#
+#   ## link with ACCESS (c) database (migrate enventually), to get actual coordinates
+#
+#
+#
 }else{
 
 
