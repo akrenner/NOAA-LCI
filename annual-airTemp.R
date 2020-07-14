@@ -11,7 +11,7 @@ currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
 currentCol <- c("red", "magenta")
 # currentCol <- "red"
 SWMP <- TRUE
-SWMP <- FALSE
+# SWMP <- FALSE
 
 
 
@@ -20,7 +20,7 @@ source ("annualPlotFct.R")
 if (SWMP){
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
 }else{
-  # source ("noaaWeather.R")
+  source ("noaaWeather.R")
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
 

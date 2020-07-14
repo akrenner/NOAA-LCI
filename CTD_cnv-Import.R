@@ -99,9 +99,12 @@ Require (oce)
 ## read in processed files of individual CTD casts
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
-# fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
-fN <- list.files ("~/GISdata/LCI/CTD")
+fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
+# fN <- list.files ("~/GISdata/LCI/CTD", recursive = TRUE)
+fN <- list.files ("~/tmp/LCI_noaa/cache/hex-raw CTD files --reprocess/"  ## tmp to try file names!
+                  , recursive = TRUE, full.names = FALSE)
 print (length (fN))
+
 
 readCNV <- function (i){
   Require (oce)
@@ -191,18 +194,6 @@ rm (fN, readCNV)
 
 # "bad" in station?
 
-
-
-
-
-
-
-
-
-
-
-
-
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 
@@ -236,34 +227,49 @@ if (0){# ideal: read-in data from ACCESS database via ODBC -- may be not worth t
 
 }else if (1){ # manually exported tables, read-in those data and link to existing tables
   # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
-  stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.txt")
-  transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.txt")
-  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+  transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+#  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
 
-  tN <- transectEv$Transect [match (
-    stationEv$TransectEvent, transectEv$TransectEvent)] ## assuming dates are all correct
+  ## clean up dates/times
+  stationEv$Date <- ifelse (stationEv$Date == "", "1900-1-1", stationEv$Date)
+  stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
+  stationEv$timeStamp <- paste (format (as.POSIXct (stationEv$Date), "%Y-%m-%d")
+                               , format (as.POSIXct (stationEv$Time), "%H:%M"))
+  stationEv$timeStamp <- ifelse (stationEv$timeStamp < as.POSIXct("1901-01-01 00:00")
+                                 , NA, stationEv$timeStamp)
+
+  ## make relational DB links
+  tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
+
+  ## 20 NAs -- why??
+  if (any (is.na (tM))){
+    print (stationEv [which (is.na (tM)), c (21, 8, 9, 10)])
+    stop ("no missing transectEvents allowed")
+  }
+
   ## this may be the only needed field from TransectEvent
-  stationEv$Match_Name <- paste0 (tN, "_", stationEv$Station)
-  rm (transectEv, tN)
+  stationEv$Transect <- factor (transectEv$Transect [tM])
+  stationEv$Match_Name <- paste0 (transectEv$Transect [tM], "_", stationEv$Station)
+  rm (transectEv, tM)
 
   stationEv$LonNotes <- with (stationEv, LongitudeDeg - abs (LongitudeMins)/60)
   stationEv$LatNotes <- with (stationEv, LatitudeDeg + LatitudeMins/60)
 
-  ## XXX fix bad positions in Access -- go back to source notebooks!
-  ## just 6 bad positions, i.e. LonNotes > -130
   badLon <- subset (stationEv, (-160 > LonNotes)|(LonNotes > -130))
   if (nrow (badLon) > 1){
     stop (print (badLon, c(21, 5, 6)))
 #    stationEv <- subset (stationEv, !(StationEvent %in% badLon$StationEvent))
   }
   rm (badLon)
-  summary (stationEv [,c(1:4,22:23)])
+ # summary (stationEv [,c(1:4,22:23)])
 
   stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
-  stationEv$LonMast <- stnMaster$Lon_decDegree [match (
-    stationEv$Match_Name, stnMaster$Match_Name)]
-  stationEv$LatMast <- stnMaster$Lat_decDegree [match (
-    stationEv$Match_Name, stnMaster$Match_Name)]
+  sMatch <- match (stationEv$Match_Name, stnMaster$Match_Name)
+  stationEv$LonMast <- stnMaster$Lon_decDegree [sMatch]
+  stationEv$LatMast <- stnMaster$Lat_decDegree [sMatch]
+# stationEv$Transect <- stnMaster$Line [sMatch]
+# stationEv$Station <- stnMaster$Station [sMatch]
   rm (stnMaster)
 
   Require (geosphere)
@@ -273,18 +279,50 @@ if (0){# ideal: read-in data from ACCESS database via ODBC -- may be not worth t
   stationErr$lonErr <- with (stationEv, LonNotes - LonMast)
   stationErr$latErr <- with (stationEv, LatNotes - LatMast)
 
-  summary (stationErr$lonErr)
+ # summary (stationErr$lonErr)
+ # stationEv [which.max (stationErr$posError), c(21,5,6, 22:25)]
 
-  pdf ("~/tmp/LCI_noaa/media/badPositions_CTD.pdf")
-  plot (LonNotes~LonMast, stationEv, asp = 1)
-  plot (LatNotes~LatMast, stationEv, asp = 1)
+  stationEv <- stationEv [order (stationErr$posError, decreasing = TRUE),]
+  stationErr <- stationErr [order (stationErr$posError, decreasing = TRUE),]
+  stationErr$nm <- stationErr$posError/1852
 
-  plot (LatNotes~LonNotes, stationEv, asp = 1)
-  plot (LatMast~LonMast, stationEv, asp = 1)
-  dev.off()
+  x <- data.frame (stationEv, stationErr) [which (stationErr$posError > 1852*1.0),]
+  if (nrow (x) > 3){
+    print (x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)])
+  }
+  rm (x)
+
+  # pdf ("~/tmp/LCI_noaa/media/badPositions_CTD.pdf")
+  # plot (LonNotes~LonMast, stationEv, asp = 1)
+  # plot (LatNotes~LatMast, stationEv, asp = 1)
+  #
+  # plot (LatNotes~LonNotes, stationEv, asp = 1)
+  # plot (LatMast~LonMast, stationEv, asp = 1)
+  # dev.off()
   ## eoedits
+  rm (stationErr)
 
 
+  ## fill-in missing coordinates in Notebook with generic station positions
+  stationEv$LonNotes <- with (stationEv, ifelse (is.na (LonNotes), LonMast, LonNotes))
+  stationEv$LatNotes <- with (stationEv, ifelse (is.na (LatNotes), LatMast, LatNotes))
+  ## remove surplus fields
+  stationEv <- stationEv [,-which (names (stationEv) %in%
+                                     c("LatitudeDeg", "LatitudeMins"
+                                       , "LongitudeDeg", "LongitudeMins"
+                                       , "LatMast", "LonMast"))]
+
+  ## just was below with metadata, link cnv names to relevant notebook cast records
+## BUT, as long as positions are not great, use master positions
+
+
+  ## end of edits !!
+
+  ## MATCH file names to database --- WHAT to do about doubles??? (same station sampled 2x+ per day)
+  fNDB <- with (stationEv, paste0 (format (timeStamp, "%Y-%m-%d")
+                                   , ifelse (Transect %in% as.character (3:9), "T_", "")
+                                   , Transect, "_S", Station)
+  )
 
 }else {
 

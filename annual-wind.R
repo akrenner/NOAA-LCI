@@ -11,7 +11,7 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 ## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
 ## SeldoviaTemp currently only other file using SWMP data
 # file name ---> could use Windows shortcut?
-if (0){ ## start over with new data set?
+if (1){ ## start over with new data set?
   # tF <- tempfile()
   # download.file ("http://cdmo.baruch.sc.edu/aqs/output/528292.zip", tF)
   # ## list needed files
@@ -28,7 +28,7 @@ if (0){ ## start over with new data set?
     lnk <- "~/GISdata/LCI/SWMP/current"
   }
   hmr <- as.data.frame (import_local (lnk, "kachomet")); rm (lnk)
-  save (hmr, "~/tmp/LCI_noaa/cache/wind1.RData")
+  save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
 }else{
   rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
 }
