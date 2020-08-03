@@ -99,20 +99,40 @@ Require (oce)
 ## read in processed files of individual CTD casts
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
-fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
-# fN <- list.files ("~/GISdata/LCI/CTD", recursive = TRUE)
-fN <- list.files ("~/tmp/LCI_noaa/cache/hex-raw CTD files --reprocess/"  ## tmp to try file names!
-                  , recursive = TRUE, full.names = FALSE)
+# fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
+# fN <- c (fN, list.files ("~/GISdata/LCI/CTD-new/CNV/4141/2_CNV/"
+#                          , full.names = FALSE, recursive = TRUE))
+# fN <- c (fN, list.files ("~/GISdata/LCI/CTD-new/CNV/5028/2_CNV/"
+#                          , full.names = FALSE, recursive = TRUE))
+fN <- list.files ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", ".cnv"
+                  , full.names = FALSE, ignore.case = TRUE)
+fNf <- list.files ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", ".cnv"
+                  , full.names = TRUE, ignore.case = TRUE)
 print (length (fN))
+
+## TESTING ONLY xxxx ###
+#fN <- fN [grep ("2019", fN, value = FALSE)]
+#fNf <- fNf [grep ("2019", fNf, value = FALSE)]
+## END TESTING ONLY ####
+
+
+## deem file-names inherently unreliable and go with CTD metadata-dates instead
+## match time-stamps to closest timestamps in notebooks and hope for the best
+
+fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
+  ctd <- suppressMessages (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
+  cT <- as.POSIXct (as.character (ctd@metadata$startTime)  )#, tz = "US/Alaska")
+  return (data.frame (time = ctd@metadata$startTime, file = fN [i]) )
+})
+fileDB <- as.data.frame (do.call (rbind, fileDB))
 
 
 readCNV <- function (i){
   Require (oce)
-  cN <- fN [i]
-  ctdF <- suppressMessages (read.ctd (paste ("~/GISdata/LCI/CTD/6\ DERIVE/", cN, sep = "")))# NAs introduced by coercion... = ?
-  ## cat (i, " ")
-  ## if (i %% 10 == 0){cat ("\n")}
-
+#  ctdF <- suppressMessages (read.ctd (paste ("~/GISdata/LCI/CTD/6\ DERIVE/", cN, sep = "")))# NAs introduced by coercion... = ?
+#  ctdF <- suppressMessages (read.ctd (paste0 ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", fN [i])))  # NAs introduced by coercion... = ?
+   #ctdF <- suppressMessages (read.ctd (fNf [i]))
+   ctdF <- read.ctd (fNf [i])
   ## if ("station" %in% names (ctdF@metadata)) if (grepl ("Air", ctdF@metadata$station)){
   ##     cat ("Air Cast:", i, fN [i], "\n")
   ##     return()
@@ -133,7 +153,7 @@ readCNV <- function (i){
 
   ctdF <- ctdTrim (ctdF, method = "downcast") # there's also a method seabird
   # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
-  # could/should specify min soak times, soak depth
+  # could/should specify min soak times, soak depth -- min soak time = 40s
   #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
 
 
@@ -141,19 +161,26 @@ readCNV <- function (i){
   # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
   # ctdF <- handleFlags (ctdF)
   #    ctdF <- handleFlags (ctdF, flags = defaultFlags(ctdF))
-  ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later?
+  ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later? -- really needed?
 
   if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
     names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
   }
-  if (!"fluorescence" %in% names (ctdF@data)){
-    ctdF@data$fluorescence <- rep (NA, length (ctdF@data$sigmaTheta))
-    # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
-  }
 
   meta <- function (x){rep (x, length (ctdF@data$sigmaTheta))}
 
-  cDF <- data.frame (File.Name = gsub (".cnv$", "", fN [i])
+
+  if (!"fluorescence" %in% names (ctdF@data)){
+    ctdF@data$fluorescence <- meta (NA)
+    # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
+  }
+  if (length (grep ("upoly", names (ctdF@data))) == 0){
+    ctdF@data$upoly <- meta (NA)
+    warning("Turbidity is missing in ", fN [i])
+  }
+
+
+  cDF <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
                      ## , latitude = meta (ctdF@metadata$latitude)
                      ## , longitude = meta (ctdF@metadata$longitude)
                      , timestamp = meta (ctdF@metadata$startTime)
@@ -178,20 +205,26 @@ readCNV <- function (i){
 }
 
 
-## CTD1 <- readCNV (120)                   # Air Cast
-## CTD1 <- readCNV (520)                   # missing station metadata
-## for (i in 1:length (fN)){cat (i, "\n"); CTD1 <- readCNV (i)}
-## CTD1 <- readCNV (235)
-## CTD1 <- readCNV (236)
+## bad? cast: 2012_10-29_T4_S07_cast065 -- ctdDecimate fails. All depth = negative
+save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
 
-for (k in 1:length (fN)){print (k); readCNV (k)}  ## for troubleshooting
 
-CTD1 <- mclapply (1:length (fN), readCNV, mc.cores = nCPUs)
-# require (dplyr)
-# CTD1 <- bind_rows (CTD1, id = fN)
+# for (i in 1:length (fNf)){
+#   ctdX <- readCNV (i)
+#   if (i == 1){
+#     CTD1 <- ctdX
+#   }else{
+#     print (fileDB [i,])
+#     CTD1 <- rbind (CTD1, ctdX)
+#   }
+# }
+# save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
+
+CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs)
+# require (dplyr); CTD1 <- bind_rows (CTD1, id = fN)
 CTD1 <- as.data.frame (do.call (rbind, CTD1))
-rm (fN, readCNV)
-
+rm (readCNV)
+rm (fN, fNf)
 # "bad" in station?
 
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
@@ -225,121 +258,224 @@ if (0){# ideal: read-in data from ACCESS database via ODBC -- may be not worth t
   dC <- dbConnect (odbc::odbc(), .connection_string = paste0 (driver_string, dbq_string))
   ## appropriate SQL call to link station and transect, as below...
 
-}else if (1){ # manually exported tables, read-in those data and link to existing tables
-  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
-  stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
-  transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+}
+
+# manually exported tables, read-in those data and link to existing tables
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
+stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
 #  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
 
-  ## clean up dates/times
-  stationEv$Date <- ifelse (stationEv$Date == "", "1900-1-1", stationEv$Date)
-  stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
-  stationEv$timeStamp <- paste (format (as.POSIXct (stationEv$Date), "%Y-%m-%d")
-                               , format (as.POSIXct (stationEv$Time), "%H:%M"))
-  stationEv$timeStamp <- ifelse (stationEv$timeStamp < as.POSIXct("1901-01-01 00:00")
-                                 , NA, stationEv$timeStamp)
+## temporary fix of transects -- fix this in Access DB!!
+transectEv$Transect <- ifelse (transectEv$Transect == 1, "AlongBay"
+                               , ifelse (transectEv$Transect == "KB", "AlongBay"
+                                         , transectEv$Transect))
+transectEv$Transect <- ifelse (transectEv$Transect == "0", "SubBay"
+                               , transectEv$Transect) ## confirm?!?
 
-  ## make relational DB links
-  tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
 
-  ## 20 NAs -- why??
-  if (any (is.na (tM))){
-    print (stationEv [which (is.na (tM)), c (21, 8, 9, 10)])
-    stop ("no missing transectEvents allowed")
-  }
+## clean up dates/times
+stationEv$Date <- ifelse (stationEv$Date == "", "1900-1-1", stationEv$Date)
+stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
+stationEv$timeStamp <- as.POSIXct (paste (format (as.POSIXct (stationEv$Date), "%Y-%m-%d")
+                              , format (as.POSIXct (stationEv$Time), "%H:%M")) )#, tz = "US/Alaska")
+# is.na (stationEv$timeStamp)[which (stationEv$timeStamp < as.POSIXct("1902-01-01 00:00"))] <- TRUE ## no longer needed?!?
 
-  ## this may be the only needed field from TransectEvent
-  stationEv$Transect <- factor (transectEv$Transect [tM])
-  stationEv$Match_Name <- paste0 (transectEv$Transect [tM], "_", stationEv$Station)
-  rm (transectEv, tM)
+## make relational DB links
+tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
 
-  stationEv$LonNotes <- with (stationEv, LongitudeDeg - abs (LongitudeMins)/60)
-  stationEv$LatNotes <- with (stationEv, LatitudeDeg + LatitudeMins/60)
+## 20 NAs -- why??
+if (any (is.na (tM))){
+  print (stationEv [which (is.na (tM)), c (21, 8, 9, 10)])
+  stop ("no missing transectEvents allowed")
+}
 
-  badLon <- subset (stationEv, (-160 > LonNotes)|(LonNotes > -130))
-  if (nrow (badLon) > 1){
-    stop (print (badLon, c(21, 5, 6)))
-#    stationEv <- subset (stationEv, !(StationEvent %in% badLon$StationEvent))
-  }
-  rm (badLon)
- # summary (stationEv [,c(1:4,22:23)])
+## this may be the only needed field from TransectEvent
+stationEv$Transect <- factor (transectEv$Transect [tM])
+stationEv$Match_Name <- paste0 (transectEv$Transect [tM], "_", stationEv$Station)
+rm (transectEv, tM)
 
-  stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
-  sMatch <- match (stationEv$Match_Name, stnMaster$Match_Name)
-  stationEv$LonMast <- stnMaster$Lon_decDegree [sMatch]
-  stationEv$LatMast <- stnMaster$Lat_decDegree [sMatch]
+stationEv$LonNotes <- with (stationEv, LongitudeDeg - abs (LongitudeMins)/60)
+stationEv$LatNotes <- with (stationEv, LatitudeDeg + LatitudeMins/60)
+
+badLon <- subset (stationEv, (-160 > LonNotes)|(LonNotes > -130))
+if (nrow (badLon) > 1){
+  stop (print (badLon, c(21, 5, 6)))
+  #    stationEv <- subset (stationEv, !(StationEvent %in% badLon$StationEvent))
+}
+rm (badLon)
+# summary (stationEv [,c(1:4,22:23)])
+
+stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
+sMatch <- match (stationEv$Match_Name, stnMaster$Match_Name)
+stationEv$LonMast <- stnMaster$Lon_decDegree [sMatch]
+stationEv$LatMast <- stnMaster$Lat_decDegree [sMatch]
 # stationEv$Transect <- stnMaster$Line [sMatch]
 # stationEv$Station <- stnMaster$Station [sMatch]
-  rm (stnMaster)
+rm (stnMaster)
 
-  Require (geosphere)
-  stationErr <- data.frame (posError = with (stationEv, distHaversine (
-    cbind (LonNotes, LatNotes), cbind (LonMast, LatMast)
-  )))
-  stationErr$lonErr <- with (stationEv, LonNotes - LonMast)
-  stationErr$latErr <- with (stationEv, LatNotes - LatMast)
+Require (geosphere)
+stationErr <- data.frame (posError = with (stationEv, distHaversine (
+  cbind (LonNotes, LatNotes), cbind (LonMast, LatMast)
+)))
+stationErr$lonErr <- with (stationEv, LonNotes - LonMast)
+stationErr$latErr <- with (stationEv, LatNotes - LatMast)
 
- # summary (stationErr$lonErr)
- # stationEv [which.max (stationErr$posError), c(21,5,6, 22:25)]
+# summary (stationErr$lonErr)
+# stationEv [which.max (stationErr$posError), c(21,5,6, 22:25)]
 
-  stationEv <- stationEv [order (stationErr$posError, decreasing = TRUE),]
-  stationErr <- stationErr [order (stationErr$posError, decreasing = TRUE),]
-  stationErr$nm <- stationErr$posError/1852
+stationEv <- stationEv [order (stationErr$posError, decreasing = TRUE),]
+stationErr <- stationErr [order (stationErr$posError, decreasing = TRUE),]
+stationErr$nm <- stationErr$posError/1852
 
-  x <- data.frame (stationEv, stationErr) [which (stationErr$posError > 1852*1.0),]
-  if (nrow (x) > 3){
-    print (x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)])
-  }
-  rm (x)
+x <- data.frame (stationEv, stationErr) [which (stationErr$posError > 1852*1.0),]
+if (nrow (x) > 3){
+  print (x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)])
+  write.csv(x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)]
+            , file = paste0(dirL [[3]], "badDBPos.csv"))
+}
+rm (x)
 
-  # pdf ("~/tmp/LCI_noaa/media/badPositions_CTD.pdf")
-  # plot (LonNotes~LonMast, stationEv, asp = 1)
-  # plot (LatNotes~LatMast, stationEv, asp = 1)
-  #
-  # plot (LatNotes~LonNotes, stationEv, asp = 1)
-  # plot (LatMast~LonMast, stationEv, asp = 1)
-  # dev.off()
-  ## eoedits
-  rm (stationErr)
+# pdf ("~/tmp/LCI_noaa/media/badPositions_CTD.pdf")
+# plot (LonNotes~LonMast, stationEv, asp = 1)
+# plot (LatNotes~LatMast, stationEv, asp = 1)
+#
+# plot (LatNotes~LonNotes, stationEv, asp = 1)
+# plot (LatMast~LonMast, stationEv, asp = 1)
+# dev.off()
 
 
-  ## fill-in missing coordinates in Notebook with generic station positions
-  stationEv$LonNotes <- with (stationEv, ifelse (is.na (LonNotes), LonMast, LonNotes))
-  stationEv$LatNotes <- with (stationEv, ifelse (is.na (LatNotes), LatMast, LatNotes))
-  ## remove surplus fields
-  stationEv <- stationEv [,-which (names (stationEv) %in%
-                                     c("LatitudeDeg", "LatitudeMins"
-                                       , "LongitudeDeg", "LongitudeMins"
-                                       , "LatMast", "LonMast"))]
+## TEMPORARY!!! XXXX
+stationEv$LonNotes <- with (stationEv, ifelse (stationErr$nm > 1, LonMast, LonNotes))
+stationEv$LatNotes <- with (stationEv, ifelse (stationErr$nm > 1, LatMast, LatNotes))
+## END TEMPORARY XXX
+rm (stationErr)
 
-  ## just was below with metadata, link cnv names to relevant notebook cast records
+
+## fill-in missing coordinates in Notebook with generic station positions
+stationEv$LonNotes <- with (stationEv, ifelse (is.na (LonNotes), LonMast, LonNotes))
+stationEv$LatNotes <- with (stationEv, ifelse (is.na (LatNotes), LatMast, LatNotes))
+
+
+## remove surplus fields
+stationEv <- stationEv [,-which (names (stationEv) %in%
+                                   c("LatitudeDeg", "LatitudeMins"
+                                     , "LongitudeDeg", "LongitudeMins"
+                                     , "LatMast", "LonMast"))]
+## just was below with metadata, link cnv names to relevant notebook cast records
 ## BUT, as long as positions are not great, use master positions
 
 
-  ## end of edits !!
-
-  ## MATCH file names to database --- WHAT to do about doubles??? (same station sampled 2x+ per day)
-  fNDB <- with (stationEv, paste0 (format (timeStamp, "%Y-%m-%d")
-                                   , ifelse (Transect %in% as.character (3:9), "T_", "")
-                                   , Transect, "_S", Station)
-  )
-
-}else {
+## end of edits !!
+save.image ("~/tmp/LCI_noaa/cache/CNVy.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy.RData")
 
 
 
-## read in metadata and match based on File.Name
-## metadata currently harvested from aggregated files.
-## In future, should be kept from field-notes DB
-mdata <- read.csv ("~/GISdata/LCI/CTD/ctd_metadata_m.csv")  # currently 2012-02-04 to 2016-12-13 (as of 2020-07-02)
 
-dim (mdata)
-dim (CTD1)
-head (CTD1$File.Name)
-head (mdata$File.Name)
+## match Access DB tables with CTD data using timestamps (ignore filenames!!)
+stationEv$CTDfile <- character (nrow (stationEv))
+for (i in 1:nrow (stationEv)){
+  dT <- as.numeric (difftime (stationEv$timeStamp [i], fileDB$time, units = "mins"))
+  tMatch <- which.min (dT^2)
+  if (dT [tMatch] > 5){
+    warning ("Difftime = ",dT [tMatch], "min for ", stationEv$timeStamp [tMatch])
+  }else{
+    stationEv$CTDfile [i] <- fileDB$file [tMatch]
+  }
+}
 
-summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
-summary (as.factor (format (CTD1$timestamp, "%Y")))
+
+## match CTD data to Access DB
+fileDB$reckNo <- numeric(nrow (fileDB))
+for (i in nrow (fileDB)){
+  dT <- as.numeric (difftime (stationEv$timeStamp, fileDB$time [i], units = "mins"))
+  tMatch <- which.min (dT^2)
+  if (dT [tMatch] > 5){
+    warning ("Difftime = ", dT [tMatch], "min for ", fileDB$file [tMatch])
+  }else{
+    fileDB$recNo [i] <- tMatch
+  }
+}
+# which.min (difftime (st))
+# stationEV$
+# fileDB$time
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same station sampled 2x+ per day)
+fNDB <- with (stationEv, paste0 (format (as.POSIXct (timeStamp), "%Y_%m-%d")
+                                 , "_"
+                                 , ifelse (Transect %in% as.character (3:9), "T", "")
+                                 , Transect
+                                 , "_S", formatC (Station, width = 2, flag = "0")
+))
+fNDB2 <- with (stationEv, paste0 (format (as.POSIXct (timeStamp), "%m_%d_%Y")
+                                  , "_"
+                                  , ifelse (Transect %in% as.character (3:9), "T", "")
+                                  , Transect
+                                  , "_S", formatC (Station, width = 2, flag = "0")
+))
+
+
+## grep-link with actual cnv file-names
+fNEnd <- unlist (strsplit (fN, "/"))
+fNEnd <- fNEnd [which ((1:length (fNEnd)) %% 3 == 0)]
+## problem: dates in filenames are inconsistent: 2018_10-17_T9_S08_cast072.hex vs 04_24_2019_AlongBay_
+
+## test with small example first
+stDB <- "T9_S08"
+
+
+
+
+for (i in 1:length (fNDB)){ # move to apply
+  tS <- as.POSIXct(stationEv$timeStamp)[i]
+  stDB <- with (stationEv [i,], paste0 (ifelse (Transect %in% as.character (3:9), "T", "")
+                                        , Transect
+                                        , "_S", formatC (Station, width = 2, flag = "0")))
+  xM <- grep (paste0 (format (tS, "%Y"), "[-_]", format (tS, "%m"), "[-_]"
+                      , format (tS, "%d"), stDB)
+              , fNEnd, ignore.case = TRUE) #, fixed = TRUE)
+  if (length (xM) == 0){
+    xM <- grep (fNDB2 [i], fNEnd, ignore.case = TRUE)
+  }
+  if (length (xM) > 1){stop (fNDB [i], "is matched to", fNEnd [xM])}
+
+
+
+}
+}
+
+
+
+if (0){
+  ## read in metadata and match based on File.Name
+  ## metadata currently harvested from aggregated files.
+  ## In future, should be kept from field-notes DB
+  mdata <- read.csv ("~/GISdata/LCI/CTD/ctd_metadata_m.csv")  # currently 2012-02-04 to 2016-12-13 (as of 2020-07-02)
+
+  dim (mdata)
+  dim (CTD1)
+  head (CTD1$File.Name)
+  head (mdata$File.Name)
+
+  summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
+  summary (as.factor (format (CTD1$timestamp, "%Y")))
 
 }
 
