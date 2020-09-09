@@ -2,6 +2,11 @@
 ## provide line-graph alternatives
 
 
+## missing feature:
+# duplicate station names, e.g. AlongBay_S6 : T9_S6
+
+
+
 ## load data
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
