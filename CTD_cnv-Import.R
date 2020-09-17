@@ -120,31 +120,111 @@ Require (oce)
 ## read in processed files of individual CTD casts
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
-# fN <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv", full.names = FALSE)
-# fN <- c (fN, list.files ("~/GISdata/LCI/CTD-new/CNV/4141/2_CNV/"
-#                          , full.names = FALSE, recursive = TRUE))
-# fN <- c (fN, list.files ("~/GISdata/LCI/CTD-new/CNV/5028/2_CNV/"
-#                          , full.names = FALSE, recursive = TRUE))
-fN <- list.files ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", ".cnv"
-                  , full.names = FALSE, ignore.case = TRUE)
-fNf <- list.files ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", ".cnv"
-                  , full.names = TRUE, ignore.case = TRUE)
+# fNf <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv"
+#    , full.names = TRUE) # 2017 original version
+fNf <- c (list.files ("~/GISdata/LCI/CTD-new/4141/2_CNV/"
+                         , full.names = TRUE, recursive = TRUE))
+fNf <- c (fNf, list.files ("~/GISdata/LCI/CTD-new/5028/2_CNV/"
+                         , full.names = TRUE, recursive = TRUE))
+## means data still needs to be aligned!
+if (0){
+fNf <- c (list.files ("~/GISdata/LCI/CTD-new/4141/5_LOOP/"
+                         , full.names = TRUE, recursive = TRUE))
+fNf <- c (fNf, list.files ("~/GISdata/LCI/CTD-new/5028/5_LOOP/"
+                         , full.names = TRUE, recursive = TRUE))
+}
+# fNf <- list.files ("~/GISdata/LCI/CTD-new/AllCNV/", ".cnv"
+#                   , full.names = TRUE, ignore.case = TRUE)
+fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
+
+
+#####################
+## file accounting ##
+#####################
+
+## matching hex file for each CNV?
+hFN <- list.files ("~/GISdata/LCI/CTD-new/", pattern = ".hex"
+                   , ignore.case = TRUE, full.names = FALSE
+                   , recursive = TRUE)
+hDB <- data.frame (path = hFN, file = gsub ("^.*/", "", hFN)); rm (hFN)
+# hFN <- gsub ("^.*/", "", hFN) # keep only file, strip out directories
+# any (duplicated (hFN)) # no duplicates
+
+## check that all CNV have matching HEX
+hDB$hStub <- gsub (".hex$", "", tolower (hDB$file))
+hDB <- hDB [order (hDB$path),]
+
+## check for duplicate HEX files
+# hDB$hDupl <- duplicated (hDB$hStub)
+if (any (duplicated(hDB$hStub))){
+  print (hDB [order (hDB$hStub, hDB$hDupl),])
+  stop ("duplicated hex file names")
+}else{
+  Require ("openssl") # alternative: digest
+  hDB$sha256 <- sha256 (paste0 ("~/GISdata/LCI/CTD-new/", hDB$path))
+  if (any (duplicated (hDB$sha256))){
+    print (subset (hDB, duplicated (hDB$sha256)))
+    stop ("duplicated sha256 checksums")
+  }else{cat ("No duplicate HEX files found\n")}
+}
+
+
+## do all HEX files have matching CNV files
+cFN <- gsub (".cnv$", "", tolower (fN))
+# summary (cFN %in% hFN)
+hDB$CNV <- character (nrow (hDB)) #cFN [grep ()]
+for (i in 1:nrow (hDB)){
+  cMatch <- fN [grep (hDB$hStub [i], cFN, value = FALSE)]
+  if (length (cMatch) == 1){
+    hDB$CNV [i] <- cMatch
+  # }else if (length (cMatch > 1)){print (i)}else{
+  #   hDB$CNV [i] <- "NA"
+  }
+}; rm (cMatch)
+summary (hDB$CNV == "")
+if (any (hDB$CNV == "")){
+  ## identify HEX that need processing
+  hDBx <- subset (hDB, CNV == "")
+  write.csv (hDBx, file = "~/tmp/LCI_noaa/cache/hexFiles.csv", row.names = FALSE)
+  stop ('see hexFiles.csv for ', nrow (hDBx),' hex that need processing or renaming')
+}
+
+
+## reverse: which CNV filenames have no matching HEX
+cDB <- data.frame (fN, cStub = cFN, hex = character (length (fN)))
+for (i in 1:length (fN)){
+   hMatch <- hDB$path [grep (cDB$cStub [i], hDB$hStub)]
+   if (length (hMatch) == 1){
+     cDB$hex [i] <- hMatch
+   }
+}; rm (hMatch)
+if (any (cDB$hex == "")){
+  cDB <- cDB [order (cDB$hex),]
+  write.csv (cDB, file = "~/tmp/LCI_noaa/cache/cnvFiles.csv", row.names = FALSE)
+  stop ("see cnvFiles.csv for ",nrow (cDB), " cnv files that missmatch")
+}
+
+#####################
+#####################
+
 
 ## TESTING ONLY xxxx ###
 #fN <- fN [grep ("2019", fN, value = FALSE)]
 #fNf <- fNf [grep ("2019", fNf, value = FALSE)]
 ## END TESTING ONLY ####
 
+## exclude negative pressure: 114: "C:/Users/Martin.Renner/Documents/GISdata/LCI/CTD-new/4141/2_CNV/2012_10-29_T4_S07_cast065.cnv"
+fNf <- fNf [-114] # dirty trick XXX
+
+
 
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
-
 fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
   Require (oce)
-  ctd <- suppressMessages (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
+  ctd <- suppressWarnings (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
   cT <- ctd@metadata$startTime   # fix time zone later, because import is slow
-
   ## , latitude = meta (ctdF@metadata$latitude)
   ## , longitude = meta (ctdF@metadata$longitude)
   #, depth_bottom = meta (ctdF@metadata$waterDepth)
@@ -157,7 +237,7 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
                         ))
 })
 fileDB <- as.data.frame (do.call (rbind, fileDB))
-
+## ok to ignore warnings regarding NAs introduced by coersion
 
 readCNV <- function (i){
   Require (oce)
@@ -208,7 +288,7 @@ readCNV <- function (i){
   }
   if (length (grep ("upoly", names (ctdF@data))) == 0){
     ctdF@data$upoly <- meta (NA)
-    warning("Turbidity is missing in ", fN [i])
+    cat ("Turbidity is missing in ", fNf [i], "\n")
   }
 
 
@@ -238,6 +318,7 @@ readCNV <- function (i){
 
 
 ## bad? cast: 2012_10-29_T4_S07_cast065 -- ctdDecimate fails. All depth = negative
+# i=113 2012_10-29_T4_S06_cast067.cnv
 # for (i in 1:length (fNf)){
 #   ctdX <- readCNV (i)
 #   if (i == 1){
@@ -712,7 +793,7 @@ stDB <- "T9_S08"
 
 
 
-
+## reverse -- identify surveys in notebook with no matching CTD-CNV file
 for (i in 1:length (fNDB)){ # move to apply
   tS <- as.POSIXct(stationEv$timeStamp)[i]
   stDB <- with (stationEv [i,], paste0 (ifelse (Transect %in% as.character (3:9), "T", "")
