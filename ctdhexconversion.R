@@ -5,26 +5,44 @@
 ## set up CNV files to be processed by anaCTD.R
 
 ## use script to set-up psa files?
-## need two sets of psa files, one for each instrument (turbidity vs flourescence)
+## need two sets of psa files, one for each instrument (turbidity vs fluorescence)
+## third set of psa files: excluding turbidity and fluorescence, make it all uniform
+## selected variables following "CTD processing protocol
+
+## move psa files somewhere more visible? (and onto workspace)
+
 
 
 rm (list = ls())
 setwd ("~/")
-## manualy delete pre-existing outF?
+## manually delete pre-existing outF?
 unlink ("~/GISdata/LCI/CTD-startover/allCTD/CNV", recursive = TRUE)  ## careful!
+sTime <- Sys.time()
+print (sTime)
 
 
-################################
-## define path to config files
-conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process", pattern = "con$"
-                   , recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+#################################
+## user settings               ##
+## define path to config files ##
+#################################
+
+#################################
+# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test"
+conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process"
+                                      , pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 ## path to psa files
 # psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SBEDataProcessing-Win32/", ".psa$", full.names = TRUE) # Jim's files
-psaL <- list.files ("C:/Users/Martin.Renner/AppData/Local/", ".psa$", full.names = TRUE, recursive = TRUE) # start from scratch
+psa <- list.files (paste0 (dirname ("~/"), "/AppData/Local/Sea-Bird/SBEDataProcessing-Win32"), ".psa$", full.names = TRUE, recursive = TRUE) # start from scratch
+psaL <- list.files (paste0 (dirname ("~/"), "/AppData/Local/Sea-Bird"), ".psa$", full.names = TRUE, recursive = TRUE) # start from scratch
 
 ## where to put results
-outF <- "~/GISdata/LCI/CTD-startover/allCTD/CNVtest"
-################################
+outF <- "~/GISdata/LCI/CTD-startover/allCTD/CNV/"
+
+## make uniform or keep turbidity/fluorescence in?
+fluo <- TRUE
+fluo <- FALSE
+#################################
+
 
 
 ## create directories and temp directories
@@ -36,6 +54,17 @@ unlink (tL, recursive = TRUE, force = TRUE)
 tLD <- paste (dirname (tL), basename(tL), sep = "/")
 names (tL) <- paste0 ("t", 1:4)
 inD <- dirname (conF)
+outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncracy
+
+
+## check filter, etc. psa files
+## missing from input files: [filter]
+## - depth [salt water, m]
+## - Fluorescence, WET Labs
+## - Oxygen Saturation, Garcia & Gordon [ml/l]
+## - Nitrogen Saturation
+
+
 
 if (0){
 # conF <- gsub ("//", "\\", conF, fixed = TRUE)
@@ -59,37 +88,40 @@ j <- 99
 }
 
 
+
 ## create and call batch files
+## great if this could run in parallel -- probably not on Windows?
 for (i in 1:length (conF)){
   #sapply (1:length (tL), FUN = function (j){dir.create (tL [j], recursive = TRUE)})
   for (j in 1:length (tL)){dir.create (tL [j], recursive = TRUE)}
-
-  if (length (grep ("4141", conF [i])) > 0){ ## use separate
-    psa <- psaL [grep ("4141", psaL)]
-  }else{
-    psa <- psaL [grep ("5028", psaL)]
+  if (fluo){ # false: exclude turbidity/fluorescence
+    if (length (grep ("4141", conF [i])) > 0){ ## use separate psa to preserve fluorescence/turbidity
+      psa <- psaL [grep ("4141", psaL)]
+    }else{
+      psa <- psaL [grep ("5028", psaL)]
+    }
   }
-
-  l1 <- paste0 ("DatCnv /i", inD [i], "/*.hex /c", conF [i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
-  l2 <- paste0 ("Filter /i", tLD[1], "/*.cnv /c", conF [i], "/o", tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
-  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv /c", conF [i], "/o", tLD[3], " /p", psa [grep ("Align", psa)], " #m")
+  l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
+  l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
+# l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
+  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
 #  l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
 #  paste0 ("LoopEdit /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [5], " #m")
 #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
 #  paste0 ("BinAvg /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [7], " #m")
   bT <- paste (l1, l2, l3, sep = "\n")
   write (bT, file = "~/CTDbatch.txt")
-
-  ## temp for testing
-  # write (l1, file = "~/CTDbatch.txt")
-  # write.table(l1, file = file = "~/CTDbatch.txt", append = FALSE, quote = FALSE, row.names = FALSE)
-  system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"))
-   ## cleanup
+  # efforts to suppress console output failed: invisible(), capture.output()...
+  system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE)
+  ## cleanup
   unlink (tL, recursive = TRUE, force = TRUE)
-#  unlink ("~/CTDbatch.txt")
+  unlink ("~/CTDbatch.txt")
 }
 
-rm (bT, i, j, tlD)
-rm (conF, psa, outF, inD, tL, pF, l1, l2, l3)
+rm (bT, i, j, tLD)
+rm (conF, psa, outF, inD, tL, l1, l2, l3)
+
+print (Sys.time())
+print (difftime(Sys.time(), sTime))
 
 ## EOF
