@@ -12,6 +12,12 @@
 ## move psa files somewhere more visible? (and onto workspace)
 
 
+## open issues
+# con (rather than .xmlcon) file doesn't include turbidity -- what do to about it?
+# any way to translate con to xmlcon file? (for convenience)
+# automate .psa file setting. Currently have to go through each module, load,
+# configure, save, and repeat for other instrument again.
+
 
 rm (list = ls())
 setwd ("~/")
@@ -27,13 +33,13 @@ print (sTime)
 #################################
 
 #################################
-# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test"
-conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process"
-                                      , pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+
 ## path to psa files
-# psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SBEDataProcessing-Win32/", ".psa$", full.names = TRUE) # Jim's files
-psa <- list.files (paste0 (dirname ("~/"), "/AppData/Local/Sea-Bird/SBEDataProcessing-Win32"), ".psa$", full.names = TRUE, recursive = TRUE) # start from scratch
-psaL <- list.files (paste0 (dirname ("~/"), "/AppData/Local/Sea-Bird"), ".psa$", full.names = TRUE, recursive = TRUE) # start from scratch
+# try with copy in workspace directory
+psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
+psaL <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
 
 ## where to put results
 outF <- "~/GISdata/LCI/CTD-startover/allCTD/CNV/"
