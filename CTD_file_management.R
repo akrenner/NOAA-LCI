@@ -3,18 +3,23 @@
 ## automate movement and reoganization of CTD hex and CNV files
 ## still need Jim to reprocess files for alignment
 
-## BUGS:
+
+## BUGS and open issues
 ## on Windows platform, may have to manually delete
-## ~/GISdata/LCI/CTD-startover/allCTD/ before running this script
-
+#  ~/GISdata/LCI/CTD-startover/allCTD/ before running this script
+#
 ## streamline: don't need to copy files twice:
-## create fDB, edit file names in there (newname), copy to final directory
+# create fDB, edit file names in there (newname), copy to final directory with newname
+## QAQC
+# move comparison with Notebook-DB from CTD_cnv-Import to here?
+# ignore FixMeta completely?
+## con-file match: always use con-file in the past or whatever is closest?
 
-## make sure ALL file names, and metadata are clean -- review/audit code
 
 
 rm (list = ls())
-
+unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!!
+set.seed (8)
 
 
 ## define new destinations
@@ -435,7 +440,7 @@ summary (fDB$tErr)
 if (any (fDB$tErr > 1)){
   print (subset (fDB [,2:ncol (fDB)], abs (tErr) > 1))
 #  stop ("fix date discrepancies between metadata and file names")
-  warning ("fix date discrepancies between metadata and file names")
+  warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
 #      fixMeta (fDB$shortFN [i], fDB$fnDate)
@@ -454,6 +459,13 @@ save.image ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
 
 
+
+## manipulate shortF, short filename to implement corrections
+## (ultimately, skip all the in-file corrections above)
+# add instrument-serial to filename for troubleshooting later (temp?)
+fDB$shortFNx <- sapply (1:nrow (fDB), function (i){
+  gsub (".hex$", paste0 ("_", fDB$instN [i], ".hex"), fDB$shortFN [i])
+  })
 
 
 
@@ -499,9 +511,9 @@ for (i in 1:nrow (cFDB)){
 }
 }
 
+
 ## copy hex files
-### end of edits
-#fDB$conFile <- cFDB$
+## assign appropriate con file to each HEX file
 fDB$procDir <- character (nrow (fDB))
 fDB$calDist <- numeric (nrow (fDB)) # days since calibration
 for (i in 1:nrow (fDB)){
@@ -513,14 +525,29 @@ for (i in 1:nrow (fDB)){
 }
 ## exclude those files for now pre-dateing the first calibration file
 # fDBx <- subset (fDB, fDB$calDist < 365*10) # should never be greater than 10 years
+fDBx <- fDB
 
 ## copy files to new/final directory
-cpCk <- with (fDBx, file.copy (from = file, to = paste0 (procDir, shortFN)))  ## could manipulate shortFN!
+cpCk <- with (fDBx, file.copy (from = file, to = paste0 (procDir, shortFNx)))  ## could manipulate shortFN!
 if (any (!cpCk)){
   print (summary (cpCk))
   stop ("copy of hex files failed")
 }
 rm (cpCk)
 unlink (nD, recursive = TRUE, force = TRUE)
+
+
+## make small dataset for testing
+if (0){
+  dir.create ("~/GISdata/LCI/CTD-startover/allCTD/hex2test")
+  fDBy <- fDBx [sample (1:nrow (fDBx), size = 20, replace = FALSE),]
+  fDBy$procDirT <- as.factor (gsub ("hex2process", "hex2test", fDBy$procDir, fixed = TRUE))
+  for (i in 1:length (levels (fDBy$procDirT))){
+    dir.create (levels (fDBy$procDirT)[i], recursive = TRUE)
+    file.copy (paste0 (fDBy$procDir, "/.*con$"), fDBy$procDirT) # need file.list first
+  }
+  with (fDBy , file.copy (from = file, to = paste0 (procDir, shortFNx)))
+  rm (fDBy)
+}
 
 ## EOF

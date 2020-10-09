@@ -13,10 +13,15 @@
 
 
 ## open issues
-# con (rather than .xmlcon) file doesn't include turbidity -- what do to about it?
+# - con (rather than .xmlcon) file doesn't include turbidity -- what do to about it?
 # any way to translate con to xmlcon file? (for convenience)
-# automate .psa file setting. Currently have to go through each module, load,
+# - automate .psa file setting. Currently have to go through each module, load,
 # configure, save, and repeat for other instrument again.
+# - it's trivially parallel problem -- but can batch process run in parallel?
+#    -> on Windows, not worth the trouble! full run about 35 min
+# - process only newly added files: keep log of what's been processed already!
+
+
 
 
 rm (list = ls())
@@ -33,12 +38,11 @@ print (sTime)
 #################################
 
 #################################
-# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 
 ## path to psa files
-# try with copy in workspace directory
-psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
+# psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
 psaL <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
 
 ## where to put results
@@ -46,7 +50,7 @@ outF <- "~/GISdata/LCI/CTD-startover/allCTD/CNV/"
 
 ## make uniform or keep turbidity/fluorescence in?
 fluo <- TRUE
-fluo <- FALSE
+# fluo <- FALSE
 #################################
 
 
@@ -60,24 +64,16 @@ unlink (tL, recursive = TRUE, force = TRUE)
 tLD <- paste (dirname (tL), basename(tL), sep = "/")
 names (tL) <- paste0 ("t", 1:4)
 inD <- dirname (conF)
-outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncracy
-
-
-## check filter, etc. psa files
-## missing from input files: [filter]
-## - depth [salt water, m]
-## - Fluorescence, WET Labs
-## - Oxygen Saturation, Garcia & Gordon [ml/l]
-## - Nitrogen Saturation
+outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy
 
 
 
+# ## trouble shooting -- one file at a time
 if (0){
 # conF <- gsub ("//", "\\", conF, fixed = TRUE)
 # file.path(conF, fsep = "\\")
 i <- 3
 j <- 99
-# ## trouble shooting -- one file at a time
 # for (i in 1:length (conF)){
 #   for (k in 1:length (tL)){dir.create (tL [k], recursive = TRUE)}
 #   hexFiles <- list.files(dirname (conF [i]), ".hex$")
@@ -101,24 +97,28 @@ for (i in 1:length (conF)){
   #sapply (1:length (tL), FUN = function (j){dir.create (tL [j], recursive = TRUE)})
   for (j in 1:length (tL)){dir.create (tL [j], recursive = TRUE)}
   if (fluo){ # false: exclude turbidity/fluorescence
-    if (length (grep ("4141", conF [i])) > 0){ ## use separate psa to preserve fluorescence/turbidity
+    if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes fluorescence
+      psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
+    }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
       psa <- psaL [grep ("4141", psaL)]
     }else{
       psa <- psaL [grep ("5028", psaL)]
     }
+  }else{
+    psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
   }
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
   l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
 # l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
   l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
-#  l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
+# l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
 #  paste0 ("LoopEdit /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [5], " #m")
 #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
 #  paste0 ("BinAvg /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [7], " #m")
   bT <- paste (l1, l2, l3, sep = "\n")
   write (bT, file = "~/CTDbatch.txt")
   # efforts to suppress console output failed: invisible(), capture.output()...
-  system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE)
+  x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
   ## cleanup
   unlink (tL, recursive = TRUE, force = TRUE)
   unlink ("~/CTDbatch.txt")
@@ -126,6 +126,13 @@ for (i in 1:length (conF)){
 
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)
+
+
+
+## write out log what has already been processed (to speed up new data)
+# no record whether conversion was successful -- assume it was
+# -- consider for workspace -- not worth the trouble on local machine
+
 
 print (Sys.time())
 print (difftime(Sys.time(), sTime))
