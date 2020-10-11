@@ -25,7 +25,8 @@
 
 
 rm (list = ls())
-setwd ("~/")
+cWD <- getwd()
+setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
 ## manually delete pre-existing outF?
 unlink ("~/GISdata/LCI/CTD-startover/allCTD/CNV", recursive = TRUE)  ## careful!
 sTime <- Sys.time()
@@ -137,4 +138,5 @@ rm (conF, psa, outF, inD, tL, l1, l2, l3)
 print (Sys.time())
 print (difftime(Sys.time(), sTime))
 
+setwd (cWD)
 ## EOF

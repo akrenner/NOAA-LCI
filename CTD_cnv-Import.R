@@ -120,24 +120,10 @@ Require (oce)
 ## read in processed files of individual CTD casts
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
-# fNf <- list.files ("~/GISdata/LCI/CTD/6\ DERIVE/", ".cnv"
-#    , full.names = TRUE) # 2017 original version
-fNf <- c (list.files ("~/GISdata/LCI/CTD-new/4141/2_CNV/"
-                      , full.names = TRUE, recursive = TRUE))
-fNf <- c (fNf, list.files ("~/GISdata/LCI/CTD-new/5028/2_CNV/"
-                           , full.names = TRUE, recursive = TRUE))
 ## start-over
-fnF <- list.files("~/GISdata/LCI/CTD-startover/")
-
-
-## means data still needs to be aligned!
-if (0){
-  fNf <- c (list.files ("~/GISdata/LCI/CTD-new/4141/5_LOOP/"
-                        , full.names = TRUE, recursive = TRUE))
-  fNf <- c (fNf, list.files ("~/GISdata/LCI/CTD-new/5028/5_LOOP/"
-                             , full.names = TRUE, recursive = TRUE))
-}
-fNf <- list.files ("~/GISdata/LCI/CTD-new/CNV/AllCNV/", ".cnv"
+fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV/", ".cnv"
+# fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV--homogene/", ".cnv"
+#fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV--turbid/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
 fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
@@ -147,7 +133,9 @@ print (length (fN))
 ## file accounting ##
 #####################
 
-## matching hex file for each CNV?
+## matching hex file for each CNV? -- no longer needed or relevant
+## now that all is reprocessed
+if (0){
 hFN <- list.files ("~/GISdata/LCI/CTD-new/", pattern = ".hex"
                    , ignore.case = TRUE, full.names = FALSE
                    , recursive = TRUE)
@@ -215,7 +203,7 @@ if (any (cDB$hex == "")){
   write.csv (cDB, file = "~/tmp/LCI_noaa/cache/cnvFiles.csv", row.names = FALSE)
   stop ("see cnvFiles.csv for ",nrow (cDB), " cnv files that missmatch")
 rm (cFN, cDB)}
-
+}
 
 #####################
 #####################
@@ -227,7 +215,7 @@ rm (cFN, cDB)}
 ## END TESTING ONLY ####
 
 ## exclude negative pressure: 114: "C:/Users/Martin.Renner/Documents/GISdata/LCI/CTD-new/4141/2_CNV/2012_10-29_T4_S07_cast065.cnv"
-fNf <- fNf [-114] # dirty trick XXX
+# fNf <- fNf [-114] # dirty trick XXX
 
 
 
@@ -244,34 +232,18 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
   ## , Match_Name = meta (ctdF@metadata$station)
   #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
 
-  return (data.frame (time = ctd@metadata$startTime, file = fN [i]
+  return (data.frame (time = ctd@metadata$startTime, file = fN [i], path = fNf [i]
                       , instSerNo = ctd@metadata$serialNumberTemperature # serial number of CTD instrument
   ))
 })
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 ## ok to ignore warnings regarding NAs introduced by coersion
 
+save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")  ## this to be read by dataSetup.R
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 
-## check consistency of CNV field names. Always 8? turbidity present? fluorescence??
-turbidFix <- function (i){
-  Require (oce)
-  ctdF <- read.ctd (fNf [i]) # provide "missingvalue/NA?
-  ## fix-up missing fields
-  data.frame (fn = fNf [i], upol = "upoly" %in% names (ctdF@data)
-              , turbidity = "turbidity" %in% names (ctdF@data)
-              , inst = ctdF@metadata$serialNumberTemperature
-              , instMatch = grep (trimws (ctdF@metadata$serialNumberTemperature)
-                                  , fNf [i], value = FALSE)
-              , Nfield = length (names (ctdF@data))
-              , fNames = paste (names (ctdF@data), collapse = ", ")
-  )
-}
-# turF <- t (sapply (1:length (fNf), turbidFix)) # slow; mclapply?
-turF <- mclapply (1:length (fNf), turbidFix, mc.cores = nCPUs)
-turF <- as.data.frame (do.call (rbind, turF))
-# if (any (turF$)).... XXX
-write.csv (turF, file = "~/tmp/LCI_noaa/cache/turbidityNA.csv", row.names = FALSE)
-rm (turF, turbidFix)
+
+
 
 readCNV <- function (i){
   Require (oce)
@@ -287,7 +259,7 @@ readCNV <- function (i){
   # cut bad flags!
   ## aggregate depth bins
   ## derived variables ??
-  ## add metadata from elsewhere (later -- latlon, Match_Name, tide,..)
+  ## add metadata from notebook (later -- latlon, Match_Name, tide,..)
   ## most should be here (paste into aggregated data or separate table)
   ##   .... find others!
 
@@ -296,14 +268,14 @@ readCNV <- function (i){
 
   ## attempt to use SEABIRD method "sbe". If that fails,
   ## revert to "downcast"
-  cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE)
-#                , outfile = "~/tmp/LCI_noaa/cache/ctdTrim_errors.txt") # i=24 fails
+  cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # some fail
   if (class (cTrim) == "try-error"){
     ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
     # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
     # could/should specify min soak times, soak depth -- min soak time = 40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }
+  ## derived variables?
 
   ## aggregate
   # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
@@ -312,44 +284,36 @@ readCNV <- function (i){
   ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later? -- really needed?
 
   ## fix-up missing fields
-  meta <- function (x){rep (x, length (ctdF@data$sigmaTheta))}
-  if (0){  # appears to be no longer an issue
-    if (length (grep ("upoly", names (ctdF@data))) == 0){
-      ctdF@data$upoly <- meta (NA)
-      if (ctdF@metadata$serialNumberTemperature != 5028){
-        cat ("Turbidity is missing in ", fNf [i], "\n")
-      }
-    }
-
-    if (!"fluorescence" %in% names (ctdF@data)){
-      ctdF@data$fluorescence <- meta (NA)
-      # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
-    }
-    if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
-      names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
-    }
+  meta <- function (x){rep (x, length (ctdF@data$temperature))}
+  # if (length (grep ("upoly", names (ctdF@data))) == 0){
+  if (!"upoly" %in% names (ctdF@data)){
+        ctdF@data$upoly <- meta (NA)
+  }
+  if (!"fluorescence" %in% names (ctdF@data)){
+    ctdF@data$fluorescence <- meta (NA)
+    # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
+  }
+  if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
+    names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
   }
 
   # turbidity and fluorescence missing throughout??
-  cDF <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
-                     ## , latitude = meta (ctdF@metadata$latitude)
-                     ## , longitude = meta (ctdF@metadata$longitude)
+  cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
                      , timestamp = meta (ctdF@metadata$startTime)
                      , depth_bottom = meta (ctdF@metadata$waterDepth)
-                     #, transect = meta (ctdF@metadata$station)
-                     #, Match_Name = meta (ctdF@metadata$station)
                      #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                     , density = ctdF@data$sigmaTheta
+                     , density = ctdF@data$sigmaTheta # use sigmaTheta or sigmaT?
                      , depth = ctdF@data$depth
                      , O2 = ctdF@data$oxygen
                      , par = ctdF@data$par
                      , salinity = ctdF@data$salinity
                      , temperature = ctdF@data$temperature
                      , pressure = ctdF@data$pressure
+                     # nitrogen
                      #, fluorescence = ctdF@data$fluorescence ## often missing
                      #, turbidity = ctdF@data$upoly
   )
-  cDF <- subset (cDF, density > 0)
+  cDF <- subset (cDFo, density > 0)
   return (cDF)
 }
 
@@ -357,11 +321,11 @@ readCNV <- function (i){
 ## bad? cast: 2012_10-29_T4_S07_cast065 -- ctdDecimate fails. All depth = negative
 # i=113 2012_10-29_T4_S06_cast067.cnv
 for (i in 1:length (fNf)){
+  print (paste (i, fileDB [i,c(2,4)]))
   ctdX <- readCNV (i)
   if (i == 1){
     CTD1 <- ctdX
   }else{
-    print (fileDB [i,])
     CTD1 <- rbind (CTD1, ctdX)
   }
 }
@@ -376,10 +340,8 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 
 
-## start-over this part -- read metadata/field notes from KBRR ACCESS database
-
-
-if (0){# ideal: read-in data from ACCESS database via ODBC -- may be not worth the troubles
+# ideal: read-in data from ACCESS database via ODBC -- may be not worth the troubles
+if (0){
   # Require ("odbc")
   # odbc <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess")
   Require ("DBI")
@@ -458,6 +420,8 @@ if (nrow (badLon) > 1){
 rm (badLon)
 # summary (stationEv [,c(1:4,22:23)])
 
+
+
 stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 sMatch <- match (stationEv$Match_Name, stnMaster$Match_Name)
 stationEv$LonMast <- stnMaster$Lon_decDegree [sMatch]
@@ -517,7 +481,6 @@ stationEv <- stationEv [,-which (names (stationEv) %in%
 ## BUT, as long as positions are not great, use master positions
 
 
-## end of edits !!
 save.image ("~/tmp/LCI_noaa/cache/CNVy.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy.RData")
 
@@ -612,6 +575,8 @@ for (i in 1:length (fixN)){
 }
 rm (fixN, fixT)
 
+save.image ("~/tmp/LCI_noaa/cache/CNVy3.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy3.RData")
 
 
 ############################################
@@ -654,6 +619,8 @@ for (i in 1: nrow (fileDB)){ # could/should use sapply
   }
 }
 # warnings() #[1:10]
+save.image ("~/tmp/LCI_noaa/cache/CNVy4.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy4.RData")
 
 
 ## QCQA of timestamp matching
@@ -716,7 +683,7 @@ fileDB$matchN <- sapply (1:nrow (fileDB), FUN = function (i){
   #  sN <- gsub ("^S", "", sN) # for regular station
   sN <- gsub ("^[A-Z]*", "", sN) # covering SKB and similars as well
   sN <- gsub ("[a-z,A-Z]*$", "", sN)  ## this will also kill "ChinaPootB_", etc.
-  stn <- paste0 (stn [4], "-S", as.numeric (sN))
+  stn <- paste0 (stn [4], "-S", as.numeric (sN)) # introduces NAs by coercion
   stn <- paste0 (format (fileDB$localTime [i], "%Y-%m-%d"), "_", stn)
 
   nbName <- paste0 (format (stationEv$timeStamp, "%Y-%m-%d"), "_"
@@ -807,6 +774,8 @@ dF <- fileDB [which (duplicated(fileDB$localTime)),]
 lapply (1:length (dF), FUN = function (i){
   fileDB [which (fileDB$localTime == dF$localTime [i]),c(2,6,9)]
 })
+## there are a few -- delete cnv file!
+unlink (paste0 (dir, "/", fileDB$path [dF]))
 
 
 
@@ -857,6 +826,17 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
 
 
 
+
+## need alternative to mdata here!
+## END OF EDITS
+
+
+save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVyc.RData")
+
+
+# mdata <- .....    # cook-up from notebooks
+
 if (0){
   ## read in metadata and match based on File.Name
   ## metadata currently harvested from aggregated files.
@@ -870,8 +850,6 @@ if (0){
 
   summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
   summary (as.factor (format (CTD1$timestamp, "%Y")))
-
-}
 
 
 needCNV <- mdata$File.Name [!mdata$File.Name %in% CTD1$File.Name]
@@ -939,6 +917,8 @@ summary (testFN)
 physOc <- subset (physOc, testFN, select = -File.Name.1)
 rm (testFN, CTD1, mBad, mdata)
 # print (summary (physOc))
+}
+
 
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")

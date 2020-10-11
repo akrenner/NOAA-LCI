@@ -5,20 +5,20 @@
 
 
 ## BUGS and open issues
-## on Windows platform, may have to manually delete
-#  ~/GISdata/LCI/CTD-startover/allCTD/ before running this script
 #
 ## streamline: don't need to copy files twice:
 # create fDB, edit file names in there (newname), copy to final directory with newname
 ## QAQC
 # move comparison with Notebook-DB from CTD_cnv-Import to here?
 # ignore FixMeta completely?
-## con-file match: always use con-file in the past or whatever is closest?
+## finding best con-file: always use con-file in the past or whatever is closest?
 
 
 
 rm (list = ls())
-unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!!
+# unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
+unlink ("~/GISdata/LCI/CTD-startover/allCTD/edited_hex", recursive = TRUE)
+unlink ("~/GISdata/LCI/CTD-startover/allCTD/hex2process", recursive = TRUE)
 set.seed (8)
 
 
@@ -255,6 +255,9 @@ for (i in 2:6){
 ## Required END line not found: -- SEABIRD XXX can fix this?? -- examine! XXX
 delFile ("2012-07-30-CookInlet-Tran6-cast091")
 delFile ("2012_07-30_T6_S21_cast091.hex")
+
+## negative pressure values
+delFile ("2012-10-29-cookinlet-tran4-cast065-s07")
 
 
 for (i in 1:10){## ambiguous file -- fix this!! ask Jim?
