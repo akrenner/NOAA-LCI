@@ -302,7 +302,7 @@ readCNV <- function (i){
                      , timestamp = meta (ctdF@metadata$startTime)
                      , depth_bottom = meta (ctdF@metadata$waterDepth)
                      #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                     , density = ctdF@data$sigmaTheta # use sigmaTheta or sigmaT?
+                     , density = ctdF@data$sigmaT # use sigmaTheta or sigmaT?; what's "theta"?
                      , depth = ctdF@data$depth
                      , O2 = ctdF@data$oxygen
                      , par = ctdF@data$par

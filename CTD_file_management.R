@@ -16,6 +16,10 @@
 
 
 rm (list = ls())
+
+# TESTrun <- TRUE
+# TESTrun <- FALSE
+
 # unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
 unlink ("~/GISdata/LCI/CTD-startover/allCTD/edited_hex", recursive = TRUE)
 unlink ("~/GISdata/LCI/CTD-startover/allCTD/hex2process", recursive = TRUE)
@@ -39,7 +43,7 @@ rm (x)
 
 
 
-rL <- function (f, p = NULL){
+rL <- function (f, p = NULL){ # recursive listing of files
   x <- list.files(paste0 ("~/GISdata/LCI/CTD-startover/Workspace/", f)
              , pattern = p, ignore.case = TRUE, recursive = TRUE
              , full.names = TRUE)
@@ -47,10 +51,6 @@ rL <- function (f, p = NULL){
   return (x)
   }
 
-
-## move about CNV files -- not bother?
-# fL <- rL ("ctd-data2012-16/3_Processed data (CSV files)/")
-# fL <- c (fL, rL ("ctd-data2017-21/3_Processed data (CSV files)/"))
 
 
 
@@ -61,6 +61,7 @@ fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 20
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 print (length (fL))
 rm (rL)
+
 
 
 ## manually remove duplicates -- if any -- none found
@@ -108,8 +109,6 @@ for (i in 1:nrow (fDB)){
 
   hx <- gsub ("^.* ", "", grep ("Conductivity SN", hx, value = TRUE))
   fDB$instN [i] <- hx
-  # fDB$instN [i] <- ifelse (length (grep (instL [1], hx)) > 0, instL [1]
-  #                , ifelse (length (grep (instL [2], hx)) > 0, instL [2], NA))
   fDB$copy [i] <- file.copy (from = fDB$file [i]
                               , to = paste0 (nD, "/", fDB$instN [i], "/")
                               , recursive = FALSE
@@ -136,9 +135,6 @@ print (nrow(fDB))
 iN <- list.files (nD, pattern = "bad", ignore.case = TRUE, recursive = TRUE, full.names = TRUE)
 iN <- c (iN, list.files (nD, pattern = "air", ignore.case = TRUE, recursive = TRUE, full.names = TRUE))
 unlink (iN)
-# zip up result manually to email to Jim
-# zip ("~/GISdata/LCI/CTD-startover/edited_hex.zip",
-#      list.files (nD, pattern = ))
 rm (hx, iN, i, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
 
 ## end of first, main step
@@ -147,7 +143,6 @@ rm (hx, iN, i, fDB)  # fDB is no longer valid, after bad/aircasts removed, build
 ## place hex files with their matching conf/xmlconf file
 save.image ("~/tmp/LCI_noaa/cache/ctdHex1.RData")
 ## rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/ctdHex1.RData")
-
 
 
 
@@ -192,9 +187,10 @@ fixBoth <- function (patternfind, goodpattern, goodDate){
  fixMeta (patternfind, goodDate)
  fixFN (patternfind, goodpattern)
 }
-delFile <- function (patternfind){
-  badFN <- list.files (nD, pattern = patternfind, recursive = TRUE, full.names = TRUE)
-  unlink (badFN)
+delFile <- function (filename){
+  ## patternfind <- gsub ("-", "\\\\-", filename)
+  badFN <- list.files (nD, pattern = filename, recursive = TRUE, full.names = TRUE)
+  unlink (badFN, force = TRUE)
 }
 inspFile <- function (patternfind, nr = 80){
   badFN <- list.files (nD, pattern = patternfind, recursive = TRUE, full.names = TRUE)
@@ -253,11 +249,12 @@ for (i in 2:6){
 ## 2017_12-14_AlongBay_SKB03_cast127, recorded by sys-clock as 2017-4-18 -- investigate!
 
 ## Required END line not found: -- SEABIRD XXX can fix this?? -- examine! XXX
-delFile ("2012-07-30-CookInlet-Tran6-cast091")
+delFile ("2012-07-30-CookInlet-Tran6-cast091")  ## must be RegEx
 delFile ("2012_07-30_T6_S21_cast091.hex")
 
 ## negative pressure values
-delFile ("2012-10-29-cookinlet-tran4-cast065-s07")
+## delFile ("2012-10-29-(C|c)ook(I|i)nlet-(T|t)ran4-cast065-s07")
+delFile ("2012-10-29-CookInlet-Tran4-cast065-S07")  ## SBEDataProcessing changed case of file name
 
 
 for (i in 1:10){## ambiguous file -- fix this!! ask Jim?
@@ -326,6 +323,13 @@ fDB <- data.frame (file = fL); rm (fL)
 fDB$shortFN <- gsub ("^.*/", "", fDB$file)
 fDB$metDate <- as.POSIXct(rep (NA, nrow (fDB)))
 fDB$instN <- character (nrow (fDB))
+
+
+# ## quick test-run for prototyping
+# if (TESTrun == TRUE){
+#   # fDB <- fDB [sample (1:nrow (fDB), size = nrow (fDB)/10, replace = FALSE)]
+#   fDB <- fDB [1:(nrow (fDB)/10),]
+# }
 
 
 ## filename-dates
