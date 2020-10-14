@@ -47,14 +47,14 @@ x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 ############################
 
 PDF <- function (fN, ...){
-#    pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
-  # if (width < 50){
-  #   width <- 100*width
-  #   height <- 100*height
-  # }else{
-  #   width <- 480; height <- 480
-  # }
-     png (paste0 ("~/tmp/LCI_noaa/media/", fN, ".png"), ...) # automatically adjust scale?
+   pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
+if (width < 50){
+  width <- 100*width
+  height <- 100*height
+}else{
+  width <- 480; height <- 480
+}
+#     png (paste0 ("~/tmp/LCI_noaa/media/", fN, ".png"), ...) # automatically adjust scale?
 }
 
 if (!require("pacman")) install.packages("pacman"

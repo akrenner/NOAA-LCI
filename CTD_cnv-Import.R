@@ -21,10 +21,12 @@
 # x done x  fix file-names: 2019-15-14 to 2019-05-14  -- redo in code?
 # anything that can/should be done about missing notes or missing files?
 # check that station numbers within transects are in chronological order
-# x negative pressures: delete?  Wrong calibration file?  (check dates!)
+# x negative pressures: delete. Aircasts?  Calibration file is correct!
 
 ## 2020-10-13: resolve metadata-filename date mismatches!
 
+## make SURE, fileDB alsoways has station, transect, lat, lon
+##            lat lon can be from notebook or master list -- cannot be NA
 
 
 ## replot The Wall
@@ -72,21 +74,9 @@ set.seed(7)
 ## define basic functions ##
 ############################
 
-PDF <- function (fN, ...){
-  #    pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
-  # if (width < 50){
-  #   width <- 100*width
-  #   height <- 100*height
-  # }else{
-  #   width <- 480; height <- 480
-  # }
-  png (paste0 ("~/tmp/LCI_noaa/media/", fN, ".png"), ...) # automatically adjust scale?
-}
 
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-# pacman::p_load(package1, package2, package_n)
-# pacman::p_load ("parallel")
+if (!require("pacman")){
+  install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
 Require <- pacman::p_load
 
 
@@ -107,28 +97,13 @@ if (.Platform$OS.type != "unix"){
 ## CTD data ##
 ##############
 
-
-## There are 3 different approaches here, relying in different stages of processing with
-## SeaBird software:
-## 1. cnv files: minimal processing by SeaBird software. 2012 largely missing.
-## 2. processed csv files: binned files, output by SeaBird software. Hierachical folders = issue
-## 3. aggregated files: missing turbidity. All other issues resolved now.
-
-## need to process HEX files using Seabird BATCH files! See
-## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
-
-
-### read cnv files for turbidity
-
-# read in cnv files for turbidity
 Require (oce)
 ## read in processed files of individual CTD casts
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
-## start-over
-fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--homogene/", ".cnv"
-#fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
+# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
+fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
 fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
@@ -140,17 +115,21 @@ print (length (fN))
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
   Require ("oce")
-  ctd <- suppressWarnings (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
-  cT <- ctd@metadata$startTime   # fix time zone later, because import is slow
+  ctdF <- suppressWarnings (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
+  cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
   ## , latitude = meta (ctdF@metadata$latitude)
   ## , longitude = meta (ctdF@metadata$longitude)
   #, depth_bottom = meta (ctdF@metadata$waterDepth)
   ## , transect = meta (ctdF@metadata$station)
   ## , Match_Name = meta (ctdF@metadata$station)
   #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
-  return (data.frame (time = ctd@metadata$startTime, file = fN [i], path = fNf [i]
-                      , instSerNo = ctd@metadata$serialNumberTemperature # serial number of CTD instrument
-  ))
+  outDF <- data.frame (time = ctdF@metadata$startTime
+                       , file = fN [i], path = fNf [i]
+                       , instSerNo = ctdF@metadata$serialNumberTemperature # serial number of CTD instrument
+                       , depth_bottom = ctdF@metadata$waterDepth
+                       )
+
+  return (outDF)
 })
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 ## ok to ignore warnings regarding NAs introduced by coersion
@@ -211,7 +190,7 @@ readCNV <- function (i){
 
     cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
                         , path = meta (fNf [i])
-                        , timestamp = meta (ctdF@metadata$startTime)
+                        #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
                         , depth_bottom = meta (ctdF@metadata$waterDepth)
                         #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
                         , density = ctdF@data$sigmaT # use sigmaTheta or sigmaT?; what's "theta"?
@@ -458,7 +437,7 @@ fixT <- as.POSIXct (paste ("2012-04-26"
 for (i in 1:length (fixN)){
   fileDB$localTime [which (fileDB$file == fixN [i])] <- fixT [i]
 }
-rm (fixN, fixT)
+rm (fixN, fixT, i)
 
 save.image ("~/tmp/LCI_noaa/cache/CNVy3.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy3.RData")
@@ -529,28 +508,20 @@ fnDate <- gsub ("[A-Z,a-z]*$", "", fnDate) # remove any letters at end of date
 mDate <- gsub (" .*$", "", as.character (fileDB$localTime))
 fileDB$dateErr <- ifelse (mDate == fnDate, FALSE, TRUE)
 rm (fnDate, mDate)
-x <- subset (fileDB, dateErr)[,c(2,6,7)]  ## files with mismatch in file-name and metadata date
+x <- subset (fileDB, dateErr) #[,c(2,6,7)]  ## files with mismatch in file-name and metadata date
 
 
 if (any (as.numeric (format (x$localTime, "%H")) > 2)){ # allow up to 2 am
 #  stop ("There are mismatches between metadata and file names")
   print ("There are mismatches between metadata and file names")
-  print (x [order (x$file),])  ## files where dates in filename and CTD-metadata mismatch. Any shortly after midnight are ok.
+  print (x [order (x$file),c(2,6,7)])  ## files where dates in filename and CTD-metadata mismatch. Any shortly after midnight are ok.
 }
 rm (x)
-# x$year <- factor (as.numeric (format (x$localTime, "%Y")))
-# subset (x, year !=2012) # 2012 records all refer to night samples -- safe to use metadata
 ## as of 2020-08-03, all discrepancies are now accounted for. 2012 and 2017 have a 1-day discrepancy due to
 ## surveys going on past mid-night.
-
 # 2017-12-14 AlongBay, T9: notebook indicates that's right, metadata claims 2017-04-18 (also sampled, but other transects)
 # 2018-01-17 AlongBay, T9; notebook indicates that's right, metadata claims 2017-05-22
 ## resolved above and through changes in filenames
-## possible causes:
-# missing notebook entry!
-# bad time zone
-# bad time/date in notebook
-# -> need to ascertain first whether station is matching!
 
 
 summary (fileDB$recNo)  ## 526 still missing an entry -- assign station to those by filename? XXX end of editsXXX
@@ -697,7 +668,6 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
   stDB <- "T9_S08"
 
 
-
   ## reverse -- identify surveys in notebook with no matching CTD-CNV file
   for (i in 1:length (fNDB)){ # move to apply
     tS <- as.POSIXct(stationEv$timeStamp)[i]
@@ -716,9 +686,6 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
 
 
 
-
-## need alternative to mdata here!
-## END OF EDITS
 
 
 save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
@@ -762,14 +729,6 @@ if (0){
   ## metadata currently harvested from aggregated files.
   ## In future, should be kept from field-notes DB
   mdata <- read.csv ("~/GISdata/LCI/CTD/ctd_metadata_m.csv")  # currently 2012-02-04 to 2016-12-13 (as of 2020-07-02)
-
-  dim (mdata)
-  dim (CTD1)
-  head (CTD1$File.Name)
-  head (mdata$File.Name)
-
-  summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
-  summary (as.factor (format (CTD1$timestamp, "%Y")))
 }
 
 xmatch <- match (as.character (CTD1$File.Name), as.character (mdata$File.Name))
