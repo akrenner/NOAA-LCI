@@ -28,7 +28,7 @@ rm (list = ls())
 cWD <- getwd()
 setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
 ## manually delete pre-existing outF?
-unlink ("~/GISdata/LCI/CTD-startover/allCTD/CNV", recursive = TRUE)  ## careful!
+unlink ("~/GISdata/LCI/CTD-processing/allCTD/CNV", recursive = TRUE)  ## careful!
 sTime <- Sys.time()
 print (sTime)
 
@@ -39,15 +39,15 @@ print (sTime)
 #################################
 
 #################################
-conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
-# conF <- list.files("~/GISdata/LCI/CTD-startover/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+# conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 
 ## path to psa files
-# psa <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
-psaL <- list.files ("~/GISdata/LCI/CTD-startover/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
+# psa <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
+psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
 
 ## where to put results
-outF <- "~/GISdata/LCI/CTD-startover/allCTD/CNV/"
+outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
 
 ## make uniform or keep turbidity/fluorescence in?
 fluo <- TRUE

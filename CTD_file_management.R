@@ -21,13 +21,13 @@ rm (list = ls())
 # TESTrun <- FALSE
 
 # unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
-unlink ("~/GISdata/LCI/CTD-startover/allCTD/edited_hex", recursive = TRUE)
-unlink ("~/GISdata/LCI/CTD-startover/allCTD/hex2process", recursive = TRUE)
+unlink ("~/GISdata/LCI/CTD-processing/allCTD/edited_hex", recursive = TRUE)
+unlink ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", recursive = TRUE)
 set.seed (8)
 
 
 ## define new destinations
-nD <- "~/GISdata/LCI/CTD-startover/allCTD/edited_hex/"
+nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
 instL <- c ("4141", "5028")
 ## clean slate -- do this by hand!
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
@@ -44,7 +44,7 @@ rm (x)
 
 
 rL <- function (f, p = NULL){ # recursive listing of files
-  x <- list.files(paste0 ("~/GISdata/LCI/CTD-startover/Workspace/", f)
+  x <- list.files(paste0 ("~/GISdata/LCI/CTD-processing/Workspace/", f)
              , pattern = p, ignore.case = TRUE, recursive = TRUE
              , full.names = TRUE)
   print (length (x))
@@ -74,9 +74,8 @@ rm (fL)
 fDB <- fDB[with (fDB, order (file, fN)),]
 fDB$isD <- duplicated (fDB$fN)
 
-require (openssl)
 if (0){
-  require (openssl)
+  require ("openssl")
   fDB$sha <- sapply (1:nrow (fDB), function (i){
     hF <- file (fDB$file [i], open = "r", raw = TRUE)
     require (openssl)
@@ -100,7 +99,7 @@ if (0){
 ##################################################################
 
 fDB$copy <- logical (nrow (fDB))
-
+fDB$file <- as.character (fDB$file)
 
 for (i in 1:nrow (fDB)){
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
@@ -121,7 +120,8 @@ print (summary (factor (fDB$copy)))
 iN <- list.files (nD, pattern = ".txt$", ignore.case = TRUE
                   , recursive = TRUE, full.names = TRUE)
 cpCk <- file.copy (from = iN, to = gsub (".txt", ".hex", iN, fixed = TRUE)
-           , copy.date = TRUE, recursive = FALSE)
+           #, copy.date = TRUE
+           , recursive = FALSE)
 if (any (!cpCk)){print (summary (cpCk))} # all should be TRUE
 rm (cpCk)
 unlink (iN)
@@ -135,13 +135,13 @@ print (nrow(fDB))
 iN <- list.files (nD, pattern = "bad", ignore.case = TRUE, recursive = TRUE, full.names = TRUE)
 iN <- c (iN, list.files (nD, pattern = "air", ignore.case = TRUE, recursive = TRUE, full.names = TRUE))
 unlink (iN)
-rm (hx, iN, i, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
+rm (iN, i, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
 
 ## end of first, main step
 ## next step:
 ## fix-up malformed file names and metadata
 ## place hex files with their matching conf/xmlconf file
-save.image ("~/tmp/LCI_noaa/cache/ctdHex1.RData")
+# save.image ("~/tmp/LCI_noaa/cache/ctdHex1.RData")
 ## rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/ctdHex1.RData")
 
 
@@ -179,7 +179,8 @@ fixFN <- function (patternfind, goodpattern){
   badFN <- list.files (nD, pattern = patternfind # need to fix files before starting fDB
                        ,recursive = TRUE, full.names = TRUE)
   goodFN <- gsub (patternfind, goodpattern, badFN)
-  cpCk <- file.copy (from = badFN, to = goodFN, copy.date = TRUE, recursive = FALSE)
+  cpCk <- file.copy (from = badFN, to = goodFN#, copy.date = TRUE
+                     , recursive = FALSE)
   unlink (badFN)
   #  return (cpCk) # make this silent/invisible?
 }
@@ -252,9 +253,6 @@ for (i in 2:6){
 delFile ("2012-07-30-CookInlet-Tran6-cast091")  ## must be RegEx
 delFile ("2012_07-30_T6_S21_cast091.hex")
 
-## negative pressure values
-## delFile ("2012-10-29-(C|c)ook(I|i)nlet-(T|t)ran4-cast065-s07")
-delFile ("2012-10-29-CookInlet-Tran4-cast065-S07")  ## SBEDataProcessing changed case of file name
 
 
 for (i in 1:10){## ambiguous file -- fix this!! ask Jim?
@@ -310,7 +308,7 @@ fixMeta ("2016_02-16_T7", "2016-02-16")
 
 ## end of file manipulations
 # rm (inspFile)
-save.image ("~/tmp/LCI_noaa/cache/ctdHex2.RData")
+# save.image ("~/tmp/LCI_noaa/cache/ctdHex2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHex2.RData")
 
 
@@ -388,7 +386,7 @@ for (i in 1:nrow (fDB)){
   fDB$instN [i] <- hX
 }
 rm (hF, hD, hX, i)
-save.image ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
+# save.image ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
 
 
@@ -437,11 +435,6 @@ rm (fixBoth, fixFN, fixMeta, delFile)
 #####
 
 fDB$tErr <- as.numeric (difftime(fDB$fnDate, fDB$metDate, units = "days"))
-# fDB$tErr <- sapply (1:nrow (fnDate), FUN = function (i){
-#   as.numeric (fDB, difftime (fDB$fnDate [i], fDB$metDate [i], units = "days"))
-#   })
-# summary (fDB$fnDate)
-# summary (fDB$metDate)
 
 summary (fDB$tErr)
 if (any (fDB$tErr > 1)){
@@ -462,7 +455,7 @@ if (any (fDB$tErr > 1)){
 
 ## thought: cut-out date-filename, replace with metDate
 
-save.image ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
+# save.image ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
 
 
@@ -486,10 +479,10 @@ fDB$shortFNx <- sapply (1:nrow (fDB), function (i){
 ## clean up caches
 ####################################################
 
-cDir <- "~/GISdata/LCI/CTD-startover/Workspace/conFiles/"
+cDir <- "~/GISdata/LCI/CTD-processing/Workspace/conFiles/"
 cFDB <- data.frame (file = list.files (cDir, full.names = FALSE))
 cFDB$date <- gsub (".(xmlcon|CON)", "", cFDB$file)
-cFDB$dir <- paste0 ("~/GISdata/LCI/CTD-startover/allCTD/hex2process/"
+cFDB$dir <- paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/"
                     , cFDB$date, "/")
 cFDB$inst <- substr (x = cFDB$file, start = 11, stop = 14)
 
@@ -526,11 +519,11 @@ fDB$calDist <- numeric (nrow (fDB)) # days since calibration
 for (i in 1:nrow (fDB)){
   dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
   dT <- ifelse (cFDB$inst == fDB$instN [i], dT, dT + 1e9) # penalize wrong inst
-  dT <- ifelse (dT < 0, dT*-1+365*2, dT)  # penalize records in the future (SEABIRD fails) -- 20 records
+  dT <- ifelse (dT < 0, dT*-1+365*20, dT)  # penalize records in the future (SEABIRD fails) -- 20 records
   fDB$calDist [i] <- min (dT)
   fDB$procDir [i] <- cFDB$dir [which.min (dT)]
 }
-## exclude those files for now pre-dateing the first calibration file
+## exclude those files for now pre-dating the first calibration file
 # fDBx <- subset (fDB, fDB$calDist < 365*10) # should never be greater than 10 years
 fDBx <- fDB
 
@@ -546,7 +539,7 @@ unlink (nD, recursive = TRUE, force = TRUE)
 
 ## make small dataset for testing
 if (0){
-  dir.create ("~/GISdata/LCI/CTD-startover/allCTD/hex2test")
+  dir.create ("~/GISdata/LCI/CTD-processing/allCTD/hex2test")
   fDBy <- fDBx [sample (1:nrow (fDBx), size = 20, replace = FALSE),]
   fDBy$procDirT <- as.factor (gsub ("hex2process", "hex2test", fDBy$procDir, fixed = TRUE))
   for (i in 1:length (levels (fDBy$procDirT))){

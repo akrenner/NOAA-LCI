@@ -18,9 +18,13 @@
 #    - delete duplicate file (only one)
 # fix meta-data dates? -- in script
 # fix medata-data? times 2012-04-26_T9  (notes are good)
-# x done x  fix file-names: 2019-15-14 to 2019-05-14
+# x done x  fix file-names: 2019-15-14 to 2019-05-14  -- redo in code?
 # anything that can/should be done about missing notes or missing files?
 # check that station numbers within transects are in chronological order
+# x negative pressures: delete?  Wrong calibration file?  (check dates!)
+
+## 2020-10-13: resolve metadata-filename date mismatches!
+
 
 
 ## replot The Wall
@@ -31,8 +35,9 @@
 rm (list = ls())
 ## CAREFUL with this!!
 # system ("rm -r ~/tmp/LCI_noaa/")
-# unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
+# ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
+sTime <- Sys.time()
 
 
 ## file structure:
@@ -121,108 +126,20 @@ Require (oce)
 ## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
 
 ## start-over
-fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV/", ".cnv"
-# fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV--homogene/", ".cnv"
-#fNf <- list.files("~/GISdata/LCI/CTD-startover/allCTD/CNV--turbid/", ".cnv"
+fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
+# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--homogene/", ".cnv"
+#fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
 fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
 
-
-#####################
-## file accounting ##
-#####################
-
-## matching hex file for each CNV? -- no longer needed or relevant
-## now that all is reprocessed
-if (0){
-hFN <- list.files ("~/GISdata/LCI/CTD-new/", pattern = ".hex"
-                   , ignore.case = TRUE, full.names = FALSE
-                   , recursive = TRUE)
-# start-over
-hList <- function (f){list.files (f, pattern = ".hex", ignore.case = TRUE, full.names = FALSE, recursive = TRUE)}
-hFN <- hList ("~/GISdata/LCI/CTD-startover/allCTD/edited_hex/")
-hFN <- c (hFN, hList ("~/GISdata/LCI/CTD-startover/ctd-data2012-16/"))
-hFN <- c (hFN, hList ("~/GISdata/LCI/CTD-startover/ctd-data2017-21/"))
-rm (hList)
-hDB <- data.frame (path = hFN, file = gsub ("^.*/", "", hFN)); rm (hFN)
-# hFN <- gsub ("^.*/", "", hFN) # keep only file, strip out directories
-# any (duplicated (hFN)) # no duplicates
-
-## check that all CNV have matching HEX
-hDB$hStub <- gsub (".hex$", "", tolower (hDB$file))
-hDB <- hDB [order (hDB$path),]
-
-## check for duplicate HEX files
-# hDB$hDupl <- duplicated (hDB$hStub)
-if (any (duplicated(hDB$hStub))){
-  print (hDB [order (hDB$hStub, hDB$hDupl),])
-  stop ("duplicated hex file names")
-}else{
-  Require ("openssl") # alternative: digest
-  hDB$sha256 <- sha256 (paste0 ("~/GISdata/LCI/CTD-new/", hDB$path))
-  if (any (duplicated (hDB$sha256))){
-    print (subset (hDB, duplicated (hDB$sha256)))
-    stop ("duplicated sha256 checksums")
-  }else{cat ("No duplicate HEX files found\n")}
-}
-
-
-## do all HEX files have matching CNV files
-cFN <- gsub (".cnv$", "", tolower (fN))
-# summary (cFN %in% hFN)
-hDB$CNV <- character (nrow (hDB)) #cFN [grep ()]
-for (i in 1:nrow (hDB)){
-  cMatch <- fN [grep (hDB$hStub [i], cFN, value = FALSE)]
-  if (length (cMatch) == 1){
-    hDB$CNV [i] <- cMatch
-    # }else if (length (cMatch > 1)){print (i)}else{
-    #   hDB$CNV [i] <- "NA"
-  }
-}; rm (cMatch)
-summary (hDB$CNV == "")
-if (any (hDB$CNV == "")){
-  ## identify HEX that need processing
-  hDBx <- subset (hDB, CNV == "")
-  write.csv (hDBx, file = "~/tmp/LCI_noaa/cache/hexFiles.csv", row.names = FALSE)
-  stop ('see hexFiles.csv for ', nrow (hDBx),' hex that need processing or renaming')
-  rm (hDBx)
-}
-
-
-## reverse: which CNV filenames have no matching HEX
-cDB <- data.frame (fN, cStub = cFN, hex = character (length (fN)))
-for (i in 1:length (fN)){
-  hMatch <- hDB$path [grep (cDB$cStub [i], hDB$hStub)]
-  if (length (hMatch) == 1){
-    cDB$hex [i] <- hMatch
-  }
-}; rm (hMatch)
-if (any (cDB$hex == "")){
-  cDB <- cDB [order (cDB$hex),]
-  write.csv (cDB, file = "~/tmp/LCI_noaa/cache/cnvFiles.csv", row.names = FALSE)
-  stop ("see cnvFiles.csv for ",nrow (cDB), " cnv files that missmatch")
-rm (cFN, cDB)}
-}
-
-#####################
-#####################
-
-
-## TESTING ONLY xxxx ###
-#fN <- fN [grep ("2019", fN, value = FALSE)]
-#fNf <- fNf [grep ("2019", fNf, value = FALSE)]
-## END TESTING ONLY ####
-
-## exclude negative pressure: 114: "C:/Users/Martin.Renner/Documents/GISdata/LCI/CTD-new/4141/2_CNV/2012_10-29_T4_S07_cast065.cnv"
-# fNf <- fNf [-114] # dirty trick XXX
 
 
 
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
-  Require (oce)
+  Require ("oce")
   ctd <- suppressWarnings (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
   cT <- ctd@metadata$startTime   # fix time zone later, because import is slow
   ## , latitude = meta (ctdF@metadata$latitude)
@@ -231,7 +148,6 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
   ## , transect = meta (ctdF@metadata$station)
   ## , Match_Name = meta (ctdF@metadata$station)
   #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
-
   return (data.frame (time = ctd@metadata$startTime, file = fN [i], path = fNf [i]
                       , instSerNo = ctd@metadata$serialNumberTemperature # serial number of CTD instrument
   ))
@@ -245,23 +161,20 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")  ## this to be read by dataSetup
 
 
 
+### QAQC -- remove bad files
+## delete files with negative pressure
+
+unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function (i){
   Require (oce)
   ctdF <- read.ctd (fNf [i])
-  ## if ("station" %in% names (ctdF@metadata)) if (grepl ("Air", ctdF@metadata$station)){
-  ##     cat ("Air Cast:", i, fN [i], "\n")
-  ##     return()
-  ## }
 
   ## more CTD import processing steps
   ## zero-depth
   ## cut-out surface, up-cast?
   # cut bad flags!
   ## aggregate depth bins
-  ## derived variables ??
-  ## add metadata from notebook (later -- latlon, Match_Name, tide,..)
-  ## most should be here (paste into aggregated data or separate table)
-  ##   .... find others!
+  ## add derived variables ??
 
   ## best: manually inspect and read-in from separate table
   # ?plotScan
@@ -275,70 +188,78 @@ readCNV <- function (i){
     # could/should specify min soak times, soak depth -- min soak time = 40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }
-  ## derived variables?
-
-  ## aggregate
-  # ctdF <- initializeFlagScheme(ctdF, name = "ctd")
-  # ctdF <- handleFlags (ctdF)
-  #    ctdF <- handleFlags (ctdF, flags = defaultFlags(ctdF))
-  ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later? -- really needed?
-
-  ## fix-up missing fields
-  meta <- function (x){rep (x, length (ctdF@data$temperature))}
-  # if (length (grep ("upoly", names (ctdF@data))) == 0){
-  if (!"upoly" %in% names (ctdF@data)){
-        ctdF@data$upoly <- meta (NA)
-  }
-  if (!"fluorescence" %in% names (ctdF@data)){
-    ctdF@data$fluorescence <- meta (NA)
-    # cat (gsub ("/Users/martin/GISdata/LCI/CTD/6 DERIVE//", "", fN [i]), "\n")
-  }
-  if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
-    names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
-  }
-
-  # turbidity and fluorescence missing throughout??
-  cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
-                     , timestamp = meta (ctdF@metadata$startTime)
-                     , depth_bottom = meta (ctdF@metadata$waterDepth)
-                     #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                     , density = ctdF@data$sigmaT # use sigmaTheta or sigmaT?; what's "theta"?
-                     , depth = ctdF@data$depth
-                     , O2 = ctdF@data$oxygen
-                     , par = ctdF@data$par
-                     , salinity = ctdF@data$salinity
-                     , temperature = ctdF@data$temperature
-                     , pressure = ctdF@data$pressure
-                     # nitrogen
-                     #, fluorescence = ctdF@data$fluorescence ## often missing
-                     #, turbidity = ctdF@data$upoly
-  )
-  cDF <- subset (cDFo, density > 0)
-  return (cDF)
-}
-
-
-## bad? cast: 2012_10-29_T4_S07_cast065 -- ctdDecimate fails. All depth = negative
-# i=113 2012_10-29_T4_S06_cast067.cnv
-for (i in 1:length (fNf)){
-  print (paste (i, fileDB [i,c(2,4)]))
-  ctdX <- readCNV (i)
-  if (i == 1){
-    CTD1 <- ctdX
+  if (median (median (ctdF@data$pressure)) < 0){
+    cat ("Negative pressure: ", fN [i], "\n")
+    # log bad files
+    write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
+    return()
   }else{
-    CTD1 <- rbind (CTD1, ctdX)
+    ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later? -- really needed?
+
+    ## fix-up missing fields
+    meta <- function (x){rep (x, length (ctdF@data$temperature))}
+    # if (length (grep ("upoly", names (ctdF@data))) == 0){
+    if (!"upoly" %in% names (ctdF@data)){
+      ctdF@data$upoly <- meta (NA)
+    }
+    if (!"fluorescence" %in% names (ctdF@data)){
+      ctdF@data$fluorescence <- meta (NA)
+    }
+    if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
+      names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
+    }
+
+    cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
+                        , path = meta (fNf [i])
+                        , timestamp = meta (ctdF@metadata$startTime)
+                        , depth_bottom = meta (ctdF@metadata$waterDepth)
+                        #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
+                        , density = ctdF@data$sigmaT # use sigmaTheta or sigmaT?; what's "theta"?
+                        , depth = ctdF@data$depth
+                        , O2 = ctdF@data$oxygen
+                        , par = ctdF@data$par
+                        , salinity = ctdF@data$salinity
+                        , temperature = ctdF@data$temperature
+                        , pressure = ctdF@data$pressure
+                        , nitrogen = ctdF@data$nitrogenSaturation
+                        , fluorescence = ctdF@data$fluorescence ## often missing
+                        , turbidity = ctdF@data$upoly
+    )
+    cDF <- subset (cDFo, density > 0) ## still necessary?
+    return (cDF)
   }
 }
+
+## for troubleshooting
+# for (i in 1:length (fNf)){
+# # for (i in 193:length (fNf)){  ## speed-up for testing
+#   print (paste (i, fileDB [i,c(2)]))
+#   ctdX <- readCNV (i)
+#   # if (i == 1){
+#   if (!exists ("CTD1")){
+#     CTD1 <- ctdX
+#   }else{
+#     CTD1 <- rbind (CTD1, ctdX)
+#   }
+# }
+# rm (ctdX)
+## more efficient, but doesn't ID errors -- so redundant
 CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
-# require (dplyr); CTD1 <- bind_rows (CTD1, id = fN)
+# require (dplyr); CTD1x <- bind_rows (CTD1x, id = fN)
 CTD1 <- as.data.frame (do.call (rbind, CTD1))
 rm (readCNV)
 rm (fN, fNf)
-# "bad" in station?
 
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 
+
+
+
+### get metadata from notebook ACCESS database
+## QCQA (outsource!) of notebook
+## check station lat-lon vs master list
+## check timestamps vs. metadata
 
 # ideal: read-in data from ACCESS database via ODBC -- may be not worth the troubles
 if (0){
@@ -350,14 +271,10 @@ if (0){
                     , database = "/Users/Martin.Renner/Documents/GISdata/LCI/EVOS_LTM.accdb"
   )
 
-
   dbC <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess", driver = )
   channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Martin.Renner/Documents/GISdata/LCI/EVOS_LTM.accdb")
   data <- sqlQuery( channel , paste ("select * from CUSTOMERS"))
   odbcCloseAll()
-
-
-
 
   dbq_string <- paste0 ("DBQ=", "locatoin of my file")
   driver_string <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
@@ -368,7 +285,6 @@ if (0){
 }
 
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
 transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
 #  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
@@ -386,7 +302,7 @@ stationEv$Date <- ifelse (stationEv$Date == "", "1900-01-01", stationEv$Date)
 stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
 # stationEv$timeStamp <- as.POSIXct (paste (format (as.POSIXct (stationEv$Date), "%Y-%m-%d")
 #                                           , format (as.POSIXct (stationEv$Time), "%H:%M")), tz = "UTC" )#, tz = "America/Anchorage")
-Require (lubridate) # for time-zone adjustment
+Require ("lubridate") # for time-zone adjustment
 stationEv$timeStamp <- ymd_hms (paste (gsub (" .*", '', stationEv$Date)
                                        , gsub (".* ", '', stationEv$Time))
                                 , tz = "America/Anchorage")
@@ -483,40 +399,9 @@ stationEv <- stationEv [,-which (names (stationEv) %in%
 
 save.image ("~/tmp/LCI_noaa/cache/CNVy.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy.RData")
-
-
-
-
-## match Access DB tables with CTD data using timestamps (ignore filenames!!)
-## find a file for each record in Access table --- not much point in doing that
-# stationEv$CTDfile <- character (nrow (stationEv))
-# stationEv$metaTime <- character (nrow (stationEv))
-# for (i in 1:nrow (stationEv)){
-#   dT <- as.numeric (difftime (stationEv$timeStamp [i], fileDB$time, units = "mins"))
-#   tMatch <- which.min (dT^2)
-#   if (dT [tMatch] > 30){
-#     warning ("Difftime = ",dT [tMatch], "min for ", stationEv$timeStamp [tMatch])
-#   }else{
-#     stationEv$CTDfile [i] <- fileDB$file [tMatch]
-#   }
-#   stationEv$metaTime [i] <- as.character (fileDB$time [tMatch])
-# }
-# ## QAQC ##
-# tErr <- difftime (stationEv$timeStamp
-#                   , fileDB$time [match (stationEv$CTDfile, fileDB$file)]
-#                   , units = "days")
-# hist (as.numeric (tErr))
-# stationEv [which.max (as.numeric (tErr)^2),]
-#
-#
-# summary (nchar (stationEv$CTDfile)>0)  # 2037 FALSE, 935 TRUE ##|| records but no CTD file
-
-
-
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy.RData")
 ## this is the ROOM where it's happening
 
-## match CTD data to Access DB -- this is the one that matters!
+## match CTD data to Access DB by timestamp -- this is the one that matters!
 fileDB$recNo <- as.numeric (rep (NA, nrow (fileDB))) # numeric(nrow (fileDB))
 fileDB$tErr <- as.numeric (nrow (fileDB))
 
@@ -619,12 +504,13 @@ for (i in 1: nrow (fileDB)){ # could/should use sapply
   }
 }
 # warnings() #[1:10]
+rm (tMatch)
 save.image ("~/tmp/LCI_noaa/cache/CNVy4.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy4.RData")
 
 
 ## QCQA of timestamp matching
-dbLog [order (dbLog$err^2, decreasing = FALSE)[1:10],]  ## dbLog abandoned?
+# print (dbLog [order (dbLog$err^2, decreasing = FALSE)[1:10],])  ## dbLog abandoned?
 
 # flag mismatch between metadata and file-name date -- resolve above rather than manually in files
 fnDate <- gsub ("_", "-", fileDB$file)
@@ -643,10 +529,13 @@ fnDate <- gsub ("[A-Z,a-z]*$", "", fnDate) # remove any letters at end of date
 mDate <- gsub (" .*$", "", as.character (fileDB$localTime))
 fileDB$dateErr <- ifelse (mDate == fnDate, FALSE, TRUE)
 rm (fnDate, mDate)
-x <- subset (fileDB, dateErr)[,c(2,6)]
-x [order (x$file),]  ## files where dates in filename and CTD-metadata mismatch. Any shortly after midnight are ok.
+x <- subset (fileDB, dateErr)[,c(2,6,7)]  ## files with mismatch in file-name and metadata date
+
+
 if (any (as.numeric (format (x$localTime, "%H")) > 2)){ # allow up to 2 am
-  stop ("There are mismatches between metadata and file names")
+#  stop ("There are mismatches between metadata and file names")
+  print ("There are mismatches between metadata and file names")
+  print (x [order (x$file),])  ## files where dates in filename and CTD-metadata mismatch. Any shortly after midnight are ok.
 }
 rm (x)
 # x$year <- factor (as.numeric (format (x$localTime, "%Y")))
@@ -666,6 +555,7 @@ rm (x)
 
 summary (fileDB$recNo)  ## 526 still missing an entry -- assign station to those by filename? XXX end of editsXXX
 summary (fileDB$time [is.na (fileDB$recNo)]) # distribution of missing matches
+
 
 
 
@@ -719,7 +609,7 @@ row.names(fileDB) <- 1:nrow (fileDB) # reset for troubleshooting
 ##   chsm == 2: time match, station doesn't. -- concurrent surveys? nudge times?
 ##   chsm == 1: station-match, time doesn't (tzone?)
 ##   chsm == 0: missing notebook?? -- use station-list only
-##   chsm == -1: conflict -- trust file name IF time-error small
+##   chsm == -1: conflict -- trust file name IF time-error small  (still resolve correct time)
 
 # fileDB$consMatch <- with (fileDB, ifelse (chsm == -1, matchN
 #                                           , ifelse (chsm == 3, matchN
@@ -736,7 +626,10 @@ write.csv (x [,c(6, 2)], file = "~/tmp/LCI_noaa/cache/noNotebookEntries.csv", ro
 x <- subset (fileDB, chsm == 2)
 j <- 5;     tS <- c(17,18,6) #, 22)
 
-for (j in 1:nrow (x)){
+
+## hundreds -- need a different fix -- looking for which issue again??
+if (0){
+for (j in 1:nrow (x)){  ## hundreds -- need a different fix
   i <- as.numeric (row.names(x)[j])
   row.names(x) <- 1:nrow (x)
   x [, c(6,2,3,4,5)]
@@ -757,14 +650,14 @@ for (j in 1:nrow (x)){
                       , fileDB$localTime),] ## all files from day in question
   print (fx [order (fx$localTime), c(6,2,3,5)]) # all files from that date
 }
-
+}
 ## 2. find missing matches: chsm %in% c(0,1)
 
 
 
 ## debugging
 fileDB [which (is.na (fileDB$matchN))[1],]
-
+# print (length (which (is.na (fileDB$matchN))))
 
 
 
@@ -775,7 +668,7 @@ lapply (1:length (dF), FUN = function (i){
   fileDB [which (fileDB$localTime == dF$localTime [i]),c(2,6,9)]
 })
 ## there are a few -- delete cnv file!
-unlink (paste0 (dir, "/", fileDB$path [dF]))
+# unlink (paste0 (dir, "/", fileDB$path [dF]))
 
 
 
@@ -818,9 +711,6 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
       xM <- grep (fNDB2 [i], fNEnd, ignore.case = TRUE)
     }
     if (length (xM) > 1){stop (fNDB [i], "is matched to", fNEnd [xM])}
-
-
-
   }
 }
 
@@ -834,8 +724,38 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
 save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVyc.RData")
 
+#  ls()
+## where's notebook data? need lat-lon. Also need masterlist
+# "CTD1"      "CTD1x"     "CTD1y"     "ctdX"      "dbLog"     "dF"        "dirL"      "dT"
+# "fDt"       "fileDB"    "i"         "j"         "nCPUs"     "PDF"       "Require"   "sMatch"
+# "stationEv" "tEr"       "tS"        "x"
+## need: CTD1, fileDB?
+
 
 # mdata <- .....    # cook-up from notebooks
+mdata <- with (fileDB, data.frame (isoTime = localTime
+                                   , File.Name = gsub (".cnv", "", file, fixed = TRUE)
+                                   , Date = format (localTime, "%Y-%m-%d") #??
+                                   , Transect = stationEv$Transect [matchN]
+                                   , Station = stationEv$Station [matchN]
+                                   , Time = format (localTime, "%H:%M")
+                                   , CTD.serial = instSerNo
+                                   , latitude_DD = stationEv$LatNotes [matchN]
+                                   , longitude_DD = stationEv$LonNotes [matchN]
+                                   # , Bottom.Depth = ## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
+                                   , comments = stationEv$Comments [matchN]
+))
+
+
+
+  ## glue it all together: add transect, station, lat, lon to CTD1
+  # stationMatch <- stationEv [match (),]
+  # fileDB <- cbind (fileDB, )
+  #
+  #
+  # physOc <- with (CTD1, data.frame (timestamp, File.Name,
+  #                                   stationEv$Station
+  #                                   )
 
 if (0){
   ## read in metadata and match based on File.Name
@@ -850,61 +770,15 @@ if (0){
 
   summary (as.factor (format (CTD1$timestamp [grep ("_T9_", CTD1$File.Name, invert = FALSE)], "%m")))
   summary (as.factor (format (CTD1$timestamp, "%Y")))
-
-
-needCNV <- mdata$File.Name [!mdata$File.Name %in% CTD1$File.Name]
-print (length (needCNV))
-print (length (levels (factor (CTD1$File.Name))))
-print (nrow (mdata))
-
+}
 
 xmatch <- match (as.character (CTD1$File.Name), as.character (mdata$File.Name))
 ## finding bad matches
 summary (xmatch)
 badFileNames <- as.character (unique (CTD1$File.Name [which (is.na (xmatch))]))
 length (badFileNames)                   # < 26 -- not too bad
-
 print (badFileNames)
 
-mBad <- function (fstr){
-  cat ("non-matching File.Names of CNV files\n")
-  print (grep (fstr, badFileNames, value = TRUE))
-  cat ("\nNames in aggregated\n")
-  print (grep (fstr, mdata$File.Name, value = TRUE))
-}
-
-## failed to turn-off CTD?  field notes?
-# mBad ("2012_04-26_T9_S")
-
-## bad casts?  No metadata available?  Field notes?
-mBad ("2012_05-31")
-# mBad ("2017_12-14_T9_S04south_cast123"
-
-
-# mBad ("2012_08-15_AlongBay")
-
-## PARTIAL -- bad, del
-# mBad ("2014_03-28_AlongBay")
-
-## bad casts repeated, keep both?
-# mBad ("2015_06-26_T9")
-
-# mBad ("2015_08-14_AlongBay")
-# mBad ("2015_11-03_T4")
-# mBad ("2015_11-04_T3_S03")
-
-## missing metadata? field notes?
-# mBad ("2015_11-04")
-
-## Station KB10 or KB09?
-# mBad ("2016_06-16_AlongBay")
-
-# mBad ("2016_01-07_AlongBay")
-
-
-
-# print (summary (mdata))
-# print (summary (CTD1))
 
 physOc <- data.frame (mdata [xmatch,], CTD1) # watch out for isoTime
 # physOc <- data.frame (mdata [xmatch,2:ncol (mdata)], CTD1)
@@ -915,16 +789,13 @@ names (physOc)
 testFN <- as.character (physOc$File.Name) == as.character (physOc$File.Name.1)
 summary (testFN)
 physOc <- subset (physOc, testFN, select = -File.Name.1)
-rm (testFN, CTD1, mBad, mdata)
+rm (testFN, CTD1, mdata)
 # print (summary (physOc))
-}
+
 
 
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
-
-
-
 
 
 names (physOc) <- c ("isoTime",
@@ -939,6 +810,7 @@ names (physOc) <- c ("isoTime",
                      , "Salinity_PSU"
                      , "Temperature_ITS90_DegC"
                      , "Pressure..Strain.Gauge..db."
+                     , "Nitrogen.saturation..mg.l."
                      , "Fluorescence_mg_m3"
                      , "turbidity"
 )
@@ -952,6 +824,7 @@ names (physOc) <- c ("isoTime",
 
 save.image ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 
+print (difftime(Sys.time(), sTime))
 cat ("\n\n#\n#\n#", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                             , usetz = FALSE)
      , " \n# \n# End of dataSetup.R\n#\n#\n")
