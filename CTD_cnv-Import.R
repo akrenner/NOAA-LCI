@@ -24,6 +24,7 @@
 # x negative pressures: delete. Aircasts?  Calibration file is correct!
 
 ## 2020-10-13: resolve metadata-filename date mismatches!
+## get bottom depth right for physOc
 
 ## make SURE, fileDB alsoways has station, transect, lat, lon
 ##            lat lon can be from notebook or master list -- cannot be NA
@@ -709,7 +710,7 @@ mdata <- with (fileDB, data.frame (isoTime = localTime
                                    , CTD.serial = instSerNo
                                    , latitude_DD = stationEv$LatNotes [matchN]
                                    , longitude_DD = stationEv$LonNotes [matchN]
-                                   # , Bottom.Depth = ## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
+                                   , Bottom.Depth = rep (NA, length (matchN))## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
                                    , comments = stationEv$Comments [matchN]
 ))
 
@@ -739,17 +740,10 @@ length (badFileNames)                   # < 26 -- not too bad
 print (badFileNames)
 
 
-physOc <- data.frame (mdata [xmatch,], CTD1) # watch out for isoTime
+physOc <- data.frame (mdata [xmatch,]
+                      , CTD1 [,which (names (CTD1) == "density"):ncol (CTD1)]) # watch out for isoTime
 # physOc <- data.frame (mdata [xmatch,2:ncol (mdata)], CTD1)
-rm (xmatch)
-# print (summary (physOc))
-
-names (physOc)
-testFN <- as.character (physOc$File.Name) == as.character (physOc$File.Name.1)
-summary (testFN)
-physOc <- subset (physOc, testFN, select = -File.Name.1)
-rm (testFN, CTD1, mdata)
-# print (summary (physOc))
+rm (xmatch, CTD1, mdata)
 
 
 
@@ -761,7 +755,8 @@ names (physOc) <- c ("isoTime",
                      "File.Name", "Date", "Transect", "Station"
                      , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
                      , "Bottom.Depth", "comments"
-                     , "timestamp", "depth_bottom" # , "CTDserial"
+                     # , "timestamp"
+                     # , "depth_bottom" # , "CTDserial"
                      , "Density_sigma.theta.kg.m.3"
                      , "Depth.saltwater..m."
                      , "Oxygen_SBE.43..mg.l."
