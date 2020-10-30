@@ -20,6 +20,8 @@ Require ("openssl")
 Require ("parallel")
 Require ("lubridate")
 Require ("geosphere")
+Require ("zip")
+Require ("LakeMetabolizer")
 
 
 source ("CTD_file_management.R") ## QCQA, match hex with con file

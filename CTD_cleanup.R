@@ -16,17 +16,26 @@
 ##    notebook latlon consistent with master-list
 ##    transect-stations correct -> match with master-list
 # -> fill in from masterlist
-# check consistency of metadata and notebook time and date -- do this earlier? 
+# check consistency of metadata and notebook time and date -- do this earlier?
 # that station names are consistent with notebook and file names
-# 
+#
 # make sure matchName for link to other datasets is correct
-# 
+#
 #
 ##
 ## 2. produce annual aggregates
 #     zip-up aggregates for export
 #
 #####################################################
+
+
+
+## missing stations into master list
+## PTGR, PTPOGI....
+## ask for updates on notebooks
+## 2020 along-bay station names: review and adjust
+## bottom-depth from master/notes: add
+
 
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
@@ -71,12 +80,127 @@ showBad <- function (po){
   return (y)
 }
 
-oldMatch <- physOc$Match_Name
-oldMatch <- paste (physOc$Transect, physOc$Station, sep = "_")
+physOc$Transect <- trimws (physOc$Transect)
+physOc$Station <- gsub ("^0*", "", trimws (physOc$Station))
+# physOc$Transect <- as.integer (physOc$Transect)
+# physOc$Station <- as.integer (physOc$Station)
 Match_Name <- paste (physOc$Transect, physOc$Station, sep = "_") # ignore all prev fixings!
 physOc <- cbind (Match_Name, physOc); rm (Match_Name)
+oldMatch <- physOc$Match_Name
+
+
+
+## existing match-names are based on notebook entries. Need to go back to filenames
+## for those where notebook entries are missing (many)
+stnFNex <- substr (physOc$File.Name, 11, nchar (physOc$File.Name))
+
+## fix file-names not matching convention (missing "-" between transect and station)
+stnFNex <- gsub ("t9s06", "t9_s06", stnFNex)
+stnFNex <- gsub ("tutka", "tutka_S", stnFNex)
+stnFNex <- gsub ("tua", "tutka_Sa", stnFNex)
+stnFNex <- gsub ("tub", "tutka_Sb", stnFNex)
+stnFNex <- gsub ("sadie", "sadie_S", stnFNex)
+stnFNex <- gsub ("cookinlet", "_", stnFNex)
+stnFNex <- gsub ("pt.pogi", "pogipoint", stnFNex)
+stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
+stnFNex <- gsub ("ptgraham", "portgraham", stnFNex)
+stnFNex <- gsub ("ptgrm", "portgraham", stnFNex)
+stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
+stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
+stnFNex <- gsub ("seldovia", "seldovia_S", stnFNex)
+stnFNex <- gsub ("alongbay_pt.kblandpogi_cast123", "alongbay_1_cast123", stnFNex) ## check!
+
+p <- function (x){formatC (x, width = 2, format = "d", flag = "0")}
+for (i in 1:14){stnFNex <- gsub (paste0 ("kb", p(i)), paste0 ("ab-S", p(i)), stnFNex)}
+# for (i in 2:10){stnFNex <- gsub (paste0 ("tutka", p(i)), paste0 ("tutka-S", p(i)))}
+rm (p)
+
+## extract Station and Transect numbers
+stnSp <- strsplit(gsub ("_", "-", stnFNex), "-")
+## if all is well, order or elements in list should be sufficient. Just correct bad files?
+stN <- sapply (1:length (stnSp), function (i){stnSp[[i]][3]}) # 3 is station
+tnN <- sapply (1:length (stnSp), function (i){stnSp[[i]][2]}) # 2 is transect
+
+x <- which (stN == "tran3")
+stnSp [[x[1]]]
+
+
+rbind (tran = length (tnN),## check that length is correct
+       stat = length (stN),
+       CTDd = nrow (physOc))
+
+
+## fix stations that are out-of-order
+levels (factor (stN))
+bS <- grep ("cast", stN)
+stN [bS] <- sapply (bS, function (i){stnSp[[i]][4]})
+# bS <- grep ("t9", stN)
+# ; rm (bS) # attempt to fix disorderly cases
+# x <- which (stN == "t9")
+rm (bS)
+
+if (0){
+stN <- sapply (1:length (stnSp), function (i){
+  grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
+})
+tnN <- sapply (1:length (stnSp), function (i){
+   grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
+        , tolower (stnSp[[i]]), value = TRUE)[1]
+})
+
+# for (i in 1:length (tnN)){
+#   if (length (tnN [[i]]) != 1){stop (i)}
+# }
+# stnSp [[i]]
+}
+
+
+
+## error-corrections and data-extraction for transects
+levels (factor (tnN))
+tnN [grep ("^t[a-z]*\\d", tnN)] <- gsub ("^t[a-z]*", "", tnN [grep ("^t[a-z]*\\d", tnN)])
+tnN <- gsub ("9[a-z]+[0-9]*", "9", tnN) # watch carefully
+tnN [grep ("(sub|stevekibler)", tnN)] <- "subbay"
+tnN [grep ("^(along|kbay|ab)", tnN)] <- "AlongBay"  ## "AlongBay" for now, as in physOc$Match
+is.na (tnN)[tnN == ""] <- TRUE
+levels (factor (tnN))
+summary (tnN == physOc$Transect)
+
+
+## error-corrections and data-extraction for stations
+levels (factor (stN))
+stN <- gsub ("^s", "", stN)
+stN <- gsub ("t9", "6", stN)
+stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
+stN <- gsub ("^0*", "", stN)
+levels (factor (stN))
+is.na (stN)[stN == ""] <- TRUE
+summary (stN == physOc$Station)
+
+newMatch <- paste (tnN, stN, sep = "_")
+is.na (newMatch)[is.na (tnN) | is.na (stN)] <- TRUE
+
+physOc$Match_Name <- ifelse (physOc$Match_Name == "NA_NA", newMatch, physOc$Match_Name)
+# is.na (physOc$Match_Name)[physOc$Match_Name == "NA_NA"] <- TRUE
+levels (factor (physOc$Match_Name))
+# levels (factor (physOc$File.Name [which (physOc$Match_Name == "AlongBay_pt.")]))
+rm (newMatch, stN, tnN)
+
+
+
+if (0){
 # summary (stn)
 # y1 <- showBad (physOc)
+gsubx <- function (tx, nt = "", fixed = TRUE){gsub (tx, nt, physOc$Match_Name, fixed = fixed)}
+physOc$Match_Name <- gsubx (" (part of multiple transects)", fixed = TRUE)
+physOc$Match_Name <- gsubx ("^AlongBay_", fixed = FALSE)
+physOc$Match_Name <- gsubx ("^Subbays_", fixed = FALSE)
+physOc$Match_Name <- gsubx ("Sadie0", "Sadie_")
+physOc$Match_Name <- gsubx ("Bear ", "Bear_")
+physOc$Match_Name <- gsubx ("^J[bB]ay", "Jakolof", fixed = FALSE)
+physOc$Match_Name <- gsubx ("^K[bB]ay", "Kasitsna", fixed = FALSE)
+physOc$Match_Name <- gsubx ("^KB([0-9])", "AlongBay_\\1", fixed = FALSE)
+
 physOc$Match_Name <- gsub (" (part of multiple transects)", "", physOc$Match_Name, fixed = TRUE)
 physOc$Match_Name <- gsub ("^AlongBay_", "", physOc$Match_Name) #, fixed = TRUE)
 physOc$Match_Name <- gsub ("^Subbays_", "", physOc$Match_Name) #, fixed = TRUE)
@@ -85,6 +209,7 @@ physOc$Match_Name <- gsub ("Bear ", "Bear_", physOc$Match_Name, fixed = TRUE)
 physOc$Match_Name <- gsub ("^J[bB]ay", "Jakolof", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^K[bB]ay", "Kasitsna", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^KB([0-9])", "AlongBay_\\1", physOc$Match_Name)
+
 physOc$Match_Name <- gsub ("_0", "_", physOc$Match_Name, fixed = TRUE) # as per naming convention
 physOc$Match_Name <- gsub ("_(\\d+)[ab]$", "_\\1", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^9andTutka_Tutka", "Tutka_", physOc$Match_Name)
@@ -115,7 +240,14 @@ print (badStn <- showBad (physOc))
 # physOc <- subset (physOc, physOc$Match_name != "9_4south")
 physOc <- physOc [physOc$Station != "4south",]
 ###
+}
 
+## fix up station and transect names from Match_Name
+trst <- strsplit(physOc$Match_Name, "_", fixed = TRUE)
+trst <- do.call ("rbind", trst)
+physOc$Transect <- trst [,1]
+physOc$Station <- trst [,2]
+rm (trst)
 
 
 
@@ -168,7 +300,7 @@ summary (physOc)
 
 
 
-## check whether still needed? 
+## check whether still needed?
 if (0){
 ## easier to re-export all CTD data?
 ## Re-assembly of inconsistent data is a bit of a mess
@@ -186,12 +318,6 @@ write.csv (badStn, file = "~/tmp/LCI_noaa/media/BadStationNames.txt"
 rm (badStn, transT)
 }
 
-## -- check this -- still relevant?? 
-## fix up station and transect names from Match_Name
-physOc$Transect <- stn$Line [match (physOc$Match_Name, stn$Match_Name)]
-# physOc$Station <- stn$New.Station.Name [match (physOc$Match_Name, stn$Match_Name)]
-
-
 
 
 
@@ -199,34 +325,33 @@ physOc$Transect <- stn$Line [match (physOc$Match_Name, stn$Match_Name)]
 ## 2. annual aggregates for export ##
 #####################################
 
+save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
+
+
 Require ("zip")
+outD <- "~/tmp/LCI_noaa/data-products/CTD"
+dir.create(outD, recursive = TRUE, showWarnings = FALSE)
+wD <- getwd()
+setwd (outD) ## zip blows up otherwise
 yr <- factor (format (physOc$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (physOc, yr == levels (yr)[i])
-  write.csv (ctdA, file = paste0 ("~/tmp/LCI_noaa/cache/", levels (yr)[i], "processedCTD.csv")
-             , row.names = FALSE, quote = FALSE)
-  zipr (paste0 ("../media/CTDaggregate", levels (yr)[i], ".zip")
-        , files = paste0 ("~/tmp/LCI_noaa/cache/", levels (yr)[i], "processedCTD.csv")
-        , recurse = FALSE, include_directories = FALSE)
+  tF <- paste0 (levels (yr)[i], "_Aggregatedfiles.csv")
+  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+  # zip::zip (zipfile = paste0 ("CTDaggregate", levels (yr)[i], ".zip")
+  #      , files = tF, include_directories = FALSE)
 }
 
-## zip-up result files
-# Require ("zip")
-# unlink ("~/tmp/LCI_noaa/media/processedCTD_annual.zip", force = TRUE)
-wD <- getwd()
-dir.create("~/tmp/LCI_noaa/data-products", recursive = TRUE)
-setwd ("~/tmp/LCI_noaa/data-products/")
-zFiles <- list.files ("~/tmp/LCI_noaa/cache/", pattern = "*processedCTD.csv", full.names = FALSE)
-zipr ("processedCTD_annual.zip"
-      , files = zFiles, recurse = FALSE, include_directories = FALSE)
-unlink (zFiles, force = TRUE)
+unlink ("processedCTD_annual.zip", force = TRUE)
+zFiles <- list.files ("~/tmp/LCI_noaa/data-products/", pattern = "ctd[0-9]*.csv", full.names = FALSE)
+zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
+          , include_directories = FALSE)
+# unlink (zFiles, force = TRUE)
 rm (zFiles)
 setwd (wD); rm (wD)
-### system ("zip -jm ~/tmp/LCI_noaa/media/processedCTD_annual.zip ~/tmp/LCI_noaa/cache/*processedCTD.csv")
-## write.csv (physOc, file = "~/tmp/LCI_noaa/media/CTD_aggregate_allYears.csv"
-##          , row.names = FALSE, quote = FALSE)
 rm (showBad, oldMatch, ctdA, yr)
-
+ls()
 
 
 save (physOc, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
