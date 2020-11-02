@@ -92,28 +92,54 @@ oldMatch <- physOc$Match_Name
 
 ## existing match-names are based on notebook entries. Need to go back to filenames
 ## for those where notebook entries are missing (many)
-stnFNex <- substr (physOc$File.Name, 11, nchar (physOc$File.Name))
+stnFNex <- tolower (substr (physOc$File.Name, 11, nchar (physOc$File.Name)))
 
 ## fix file-names not matching convention (missing "-" between transect and station)
 stnFNex <- gsub ("t9s06", "t9_s06", stnFNex)
-stnFNex <- gsub ("tutka", "tutka_S", stnFNex)
-stnFNex <- gsub ("tua", "tutka_Sa", stnFNex)
-stnFNex <- gsub ("tub", "tutka_Sb", stnFNex)
-stnFNex <- gsub ("sadie", "sadie_S", stnFNex)
 stnFNex <- gsub ("cookinlet", "_", stnFNex)
-stnFNex <- gsub ("pt.pogi", "pogipoint", stnFNex)
-stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
-stnFNex <- gsub ("ptgraham", "portgraham", stnFNex)
-stnFNex <- gsub ("ptgrm", "portgraham", stnFNex)
-stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
-stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
-stnFNex <- gsub ("seldovia", "seldovia_S", stnFNex)
-stnFNex <- gsub ("alongbay_pt.kblandpogi_cast123", "alongbay_1_cast123", stnFNex) ## check!
+stnFNex <- gsub ("_skb", "_s", stnFNex)
+stnFNex <- gsub ("alongbay_kb", "alongbay_s", stnFNex)
 
-p <- function (x){formatC (x, width = 2, format = "d", flag = "0")}
-for (i in 1:14){stnFNex <- gsub (paste0 ("kb", p(i)), paste0 ("ab-S", p(i)), stnFNex)}
+# stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
+# stnFNex <- gsub ("ptgraham", "portgraham", stnFNex)
+# stnFNex <- gsub ("ptgrm", "portgraham", stnFNex)
+# stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
+stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_portgraham_", stnFNex)
+stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_pogi_", stnFNex) ## check!
+
+## bad transect! -- audit XXX
+stnFNex <- gsub ("_alongbay_chinapoot[_]*", "_subbay_chinapoot", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_bear[_]*", "_subbay_bear", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_halibut[_]*", "_subbay_halibut", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_jbay[_]*", "_subbay_jbay", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_peterson[_]*", "_subbay_peterson", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_sadie[_]*", "_subbay_sadie", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_seldovia[_]*", "_subbay_seldovia", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_coalcove[_]*", "_subbay_coalcove", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_pt.bede[_]*", "_subbay_ptbede", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_dangerouscape[_]*", "_subbay_dangerouscape", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_nanwalek[_]*", "_subbay_nanwalek", stnFNex) ## check!
+stnFNex <- gsub ("alongbay_tutka[_]*", "subbay_tutka", stnFNex) ## check!
+stnFNex <- gsub ("t9andtutka_tutka[_]*", "subbays_tutka", stnFNex) ## check!
+
+## intensive-phytoplankton -- missing station name; same for tutka
+
+## individual files
+stnFNex <- gsub ("2012-07-02-kbaysubays-cast152-tub_", "2012-07-02-subbays-tutkab_cast152_", stnFNex) ## check!
+
+## testing, QAQC
+# levels (factor (physOc$File.Name [grep ("alongbay_p(or|r)*t[a-z]*_", stnFNex)]))
+# levels (factor (physOc$File.Name [grep ("pt\\.", stnFNex)]))
+
+## preventative station-labels for subbays
+
+
+
+## kiss -- no leading zero in match-names!
+# p <- function (x){formatC (x, width = 2, format = "d", flag = "0")}
+# for (i in 1:14){stnFNex <- gsub (paste0 ("kb", p(i)), paste0 ("ab-S", p(i)), stnFNex)}
 # for (i in 2:10){stnFNex <- gsub (paste0 ("tutka", p(i)), paste0 ("tutka-S", p(i)))}
-rm (p)
+# rm (p)
 
 ## extract Station and Transect numbers
 stnSp <- strsplit(gsub ("_", "-", stnFNex), "-")
@@ -145,7 +171,7 @@ stN <- sapply (1:length (stnSp), function (i){
 })
 tnN <- sapply (1:length (stnSp), function (i){
    grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
-        , tolower (stnSp[[i]]), value = TRUE)[1]
+        , stnSp[[i]], value = TRUE)[1]
 })
 
 # for (i in 1:length (tnN)){
@@ -167,9 +193,11 @@ levels (factor (tnN))
 summary (tnN == physOc$Transect)
 
 
+
 ## error-corrections and data-extraction for stations
 levels (factor (stN))
 stN <- gsub ("^s", "", stN)
+stN <- gsub ("^adie", "sadie", stN)
 stN <- gsub ("t9", "6", stN)
 stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
 stN <- gsub ("^0*", "", stN)
@@ -261,12 +289,26 @@ physOc$longitude_DD <- ifelse (is.na (physOc$longitude_DD)
 physOc$latitude_DD <- ifelse (is.na (physOc$latitude_DD)
                               , stn$Lat_decDegree [match (physOc$Match_Name, stn$Match_Name)]
                               , physOc$latitude_DD)
+physOc$Bottom.Depth <- ifelse (is.na (physOc$Bottom.Depth)
+                               , stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
+                               , physOc$Bottom.Depth
+                               )
+
+
+
 ## print (sort (levels (factor (physOc$longitude_DD))))
 ## physOc [which (physOc$longitude_DD == "NA"),]
-physOc$longitude_DD <- ifelse (physOc$longitude_DD > 0, physOc$longitude_DD * -1
-                               , physOc$longitude_DD)
-# summary (factor (physOc$File.Name [which (is.na (physOc$longitude_DD))]))
+if (max (physOc$longitude_DD, na.rm = TRUE) > 0){stop ("some longites are positive")}
+
+
+## write stations with missing positions to file
+noPos <- levels (factor (physOc$File.Name [which (is.na (physOc$longitude_DD))]))
+noPos <- levels (factor (physOc$Match_Name [which (is.na (physOc$longitude_DD))]))
+print (noPos)
+write (noPos, file = "~/tmp/LCI_noaa/data-products/missingLocations_CTD.txt")
+rm (noPos)
 # summary (physOc$longitude_DD)
+
 
 
 
@@ -275,11 +317,9 @@ Require ("oce")
 physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
                                                           , Pressure..Strain.Gauge..db.
                                                           , eos = "unesco"))-1000
-## O2 Saturation is off -- sometimes reported as ml/l, others as mg/l.
-## no obvious way in oce, but could recalculate it using
-## LakeMetabolizer::o2.at.sat()
+if (0){
 Require ("LakeMetabolizer")
-## # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.
+## # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. -- or get straight from seabird!
 O2 <- with (
   physOc, o2.at.sat.base (temp = Temperature_ITS90_DegC
                           #                          , baro = Pressure..Strain.Gauge..db. *100 + 1000
@@ -288,37 +328,127 @@ O2 <- with (
 ## plot (O2, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.)
 physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. <- O2
 rm (O2)
-physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
-
+}
+# physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
 physOc$Spice <- with (physOc, swSpice (Salinity_PSU
                                        , Temperature_ITS90_DegC
                                        , Pressure..Strain.Gauge..db.
 ))
 summary (physOc)
-## any other data cleaning on physOc data...
 
 
 
 
-## check whether still needed?
+
+
+
+#####################################################
+## trouble-shooting density and depth calculations ##
+#####################################################
+
+## a fair number of casts have highest density/salinity at the surface. Remove those impossible data points.
+badDens <- function (i){
+  ctd <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
+  cntx <- subset (1:nrow (physOc), physOc$File.Name == levels (physOc$File.Name)[i])
+  if (!is.na (sum (ctd$Density_sigma.theta.kg.m.3[c(1,2)]))){ # bad/missing values Density_sigma.theta.kg.m.3
+    if (ctd$Density_sigma.theta.kg.m.3 [1] >
+        ctd$Density_sigma.theta.kg.m.3 [2]){
+      bCntr <- cntx [1]
+    }else{
+      bCntr <- numeric()
+    }
+  }else{bCntr <- numeric()
+  }
+  return (bCntr)
+}
+# bCntr <- unlist (mclapply (1:length (levels (physOc$File.Name)), FUN = badDens
+#                          , mc.cores = nCPUs))
+bCntr <- unlist (lapply (1:length (levels (physOc$File.Name)), FUN = badDens))
+
+cat ("\n\nRemoved first data point from ", length (bCntr), " out of ",
+     length (levels (physOc$File.Name)), "CTD casts ("
+     , round (length (bCntr)/length (levels (physOc$File.Name))*100)
+     ,"%) because surface density \nwas higher than in subsequent samples.\n\n")
+physOc <- subset (physOc, !(1:nrow (physOc)) %in% bCntr)
+rm (bCntr, badDens)
+
+
+
+
+## dF <- factor (physOc$File.Name)         # Date ?
+## dPc <- unlist (mclapply (1:length (levels (dF)), function (i){
+##     x <- subset (physOc, dF == levels (dF)[i])
+##     r <- cor (x$Pressure..Strain.Gauge..db.,x$Depth.saltwater..m.)
+##     return (r)
+## }
+## , mc.cores = nCPUs))
+## summary (dPc)
+
 if (0){
-## easier to re-export all CTD data?
-## Re-assembly of inconsistent data is a bit of a mess
-## output translation table
-transT <- cbind (Trans_Station = oldMatch, Match_Name = physOc$Match_Name)[!duplicated (oldMatch),]
-## XXX Warning number or ros or results is not multiple of vector length (arg 2).
-## does this need a fix/is a bug ?? XXX
-
-transT <- transT [order (transT [,1]),]
-write.csv (subset (transT, transT [,1] != transT [,2])
-           , file = "~/tmp/LCI_noaa/media/PO_stationNames.csv"
-           , row.names = FALSE, quote = FALSE)
-write.csv (badStn, file = "~/tmp/LCI_noaa/media/BadStationNames.txt"
-           , row.names = FALSE, quote = FALSE)
-rm (badStn, transT)
+  is.monotone <- function (ts){
+    tsd <- ts [2:length (ts)]
+    difV <- ts [1:(length (ts)-1)]-tsd
+    all (difV <= 0)
+  }
+  badPAR <- sapply (levels (physOc$File.Name), FUN = function (fn){
+    cast <- subset (physOc, File.Name == fn)
+    is.monotone (cast$PAR.Irradiance)
+  })
+  badDens <- sapply (levels (physOc$File.Name), FUN = function (fn){
+    cast <- subset (physOc, File.Name == fn)
+    is.monotone (cast$Density_sigma.theta.kg.m.3)
+  })
 }
 
+## exclude bad casts, cast that don't include top water layer
+gC <- levels (factor (subset (physOc, Depth.saltwater..m. <= 3)$File.Name))
+physOc <- subset (physOc, File.Name %in% gC)
+physOc <- physOc [order (physOc$File.Name, physOc$Depth.saltwater..m.),] # for match
+physOc$File.Name <- factor (physOc$File.Name)
+rm (gC)
 
+
+
+
+
+## plot all casts: depth-density, temp, salinity
+
+
+
+dir.create("~/tmp/LCI_noaa/media/CTDtests/", showWarnings = FALSE)
+png ("~/tmp/LCI_noaa/media/CTDtests/testPlots%02d.png")
+xY <- factor (format (physOc$isoTime, "%Y"))
+plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.
+      #    , col = physOc$CTD.serial
+      , col = as.numeric (xY) # YEAR!!
+      , pch = 19
+)
+legend ("topright", col = 1:length (levels (xY)), pch = 19, legend = levels (xY))
+rm (xY)
+
+plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
+      , col = factor (physOc$CTD.serial))
+## plot (physOc$Oxygen.Saturation.Garcia.Gordon.mg.l., physOc$Oxygen_SBE.43..mg.l.
+##     , col = physOc$CTD.serial)
+## plot (physOc$Depth.saltwater..m., physOc$Oxygen_SBE.43..mg.l.
+##     , col = physOc$CTD.serial)
+dev.off()
+
+
+if (0){
+## plot cast-profiles
+Require ("oce")
+cCast <- levels (factor (physOc$File.Name))
+outF <- "~/tmp/LCI_noaa/media/CTDtests/profilePlots/"
+dir.create(outF, recursive = TRUE, showWarnings = FALSE)
+for (i in 1:length (cCast)){
+  ## make oce-ctd 0bject
+  pdf (paste0 (outF, cCast [i], ".pdf"))
+  ## plot profile
+  plot (ctdP, which = c("TS", "salinity+temperature", "N2", "text"))
+  dev.off()
+}
+}
 
 
 #####################################
@@ -356,8 +486,3 @@ ls()
 
 save (physOc, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 
-
-## link with ACCESS (c) database (migrate enventually), to get actual coordinates
-## use file-name to link with database tables
-## -- do that in dataSetup.R -- or BETTER: more that step and annual aggregates into this
-## file to have all CDT stuff together here

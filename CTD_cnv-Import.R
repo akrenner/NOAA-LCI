@@ -790,9 +790,8 @@ save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
 
 #  ls()
 ## where's notebook data? need lat-lon. Also need masterlist
-# "CTD1"      "dF"        "dirL"      "dT"
-# "fDt"       "fileDB"    "i"         "j"         "nCPUs"     "PDF"       "Require"   "sMatch"
-# "stationEv" "tEr"       "tS"        "x"
+# "CTD1"      "cX"        "dirL"      "fileDB"    "fX"        "i"         "nCPUs"
+# "Require"  "stationEv" "sTime"
 ## need: CTD1, fileDB?
 
 
@@ -815,7 +814,7 @@ mdata <- with (fileDB, data.frame (isoTime = localTime
                                    , CTD.serial = instSerNo
                                    , latitude_DD = stationEv$LatNotes [consensNo]
                                    , longitude_DD = stationEv$LonNotes [consensNo]
-                                   , Bottom.Depth = rep (NA, length (consensNo))## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
+                                   , Bottom.Depth = depth_bottom # rep (NA, length (consensNo))## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
                                    , comments = stationEv$Comments [consensNo]
 ))
 summary (mdata)
@@ -865,7 +864,7 @@ names (physOc) <- c ("isoTime",
                      # , "depth_bottom" # , "CTDserial"
                      , "Density_sigma.theta.kg.m.3"
                      , "Depth.saltwater..m."
-                     , "Oxygen_SBE.43..mg.l."  # verify which is exported!!
+                     , "Oxygen.Saturation.Garcia.Gordon.mg.l."  #"Oxygen_SBE.43..mg.l."  # verify which is exported!!
                      , "PAR.Irradiance"
                      , "Salinity_PSU"
                      , "Temperature_ITS90_DegC"
@@ -879,11 +878,11 @@ names (physOc) <- c ("isoTime",
 
 
 
-
+cat ("\n\n#\n#\n#\n# ")
 print (difftime(Sys.time(), sTime))
-cat ("\n\n#\n#\n#", format (Sys.time(), format = "%Y-%m-%d %H:%M"
+cat ("\n# ", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                             , usetz = FALSE)
-     , " \n# \n# End of dataSetup.R\n#\n#\n")
+     , " \n# \n# End of CTD_cnv-Import.R\n#\n#\n")
 rm (sTime)
 
 

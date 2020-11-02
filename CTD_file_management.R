@@ -33,7 +33,7 @@ instL <- c ("4141", "5028")
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
 x <- c (unlink (paste0 (nD, instL [1], "/"))
         , unlink (paste0 (nD, instL [2], "/")))
-print (x)
+# print (x)
 for (i in 1:length (instL)){
  dir.create (paste0 (nD, instL [i]), recursive = TRUE)
 }
@@ -44,10 +44,11 @@ rm (x)
 
 
 rL <- function (f, p = NULL){ # recursive listing of files
+  ## NULL because some files are .txt -- gobble all up
   x <- list.files(paste0 ("~/GISdata/LCI/CTD-processing/Workspace/", f)
              , pattern = p, ignore.case = TRUE, recursive = TRUE
              , full.names = TRUE)
-  print (length (x))
+  # print (length (x))
   return (x)
   }
 
@@ -59,11 +60,16 @@ fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-21/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt"))
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
-print (length (fL))
+## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
+## same cast and still having the same filename.
+fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
+fL <- c(fL, rL ("ctd-data_2017-21/1_Unedited .hex files/"))
+# print (length (fL))
 rm (rL)
 
 
-
+## bad files out
+fL <- fL [-grep ("Troubleshooting", fL)]
 ## manually remove duplicates -- if any -- none found
 
 ## check duplicates by name or sha256
@@ -71,7 +77,7 @@ fDB <- data.frame (file = fL
                    , fN = gsub ("^.*/", "", fL)
 )
 rm (fL)
-fDB <- fDB[with (fDB, order (file, fN)),]
+# fDB <- fDB[with (fDB, order (file, fN)),]
 fDB$isD <- duplicated (fDB$fN)
 
 if (0){
@@ -109,7 +115,7 @@ for (i in 1:nrow (fDB)){
   hx <- gsub ("^.* ", "", grep ("Conductivity SN", hx, value = TRUE))
   fDB$instN [i] <- hx
   fDB$copy [i] <- file.copy (from = fDB$file [i]
-                              , to = paste0 (nD, "/", fDB$instN [i], "/")
+                              , to = paste0 (nD, fDB$instN [i], "/")
                               , recursive = FALSE
              , overwrite = FALSE, copy.date = TRUE)
 }
@@ -208,7 +214,12 @@ inspFile <- function (patternfind, nr = 80){
 
 
 ## 20125_04 -- impossible date. Wrong metadata and FN
-fixBoth ("20125_04", "2015_04", "2015-04-12")  # make sure all on 12th!
+fixBoth ("20125_04-12", "2015_04-12", "2015-04-12")  # make sure all on 12th!
+# fixBoth ("04_24_2019", "2019-04-24", "2019-04-24")
+fixFN ("04(_|-)24(_|-)2019", "2019_04-24")
+fixFN ("04(_|-)29(_|-)2019", "2019_04-24")
+fixFN ("2019(_|-)15(_|-)14", "2019_05-14")
+
 
 ## manually fix-up files with discrepancies metadata vs filename
 
@@ -335,17 +346,19 @@ x <- substr (fDB$shortFN, 1, 11)  ## extract dates
 x <- gsub ("_+", "-", x)          ## fix up messes
 x <- gsub ("-+", "-", x)
 x <- gsub ("-$", "", x)
-fDB$fnDate <- as.POSIXct (x, format = "%Y-%M-%d") # create a catch in case this doesn't work!
-for (i in 1:length (x)){ # find problems in file-names -- iterative
-  fDB$fnDate [i] <- as.POSIXct (x [i])
-}
-if (i < nrow (fDB)){
-  print (x [i])
-  print (fDB [i,])
-  stop ("filename doesn't contain good date")
+xT <- try (as.POSIXct (x, format = "%Y-%M-%d")) # catch in case this doesn't work
+if (class (xT)[1] != "try-error"){
+  fDB$fnDate <- xT
+}else{
+  for (i in 1:length (x)){ # find problems in file-names -- iterative
+    xT <- try (as.POSIXct (x[i]))
+    if (class (xT)[1] == "try-error"){
+      stop ("malformed date in ", i, " ", x [i])
+    }
+  }
 }
 ## clean-up
-rm (x, i)
+rm (x, i, xT)
 
 
 ## gather metadata dates
@@ -451,6 +464,7 @@ if (any (fDB$tErr > 1)){
 ## fix metDate above to make this unneccessary,
 ## or fix this so metDate does not become numeric
 
+## for now, fix discrepancy in favor of filename (here?)
 
 
 ## thought: cut-out date-filename, replace with metDate
@@ -523,6 +537,7 @@ for (i in 1:nrow (fDB)){
   fDB$calDist [i] <- min (dT)
   fDB$procDir [i] <- cFDB$dir [which.min (dT)]
 }
+
 ## exclude those files for now pre-dating the first calibration file
 # fDBx <- subset (fDB, fDB$calDist < 365*10) # should never be greater than 10 years
 fDBx <- fDB
