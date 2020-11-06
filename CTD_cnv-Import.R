@@ -33,12 +33,10 @@
 # x negative pressures: delete. Aircasts?  Calibration file is correct!
 
 ## 2020-10-13: resolve metadata-filename date mismatches!
-## get bottom depth right for physOc
 
 ## make SURE, fileDB alsoways has station, transect, lat, lon
 ##            lat lon can be from notebook or master list -- cannot be NA
 
-## XXX fix: bottom depth is all NA
 
 
 
@@ -142,7 +140,7 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 ## ok to ignore warnings regarding NAs introduced by coersion
 
-save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")  ## this to be read by dataSetup.R
+save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 
 
@@ -177,7 +175,7 @@ readCNV <- function (i){
     # could/should specify min soak times, soak depth -- min soak time = 40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }
-  if (median (median (ctdF@data$pressure)) < 0){
+  if (median (ctdF@data$pressure) < 0){
     cat ("Negative pressure: ", fN [i], "\n")
     # log bad files
     write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
@@ -203,9 +201,10 @@ readCNV <- function (i){
                         #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
                         , depth_bottom = meta (ctdF@metadata$waterDepth)
                         #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                        , density = ctdF@data$sigmaT # use sigmaTheta or sigmaT?; what's "theta"?
+                        , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
                         , depth = ctdF@data$depth
                         , O2 = ctdF@data$oxygen
+                        , O2GG = ctdF@data$oxygen2
                         , par = ctdF@data$par
                         , salinity = ctdF@data$salinity
                         , temperature = ctdF@data$temperature
@@ -739,7 +738,7 @@ for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
 ## there are a few -- delete cnv file!
 # unlink (paste0 (dir, "/", fileDB$path [dF]))
 rm (dF, dubFiles)
-
+rm (fX, cX)
 
 
 if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same station sampled 2x+ per day)
@@ -819,6 +818,7 @@ mdata <- with (fileDB, data.frame (isoTime = localTime
 ))
 summary (mdata)
 summary (fileDB$consensNo)
+rm (stationEv)
 
 ## FIX here: lat-long: all NA!
 
@@ -864,7 +864,8 @@ names (physOc) <- c ("isoTime",
                      # , "depth_bottom" # , "CTDserial"
                      , "Density_sigma.theta.kg.m.3"
                      , "Depth.saltwater..m."
-                     , "Oxygen.Saturation.Garcia.Gordon.mg.l."  #"Oxygen_SBE.43..mg.l."  # verify which is exported!!
+                     , "Oxygen_SBE.43..mg.l."  # verify which is exported!!
+                     , "Oxygen.Saturation.Garcia.Gordon.mg.l."
                      , "PAR.Irradiance"
                      , "Salinity_PSU"
                      , "Temperature_ITS90_DegC"
@@ -874,7 +875,7 @@ names (physOc) <- c ("isoTime",
                      , "turbidity"
 )
 # print (summary (physOc))
-
+rm (i)
 
 
 

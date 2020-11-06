@@ -117,10 +117,15 @@ stnFNex <- gsub ("_alongbay_sadie[_]*", "_subbay_sadie", stnFNex) ## check!
 stnFNex <- gsub ("_alongbay_seldovia[_]*", "_subbay_seldovia", stnFNex) ## check!
 stnFNex <- gsub ("_alongbay_coalcove[_]*", "_subbay_coalcove", stnFNex) ## check!
 stnFNex <- gsub ("_alongbay_pt.bede[_]*", "_subbay_ptbede", stnFNex) ## check!
+stnFNex <- gsub ("_alongbay_say", "_subbay_say", stnFNex) ## check!
 stnFNex <- gsub ("_alongbay_dangerouscape[_]*", "_subbay_dangerouscape", stnFNex) ## check!
 stnFNex <- gsub ("_alongbay_nanwalek[_]*", "_subbay_nanwalek", stnFNex) ## check!
 stnFNex <- gsub ("alongbay_tutka[_]*", "subbay_tutka", stnFNex) ## check!
 stnFNex <- gsub ("t9andtutka_tutka[_]*", "subbays_tutka", stnFNex) ## check!
+stnFNex <- gsub ("cast", "_cast", stnFNex)
+stnFNex <- gsub ("__+", "_", stnFNex) ## no duplicates
+
+
 
 ## intensive-phytoplankton -- missing station name; same for tutka
 
@@ -160,6 +165,17 @@ rbind (tran = length (tnN),## check that length is correct
 levels (factor (stN))
 bS <- grep ("cast", stN)
 stN [bS] <- sapply (bS, function (i){stnSp[[i]][4]})
+
+## lost cause, if not already fixed earlier
+# bS <- grep ("along", stN)
+# tnN [bS] <- sapply (bS, function (i){stnSp [[i]][3]})
+# stN [bS] <- sapply (bS, function (i){stnSp [[i]][4]})
+
+bS <- grep ("4141", stN)
+stnSp [bS]
+bS <- grep ("t9", stN)
+levels (factor (physOc$File.Name [bS]))
+#@stnSp [bS]
 # bS <- grep ("t9", stN)
 # ; rm (bS) # attempt to fix disorderly cases
 # x <- which (stN == "t9")
@@ -179,8 +195,8 @@ tnN <- sapply (1:length (stnSp), function (i){
 # }
 # stnSp [[i]]
 }
-
-
+stN <- unlist (stN)
+length (stN)
 
 ## error-corrections and data-extraction for transects
 levels (factor (tnN))
@@ -196,12 +212,25 @@ summary (tnN == physOc$Transect)
 
 ## error-corrections and data-extraction for stations
 levels (factor (stN))
-stN <- gsub ("^s", "", stN)
-stN <- gsub ("^adie", "sadie", stN)
+stN <- gsub ("^s0", "", stN)
+stN <- gsub ("^s1", "1", stN)
+stN <- gsub ("^s2", "2", stN)
 stN <- gsub ("t9", "6", stN)
-stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
+stN <- gsub ("jbay", "jakalof", stN)
+stN <- gsub ("say", "sadie", stN)
+stN <- gsub ("^along*", "", stN)
+stN <- gsub ("extra", "", stN)
+stN <- gsub ("south", "", stN)
+## stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
 stN <- gsub ("^0*", "", stN)
+for (i in 0:9){
+  stN <- gsub (paste0 (i, "(a|b)"), i, stN)
+}
+
+
 levels (factor (stN))
+
+
 is.na (stN)[stN == ""] <- TRUE
 summary (stN == physOc$Station)
 
@@ -304,6 +333,7 @@ if (max (physOc$longitude_DD, na.rm = TRUE) > 0){stop ("some longites are positi
 ## write stations with missing positions to file
 noPos <- levels (factor (physOc$File.Name [which (is.na (physOc$longitude_DD))]))
 noPos <- levels (factor (physOc$Match_Name [which (is.na (physOc$longitude_DD))]))
+cat ("#\n#\n#\n# missing locations for these stations:\n\n")
 print (noPos)
 write (noPos, file = "~/tmp/LCI_noaa/data-products/missingLocations_CTD.txt")
 rm (noPos)
@@ -314,22 +344,22 @@ rm (noPos)
 
 ## bad densities (some are not sigma theta, up to 1024)
 Require ("oce")
-physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
-                                                          , Pressure..Strain.Gauge..db.
-                                                          , eos = "unesco"))-1000
-if (0){
-Require ("LakeMetabolizer")
-## # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. -- or get straight from seabird!
-O2 <- with (
-  physOc, o2.at.sat.base (temp = Temperature_ITS90_DegC
-                          #                          , baro = Pressure..Strain.Gauge..db. *100 + 1000
-                          , salinity = Salinity_PSU
-                          , model= "garcia"))
-## plot (O2, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.)
-physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. <- O2
-rm (O2)
-}
-# physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
+# physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
+#                                                           , Pressure..Strain.Gauge..db.
+#                                                           , eos = "unesco"))-1000
+# if (0){
+# Require ("LakeMetabolizer")
+# ## # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. -- or get straight from seabird!
+# O2 <- with (
+#   physOc, o2.at.sat.base (temp = Temperature_ITS90_DegC
+#                           #                          , baro = Pressure..Strain.Gauge..db. *100 + 1000
+#                           , salinity = Salinity_PSU
+#                           , model= "garcia"))
+# ## plot (O2, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.)
+# physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. <- O2
+# rm (O2)
+# }
+physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
 physOc$Spice <- with (physOc, swSpice (Salinity_PSU
                                        , Temperature_ITS90_DegC
                                        , Pressure..Strain.Gauge..db.
@@ -484,5 +514,5 @@ rm (showBad, oldMatch, ctdA, yr)
 ls()
 
 
-save (physOc, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
+save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 

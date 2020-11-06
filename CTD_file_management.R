@@ -554,7 +554,19 @@ unlink (nD, recursive = TRUE, force = TRUE)
 
 ## make small dataset for testing
 if (0){
-  dir.create ("~/GISdata/LCI/CTD-processing/allCTD/hex2test")
+  for (sFd in c("convert", "filter", "align")){
+    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/4141/", sFd), recursive = TRUE, showWarnings = FALSE)
+    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028/", sFd), recursive = TRUE, showWarnings = FALSE)
+    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/generic", sFd), recursive = TRUE, showWarnings = FALSE)
+  }
+  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_5028_Sep-2014/SBE19plus_5028_Sep-2014.xmlcon"
+             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028")
+  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_4141_Oct-2018/SBE19plus_4141_Oct-2018.xmlcon"
+             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028")
+  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_5028_Apr-2012/SBE19plus_5028_Apr-2012.CON"
+             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/generic")
+
+
   fDBy <- fDBx [sample (1:nrow (fDBx), size = 20, replace = FALSE),]
   fDBy$procDirT <- as.factor (gsub ("hex2process", "hex2test", fDBy$procDir, fixed = TRUE))
   for (i in 1:length (levels (fDBy$procDirT))){

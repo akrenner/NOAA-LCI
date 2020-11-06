@@ -151,6 +151,7 @@ if (0){
 Require ("parallel")
 x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }
+x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
 # dev.off()
 
 if (0){

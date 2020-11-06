@@ -28,9 +28,9 @@ source ("CTD_file_management.R") ## QCQA, match hex with con file
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
-# source ("datasetup.R")
-# source ("anaCTD.R")
-# source ("CTDwall.R")
+source ("datasetup.R")
+source ("anaCTD.R")              ## CTD profiles?
+source ("CTDwall.R")
 
 
 ## replot The Wall
