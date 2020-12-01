@@ -659,6 +659,8 @@ x <- subset (fileDB, chsm == 2)
 j <- 5;     tS <- c(17,18,6) #, 22)
 rm (x, j)
 fileDB$consensNo <- ifelse (fileDB$chsm == 2, NA, fileDB$consensNo)
+## alternative strategy -- trust times, not location
+
 
 ## all good: 3
 fileDB$consensNo <- fileDB$match_time

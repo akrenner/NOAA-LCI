@@ -228,6 +228,11 @@ for (i in 0:9){
 }
 
 
+## fix transects to subbay where T9 has subbay stations
+
+
+
+
 levels (factor (stN))
 
 
@@ -479,6 +484,43 @@ for (i in 1:length (cCast)){
   dev.off()
 }
 }
+
+
+save.image ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")  ## this to be read by dataSetup.R
+
+summary (is.na (physOc$latitude_DD))
+summary (is.na (physOc$longitude_DD))
+noLL <- which (is.na (physOc$latitude_DD))
+levels (factor (physOc$Match_Name[noLL]))
+## remove unresolved positions -- still too many!
+physOc <- subset (physOc, !is.na (latitude_DD))
+physOc <- subset (physOc, !is.na (longitude_DD))
+
+
+## QAQC: plot each day, station in order
+pdf ("~/tmp/LCI_noaa/media/CTDstationTest.pdf")
+dayF <- factor (physOc$Date)
+for (i in 1:length (levels (dayF))){
+  crs <- subset (physOc, dayF == levels (dayF)[i])
+  crs <- subset (crs, duplicated(crs$Match_Name) == FALSE)
+  crs <- crs [order (crs$isoTime),]
+  if (nrow (crs) > 0){
+    cF <- factor (crs$CTD.serial)
+    for (j in 1:length (levels (cF))){
+      crsC <- subset (crs, cF == levels (cF)[j])
+      plot (latitude_DD~longitude_DD, crsC
+            , main = paste (levels (dayF)[i], paste (cF [j], levels (factor (crsC$Transect)), collapse = " and "))
+            , type = "l")
+      # with (crsC, text (longitude_DD, latitude_DD, labels = Station))
+      # with (crsC, text (longitude_DD, latitude_DD, labels = Match_Name))
+      with (crsC, text (longitude_DD, latitude_DD, labels = paste (Transect, Station, sep = "-"), cex = 0.7))
+    }
+  }
+}
+
+dev.off()
+rm (dayF, crs, cF, crsC)
 
 
 #####################################

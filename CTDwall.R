@@ -28,18 +28,13 @@ physOc$Transect <- factor (physOc$Transect)
 physOc$year <- factor (format (physOc$isoTime, "%Y"))
 ## combine CTD and station meta-data
 physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through the cracks??
-## stn <- stn [,which (names (stn) %in%
-##                     c("Line", "Station", "Match_Name", "Lon_decDegree", "Lat_decDegree", "Depth_m")
-##                     )]
-physOc <- cbind (physOc, stn [match (physOc$Match_Name, stn$Match_Name)
-                              , which (names (stn) %in% c(# "Line",
-                                                          "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
+## stn should be no longer needed -- see dataSetup.R
+# physOc <- cbind (physOc, stn [match (physOc$Match_Name, stn$Match_Name)
+#                               , which (names (stn) %in% c(# "Line",
+#                                                           "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 # print (summary (physOc))
 
-## weed out for now, but HAVE TO FIX eventually??
-physOc <- subset (physOc, !is.na (Salinity_PSU))
-# physOc <- subset (physOc, )
 
 
 
@@ -83,6 +78,8 @@ poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Ga
 #
 # add flourescence to other variables. To do that, need to make section from oce-ctd object
 
+
+dir.create ("~/tmp/LCI_noaa/media/CTDwall", recursive = TRUE, showWarnings = FALSE)
 for (j in 1:length (levels (poAll$Transect))){ # by transect
   physOcY <- subset (poAll, Transect == levels (poAll$Transect)[j])
   physOcY$year <- factor  (physOcY$year)
@@ -94,8 +91,8 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
   # pdf ("~/tmp/LCI_noaa/media/ctdWall_spSections%02d.pdf" # doesn't work in Rterm.exe, ok with RStudio
   #      , height = 11, width = 8.5
   #      )
-  pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall_"
-               , "_T-", levels (poAll$Transect)[j]
+  pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/"
+               , "T-", levels (poAll$Transect)[j]
                , "_", levels (physOcY$year)[k]
                , ".pdf")
        , height = 11, width = 8.5)
@@ -108,6 +105,7 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
     xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
     if (length (levels (factor (xC$Match_Name))) > 1){ ## shouldn't be necessary -- what's up with Transect = NA??
 #      xC <- xC [order (xC$isoTime, xC$Pressure..Strain.Gauge..db.),]
+      xC <- xC [order (xC$isoTime),]
       ## arrange ctd data into sections
       ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
@@ -117,43 +115,56 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
       xC <- as.section (lapply (1:length (levels (xC$Match_Name)) # XX rewrite with %>% pipes?
                                 , FUN = function (x){
                                   sCTD <- subset (xC, Match_Name == levels (Match_Name)[x])
-                                  with (sCTD,
+                                  ocOb <- with (sCTD,
                                         as.ctd (salinity = Salinity_PSU
                                                 , temperature = Temperature_ITS90_DegC
                                                 , pressure = Pressure..Strain.Gauge..db.
-                                                , longitude = Lon_decDegree
-                                                , latitude = Lat_decDegree
+                                                , longitude = longitude_DD
+                                                , latitude = latitude_DD
                                                 , station = Match_Name
                                                 #, sectionId = transDate
                                                 , time = isoTime
-                                                , other = list (flourescence = Fluorescence_mg_m3
-                                                                # add other variables here as needed
-                                                                )
                                         ))
+                                  ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
+                                  ocOb <- oceSetData (ocOb, "flourescence", sCTD$Fluorescence_mg_m3)
+                                  ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
+                                  ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
+                                  ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
+                                  ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+                                  ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
+                                  ocOb
                                 }))
 
+      if (1){
       pSec <- function (N, zC, ...){
         plot (xC, which = N
               #, showBottom = bathy
-              , showBottom = FALSE
-              , axes = TRUE, ztype = 'image', zcol = zC
-              , stationTicks = TRUE, ...) # zlim?
+              , showBottom = "lines" #FALSE
+              , axes = TRUE, ztype = 'image'
+              , zcol = zC
+              , stationTicks = TRUE
+              , showStations = TRUE
+              # , grid = TRUE
+              , ...) # zlim?
       }
       pSec (1, oceColorsTemperature) #, zlim = c(-1, 15.4))
       title (main = levels (physOc$transDate)[i], col = "blue")
       pSec (2, oceColorsSalinity) #, zlim = c(15.97, 33.22)) # non-linear scaleing?
       pSec (3, oceColorsDensity) #, zlim = c(11.58, 26.63))
-      pSec ("flourescence", oceColorsChlorophyll) #+, zlim = c(-1.6, 33.96)) # should NOT have negative flourescence XXX
+      # pSec ("turbidity", oceColorsChlorophyll) #+, zlim = c(-1.6, 33.96)) # should NOT have negative flourescence XXX
       # pSec (99, showStations = TRUE, coastline = "coastlineWorldFine")
-      if (0){
+      pSec (3)
+      }else{
         plot (xC
-              , which = c (1,2,3,99) # temp, sal, sigmaTheta, map
+              #, which = c (1,2,3,99) # temp, sal, sigmaTheta, map
+              , which = 99
               #          , coastline = "best"      # replace with local
               , coastline = "coastlineWorldFine"
               , showBottom = "polygon"  # better: provide a "topo" object
               # showBottom = bathy
               ,  axes = TRUE
               , showStations = TRUE
+              , gird = TRUE
               ###          , mar = c()
         )
       }
@@ -171,6 +182,7 @@ for (j in 1:length (levels (poAll$Transect))){ # by transect
 }
 physOc <- poAll
 rm (xC, i, poAll, pSec, physOcY)
+
 
 
 
@@ -215,7 +227,7 @@ if (0){
 
 
 ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-library(ocedata) #for the coastlineWorldFine data
+Require (ocedata) #for the coastlineWorldFine data
 data(coastlineWorldFine)
 
 mp <- function() {
@@ -225,7 +237,7 @@ mp <- function() {
 }
 
 
-pdf ("~/tmp/LCI_noaa/media/studyareaMap.pdf")
+pdf ("~/tmp/LCI_noaa/media/CTDwall/studyareaMap.pdf")
 mp()
 # mapImage (bathy, col = oceColorsGebco, breaks = seq (-500, 0, 500))
 mapImage (bathy, col = oceColorsGebco, breaks = c (seq (-300, 0, 20), 2000))
