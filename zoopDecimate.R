@@ -1,8 +1,11 @@
 #!/usr/bin/env Rscript
 
-## zooplankton comparison across years
+## zooplankton community distances between samples
+## figure out which stations/transects to cull
+## use zoopCoomunity as a template
 
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
+
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R -- of interest: zooC and zooCenv
 set.seed (8)
 Require ("sp")
 Require ("raster")
@@ -10,14 +13,123 @@ Require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019/", recursive = TRUE, showWarnings = FALSE)
 
 
-### standardize survey effort and distribution!! 
+
+## cluster analysis of zoop, label by station (and year/month?)
+
+## average stations over seasons and years
+## iteratively remove closest station
+## plot total multi-D variance against sample size
+
+
+agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
+
+# agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name), zooCenv$Year))
+
+row.names (agZoop) <- agZoop [,1]
+agZoop <- agZoop [,2:ncol (agZoop)]
+
+## reduce to core stations
+cS <- grep ("^(Along|[1-9])", row.names (agZoop))
+agZoop <- agZoop [cS,]; rm (cS)
+
+require ("vegan")
+nM <- metaMDS (agZoop, distance = "bray", k = 3, try = 200, trymax = 500)
+
+pdf ("~/tmp/LCI_noaa/media/zoopStation-nMDS.pdf")
+plot (nM, "sites", type = "n")
+text (nM, "sites")
+dev.off()
+
+pdf ("~/tmp/LCI_noaa/media/zoopStation-Cluster.pdf")
+plot (hclust (dist (agZoop, "manhattan"), method = "ward.D"))
+dev.off()
+
+
+## iterative reduction
+disM <- function (cM){# distance measure
+  dist (cM, "manhattan")
+}
+
+## measure of diversity/distance/variance
+dM <- function (cM){
+  require ("vegan")
+  ## ideas: variance
+
+  ## species diversity
+  diversity (rowSums (cM), index = "shannon", MARGIN = 1)
+
+  # species richness
+#  specnumber (rowSums(cM))
+
+  ## total distance
+#  sum (disM (cM))
+}
+## total distance and species richness show a slope with no indication of leveling off
+## diversity is a more useful measure here
+
+
+## heuristic: remove shortest distance, repeat
+rdS <- data.frame (Nsamp = 35:2, divM = NA, drop = NA, stns = NA)
+
+## heuristic -- iterative search
+nZ <- agZoop
+for (i in 1:(nrow (agZoop)-1)){
+  rdS$Nsamp [i] <- nrow (nZ)
+  rdS$divM [i] <- dM (nZ)
+  rdS$stns [i] <- paste (rownames(nZ), collapse = ", ")
+  cbn <- combn (1:nrow (nZ), 2) # only look at pairs
+  cOut <- which.min (sapply (1:ncol (cbn), function (j){dM (nZ [cbn [,j],])}))
+  # remove first, random, or optimal station XXX -- random for now
+  sOut <- cbn [sample (1:2, 1), cOut]
+  rdS$drop [i] <- rownames(nZ) [sOut]
+  nZ <- nZ [-sOut,]  # watch out here for scoping XXX
+}
+
+
+if (1){
+  ## exhaustive search -- try whether it can be done (NP-hard?!)
+  ## yes, it's NP hard and impossible!!
+  for (i in 1:(nrow (agZoop))-1){
+    cbn <- combn (1:nrow (agZoop), nrow (agZoop)-i+1)
+    oCbn <- which.max (sapply (1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])}))
+    oVect <- cbn [,oCbn]
+    rdS$Nsamp [i] <- nrow (cbn)
+    rdS$div [i] <- dM (agZoop [oVect,]) # could recycle above
+    rdS$stns [i] <- paste (rownames (agZoop)[oVect], collapse = ", ")
+    cat (i, "\n")
+  }
+}
+
+
+
+pdf ("~/tmp/LCI_noaa/media/zoopStation-optimization.pdf")
+plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
+dev.off()
+
+write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-optimization.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### standardize survey effort and distribution!!
 ## pick out stations that were present in each year-season combination
 year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))
 sttn <- with (zooCenv@data, paste (Transect, Station, sep = "-"))
 
 summary (duplicated(zooCenv$SampleID_H))
 summary (duplicated (zooCenv$SampleID))
-## remove or leave-in 6 duplicated stations? 
+## remove or leave-in 6 duplicated stations?
 
 ## year_season <- subset (year_season, year_season != "NA-NA")
 ## sttn <- subset (sttn, sttn != "-")
@@ -105,7 +217,7 @@ barplot (tempDay$AJ~poDay
 ##       , col = ifelse (tempDay$AJ < 0, "blue", "red")
        , border = NA
        , xlab = "time"
-       , ylab = "90 day moving average temperature anomaly [°C]"
+       , ylab = "90 day moving average temperature anomaly [?C]"
        , axes = FALSE
        , names.arg = "" #nArgs
         # , ylim = c(-2.6, 2.5)
@@ -191,8 +303,8 @@ T9env$month <- factor (T9env$month)
 T9env$zoopSum <- rowSums (subset (zooC, zooCenv$Transect == 9))
 
 ## test densities -- something is wrong
-## plot (volSample~month, T9env)           # volSamples not right!! 
-# plot (zoopSum~month, T9env)           # volSamples not right!! 
+## plot (volSample~month, T9env)           # volSamples not right!!
+# plot (zoopSum~month, T9env)           # volSamples not right!!
 
 plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month]
     , pch = 19 # as.numeric (factor (T9env$Station))
@@ -200,7 +312,7 @@ plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month]
  #   , cex = 10 * (T9env$zoopSum / max (T9env$zoopSum))
       )
 for (i in 1:length (levels (T9env$month))){
-    cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)   
+    cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
 }
 # legend ("topleft", legend = month.abb, pch = 19, col = mCol)
 text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
@@ -208,7 +320,7 @@ dev.off()
 write.csv (data.frame (T9, T9env, subset (zooC, zooCenv$Transect == 9))
          , file = "~/tmp/LCI_noaa/cache/zoopT9monthly.csv", row.names = FALSE)
 
-## model to dig into this further? 
+## model to dig into this further?
 
 
 
@@ -226,7 +338,7 @@ if (0){
     cbind (month.abb, kmeans (mT9, 3)$cluster)
     rm (kM)
 }
-    
+
 Require (magrittr) # for pipe!
 zoo.hc <- mT9 %>%
     scale() %>%
@@ -248,7 +360,7 @@ rm (zoo.hc, mT9, T9, T9env, mCol)
 # PDF ("2019/zoop-all-cluster")
 pdf (paste0 (dirL[3], "/2019/zoopall-cluster.pdf"))
 # row.names(zooC) <- zooCenv$SampleID ## duplicated sample IDs! ok??
-zoo.hc <- zooC %>% 
+zoo.hc <- zooC %>%
   #  aggregate(x, list (zooCenv$Sampling.location)) %>%
   subset (subset = zooCenv$season == "summer") %>%
   scale() %>%
@@ -371,12 +483,12 @@ Require ("RColorBrewer")
 plotInSeason ("Zoop_intraseasonal-nMDS_location"
             , plotCat = "Transect"
             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
-                                        # brewer.pal (length (levels (zooCenv$Transect)), name = "Set3")  
+                                        # brewer.pal (length (levels (zooCenv$Transect)), name = "Set3")
             , hull = TRUE, legLoc = "bottomleft")
 
 plotInSeason ("Zoop_intraseasonal-nMDS_years"
             , plotCat = "Year"
-            , colP =  rainbow_hcl (length (levels (zooCenv$Year)))  
+            , colP =  rainbow_hcl (length (levels (zooCenv$Year)))
             , hull = TRUE, legLoc = "bottomleft")
 
 # print (summary (zooCenv$SalCat))
@@ -387,13 +499,13 @@ plotInSeason ("Zoop_intraseasonal-nMDS_Sal"
 ## error in file(con, "w") : cannot open the connection -- XX not sure what the issue
 # plotInSeason ("Zoop_intraseasonal-reScalenMDS_location"
 #             , plotCat = "Transect"
-#             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))  
+#             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
 #             , hull = TRUE, legLoc = "bottomleft"
 #             , reScale = TRUE
 #               )
 # plotInSeason ("Zoop_intraseasonal-reScalenMDS_years"
 #             , plotCat = "Year"
-#             , colP = rainbow_hcl (length (levels (zooCenv$Year)))  
+#             , colP = rainbow_hcl (length (levels (zooCenv$Year)))
 #             , hull = TRUE #, legLoc = "bottomleft"
 #             , reScale = TRUE
 #               )
@@ -508,7 +620,7 @@ rm (aicTb, bM, aicTx, mdlL)
 if (0){## quantify variability within seasons, comparing warm/cold (why??)
 sDz <- aggregate (nMScores [,1:3]~season+warmCat, data = zooCenv, FUN = sd)
 Require (lattice)
-# bargraph 
+# bargraph
 PDF ("2019/Zoop_seasonal-SD")
 for (i in 1:3){
     barchart (sDz [,2+i]~warmCat|season, data = sDz, ylab = paste ("SD nMDS", i))
@@ -540,7 +652,7 @@ for (j in 1:3){
                , xlab = levels (zooCenv$season)[i]
                , ylab = ""
                  ##, horizontal = TRUE
-               , notch = TRUE, varwidth = TRUE            
+               , notch = TRUE, varwidth = TRUE
                  )
     }
     mtext (paste ("nMDS axis", j), outer = TRUE)
@@ -587,7 +699,7 @@ zooY <- zooY [,2:ncol (zooY)]
 row.names (zooY) <- zY
 rm (zY)
 
-## remove rare species? 
+## remove rare species?
 # zooY <- zooY [,which (apply (zooY, 2, max) > 1)
 
 
