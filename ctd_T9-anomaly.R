@@ -16,6 +16,8 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- 
 ## bugs/missing features ##
 ###########################
 
+
+
 # x-axis is on shaking grounds. 7000 = eye-balled. Make that programatic
 # x add vertical lines to mark years?
 # x move years to be between tick-marks
@@ -27,7 +29,7 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- 
 
 
 ## x salinity: 0-10 m  and 10 to 100 m
-## fresh-water content: psu = X, integrate over 0:10
+## x fresh-water content: psu = X, integrate over 0:10
 ## overlay all years
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
@@ -262,37 +264,47 @@ rm (anAx, clPlot)
 
 
 
+save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 
 #########################
 ## freshwater contents ##
 #########################
 
-fw <- subset (xC, Depth.saltwater..m. <= 40)
+fw <- subset (xC, Depth.saltwater..m. <= 10)
 fw <- aggregate (Salinity_PSU~Date, data = fw, FUN = function (x){
-  mean (max (xC$Salinity_PSU, na.rm = TRUE)-x, na.rm = TRUE)
+  sum (max (xC$Salinity_PSU, na.rm = TRUE)-x, na.rm = FALSE)
 })
 names (fw) <- c ("Date", "freshCont")
 fw$Date <- as.POSIXct(fw$Date)
 fw$month <- as.numeric (format (fw$Date, "%m"))
+fw$year <- as.numeric (format (fw$Date, "%Y"))
 
+## QAQC
+ is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
 
-pdf ("~/tmp/LCI_noaa/media/T9S6_freshwatercontent.pdf", height = 9, width = 6)
-par (mfrow = c(3,1)
-     , mar = c (5,4, 0.1, 0.1)
-)
-
-plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
-
-## better to use full record?
+## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
+fwS$sd <- aggregate (freshCont~month, fw, sd)$freshCont
+lfw <- fwS; lfw$month <- lfw$month - 12
+ufw <- fwS; ufw$month <- ufw$month + 12
+fwS <- rbind (lfw, fwS, ufw); rm (lfw, ufw)
+require (mgcv)
+md <- gam (freshCont~s(month), data = fwS)
+lS <- loess (freshCont~month, data = fwS, span = 0.2)
 ## stick with monthly means for now, rather than smooth
+fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
+
+
+
 if (1){
-  lfw <- fwS; lfw$month <- lfw$month - 12
-  ufw <- fwS; ufw$month <- ufw$month + 12
-  fwS <- rbind (lfw, fwS, ufw); rm (lfw, ufw)
-  require (mgcv)
-  md <- gam (freshCont~s(month), data = fwS)
-  lS <- loess (freshCont~month, data = fwS, span = 0.2)
+  pdf ("~/tmp/LCI_noaa/media/T9S6_freshwatercontent.pdf", height = 9, width = 6)
+  par (mfrow = c(3,1)
+       , mar = c (5,4, 0.1, 0.1)
+  )
+  ## time series
+  plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
+  ## seasonal climatology
   plot (freshCont~month, fwS
         , xlim = c(1,12), type = "l", lwd = 2
         , ylab = "freshwater content"
@@ -304,14 +316,21 @@ if (1){
           , col = c("black", "red", "blue")
           , lwd = 2
   )
+  ## freshwater anomaly
+  plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
+  abline (h = 0, col = "gray")
+
+  dev.off()
 }
-## freshwater anomaly
-fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
-plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
-abline (h = 0, col = "gray")
 
+
+### timing of freshwater -- panel for each year ###
+require ("lattice")
+pdf ("~/tmp/LCI_noaa/media/T9S6_freshSeason.pdf", width = 7, height = 9)
+print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
+print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
+               , xlab = "freshwater anomaly"))
 dev.off()
-
 
 

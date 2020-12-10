@@ -5,7 +5,7 @@ if (length (grep ("Martin", getwd())) > 0){
    setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }else{
    # setwd("~/GISdata/LCI/CTDprocessing/")
-   setwd("~/myDocs/R-scripts")
+   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 
 
