@@ -22,11 +22,14 @@ dir.create ("~/tmp/LCI_noaa/media/2019/", recursive = TRUE, showWarnings = FALSE
 
 
 agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
-
-# agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name), zooCenv$Year))
-
 row.names (agZoop) <- agZoop [,1]
 agZoop <- agZoop [,2:ncol (agZoop)]
+
+## instead use season x station
+agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name),  zooCenv$season), sum)
+row.names (agZoop) <- paste (as.character (agZoop [,1]), as.character (agZoop [,2]), sep = "-")
+agZoop <- agZoop [,3:ncol (agZoop)]
+
 
 ## reduce to core stations
 if (1){
@@ -34,16 +37,20 @@ if (1){
   agZoop <- agZoop [cS,]; rm (cS)
 }
 require ("vegan")
+if (1){
 nM <- metaMDS (agZoop, distance = "bray", k = 3, try = 200, trymax = 500)
 
-pdf ("~/tmp/LCI_noaa/media/zoopStation-nMDS.pdf")
+pdf ("~/tmp/LCI_noaa/media/zoopStationYear-nMDS.pdf")
 plot (nM, "sites", type = "n")
 text (nM, "sites")
 dev.off()
 
-pdf ("~/tmp/LCI_noaa/media/zoopStation-Cluster.pdf")
+pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf")
 plot (hclust (dist (agZoop, "manhattan"), method = "ward.D"))
 dev.off()
+}
+
+
 
 
 ## iterative reduction
@@ -72,7 +79,7 @@ dM <- function (cM){
 
 
 ## heuristic: remove shortest distance, repeat
-rdS <- data.frame (Nsamp = 35:2, divM = NA, drop = NA, stns = NA)
+rdS <- data.frame (Nsamp = nrow (agZoop):2, divM = NA, drop = NA, stns = NA)
 
 ## heuristic -- iterative search
 nZ <- agZoop
@@ -93,25 +100,38 @@ for (i in 1:(nrow (agZoop)-1)){
   rdS$drop [i] <- rownames(nZ) [sOut]
   nZ <- nZ [-sOut,]  # watch out here for scoping XXX
 }
-pdf ("~/tmp/LCI_noaa/media/zoopStation-uoptimization.pdf")
+
+
+pdf ("~/tmp/LCI_noaa/media/zoopStation-unoptimization.pdf")
 plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
 dev.off()
+write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-unoptimization.csv", row.names = FALSE)
+save.image ("~/tmp/LCI-noaa/cache/zoopDec.RData")
 
-write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-optimization.csv", row.names = FALSE)
 
-
+## exhaustive search -- try whether it can be done (NP-hard?!)
+## yes, it's NP hard and impossible!!
+nCPUs <- detectCores (logical = TRUE)-1
 require ("parallel")
-nCPUs <- detectCores (logical = TRUE)
-#if (version$os == "mingw32"){
-if (0){
-  # require ("doParallel")
-  # cl <- makeCluster (nCPUs-1)
-  # registerDoParallel (cl)
-  require ("doSMP")  # .... then do foreach loop
-}
-cat ("\n##\n##\nStarting exhaustive search\n\n")
-## exhaustive search -- try whether it can be done (NP-hard!)
+## would use SMP on windows
+#  if (version$os == "mingw32"){
 
+## replace just the selected sample size
+for (i in 1:(nrow (agZoop)-1)){
+    sT <- Sys.time()
+    cbn <- combn (1:nrow (agZoop), nrow (agZoop)-i+1)
+  if (version$os == "mingw32"){
+        oCbn <- which.max (sapply (1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])}))
+    }else{oCbn <- which.max (unlist (mclapply (1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])}, mc.cores = nCPU)))
+    }
+    oVect <- cbn [,oCbn]
+    rdS$Nsamp [i] <- nrow (cbn)
+    rdS$div [i] <- dM (agZoop [oVect,]) # could recycle above
+    rdS$stns [i] <- paste (rownames (agZoop)[oVect], collapse = ", ")
+    cat (i, difftime (Sys.time(), sT, units = "mins"), "\n")
+    save.image (paste0 ("~/tmp/zoopDecStatYear", i, ".RData"))
+    cat (i, difftime (Sys.time(), nT, units = "min"), " min\n")
+}
 ## needs to run on fast parallel machine. On NOAA laptop:
 # 1 0.0001332641  min
 # 2 0.002182035  min
@@ -123,30 +143,6 @@ cat ("\n##\n##\nStarting exhaustive search\n\n")
 # 8 492.16  min
 # 9 -- unknown
 
-for (i in 1:(nrow (agZoop)-1)){
-  nT <- Sys.time()
-  cbn <- combn (1:nrow (agZoop), nrow (agZoop)-i+1)
-  if (version$os == "mingw32"){
-    oCbn <- which.max (sapply (1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])}))  ## this is the part to parallelize
-    # res <- parLapply (cl, 1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])})
-    # oBCn <- which.max (unlist (res))
-    # rm (res)
-  }else{
-    oCbn <- which.max (unlist (mclappy (1:ncol (cbn), function (j){dM (agZoop [cbn [,j],])}, mc.cores = nCPUs)))
-  }
-  oVect <- cbn [,oCbn]
-  rdS$Nsamp [i] <- nrow (cbn)
-  rdS$divE [i] <- dM (agZoop [oVect,]) # could recycle above
-  rdS$stns [i] <- paste (rownames (agZoop)[oVect], collapse = ", ")
-  save.image (paste0 ("~/tmp/LCI_noaa/cache/zoopDecim", i, ".RData"))
-  cat (i, difftime (Sys.time(), nT, units = "min"), " min\n")
-  #  cat (i, "\n")
-}
-
-# if (version$os == "mingw32"){
-#   stopCluster (cl)
-# }
-
 
 pdf ("~/tmp/LCI_noaa/media/zoopStation-exactoptimization.pdf")
 plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
@@ -154,7 +150,5 @@ lines (divE~Nsamp, rdS, lwd = 2, col = "green")
 dev.off()
 
 write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-exactoptimization.csv", row.names = FALSE)
-
-
 
 ## EOF
