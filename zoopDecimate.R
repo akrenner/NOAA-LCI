@@ -26,7 +26,7 @@ Require ("sp")
 Require ("raster")
 Require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019/", recursive = TRUE, showWarnings = FALSE)
-# dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
+dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
 
 
@@ -82,6 +82,20 @@ dev.off()
 
 
 
+## estimate size of the problem -- calculated combinations
+n <- nrow (agZoop)
+df <- data.frame (k = 1:n, opt = NA)
+df$opt <- factorial (n) / (factorial (df$k)*factorial(n-df$k))
+pdf ("~/tmp/LCI_noaa/media/zoop_combinations.pdf")
+plot (opt~k, df, type = "l")
+# abline (v = 13)
+dev.off()
+sum (df$opt)/1e6
+sum (subset (df$opt, df$k < 14))/1e6
+rm (n, df)
+
+
+
 
 ## iterative reduction
 disM <- function (cM){# distance measure
@@ -112,45 +126,60 @@ dM <- function (cM, meas = "div"){
 
 
 
+
+
+
 ## heuristic: remove shortest distance, repeat
 rdS <- data.frame (Nsamp = nrow (agZoop):2, divM = NA, drop = NA
                    , stns = NA, diveE = NA, stnsE = NA)
 
+
+
+
 ## heuristic -- iterative search
-nZ <- agZoop
-for (i in 1:(nrow (agZoop)-1)){
-  rdS$Nsamp [i] <- nrow (nZ)
-  rdS$divM [i] <- dM (nZ)
-  rdS$stns [i] <- paste (rownames(nZ), collapse = ", ")
-  cbn <- combn (1:nrow (nZ), 2) # only look at pairs
-  cOut <- which.min (sapply (1:ncol (cbn), function (j){dM (nZ [cbn [,j],])}))
-  # remove first, random, or optimal station XXX -- random for now
-  # sOut <- cbn [sample (1:2, 1), cOut]
 
-  ## remove optimal station
-  n1 <- nZ [-cbn [1,cOut],]
-  n2 <- nZ [-cbn [2,cOut],]
-  sOut <- cbn [which.max (c (dM (n1), dM (n2))), cOut]; rm (n1, n2)
-
-  rdS$drop [i] <- rownames(nZ) [sOut]
-  nZ <- nZ [-sOut,]  # watch out here for scoping XXX
+bestYofXLeaf <- function (zM, nOut = nrow (zm)-1){  # recursive leave-one-out
+  dScreen <- lapply (1:row (zM), function (i){dM (zM [-i,])})
+  nSet <- 1:nrow (zM) [-which.max(dScreen)]
+  ## unfinished, non-functional
 }
 
 
+if (1){
+  nZ <- agZoop
+  for (i in 1:(nrow (agZoop)-1)){
+    rdS$Nsamp [i] <- nrow (nZ)
+    rdS$divM [i] <- dM (nZ)
+    rdS$stns [i] <- paste (rownames(nZ), collapse = ", ")
+    cbn <- combn (1:nrow (nZ), 2) # only look at pairs
+    cOut <- which.min (sapply (1:ncol (cbn), function (j){dM (nZ [cbn [,j],])}))
+    # remove first, random, or optimal station XXX -- random for now
+    # sOut <- cbn [sample (1:2, 1), cOut]
 
-pdf ("~/tmp/LCI_noaa/media/zoopStation-unoptimization.pdf")
-plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
-dev.off()
-write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-unoptimization.csv", row.names = FALSE)
-save.image ("~/tmp/LCI_noaa/cache/zoopDec.RData")
+    ## remove optimal station
+    n1 <- nZ [-cbn [1,cOut],]
+    n2 <- nZ [-cbn [2,cOut],]
+    sOut <- cbn [which.max (c (dM (n1), dM (n2))), cOut]; rm (n1, n2)
 
+    rdS$drop [i] <- rownames(nZ) [sOut]
+    nZ <- nZ [-sOut,]  # watch out here for scoping XXX
+  }
+
+  pdf ("~/tmp/LCI_noaa/media/zoopStation-unoptimization.pdf")
+  plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
+  dev.off()
+  write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-unoptimization.csv", row.names = FALSE)
+
+
+  save.image ("~/tmp/LCI_noaa/cache/zoopDec.RData")
+}
 
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDec.RData")
-# zM <- agZoop; nOut <- 50; nIter <- 10000
+# zM <- agZoop; nOut <- 50; nIter <- 500
 
 ## alternative heuristic algorithm
-bestYofX <- function (zM, nOut = 40, nIter = 1000#, seed = 8
+bestYofX <- function (zM, nOut = 10, nIter = 1000#, seed = 8  ## -- evolutionary hill climbing
                       ){ ## inherintly linear or parallel?
 #  set.seed(seed)
     ## select random stations
@@ -174,60 +203,89 @@ bestYofX <- function (zM, nOut = 40, nIter = 1000#, seed = 8
   }
   ## trace convergence
   tF <- data.frame (iter = 1:nIter, div = NA)
-  for (i in 1:nIter){   # vectorize somehow? any way to speed up? It's intrinsically serial
+  # for (i in 1:nIter){   # vectorize somehow? any way to speed up? It's intrinsically serial
+  #   rSelect <- mutate (rSelect)
+  #   tF$div [i] <- dM (zM [rSelect,])
+  # }
+  i <- 1; conv <- FALSE
+  while ((i < nIter)&(conv == FALSE)){
     rSelect <- mutate (rSelect)
     tF$div [i] <- dM (zM [rSelect,])
+    if (i > 100){ # minimal iterations before considering convergence
+      if ((tF$div [i] - tF$div [i-100])/diff (range (tF$div, na.rm = TRUE)) < 0.001){
+        conv <- TRUE
+      }
+    }
+    i <- i + 1
   }
   # plot (div~iter, tF, type = "l")
   # list (rSelect, dM (zM [rSelect,]))  # return results: best sequence and diversity of result
-  rSelect
+  sort (rSelect)
   ## end after nIter (or convergence?)
 }
 
-parBest <- functin (zM, nOut = 40, nRuns = 1000){
-  ## call bestYofX x times in parallel, return the best result. x = nCPUs
-  #  Require ("future.apply")
-  Require ("parallel"); Require ("vegan")
-  nCPUs <- detectCores (logical = TRUE)-1
-  cl <- makeCluster (nCPUs, type = "PSOCK")
-  clusterSetRNGStream (cl, iseed = 42)
-  clusterExport (cl, c("zM", "dM", "Require", "bestYofX", "nOut"))
-  x <- clusterEvalQ (cl, Require ("vegan")) # suppress output
-  ## set seed in parallel XXX
-  # x <- clusterEvalQ (cl, bestYofX (zM, nOut, nIter = 500))
-  pSet <- parLapply (1:1000, bestYofX (zM, nOut, nIter = 500))
-  bestSet <- which.max (sapply (1:length (pSet), function (i){dM (zM [pSet[[i]],])}))
-  stopCluster (cl)
-  pSet [[bestSet]]
-}
+
+nRuns <- 600
+nRuns <- 4  # better to have few long runs
+nIter <- 1000 # max-iterations per run
+nIter <- 10
+ncutStn <-  1:(nrow (agZoop)-2) # N stations x seasons to cut
+
+## need to set-up cluster outside of function
+## tens-hundreds of scenarios to test (N stations to cut) -- sequential (or parallel?)
+## gizillions of options within -- rerun several times (on on each core) with random start
+
+## use future_map instead of parLapply :
+# maybe no conflict with NOAA firewall settings (main reason)
+# more flexible, simpler code
+# avoid struggle with what's passed to the cluster and what's not
+# could use future_apply instead of furrr::future_map -- difference is only semantics?
+# it's the future?
+
+Require ("purrr")  # for %>%
+Require ("furrr")
+Require ("tictoc")
+plan (multisession (workers = availableCores()-1)) # still triggers firewall?
+
+tic()
+parBest <- ncutStn %>%
+  future_map (function (x){
+    1:nRuns %>%
+      future_map (function (X){
+        bestYofX(agZoop, nOut = x, nIter = nIter)}
+        , .options = furrr_options (seed = TRUE)
+      )
+  }, .options = furrr_options(seed = TRUE), .progress = TRUE)
+toc()
+## go back to normal
+plan (sequential)
 
 
-## cluster this one:  bestYofX (agZoop, 50, nIter = 10)
-## dM (agZoop)=4; nrow (agZoop)=78
-
-outDF <- data.frame (nSite = 1:(nrow (agZoop)-2), div = NA, sites = NA)
-for (i in 1:nrow (outDF)){
-  oSeq <- parBest (agZoop, nOut = nrow (agZoop)-i, nRuns = 640)
-  rdS$heuDiv [i] <- dM (agZoop [oSeq,])
-  rdS$heuSites [i] <- oSeq
-}
+# ## cluster this one:  bestYofX (agZoop, 50, nIter = 10)
+# ## dM (agZoop)=4; nrow (agZoop)=78
+#
+# # x <- parBest (zM = agZoop, nOut = 60, nRuns = 60)  ## better to have fewer but longer runs
+# # plot (sort (x), type = "l")
+# #
+# #
+# outDF <- data.frame (nSite = 1:(nrow (agZoop)-2), div = NA, sites = NA)
+# for (i in 1:nrow (outDF)){
+#   oSeq <- parBest (zM = agZoop, nOut = nrow (agZoop)-i, nRuns = 60)
+#   rdS$heuDiv [i] <- dM (agZoop [oSeq,])
+#   rdS$heuSites [i] <- oSeq
+# }
 
 
 save.image ("~/tmp/LCI_noaa/cache/zoopDec.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDec.RData")
+
+allS <- paste (rdS$heuSites, collapse = ", ")
 
 
+if (0){
+q()
 
-## estimate size of the problem -- calculated combinations
-n <- nrow (agZoop)
-df <- data.frame (k = 1:n, opt = NA)
-df$opt <- factorial (n) / (factorial (df$k)*factorial(n-df$k))
-pdf ("~/tmp/LCI_noaa/media/zoop_combinations.pdf")
-plot (opt~k, df, type = "l")
-abline (v = 13)
-dev.off()
-sum (df$opt)/1e6
-sum (subset (df$opt, df$k < 14))/1e6
-rm (n, df)
+
 
 
 
@@ -241,7 +299,6 @@ rm (n, df)
 ## parallel options: parallel: socket-cluster, parLapply
 ## doSMP (by REvolution) -- it's dead
 ## plyr? (seems just right)
-
 
 
 Require ("parallel")
@@ -306,4 +363,9 @@ dev.off()
 
 write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-exactoptimization.csv", row.names = FALSE)
 
+
+
+
+## map of all and subset stations
+}
 ## EOF
