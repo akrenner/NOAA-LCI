@@ -11,7 +11,7 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 ## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
 ## SeldoviaTemp currently only other file using SWMP data
 # file name ---> could use Windows shortcut?
-if (1){ ## start over with new data set?
+if (0){ ## start over with new data set?
   # tF <- tempfile()
   # download.file ("http://cdmo.baruch.sc.edu/aqs/output/528292.zip", tF)
   # ## list needed files
@@ -19,15 +19,15 @@ if (1){ ## start over with new data set?
   # unlink (tF)
   require ("SWMPr")
 # hmr <- import_local("~/GISdata/LCI/SWMP/528292.zip", "kachomet")
-  hmr <- import_local("~/GISdata/LCI/SWMP/42939.zip", "kachomet")
+  hmr <- import_local("~/GISdata/LCI/SWMP/421621.zip", "kachomet")
 
-  if (.Platform$OS.type == "windows"){
-    require ("R.utils")
-    lnk <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-  }else{ # MacOS or Linux
-    lnk <- "~/GISdata/LCI/SWMP/current"
-  }
-  hmr <- as.data.frame (import_local (lnk, "kachomet")); rm (lnk)
+  # if (.Platform$OS.type == "windows"){
+  #   require ("R.utils")
+  #   lnk <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.zip")$path
+  # }else{ # MacOS or Linux
+  #   lnk <- "~/GISdata/LCI/SWMP/current"
+  # }
+  # hmr <- as.data.frame (import_local (lnk, "kachomet")); rm (lnk)
   save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
 }else{
   rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
