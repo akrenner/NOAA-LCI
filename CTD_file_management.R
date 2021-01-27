@@ -28,7 +28,7 @@ set.seed (8)
 
 ## define new destinations
 nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
-instL <- c ("4141", "5028")
+instL <- c ("4141", "5028")  # do this from data?
 ## clean slate -- do this by hand!
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
 x <- c (unlink (paste0 (nD, instL [1], "/"))
@@ -553,28 +553,61 @@ unlink (nD, recursive = TRUE, force = TRUE)
 
 
 ## make small dataset for testing
-if (0){
-  for (sFd in c("convert", "filter", "align")){
-    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/4141/", sFd), recursive = TRUE, showWarnings = FALSE)
-    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028/", sFd), recursive = TRUE, showWarnings = FALSE)
-    dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/generic", sFd), recursive = TRUE, showWarnings = FALSE)
-  }
-  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_5028_Sep-2014/SBE19plus_5028_Sep-2014.xmlcon"
-             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028")
-  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_4141_Oct-2018/SBE19plus_4141_Oct-2018.xmlcon"
-             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028")
-  file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_5028_Apr-2012/SBE19plus_5028_Apr-2012.CON"
-             , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/generic")
+
+  # for (sFd in c("convert", "filter", "align", "bin")){
+  #   dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/4141/", sFd), recursive = TRUE, showWarnings = FALSE)
+  #   dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/5028/", sFd), recursive = TRUE, showWarnings = FALSE)
+  #   dir.create (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/generic", sFd), recursive = TRUE, showWarnings = FALSE)
+  # }; rm (sFd)
+  x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
+          , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
 
 
-  fDBy <- fDBx [sample (1:nrow (fDBx), size = 20, replace = FALSE),]
-  fDBy$procDirT <- as.factor (gsub ("hex2process", "hex2test", fDBy$procDir, fixed = TRUE))
-  for (i in 1:length (levels (fDBy$procDirT))){
-    dir.create (levels (fDBy$procDirT)[i], recursive = TRUE)
-    file.copy (paste0 (fDBy$procDir, "/.*con$"), fDBy$procDirT) # need file.list first
-  }
-  with (fDBy , file.copy (from = file, to = paste0 (procDir, shortFNx)))
-  rm (fDBy)
-}
+  # file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_5028_Sep-2014/SBE19plus_5028_Sep-2014.xmlcon"
+  #            , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/SBE19plus_5028_Sep-2014/SBE19plus_5028_Sep-2014.xmlcon")
+  # file.copy ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/SBE19plus_4141_Oct-2018/SBE19plus_4141_Oct-2018.xmlcon"
+  #            , "~/GISdata/LCI/CTD-processing/allCTD/hex2test/SBE19plus_4141_Oct-2018/SBE19plus_4141_Oct-2018.xmlcon")
+
+  xmlC <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", ".xmlcon", recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+   file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", xmlC)
+   , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", xmlC))
+
+  fDB2 <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", ".HEX"
+                      , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+
+  set.seed (8)
+  fDB2 <- sample (fDB2, 30) ## better to distribute, but good for now -- happens to work
+  file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", fDB2)
+             , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", fDB2))
+
+
+  # fDBy <- fDBx [sample (1:nrow (fDBx),15),] ## better to distribute, but good for now
+  # file.copy (paste0 (fDBy$procDir, "/", fDBy$shortFNx)
+  #            , gsub ("/edited_hex/", "/hex2test/", fDBy$file)
+  # )
+
+    #
+#  file.copy (paste (fDBy$file), gsub ("/edited_hex/", "/hex2test/", fDBy$file))
+
+
+  # for (i in c("SBE19plus_5028_Sep-2014", "SBE19plus_4141_Oct-2018", "SBE19plus_5028_Apr-2012")){
+  #   file.copy (sample (list.files (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/"
+  #                                          , i)
+  #                                  , ".hex"), 5)  ## grmpf -- DOESN'T work :(
+  #              , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", i, "/")
+  #              , recursive = TRUE
+  #   )
+  # }
+
+
+#  fDBy <- fDBx [sample (1:nrow (fDBx), size = 20, replace = FALSE),]
+  # fDBy$procDirT <- as.factor (gsub ("hex2process", "hex2test", fDBy$procDir, fixed = TRUE))
+  # for (i in 1:length (levels (fDBy$procDirT))){
+  #   dir.create (levels (fDBy$procDirT)[i], recursive = TRUE)
+  #   file.copy (paste0 (fDBy$procDir, "/.*con$"), fDBy$procDirT) # need file.list first
+  # }
+  # with (fDBy , file.copy (from = file, to = paste0 (procDir, shortFNx)))
+  # rm (fDBy)
+
 
 ## EOF

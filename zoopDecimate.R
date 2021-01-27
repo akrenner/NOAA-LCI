@@ -74,9 +74,12 @@ if (0){
 
 ## cluster analysis
 Require ("vegan")
-pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf")
+pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
+     , width = 23, height = 12)
 #plot (hclust (dist (agZoop, "manhattan"), method = "ward.D"))
-plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+plot (hclust (vegdist (agZoop, "bray"), method = "ward.D")
+      # , col = 1:4
+      )
 dev.off()
 
 
