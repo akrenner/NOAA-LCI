@@ -49,7 +49,7 @@ psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", 
 ## where to put results
 outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
 
-## make uniform or keep turbidity/fluorescence in?
+## keep turbidity/fluorescence in?  (FALSE = cut them out to have things uniform)
 fluo <- TRUE
 # fluo <- FALSE
 #################################
@@ -60,7 +60,8 @@ fluo <- TRUE
 require (tools)
 dir.create(outF, recursive = TRUE)
 ## create several temp dir that can be used from outside:
-tL <- paste0 ("~/tmp/ctd/cnv", 1:4)
+tL <- paste0 ("~/tmp/ctd/cnv", 1:6)
+# tL <- c ("conversion", "filter", "align", "loop", "bin")
 unlink (tL, recursive = TRUE, force = TRUE)
 tLD <- paste (dirname (tL), basename(tL), sep = "/")
 names (tL) <- paste0 ("t", 1:4)
@@ -110,14 +111,14 @@ for (i in 1:length (conF)){
   }
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
   l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
-# l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
-  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
-# l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
-#  paste0 ("LoopEdit /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [5], " #m")
+  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
+  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m") # new
+  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
+  # l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
 #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
-#  paste0 ("BinAvg /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [7], " #m")
-  bT <- paste (l1, l2, l3, sep = "\n")
-  write (bT, file = "~/CTDbatch.txt")
+  ## add thermal mass or derived variables??
+    bT <- paste (l1, l2, l3, l5, l7, sep = "\n")
+    write (bT, file = "~/CTDbatch.txt")
   # efforts to suppress console output failed: invisible(), capture.output()...
   x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
   ## cleanup

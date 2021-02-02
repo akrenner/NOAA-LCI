@@ -120,9 +120,14 @@ print (length (fN))
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
-  Require ("oce")
-  ctdF <- suppressWarnings (read.ctd (fNf[i])) ## still warning for missing values and NAs introduced by coercion
-  cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
+# for (i in 1:length (fNf)){print (i)
+    Require ("oce")
+  ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
+  if (class (ctdF) == "try-error"){
+    print (i)
+  }else{
+
+    cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
   ## , latitude = meta (ctdF@metadata$latitude)
   ## , longitude = meta (ctdF@metadata$longitude)
   #, depth_bottom = meta (ctdF@metadata$waterDepth)
@@ -136,6 +141,7 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
                        )
 
   return (outDF)
+  }
 })
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 ## ok to ignore warnings regarding NAs introduced by coersion
@@ -166,6 +172,8 @@ readCNV <- function (i){
   ## best: manually inspect and read-in from separate table
   # ?plotScan
 
+if (0){ ##  do all this in SEABIRD now
+
   ## attempt to use SEABIRD method "sbe". If that fails,
   ## revert to "downcast"
   cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # some fail
@@ -175,6 +183,8 @@ readCNV <- function (i){
     # could/should specify min soak times, soak depth -- min soak time = 40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }
+}
+
   if (median (ctdF@data$pressure) < 0){
     cat ("Negative pressure: ", fN [i], "\n")
     # log bad files
