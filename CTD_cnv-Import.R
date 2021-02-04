@@ -115,7 +115,6 @@ fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
 
 
-
 ## find dates to link to notebook DB
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
@@ -125,26 +124,29 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
   ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
   if (class (ctdF) == "try-error"){
     print (i)
+    print (fNf[i])
+    ## as of 2021-02-02, this affects 7 casts could address this in hex-conversion or drop them
+    # fNf [c (195, 720, 762, 900, 1858, 1864, 3527)]
+    ## return empty DF
+    cT <- NA
+    instSerNo <- NA
+    depth_bottom <- NA
   }else{
-
     cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
-  ## , latitude = meta (ctdF@metadata$latitude)
-  ## , longitude = meta (ctdF@metadata$longitude)
-  #, depth_bottom = meta (ctdF@metadata$waterDepth)
-  ## , transect = meta (ctdF@metadata$station)
-  ## , Match_Name = meta (ctdF@metadata$station)
-  #, CTDserial = meta (ctdF@metadata$serialNumberTemperature)
-  outDF <- data.frame (time = ctdF@metadata$startTime
-                       , file = fN [i], path = fNf [i]
-                       , instSerNo = ctdF@metadata$serialNumberTemperature # serial number of CTD instrument
-                       , depth_bottom = ctdF@metadata$waterDepth
-                       )
-
-  return (outDF)
+    time <- ctdF@metadata$startTime
+    instSerNo <- ctdF@metadata$serialNumberTemperature # serial number of CTD instrument
+    depth_bottom <- ctdF@metadata$waterDepth
   }
+  outDF <- data.frame (time = cT
+                       , file = fN [i], path = fNf [i]
+                       , instSerNo, depth_bottom
+                       )
+  return (outDF)
 })
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
+fileDB <- subset (fileDB, !is.na (time))
 ## ok to ignore warnings regarding NAs introduced by coersion
+
 
 save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
