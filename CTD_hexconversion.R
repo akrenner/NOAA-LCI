@@ -111,14 +111,19 @@ for (i in 1:length (conF)){
   }
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
   l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
-  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
-  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m") # new
-  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
+  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
+  ## the lines below would do the loop-edit, and binning by depth in SBEDataProcessing as well. This results about 10 files to
+  ## fail (no data). Instead, do the loopedit within OCE (see CTD_cnv-Import.R). Bin-averaging by depth will run in CTD_cleanup.R
+
+#  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")# new
+#  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m") # new
+#  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
   # l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
 #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
   ## add thermal mass or derived variables??
-    bT <- paste (l1, l2, l3, l5, l7, sep = "\n")
-    write (bT, file = "~/CTDbatch.txt")
+  bT <- paste (l1, l2, l3, sep = "\n")
+#  bT <- paste (l1, l2, l3, l5, l7, sep = "\n")
+  write (bT, file = "~/CTDbatch.txt")
   # efforts to suppress console output failed: invisible(), capture.output()...
   x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
   ## cleanup

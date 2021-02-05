@@ -105,14 +105,19 @@ if (.Platform$OS.type != "unix"){
 
 Require (oce)
 ## read in processed files of individual CTD casts
-## --- abandon this for now. Still in dataSetup_1.R, should there ever be a need to go back to it.
-
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--homogene/", ".cnv"
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
+## cut-out bad files for now -- fix this later
+## fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
+## to make things run with SEABIRD loopedit
+
+
 fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
+
+
 
 
 ## find dates to link to notebook DB
@@ -174,14 +179,13 @@ readCNV <- function (i){
   ## best: manually inspect and read-in from separate table
   # ?plotScan
 
-if (0){ ##  do all this in SEABIRD now
+if (1){ ##  do all this in SEABIRD now
 
   ## attempt to use SEABIRD method "sbe". If that fails,
   ## revert to "downcast"
-  cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # some fail
+  cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # this is the seabird method -- some fail
   if (class (cTrim) == "try-error"){
     ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-    # ctdF <- ctdTrim (ctdF, method = "sbe") # there's also a method seabird
     # could/should specify min soak times, soak depth -- min soak time = 40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }
@@ -193,7 +197,17 @@ if (0){ ##  do all this in SEABIRD now
     write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
     return()
   }else{
-    ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # later? -- really needed?
+
+    ## bin CTD profile by depth, not pressure XXX -- this needs fixing later? -- really needed?
+    # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
+    ## depth values for pressures
+    dP <- swPressure (0:200, latitude = 59, eos = "gsw")
+    ctdF <- ctdDecimate (ctdF, p = dP, method = "boxcar", e = 1.5)
+    rm (dP)
+    # Require (vprr)
+    # use:  bin_calculate
+    # ctdFx <- lappy (1:length (ctdF, FUN = bin_calculate, rev = FALSE))
+
 
     ## fix-up missing fields
     meta <- function (x){rep (x, length (ctdF@data$temperature))}
