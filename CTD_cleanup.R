@@ -400,6 +400,7 @@ badDens <- function (i){
 #                          , mc.cores = nCPUs))
 bCntr <- unlist (lapply (1:length (levels (physOc$File.Name)), FUN = badDens))
 
+physOc$File.Name <- factor (physOc$File.Name)
 cat ("\n\nRemoved first data point from ", length (bCntr), " out of ",
      length (levels (physOc$File.Name)), "CTD casts ("
      , round (length (bCntr)/length (levels (physOc$File.Name))*100)
@@ -470,7 +471,7 @@ plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
 dev.off()
 
 
-if (1){
+if (0){  # currently fails -- fix later XXX
 ## plot cast-profiles
 Require ("oce")
 cCast <- levels (factor (physOc$File.Name))

@@ -201,8 +201,8 @@ if (1){ ##  do all this in SEABIRD now
     ## bin CTD profile by depth, not pressure XXX -- this needs fixing later? -- really needed?
     # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
     ## depth values for pressures
-    dP <- swPressure (0:200, latitude = 59, eos = "gsw")
-    ctdF <- ctdDecimate (ctdF, p = dP, method = "boxcar", e = 1.5)
+    dP <- swPressure (0:200, latitude = 59, eos = "unesco")
+    ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco", e = 1.5)
     rm (dP)
     # Require (vprr)
     # use:  bin_calculate
