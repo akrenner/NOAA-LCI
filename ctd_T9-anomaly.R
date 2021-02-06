@@ -34,6 +34,10 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- 
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
 
+
+doFluo <- TRUE  # run fluorescence as well -- have to cut some casts for that
+
+
 ### data prep
 require ("oce")
 ## define sections
@@ -72,10 +76,18 @@ xC$depthR <- factor (round (xC$Depth.saltwater..m.))
 xC$month <- factor (format (xC$isoTime, "%m"))
 ## aggregate useing oce function -- skip aggregation in pre-processing by SBprocessing
 ## calculate normals
+if (doFluo){
+  xC <- subset (xC, !is.na (Fluorescence_mg_m3))
+}
+
+
+
 ctdAgg <- aggregate (Temperature_ITS90_DegC ~ depthR+month, xC, FUN = mean, na.rm = TRUE)
 ctdAgg$Salinity_PSU <- aggregate (Salinity_PSU ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
 ctdAgg$Pressure..Strain.Gauge..db. <- aggregate (Pressure..Strain.Gauge..db. ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
-
+if (doFluo){
+  ctdAgg$Fluorescence_mg_m3 <- aggregate (Fluorescence_mg_m3 ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Fluorescence_mg_m3
+}
 ## smooth normals
 ctdAgg$monthI <- as.numeric (ctdAgg$month)  ## this messes with things -- don't XXX
 preDF <- ctdAgg; preDF$monthI <- preDF$monthI - 12
@@ -91,16 +103,27 @@ sDF <- rbind (preDF, ctdAgg, postDF)
 
 # require ("mgcv")  ## patterns in residuals -- stick with loess
 # gam (Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
+## temperature
 sOut <- sapply (levels (sDF$depthR), FUN = function (i){
   loess(Temperature_ITS90_DegC~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
 })  # 12x103 matrix
 ctdAgg$tloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
-
+## salinity
 sOut <- sapply (levels (sDF$depthR), FUN = function (i){
   loess(Salinity_PSU~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
 })
 ctdAgg$sloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
+## fluorescence
+if (doFluo){
+  sOut <- sapply (levels (sDF$depthR), FUN = function (i){
+    loess(Fluorescence_mg_m3~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
+  })
+  ctdAgg$floess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
+}
+
+
 rm (preDF, postDF, sOut)
+
 
 ## model normals instead
 # mDF <- rbind (xC, xC, xC)
@@ -232,16 +255,18 @@ cT9 <- lapply (0:13, function (i){
   ocOb@metadata$waterDepth <- 103
   ocOb <- oceSetData (ocOb, "sSal", sCTD$sloess)
   ocOb <- oceSetData (ocOb, "sTemp", sCTD$tloess)
+  if (doFluo){
+    ocOb <- oceSetData (ocOb, "sFluo", sCTD$floess)
+  }
 })
 cT9 <- as.section (cT9)
 # rm (ctdAgg)
 
 
-pdf ("~/tmp/LCI_noaa/media/t9s6-climatology.pdf", height = 11.5, width = 8)
-anAx <- function (){
+anAx <- function (dAx = c(0,50, 100)){
   axis (1, at = as.POSIXct (paste0 ("2000-", 1:12, "-1")), label = FALSE)
   axis (1, at = as.POSIXct (paste0 ("2000-", 1:12, "-15")), label = month.abb, tick = FALSE)
-  axis (2, at = c (0, 50, 100))
+  axis (2, at = dAx)
 }
 clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11)){
   plot (cT, which = which, xtype = "time", ztype = "image", zcol = zcol
@@ -249,6 +274,7 @@ clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11)){
 , axes = FALSE)
 }
 
+pdf ("~/tmp/LCI_noaa/media/t9s6-climatology.pdf", height = 11.5, width = 8)
 par (mfrow = c (2,1))
 clPlot (cT9, which = "temperature", zcol = oceColorsTemperature (11))
 # clPlot (cT9, which = "sTemp", zcol = oceColorsTemperature (11))
@@ -257,12 +283,21 @@ clPlot (cT9, which = "salinity", zcol = oceColorsSalinity(11))
 # clPlot (cT9, which = "sSal", zcol = oceColorsSalinity(11))
 anAx()
 dev.off()
-rm (anAx, clPlot)
 
+
+
+## fluorescence
+if (doFluo){
+  pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-climatology.pdf")
+par (las = 1)
+  clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (11))
+  anAx(dAx = seq (0, 100, by = 20))
+  dev.off()
+}
 
 ## alternative display of this data:
 
-
+rm (clPlot, anAx)
 
 save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")

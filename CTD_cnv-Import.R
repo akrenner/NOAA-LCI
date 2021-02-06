@@ -110,7 +110,7 @@ Require (oce)
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
 ## cut-out bad files for now -- fix this later
-## fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
+fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
 ## to make things run with SEABIRD loopedit
 
 
@@ -179,7 +179,7 @@ readCNV <- function (i){
   ## best: manually inspect and read-in from separate table
   # ?plotScan
 
-if (1){ ##  do all this in SEABIRD now
+if (0){ ##  do all this in SEABIRD now
 
   ## attempt to use SEABIRD method "sbe". If that fails,
   ## revert to "downcast"
@@ -202,12 +202,12 @@ if (1){ ##  do all this in SEABIRD now
     # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
     ## depth values for pressures
     dP <- swPressure (0:200, latitude = 59, eos = "unesco")
-    ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco", e = 1.5)
+    ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco")
+    ## keeping both at 'unesco' seems to keep depth closest to prescribed depth
     rm (dP)
-    # Require (vprr)
-    # use:  bin_calculate
-    # ctdFx <- lappy (1:length (ctdF, FUN = bin_calculate, rev = FALSE))
 
+    # Require ("vprr")
+    # ctdFx <- bin_calculate (ctdF, binSize = 1, imageVolume = 1, rev = FALSE) # 1 meter
 
     ## fix-up missing fields
     meta <- function (x){rep (x, length (ctdF@data$temperature))}

@@ -448,10 +448,10 @@ rm (gC)
 
 
 ## plot all casts: depth-density, temp, salinity
+## move this out to another file, CTDWall.R?
 
 
-
-dir.create("~/tmp/LCI_noaa/media/CTDtests/", showWarnings = FALSE)
+dir.create("~/tmp/LCI_noaa/media/CTDtests/", showWarnings = FALSE, recursive = TRUE)
 png ("~/tmp/LCI_noaa/media/CTDtests/testPlots%02d.png")
 xY <- factor (format (physOc$isoTime, "%Y"))
 plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l.
