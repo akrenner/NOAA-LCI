@@ -47,10 +47,6 @@ psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", 
 
 ## where to put results
 outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
-
-## keep turbidity/fluorescence in?  (FALSE = cut them out to have things uniform)
-# fluo <- TRUE
-# fluo <- FALSE
 #################################
 
 
@@ -59,9 +55,9 @@ outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
 require (tools)
 dir.create(outF, recursive = TRUE)
 ## create several temp dir that can be used from outside:
-tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
- tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
-               , c("1-converted", "2-filtered", "3-aligned", "4-looped", "5-binned"))
+# tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
+tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
+               , c("1-converted", "2-filtered", "3-aligned", "4-looped", "5-binned", "4r-looped", "5r-binned"))
 unlink (tLB, recursive = TRUE, force = TRUE)
 # names (tLB) <- paste0 ("t", 1:5)                      ## still needed?
 # tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
@@ -134,14 +130,40 @@ for (i in 1:length (conF)){
 }
 
 
-## loopedit in here. BinAvg optional and in SEABIRD
-if (0){
-  fNf <- list.files(tLD [3], ".cnv"
-                  , full.names = TRUE, ignore.case = TRUE)
+## replicate loopedit here in R.
+## run BinAvg again in SEABIRD and/or in R.
+fNf <- list.files(tLB [3], ".cnv"
+                  , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
+require ("oce")
+for (i in 1:length (fNf)){
+  ctdF <- read.ctd(fNf [i])  ## address NA warning
+  cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
+                         # , parameters = list (minSoak = 1, maxSoak = 20)
+                         )  ## min/maxSoak = dbar (approx m)
+                , silent = TRUE)
+  if (class (cTrim) == "try-error"){
+    ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
+    # could/should specify min soak times, soak depth -- min soak time = 40s
+    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+  }else{
+    ctdF <- cTrim
+  }
+  write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
+  # ctdDecimate ()
 }
 # unlink (tL, recursive = TRUE, force = TRUE)
-
-
+# for (i in 1:length (conF)){
+#   tL <- paste (tLB, i, sep = "/")
+#   tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
+#   if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
+#     psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
+#   }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
+#     psa <- psaL [grep ("4141", psaL)]
+#   }else{
+#     psa <- psaL [grep ("5028", psaL)]
+#   }
+#   l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
+# }
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)
 

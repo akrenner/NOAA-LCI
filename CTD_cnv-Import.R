@@ -110,7 +110,9 @@ Require (oce)
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
 ## cut-out bad files for now -- fix this later
-fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
+if (length (fNf) > 100){
+  fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
+}
 ## to make things run with SEABIRD loopedit
 
 
@@ -190,7 +192,7 @@ readCNV <- function (i){
       ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
       # could/should specify min soak times, soak depth -- min soak time = 40s
       #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
-    }
+    }else{ctdF <- cTrim}
 
 
     if (median (ctdF@data$pressure) < 0){
@@ -742,31 +744,32 @@ rm (fDt)
 ## lots! 304 files!!
 print ("files with matching time stamps (duplicates)")
 dF <- fileDB [which (duplicated(fileDB$localTime)),]
-dubFiles <- lapply (1:nrow (dF), FUN = function (i){
+dubFiles <- unlist (lapply (1:nrow (dF), FUN = function (i){
   fileDB [which (fileDB$localTime == dF$localTime [i]),c(2,6,9)]
-})
+}))
 print (dubFiles)
- fX <- fileDB
- cX <- CTD1
+fX <- fileDB
+cX <- CTD1
 ## speed-up by using sqlite-DF
 #  if (0){ ## XXX not working yet === CTD1 ends up empty   XXX
-for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
-  killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
-  ## pick best file to drop
-  killName <- killCand [2] # default to keeping 2nd name
-  if (diff (nchar(killCand)) > 0){killName <- killCand [1]} # keep shorter name
-  # grep (substr (killName, 1,30), CTD1$File.Name)
-  # which (paste0 (CTD1$File.Name, ".cnv") == killName)
-  ctdOut <- which (paste0 (CTD1$File.Name, ".cnv") == killName)
-  ## account for negative pressures?
-  if (length (ctdOut) > 0){
-    CTD1 <- CTD1 [-ctdOut,]
-    fileDB <- fileDB [-which (fileDB$file == killName),]
+if (length (dubFiles) > 0){
+  for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
+    killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
+    ## pick best file to drop
+    killName <- killCand [2] # default to keeping 2nd name
+    if (diff (nchar(killCand)) > 0){killName <- killCand [1]} # keep shorter name
+    # grep (substr (killName, 1,30), CTD1$File.Name)
+    # which (paste0 (CTD1$File.Name, ".cnv") == killName)
+    ctdOut <- which (paste0 (CTD1$File.Name, ".cnv") == killName)
+    ## account for negative pressures?
+    if (length (ctdOut) > 0){
+      CTD1 <- CTD1 [-ctdOut,]
+      fileDB <- fileDB [-which (fileDB$file == killName),]
+    }
+    rm (killName, killCand, ctdOut)
+    if (nrow (CTD1) == 0){stop(print (i), " messed up")}
   }
-  rm (killName, killCand, ctdOut)
-  if (nrow (CTD1) == 0){stop(print (i), " messed up")}
 }
-#}
 ## there are a few -- delete cnv file!
 # unlink (paste0 (dir, "/", fileDB$path [dF]))
 rm (dF, dubFiles)
