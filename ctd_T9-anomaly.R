@@ -297,10 +297,45 @@ par (las = 1)
 
 ## alternative display of this data:
 
-rm (clPlot, anAx)
 
 save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
+
+
+
+## fluorescence time series -- all years
+pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-TS.pdf")
+plot.station (mkSection (xC), which = "flourescence", zcol = oceColorsChlorophyll (11))
+anAx(dAx = seq (0, 100, by = 20))
+dev.off()
+
+## fluorescence time series -- by year
+pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-TS.pdf"
+      , width = 6, height = 4*length (levels (xC$year))
+)
+par (mfrow = c(1,length (levels (xC$year))))
+for (i in 1:length (levels (xC$year))){
+  yX <- subset (xC, year == levels (xC$year)[i])
+  if (nrow (yX) > 1){
+    plot.station (mkSection (yX), which = "flourescence", zcol = oceColorsChlorophyll (11)
+                  # , xrange = as.POSIXct(paste (levels (xC$year)[i], c(1, 12), c (1,31), sep = "-"))
+                  , axes = FALSE)
+    axis (1, at = as.POSIXct (paste0 (levels (xC$year)[i], "-", 1:12, "-1")), label = FALSE)
+    axis (1, at = as.POSIXct (paste0 (levels (xC$year)[i], "-", 1:12, "-15")), label = month.abb, tick = FALSE)
+    axis (2, at = seq (0, 100, by = 20))
+  }
+}
+dev.off()
+
+
+
+
+
+rm (clPlot, anAx)
+
+
+
+
 
 #########################
 ## freshwater contents ##

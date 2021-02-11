@@ -158,7 +158,6 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 
 
 
-
 ## read CTD data from CNV file and apply basic processing:
 ## trim (keep only down-cast)
 ## apply basic QAQC: skip files with negative pressure (air-casts?)
@@ -167,8 +166,9 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function (i){
   Require (oce)
-  ctdF <- read.ctd (fNf [i])
-
+  ctdF <- try (read.ctd (fNf [i]))
+  if (class (ctdF) == "try-error"){
+  } #else{
   ## more CTD import processing steps
   ## zero-depth
   ## cut-out surface, up-cast?
@@ -179,70 +179,84 @@ readCNV <- function (i){
   ## best: manually inspect and read-in from separate table
   # ?plotScan
 
-if (0){ ##  do all this in SEABIRD now
 
-  ## attempt to use SEABIRD method "sbe". If that fails,
-  ## revert to "downcast"
-  cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # this is the seabird method -- some fail
-  if (class (cTrim) == "try-error"){
-    ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-    # could/should specify min soak times, soak depth -- min soak time = 40s
-    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+  ## loop edit and binning -- here or in SEABIRD?
+  if (0){ ##  do all this in SEABIRD now
+
+    ## attempt to use SEABIRD method "sbe". If that fails,
+    ## revert to "downcast"
+    cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # this is the seabird method -- some fail
+    if (class (cTrim) == "try-error"){
+      ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
+      # could/should specify min soak times, soak depth -- min soak time = 40s
+      #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+    }
+
+
+    if (median (ctdF@data$pressure) < 0){
+      cat ("Negative pressure: ", fN [i], "\n")
+      # log bad files
+      write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
+      return()
+    }else{
+
+      ## bin CTD profile by depth, not pressure XXX -- this needs fixing later? -- really needed?
+      # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
+      ## depth values for pressures
+      dP <- swPressure (0:200, latitude = 59, eos = "unesco")
+      ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco")
+      ## keeping both at 'unesco' seems to keep depth closest to prescribed depth
+      rm (dP)
+
+      # Require ("vprr")
+      # ctdFx <- bin_calculate (ctdF, binSize = 1, imageVolume = 1, rev = FALSE) # 1 meter
+    }
   }
-}
 
-  if (median (ctdF@data$pressure) < 0){
-    cat ("Negative pressure: ", fN [i], "\n")
-    # log bad files
-    write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
-    return()
-  }else{
 
-    ## bin CTD profile by depth, not pressure XXX -- this needs fixing later? -- really needed?
-    # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
-    ## depth values for pressures
-    dP <- swPressure (0:200, latitude = 59, eos = "unesco")
-    ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco")
-    ## keeping both at 'unesco' seems to keep depth closest to prescribed depth
-    rm (dP)
+  ## fix-up missing fields
+  meta <- function (x){rep (x, length (ctdF@data$temperature))}
+  if (!"beamAttenuation" %in% names (ctdF@data)){
+    ctdF@data$beamAttenuation <- meta (NA)
+  }
+  if (!"turbidity" %in% names (ctdF@data)){
+    ctdF@data$turbidity <- meta (NA)
+  }
 
-    # Require ("vprr")
-    # ctdFx <- bin_calculate (ctdF, binSize = 1, imageVolume = 1, rev = FALSE) # 1 meter
 
-    ## fix-up missing fields
-    meta <- function (x){rep (x, length (ctdF@data$temperature))}
     # if (length (grep ("upoly", names (ctdF@data))) == 0){
-    if (!"upoly" %in% names (ctdF@data)){
-      ctdF@data$upoly <- meta (NA)
-    }
-    if (!"fluorescence" %in% names (ctdF@data)){
-      ctdF@data$fluorescence <- meta (NA)
-    }
-    if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
-      names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
-    }
+  # if (!"upoly" %in% names (ctdF@data)){
+  #   ctdF@data$upoly <- meta (NA)
+  # }
+  # if (!"fluorescence" %in% names (ctdF@data)){
+  #   ctdF@data$fluorescence <- meta (NA)
+  # }
+  # if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
+  #   names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
+  # }
 
-    cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
-                        , path = meta (fNf [i])
-                        #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
-                        , depth_bottom = meta (ctdF@metadata$waterDepth)
-                        #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                        , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
-                        , depth = ctdF@data$depth
-                        , O2 = ctdF@data$oxygen
-                        , O2GG = ctdF@data$oxygen2
-                        , par = ctdF@data$par
-                        , salinity = ctdF@data$salinity
-                        , temperature = ctdF@data$temperature
-                        , pressure = ctdF@data$pressure
-                        , nitrogen = ctdF@data$nitrogenSaturation
-                        , fluorescence = ctdF@data$fluorescence ## often missing
-                        , turbidity = ctdF@data$upoly
-    )
-    cDF <- subset (cDFo, density > 0) ## still necessary?
-    return (cDF)
-  }
+  cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
+                      , path = meta (fNf [i])
+                      #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
+                      , depth_bottom = meta (ctdF@metadata$waterDepth)
+                      #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
+                      , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
+                      , depth = ctdF@data$depth
+                      , O2 = ctdF@data$oxygen
+                      , O2GG = ctdF@data$oxygen2
+                      , par = ctdF@data$par
+                      , salinity = ctdF@data$salinity
+                      , temperature = ctdF@data$temperature
+                      , pressure = ctdF@data$pressure
+                      , nitrogen = ctdF@data$nitrogenSaturation
+                      , fluorescence = ctdF@data$fluorescence
+                      , turbidity = ctdF@data$turbidity
+                      , attenuation = ctdF@data$beamAttenuation
+  )
+  cDF <- subset (cDFo, density > 0) ## still necessary?
+  return (cDF)
 }
+
 
 ## for troubleshooting
 # for (i in 1:length (fNf)){
@@ -300,7 +314,6 @@ if (0){
   db_connect_string <- paste0 ()
   dC <- dbConnect (odbc::odbc(), .connection_string = paste0 (driver_string, dbq_string))
   ## appropriate SQL call to link station and transect, as below...
-
 }
 
 
@@ -901,6 +914,7 @@ names (physOc) <- c ("isoTime",
                      , "Nitrogen.saturation..mg.l."
                      , "Fluorescence_mg_m3"
                      , "turbidity"
+                     , "attenuation"
 )
 # print (summary (physOc))
 rm (i)

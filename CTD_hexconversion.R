@@ -43,7 +43,6 @@ conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = 
 # conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 
 ## path to psa files
-# psa <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/SBEDataProcessing-Win32/", ".psa$", recursive = TRUE, full.names = TRUE)
 psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
 
 ## where to put results
@@ -131,6 +130,11 @@ for (i in 1:length (conF)){
   unlink ("~/CTDbatch.txt")
 }
 
+
+## loopedit in here. BinAvg optional and in SEABIRD
+
+
+
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)
 
@@ -143,6 +147,6 @@ rm (conF, psa, outF, inD, tL, l1, l2, l3)
 
 print (Sys.time())
 print (difftime(Sys.time(), sTime))
-
+cat ("end of CTD_hexconversion.R\n\n")
 setwd (cWD)
 ## EOF
