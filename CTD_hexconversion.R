@@ -49,7 +49,7 @@ psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", 
 outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
 
 ## keep turbidity/fluorescence in?  (FALSE = cut them out to have things uniform)
-fluo <- TRUE
+# fluo <- TRUE
 # fluo <- FALSE
 #################################
 
@@ -59,11 +59,12 @@ fluo <- TRUE
 require (tools)
 dir.create(outF, recursive = TRUE)
 ## create several temp dir that can be used from outside:
-tL <- paste0 ("~/tmp/ctd/cnv", 1:6)
-# tL <- c ("conversion", "filter", "align", "loop", "bin")
-unlink (tL, recursive = TRUE, force = TRUE)
-tLD <- paste (dirname (tL), basename(tL), sep = "/")
-names (tL) <- paste0 ("t", 1:4)
+tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
+ tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
+               , c("1-converted", "2-filtered", "3-aligned", "4-looped", "5-binned"))
+unlink (tLB, recursive = TRUE, force = TRUE)
+# names (tLB) <- paste0 ("t", 1:5)                      ## still needed?
+# tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 inD <- dirname (conF)
 outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy
 
@@ -96,18 +97,20 @@ j <- 99
 ## great if this could run in parallel -- probably not on Windows?
 for (i in 1:length (conF)){
   #sapply (1:length (tL), FUN = function (j){dir.create (tL [j], recursive = TRUE)})
+  ## extend path name to include i? could then skip unlink (tL) at end of this loop
+
+  tL <- paste (tLB, i, sep = "/")
+  tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
+
   for (j in 1:length (tL)){dir.create (tL [j], recursive = TRUE)}
-  if (fluo){ # false: exclude turbidity/fluorescence
-    if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes fluorescence
-      psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
-    }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
-      psa <- psaL [grep ("4141", psaL)]
-    }else{
-      psa <- psaL [grep ("5028", psaL)]
-    }
-  }else{
+  if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
     psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
+  }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
+    psa <- psaL [grep ("4141", psaL)]
+  }else{
+    psa <- psaL [grep ("5028", psaL)]
   }
+
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
   l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
 #  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
@@ -126,13 +129,17 @@ for (i in 1:length (conF)){
   # efforts to suppress console output failed: invisible(), capture.output()...
   x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
   ## cleanup
-  unlink (tL, recursive = TRUE, force = TRUE)
+  # unlink (tL, recursive = TRUE, force = TRUE)  ## need this or next batch will get files from wrong CTD
   unlink ("~/CTDbatch.txt")
 }
 
 
 ## loopedit in here. BinAvg optional and in SEABIRD
-
+if (0){
+  fNf <- list.files(tLD [3], ".cnv"
+                  , full.names = TRUE, ignore.case = TRUE)
+}
+# unlink (tL, recursive = TRUE, force = TRUE)
 
 
 rm (bT, i, j, tLD)

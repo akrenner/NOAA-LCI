@@ -216,24 +216,15 @@ readCNV <- function (i){
 
   ## fix-up missing fields
   meta <- function (x){rep (x, length (ctdF@data$temperature))}
-  if (!"beamAttenuation" %in% names (ctdF@data)){
+  if ("upoly" %in% names (ctdF@data)){
+    names (ctdF@data)[which (names (ctdF@data) == "upoly")] <- "turbidity"
+  }
+    if (!"beamAttenuation" %in% names (ctdF@data)){
     ctdF@data$beamAttenuation <- meta (NA)
   }
   if (!"turbidity" %in% names (ctdF@data)){
     ctdF@data$turbidity <- meta (NA)
   }
-
-
-    # if (length (grep ("upoly", names (ctdF@data))) == 0){
-  # if (!"upoly" %in% names (ctdF@data)){
-  #   ctdF@data$upoly <- meta (NA)
-  # }
-  # if (!"fluorescence" %in% names (ctdF@data)){
-  #   ctdF@data$fluorescence <- meta (NA)
-  # }
-  # if ("turbidity" %in% names (ctdF@data)){ # some called "turbidity", not "upoly"
-  #   names (ctdF@data)[which (names (ctdF@data) == "turbidity")] <- "upoly"
-  # }
 
   cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
                       , path = meta (fNf [i])
