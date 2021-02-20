@@ -444,7 +444,8 @@ physOc$File.Name <- factor (physOc$File.Name)
 rm (gC)
 
 
-
+## fluorescence -- has to be always positive!  -- about 150 readings
+is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 
 
 ## plot all casts: depth-density, temp, salinity
@@ -547,7 +548,7 @@ for (i in 1:length (levels (yr))){
 }
 
 unlink ("processedCTD_annual.zip", force = TRUE)
-zFiles <- list.files ("~/tmp/LCI_noaa/data-products/", pattern = "ctd[0-9]*.csv", full.names = FALSE)
+zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
 zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
           , include_directories = FALSE)
 # unlink (zFiles, force = TRUE)
@@ -559,3 +560,5 @@ ls()
 
 save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 
+cat ("\n\n\n##\n## finished CTD_cleanup.R\n##\n\n")
+## EOF

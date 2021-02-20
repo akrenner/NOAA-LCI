@@ -31,6 +31,7 @@ source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. A
 source ("datasetup.R")
 source ("anaCTD.R")              ## CTD profiles?
 source ("CTDwall.R")
+source ("ctd_T9-anomaly.R")
 
 
 ## replot The Wall

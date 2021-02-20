@@ -4,6 +4,7 @@
 ## load data
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
+load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
@@ -34,8 +35,6 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- 
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
 
-
-doFluo <- TRUE  # run fluorescence as well -- have to cut some casts for that
 
 
 ### data prep
@@ -76,18 +75,15 @@ xC$depthR <- factor (round (xC$Depth.saltwater..m.))
 xC$month <- factor (format (xC$isoTime, "%m"))
 ## aggregate useing oce function -- skip aggregation in pre-processing by SBprocessing
 ## calculate normals
-if (doFluo){
-  xC <- subset (xC, !is.na (Fluorescence_mg_m3))
-}
+
 
 
 
 ctdAgg <- aggregate (Temperature_ITS90_DegC ~ depthR+month, xC, FUN = mean, na.rm = TRUE)
 ctdAgg$Salinity_PSU <- aggregate (Salinity_PSU ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
 ctdAgg$Pressure..Strain.Gauge..db. <- aggregate (Pressure..Strain.Gauge..db. ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
-if (doFluo){
-  ctdAgg$Fluorescence_mg_m3 <- aggregate (Fluorescence_mg_m3 ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Fluorescence_mg_m3
-}
+ctdAgg$Fluorescence_mg_m3 <- aggregate (Fluorescence_mg_m3 ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Fluorescence_mg_m3
+
 ## smooth normals
 ctdAgg$monthI <- as.numeric (ctdAgg$month)  ## this messes with things -- don't XXX
 preDF <- ctdAgg; preDF$monthI <- preDF$monthI - 12
@@ -114,12 +110,12 @@ sOut <- sapply (levels (sDF$depthR), FUN = function (i){
 })
 ctdAgg$sloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
 ## fluorescence
-if (doFluo){
+
   sOut <- sapply (levels (sDF$depthR), FUN = function (i){
     loess(Fluorescence_mg_m3~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
   })
   ctdAgg$floess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
-}
+
 
 
 rm (preDF, postDF, sOut)
@@ -163,7 +159,7 @@ mkSection <- function (xC){
                                   , time = isoTime
                           ))
             ocOb@metadata$waterDepth <- 103
-            ocOb <- oceSetData (ocOb, "flourescence", sCTD$Fluorescence_mg_m3)
+            ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
             ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
             ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
             ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
@@ -171,6 +167,10 @@ mkSection <- function (xC){
             ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
             ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
             ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
+
+            sCTD$logFluorescence <- log (sCTD$Fluorescence_mg_m3)
+            ocOb <- oceSetData (ocOb, "lFluorescence", sCTD$logFluorescence)
+
             ocOb
           }
   )
@@ -184,14 +184,14 @@ plot.station <- function (section, axes = TRUE, ...){
         # , stationTicks = TRUE
         , grid = FALSE
         , axes = FALSE, ...)
+  axis (2, at = c(0, 20, 40, 60, 80, 100))
   if (axes == TRUE){
-    axis (2, at = c(0, 20, 40, 60, 80, 100))
+    tAx <- as.POSIXct (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-01-01"))
+    lAx <- as.POSIXct (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-07-01"))
+    axis (1, at = tAx, label = FALSE)
+    axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
+    abline (v = tAx)
   }
-  tAx <- as.POSIXct (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-01-01"))
-  lAx <- as.POSIXct (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-07-01"))
-  axis (1, at = tAx, label = FALSE)
-  axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
-  abline (v = tAx)
 }
 
 
@@ -255,9 +255,9 @@ cT9 <- lapply (0:13, function (i){
   ocOb@metadata$waterDepth <- 103
   ocOb <- oceSetData (ocOb, "sSal", sCTD$sloess)
   ocOb <- oceSetData (ocOb, "sTemp", sCTD$tloess)
-  if (doFluo){
-    ocOb <- oceSetData (ocOb, "sFluo", sCTD$floess)
-  }
+
+  ocOb <- oceSetData (ocOb, "sFluo", sCTD$floess)
+
 })
 cT9 <- as.section (cT9)
 # rm (ctdAgg)
@@ -287,45 +287,18 @@ dev.off()
 
 
 ## fluorescence
-if (doFluo){
-  pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-climatology.pdf")
+pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-climatology.pdf")
 par (las = 1)
-  clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (11))
-  anAx(dAx = seq (0, 100, by = 20))
-  dev.off()
-}
+clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
+anAx(dAx = seq (0, 100, by = 20))
+dev.off()
+
 
 ## alternative display of this data:
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
-
-
-
-## fluorescence time series -- all years
-pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-TS.pdf")
-plot.station (mkSection (xC), which = "flourescence", zcol = oceColorsChlorophyll (11))
-anAx(dAx = seq (0, 100, by = 20))
-dev.off()
-
-## fluorescence time series -- by year
-pdf ("~/tmp/LCI_noaa/media/t9s6-fluorescence-TS.pdf"
-      , width = 6, height = 4*length (levels (xC$year))
-)
-par (mfrow = c(1,length (levels (xC$year))))
-for (i in 1:length (levels (xC$year))){
-  yX <- subset (xC, year == levels (xC$year)[i])
-  if (nrow (yX) > 1){
-    plot.station (mkSection (yX), which = "flourescence", zcol = oceColorsChlorophyll (11)
-                  # , xrange = as.POSIXct(paste (levels (xC$year)[i], c(1, 12), c (1,31), sep = "-"))
-                  , axes = FALSE)
-    axis (1, at = as.POSIXct (paste0 (levels (xC$year)[i], "-", 1:12, "-1")), label = FALSE)
-    axis (1, at = as.POSIXct (paste0 (levels (xC$year)[i], "-", 1:12, "-15")), label = month.abb, tick = FALSE)
-    axis (2, at = seq (0, 100, by = 20))
-  }
-}
-dev.off()
 
 
 

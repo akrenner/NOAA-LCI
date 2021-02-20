@@ -243,6 +243,7 @@ if (0){
 }
 
 Require (magrittr) # for pipe!
+## consider using a different distance to focus on composition rather than abundance
 zoo.hc <- mT9 %>%
     scale() %>%
     dist (method = "manhattan") %>%

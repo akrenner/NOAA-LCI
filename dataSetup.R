@@ -145,8 +145,17 @@ poSS$SampleID_H = with (poSS, paste (Match_Name # some days >1 sample (tide cycl
 ## sort (poSS$File.Name [poSS$SampleID_H %in% names (which (x>1))])
 ## x <- summary (factor (poSS$SampleID), maxsum = 10000)
 ## sort (poSS$File.Name [poSS$SampleID %in% names (which (x>1))])
-poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name
-                          , data = physOc, FUN = max)$Depth.saltwater..m.
+
+# poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name ## fails -- needed??
+#                  , data = physOc, FUN = max)$Depth.saltwater..m.
+## not sure where NAs are coming from, but this fixes it.
+## Better to take maxDepth from station master list
+poSS$maxDepth <- rep (NA, nrow (poSS))
+mD <- aggregate (Depth.saltwater..m.~File.Name
+                          , data = physOc, FUN = max)
+poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
+rm (mD)
+
 dMean <- function (fn, fldn){
     ## calculate mean of field for the last 5 m above the bottom
     cast <- subset (physOc, File.Name == fn)

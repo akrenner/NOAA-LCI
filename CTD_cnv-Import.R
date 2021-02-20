@@ -116,6 +116,11 @@ if (length (fNf) > 100){
 ## to make things run with SEABIRD loopedit
 
 
+## OR (better??), skip aggregation. Don't need to
+# fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/", ".cnv", full.names = TRUE
+#                    , ignore.case = TRUE, recursive = TRUE)
+
+
 fN <- gsub ("^.*/", "", fNf)
 print (length (fN))
 
@@ -752,22 +757,25 @@ fX <- fileDB
 cX <- CTD1
 ## speed-up by using sqlite-DF
 #  if (0){ ## XXX not working yet === CTD1 ends up empty   XXX
-if (length (dubFiles) > 0){
-  for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
-    killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
-    ## pick best file to drop
-    killName <- killCand [2] # default to keeping 2nd name
-    if (diff (nchar(killCand)) > 0){killName <- killCand [1]} # keep shorter name
-    # grep (substr (killName, 1,30), CTD1$File.Name)
-    # which (paste0 (CTD1$File.Name, ".cnv") == killName)
-    ctdOut <- which (paste0 (CTD1$File.Name, ".cnv") == killName)
-    ## account for negative pressures?
-    if (length (ctdOut) > 0){
-      CTD1 <- CTD1 [-ctdOut,]
-      fileDB <- fileDB [-which (fileDB$file == killName),]
+## need to check by hand!! not plausible
+if (0){
+  if (length (dubFiles) > 0){
+    for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
+      killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
+      ## pick best file to drop
+      killName <- killCand [2] # default to keeping 2nd name
+      if (diff (nchar(killCand)) > 0){killName <- killCand [1]} # keep shorter name
+      # grep (substr (killName, 1,30), CTD1$File.Name)
+      # which (paste0 (CTD1$File.Name, ".cnv") == killName)
+      ctdOut <- which (paste0 (CTD1$File.Name, ".cnv") == killName)
+      ## account for negative pressures?
+      if (length (ctdOut) > 0){
+        CTD1 <- CTD1 [-ctdOut,]
+        fileDB <- fileDB [-which (fileDB$file == killName),]
+      }
+      rm (killName, killCand, ctdOut)
+      if (nrow (CTD1) == 0){stop(print (i), " messed up")}
     }
-    rm (killName, killCand, ctdOut)
-    if (nrow (CTD1) == 0){stop(print (i), " messed up")}
   }
 }
 ## there are a few -- delete cnv file!
@@ -813,8 +821,8 @@ if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same st
     }
     if (length (xM) > 1){stop (fNDB [i], "is matched to", fNEnd [xM])}
   }
+   rm (tS)
 }
-rm (tS)
 
 
 
@@ -925,6 +933,15 @@ rm (sTime)
 
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
+
+
+## tmp test
+png ("~/tmp/zzTurbidity.png")
+plot (turbidity~PAR.Irradiance, physOc)
+dev.off()
+png ("~/tmp/zzAtten.png")
+plot (attenuation~PAR.Irradiance, physOc)
+dev.off()
 
 
 ## EOF

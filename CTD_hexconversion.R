@@ -149,8 +149,15 @@ for (i in 1:length (fNf)){
     ctdF <- cTrim
   }
   write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
-  # ctdDecimate ()
+
+  ## tried, but largely failed so far with
+  ## vprr bin_cast / bin_calculate
+  ## and/or oce::ctdDecimate
+  # -- ctdDecimate seems to work but depth still a bit off
 }
+
+
+## alternative: run another SBEDataProcessing batch
 # unlink (tL, recursive = TRUE, force = TRUE)
 # for (i in 1:length (conF)){
 #   tL <- paste (tLB, i, sep = "/")

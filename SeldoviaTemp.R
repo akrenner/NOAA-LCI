@@ -79,11 +79,19 @@ sldvia$f_sal <- substr (sldvia$f_sal, 1,4)
 sldvia$f_sal <- trimws (sldvia$f_sal)
 is.na (sldvia$sal)[!sldvia$f_sal %in% c("<0>", "<1>", "<4>")] <- TRUE
 
+sldvia$f_chlfluor <- substr (sldvia$f_chlfluor, 1,4)
+sldvia$f_chlfluor <- trimws (sldvia$f_chlfluor)
+is.na (sldvia$chlfluor)[!sldvia$f_chlfluor %in% c("<0>", "<1>", "<4>")] <- TRUE
+
+
+
 ## more QCQA -- fix spikes
 # data.frame (sldvia$datetimestamp, sldvia$sal)[which (sldvia$sal < 14),]
 is.na (sldvia$sal)[sldvia$sal > 33.5] <- TRUE # cluster in first year -- error?
 is.na (sldvia$sal)[sldvia$sal < 14] <- TRUE # 2 single, disjoint values
 
+## impossible negative fluorescence values (should be gone already!)
+is.na (sldvia$chlfluor)[sldvia$chlfluor <= 0] <- TRUE
 
 sldvia$dateTime <- time_vec (sldvia$datetimestamp, station_code = "kacswq", tz_only = FALSE)
 # sldvia$month <- as.numeric (strftime(sldvia$dateTime, format='%m'))
@@ -148,7 +156,7 @@ tempDay$homerS <- tHom$Sal  [match (paste (tempDay$year, tempDay$jday), paste (t
 rm (tHom)
 
 sltFit <- function (varN){
-    require (stlplus)                       # use stlplus because it handels NAs gracefully
+    require (stlplus)                       # use stlplus because it handles NAs gracefully
     stlplus (ts (tempDay [,which (names (tempDay) == varN)], start = c (min (tempDay$year),1)
                , frequency = 365.25)
            , s.window = "periodic")
