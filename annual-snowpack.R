@@ -6,7 +6,7 @@ setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 source ("annualPlotFct.R")
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 fetchNew <- TRUE  # get fresh data from server? takes longer
-fetchNew <- FALSE  # get fresh data from server? takes longer
+# fetchNew <- FALSE  # get fresh data from server? takes longer
 maO <- 31
 qntl <- c (0.9, 0.8)
 currentCol <- c ("lightblue", "aquamarine")
