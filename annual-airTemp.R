@@ -43,7 +43,6 @@ tDay <- prepDF (varName = "atempF", dat = hmr, maO = maO, qntl = qntl)
 pdf (paste0 ("~/tmp/LCI_noaa/media/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 
 aPlot (tDay, "atempF"
-       #, ylab = paste0 ("air temperature [", expression (~degree~F), "]")
        , ylab = expression('air'~'temperature'~'['*degree~'F'*']')
        #, ylab = "air temperature [̊F]"
        , currentCol = currentCol, MA = TRUE)

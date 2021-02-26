@@ -84,6 +84,10 @@ sldvia$f_chlfluor <- trimws (sldvia$f_chlfluor)
 is.na (sldvia$chlfluor)[!sldvia$f_chlfluor %in% c("<0>", "<1>", "<4>")] <- TRUE
 
 
+## Farenheit
+sldvia$tempF <- sldvia$temp * 9/5 + 32
+
+
 
 ## more QCQA -- fix spikes
 # data.frame (sldvia$datetimestamp, sldvia$sal)[which (sldvia$sal < 14),]
