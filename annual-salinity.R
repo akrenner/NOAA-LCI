@@ -79,33 +79,58 @@ if (0){
 currentCol <- c ("navyblue", "aquamarine")
 currentCol <- c ("red", "aquamarine")
 
-tDay <- prepDF (dat = homerS, varName = "temp", qntl = qntl, maO = maO)
-pdf (paste0( ("~/tmp/LCI_noaa/media/sa-SSTHomer.pdf")), width = 9, height = 6)
-par (mar = c(3,4,2,1))
-aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
-       , main = "Homer SST")
-cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (homerS$year), currentYear-1)
-         , cYcol = currentCol, qntl = qntl [1])
-dev.off()
+tScale <- c ("celsius", "fahrenheit")
+instSite <- c ("sldviaS", "sldvia", "homerS")
+for (i in 1:length (tScale)){
+  for (j in 1: length (instSite)){
+    tDay <- prepDF (dat = list (sldviaS, sldvia, homerS)[[j]], varName = c ("temp", "tempF")[i]
+                    , qntl = qntl, maO = maO)
+    pdf (paste0 ("~/tmp/LCI_noaa/media/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer")[j]
+                 , c ("-C", "-F")[i]
+                 , ".pdf"), width = 9, height = 6)
+    par (mar = c(3,4,2,1))
+    aPlot (tDay, c("temp", "tempF")[i], currentCol = currentCol
+           , ylab = c (expression('Temperature'~'['*degree~'C'*']')
+                       , expression('Temperature'~'['*degree~'F'*']'))[i]
+                       , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
+           )
+    box()
+    dev.off()
+  }
+}
+rm (tScale, instSite, tDay)
 
-tDay <- prepDF (dat = sldviaS, varName = "temp", qntl = qntl, maO = maO)
-pdf (paste0( ("~/tmp/LCI_noaa/media/sa-SSTSeld.pdf")), width = 9, height = 6)
-par (mar = c(3,4,2,1))
-aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
-       , main = "Seldovia SST")
-cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (sldviaS$year), currentYear-1)
-         , cYcol = currentCol, qntl = qntl [1])
-dev.off()
 
-tDay <- prepDF (dat = sldvia, varName = "temp", qntl = qntl, maO = maO)
-pdf (paste0( ("~/tmp/LCI_noaa/media/sa-DeepTempSeld.pdf")), width = 9, height = 6)
-par (mar = c(3,4,2,1))
-aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
-       , main = "Seldovia bottom temperature")
-cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (sldvia$year), currentYear-1)
-         , cYcol = currentCol, qntl = qntl [1])
-dev.off()
 
+
+if (0){
+  tDay <- prepDF (dat = homerS, varName = "temp", qntl = qntl, maO = maO)
+  pdf (paste0( ("~/tmp/LCI_noaa/media/sa-SSTHomer.pdf")), width = 9, height = 6)
+  par (mar = c(3,4,2,1))
+  aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
+         , main = "Homer SST")
+  cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (homerS$year), currentYear-1)
+           , cYcol = currentCol, qntl = qntl [1])
+  dev.off()
+
+  tDay <- prepDF (dat = sldviaS, varName = "temp", qntl = qntl, maO = maO)
+  pdf (paste0( ("~/tmp/LCI_noaa/media/sa-SSTSeld.pdf")), width = 9, height = 6)
+  par (mar = c(3,4,2,1))
+  aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
+         , main = "Seldovia SST")
+  cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (sldviaS$year), currentYear-1)
+           , cYcol = currentCol, qntl = qntl [1])
+  dev.off()
+
+  tDay <- prepDF (dat = sldvia, varName = "temp", qntl = qntl, maO = maO)
+  pdf (paste0( ("~/tmp/LCI_noaa/media/sa-DeepTempSeld.pdf")), width = 9, height = 6)
+  par (mar = c(3,4,2,1))
+  aPlot (tDay, "temp", currentCol = currentCol, ylab = expression('SST'~'['*degree~'C'*']')
+         , main = "Seldovia bottom temperature")
+  cLegend ("topleft", inset = 0.05, currentYear = currentYear, mRange = c(min (sldvia$year), currentYear-1)
+           , cYcol = currentCol, qntl = qntl [1])
+  dev.off()
+}
 
 cat ("Finished salinityAnnual.R\n")
 # EOF
