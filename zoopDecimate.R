@@ -37,24 +37,52 @@ dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 ## plot total multi-D variance against sample size
 
 
-agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
-row.names (agZoop) <- agZoop [,1]
-agZoop <- agZoop [,2:ncol (agZoop)]
+
+## merge eastern-most Cook Inlet Stations
+if (0){ ## plot zoop stations to be sure:
+  Tx <- subset (poSS, !duplicated (poSS@data$Match_Name))
+  Tx$Transect <- zooCenv$Transect [match (Tx$Match_Name, zooCenv$Match_Name)]
+  Tx$Station <- zooCenv$Station [match (Tx$Match_Name, zooCenv$Match_Name)]
+
+  # Tx <- subset (Tx, Tx@data$Match_Name)
+  plot (Tx,  pch = "2", cex = 0.1)
+  text (Tx, labels = Tx$Station)
+  lines (coast)
+  rm (Tx)
+}
+
+zD <- zooCenv@data
+suppressWarnings({
+  zD$Match_Name <- ifelse ((zD$Transect == "3") & (as.numeric (zD$Station) > 10),  "3_E", zD$Match_Name) # 4, 8, 12, 13, 14
+  zD$Match_Name <- ifelse ((zD$Transect == "7") & (as.numeric (zD$Station) > 10),  "7_E", zD$Match_Name) # 1, 3, 4, 5, 9, 11, 25
+  zD$Match_Name <- ifelse ((zD$Transect == "6") & (as.numeric (zD$Station) < 9),  "6_E", zD$Match_Name) # 1, 3, 4, 5, 9, 11, 25 -- order reversed
+  zooCenv@data <- zD
+  rm (zD)
+})
 
 
-## instead use season x station
-if (1){
+## reduce to core stations -- build index to subset
+keep <- which (zooCenv$Transect %in% c ("KB", "4", "9"))
+keep <- c (keep, which (zooCenv$Match_Name %in% c ("3_E", "7_E", "6_E")))
+zooC <- zooC [keep,]
+zooCenv <- zooCenv [keep,]
+if (0){
+  agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
+  row.names (agZoop) <- agZoop [,1]
+  agZoop <- agZoop [,2:ncol (agZoop)]
+}else{ ## instead use season x station
   agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name),  zooCenv$season), sum)
   row.names (agZoop) <- paste (as.character (agZoop [,1]), as.character (agZoop [,2]), sep = "-")
   agZoop <- agZoop [,3:ncol (agZoop)]
 }
+row.names (agZoop)
 
 
 ## reduce to core stations
-if (1){
+if (0){
   cS <- grep ("^(Along|[1-9])", row.names (agZoop))
 
-  cS <- levels (factor (subset (zooCenv$Match_Name, zooCenv$Year == 2017)))
+  cS <- levels (factor (subset (zooCenv$Match_Name, zooCenv$Year > 2017)))
   cS <- grep (paste0 ("^(", paste (cS, collapse = "|"),")"), row.names (agZoop))
 
   agZoop <- agZoop [cS,]; rm (cS)
@@ -73,13 +101,31 @@ if (0){
 }
 
 ## cluster analysis
+Require ("RColorBrewer")
+sCol <- brewer.pal(4, "Set2")
+sColC <- factor (gsub ("^(\\d|AlongBay)*_\\d+-", "", row.names (agZoop)))
+sColC <- sCol [as.integer(sColC)]
+
+tColF <- factor (gsub ("_\\d+-(summer|fall|winter|spring)$", "", row.names (agZoop)))
+tCol <- brewer.pal (length (levels (tColF)), "Set2")
+tColC <- tCol [as.integer (tColF)]
+
 Require ("vegan")
 pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
-     , width = 23, height = 12)
-#plot (hclust (dist (agZoop, "manhattan"), method = "ward.D"))
-plot (hclust (vegdist (agZoop, "bray"), method = "ward.D")
-      # , col = 1:4
+     , width = 12, height = 12)
+# plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+
+Require ("ape")
+plot (as.phylo (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+      , tip.color = sColC, label.offset = 0.0, cex = 0.7
+#      , type = "fan"
+#      , type = "cladogram"
       )
+legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
+plot (as.phylo (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+      , tip.color = tColC, label.offset = 0.0, cex = 0.7
+)
+legend ("topleft", fill = tCol, legend = levels (tColF))
 dev.off()
 
 
@@ -131,7 +177,6 @@ dM <- function (cM, meas = "div"){
 
 
 
-
 ## heuristic: remove shortest distance, repeat
 rdS <- data.frame (Nsamp = nrow (agZoop):2, divM = NA, drop = NA
                    , stns = NA, diveE = NA, stnsE = NA)
@@ -168,14 +213,58 @@ if (1){
     nZ <- nZ [-sOut,]  # watch out here for scoping XXX
   }
 
-  pdf ("~/tmp/LCI_noaa/media/zoopStation-unoptimization.pdf")
-  plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
-  dev.off()
+
   write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-unoptimization.csv", row.names = FALSE)
+
+
+  pdf ("~/tmp/LCI_noaa/media/zoopStation-unoptimization.pdf", width = 12)
+  par (mar = c (8,4,0.1,0.1))
+  plot(divM~Nsamp, rdS, type = "s", lwd = 2, ylab = "species diversity"
+#      , xlab = "N stations-seasons"
+       , xlab = "")
+
+  axis (1, at = rdS$Nsamp, labels = rdS$drop, las = 3, tick = FALSE, cex.axis = 0.5, line = 1.5
+        , gap.axis = 0.1)
+  xS <- agZoop [-grep ("^3_E", row.names (agZoop), value = FALSE),]
+  abline (h = dM (xS), col = "gray")
+  points (nrow (xS), dM (xS), pch = 19, col = "red")
+  text (nrow (xS), dM (xS), labels = "-T3", pos = 4, offset = 0.5)
+
+  dev.off()
+
+
+
+  ## plots:
+  # bar charts
+  # curve with custom reduction
+  pdf ("~/tmp/LCI_noaa/media/zoopStation-LOO_zoom.pdf")
+  plot (divM~Nsamp, rdS, type = "s"
+        , xlab = "N station-seasons", ylab = "species diversity"
+        , ylim = c (3.3, 3.7), xlim = c(30, 55)
+        )
+  ## all but 3_E
+  xS <- agZoop [-grep ("^3_E", row.names (agZoop), value = FALSE),]
+  abline (h = dM (xS), col = "gray")
+  points (nrow (xS), dM (xS), pch = 19, col = "red")
+  text (nrow (xS), dM (xS), labels = "-T3", pos = 4, offset = 0.5)
+
+  xS <- agZoop [-grep ("^6_E", row.names (agZoop), value = FALSE),]
+#  xS <- xS [-grep ("^6_E", row.names (xS), value = FALSE),]
+  points (nrow (xS), dM (xS), pch = 19, col = "red")
+  text (nrow (xS), dM (xS), labels = "-T6", pos = 4, offset = 0.5)
+
+#  xS <- agZoop [-grep ("^7_E", row.names (agZoop), value = FALSE),]
+  xS <- xS [-grep ("^7_E", row.names (xS), value = FALSE),]
+  points (nrow (xS), dM (xS), pch = 19, col = "red")
+  text (nrow (xS), dM (xS), labels = "-T7 and - T6", pos = 4, offset = 0.5)
+  dev.off()
 
 
   save.image ("~/tmp/LCI_noaa/cache/zoopDec.RData")
 }
+
+
+
 
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDec.RData")
@@ -211,14 +300,15 @@ bestYofX <- function (zM, nOut = 10, nIter = 1000#, seed = 8  ## -- evolutionary
   #   tF$div [i] <- dM (zM [rSelect,])
   # }
   i <- 1; conv <- FALSE
-  while ((i < nIter)&(conv == FALSE)){
-    rSelect <- mutate (rSelect)
+  while (i < nIter){
+  #while ((i < nIter)&(conv == FALSE)){
+      rSelect <- mutate (rSelect)
     tF$div [i] <- dM (zM [rSelect,])
-    if (i > 100){ # minimal iterations before considering convergence
-      if ((tF$div [i] - tF$div [i-100])/diff (range (tF$div, na.rm = TRUE)) < 0.001){
-        conv <- TRUE
-      }
-    }
+    # if (i > 100){ # minimal iterations before considering convergence
+    #   if ((tF$div [i] - tF$div [i-100])/diff (range (tF$div, na.rm = TRUE)) < 0.001){ # this can fail: missing value where TRUE/FALSE needed
+    #     conv <- TRUE
+    #   }
+    # }
     i <- i + 1
   }
   # plot (div~iter, tF, type = "l")
@@ -230,8 +320,12 @@ bestYofX <- function (zM, nOut = 10, nIter = 1000#, seed = 8  ## -- evolutionary
 
 nRuns <- 600
 nRuns <- 4  # better to have few long runs
-nIter <- 1000 # max-iterations per run
 nIter <- 10
+
+## big run
+nRuns <- 100
+nIter <- 1000
+
 ncutStn <-  1:(nrow (agZoop)-2) # N stations x seasons to cut
 
 ## need to set-up cluster outside of function
@@ -282,15 +376,84 @@ plan (sequential)
 save.image ("~/tmp/LCI_noaa/cache/zoopDec.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDec.RData")
 
-allS <- paste (rdS$heuSites, collapse = ", ")
+
+
+
+## best for each ncutStn (1:78)
+heurDiv <- unlist (lapply (ncutStn, function (i){
+  diverMeasRun <- unlist (lapply (1:nRuns, function (j){
+    dM (agZoop [parBest [[i]][[j]],])}))
+  max (diverMeasRun)
+}))
+## compare heuristic to leave-one-out
+pdf ("~/tmp/LCI_noaa/media/zoopDecimate_methods.pdf")
+plot (divM~Nsamp, rdS, type = "l", lwd = 2, col = "black"
+      , ylab = "diversity", xlab = "N stations in sample")
+lines (heurDiv~1:ncutStn, lwd = 2, col = "blue")
+legend ("bottomright", lwd = 2, col = c("black", "blue")
+        , legend = c("leave-one-out", "heuristic"))
+dev.off()
+
+## for optimal station, ranking of inclusions for different runs
+
+bestRun <- unlist (lapply (ncutStn, function (i){
+  diverMeasRun <- unlist (lapply (1:nRuns, function (j){
+    dM (agZoop [parBest [[i]][[j]],])}))
+  which.max (diverMeasRun)
+}))
+
+
+
+## all runs identical?
+runSD <- unlist (lapply (ncutStn, function (i){
+  diverMeasRun <- unlist (lapply (1:nRuns, function (j){
+    dM (agZoop [parBest [[i]][[j]],])}))
+   sd (diverMeasRun)
+  # diff (range (diverMeasRun))
+}))
+
+pdf ("~/tmp/LCI_noaa/media/zoopDecimate_SDofRuns.pdf")
+plot (runSD, xlab = "N stations in sample", ylab = "SD of runs")
+lines (predict (loess (runSD~ncutStn)))
+dev.off()
+
+
+
+
+
+pdf ("~/tmp/LCI_noaa/media/zoopDecimate_site-frequency.pdf"
+     , height = 4, width = 12)
+siteFreq <- summary (factor (row.names (agZoop)[unlist (parBest[[60]])]))
+sO <- order (siteFreq)
+barplot (siteFreq [sO], col = sColC [sO])
+legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
+
+barplot (siteFreq [sO], col = tColC [sO])
+legend ("topleft", fill = tCol, legend = levels (tColF))
+dev.off()
+
+## still keep this one?
+pdf ("~/tmp/LCI_noaa/media/zoopDecimate_site-frequency2.pdf"
+     , height = 6, width = 25)
+par (las = 3, mar = c (8,3,1,1))
+mRN <- factor (gsub ("AlongBay", "AB", row.names (agZoop)))
+barplot (sort (summary (mRN[unlist (parBest)])))
+dev.off()
+
+
+# allS <- paste (rdS$heuSites, collapse = ", ")
+
+
+
+
+
+
+
+
+
 
 
 if (0){
-q()
-
-
-
-
 
 
 
