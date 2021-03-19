@@ -30,6 +30,15 @@ dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
 
 
+## fix duplicate station names
+zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "AlongBay_3", "4_3", zooCenv$Match_Name)
+#not relevant here...
+zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "AlongBay_6", "9_6", zooCenv$Match_Name)
+
+## fixed bad station name (temporary line)
+# zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "4_10", "9_10", zooCenv$Match_Name)
+
+
 ## cluster analysis of zoop, label by station (and year/month?)
 
 ## average stations over seasons and years
@@ -50,7 +59,6 @@ if (0){ ## plot zoop stations to be sure:
   lines (coast)
   rm (Tx)
 }
-
 zD <- zooCenv@data
 suppressWarnings({
   zD$Match_Name <- ifelse ((zD$Transect == "3") & (as.numeric (zD$Station) > 10),  "3_E", zD$Match_Name) # 4, 8, 12, 13, 14
@@ -66,7 +74,7 @@ keep <- which (zooCenv$Transect %in% c ("KB", "4", "9"))
 keep <- c (keep, which (zooCenv$Match_Name %in% c ("3_E", "7_E", "6_E")))
 zooC <- zooC [keep,]
 zooCenv <- zooCenv [keep,]
-if (0){
+if (1){
   agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
   row.names (agZoop) <- agZoop [,1]
   agZoop <- agZoop [,2:ncol (agZoop)]
@@ -110,23 +118,97 @@ tColF <- factor (gsub ("_\\d+-(summer|fall|winter|spring)$", "", row.names (agZo
 tCol <- brewer.pal (length (levels (tColF)), "Set2")
 tColC <- tCol [as.integer (tColF)]
 
+
+if (1){ ## mark T4
+  sCol <- c ("black", "red")
+  sCol <-  (1:nrow (agZoop)) %in% grep ("^4_", row.names (agZoop), value = FALSE)
+  sColC <- ifelse (sCol, "red", "black")
+}
+
 Require ("vegan")
+zClust <- hclust (vegdist (agZoop, "bray"), method = "ward.D")
+
+
 pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
      , width = 12, height = 12)
 # plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
 
 Require ("ape")
-plot (as.phylo (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
-      , tip.color = sColC, label.offset = 0.0, cex = 0.7
+plot (as.phylo (zClust)
+      , tip.color = sColC, label.offset = 0.0, cex = 1 # 0.7
 #      , type = "fan"
 #      , type = "cladogram"
       )
-legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
-plot (as.phylo (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+# legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
+plot (as.phylo (zClust)
       , tip.color = tColC, label.offset = 0.0, cex = 0.7
 )
 legend ("topleft", fill = tCol, legend = levels (tColF))
 dev.off()
+
+
+pdf ("~/tmp/LCI_noaa/media/zoopStation-Cluster-simple.pdf"
+     , width = 12, height = 12)
+# plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
+
+Require ("ape")
+plot (as.phylo (zClust)
+      #, tip.color = sColC, label.offset = 0.0, cex = 1
+      #      , type = "fan"
+      #      , type = "cladogram"
+)
+# legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
+dev.off()
+
+
+
+
+
+
+
+
+## extract N groups from hclust -- or use kmeans?
+bioG <- cutree (zClust, k = 3)   ## set N groups from hclust
+agZPt <- subset (zooCenv, !duplicated(zooCenv$Match_Name))  # remove extras
+# agZPt$clust <- factor (bioG [match (names (bioG), agZPt$Match_Name)])
+agZPt$clust <- factor (bioG [match (agZPt$Match_Name, names (bioG))])
+
+rm (bioG)
+
+## voronoi diagram / biogeography from cluster diagram
+Require ("sf")
+## should add envelope to st_voronoi
+vor <- coordinates (agZPt) %>%
+  st_multipoint() %>%
+  st_voronoi() %>%
+  st_collection_extract()
+vor <- as (vor, "Spatial") ## convert sf to sp spatial
+proj4string(vor) <- CRS (proj4string(zooCenv))
+
+## assign bioG to points, then polygons
+vor <- SpatialPolygonsDataFrame (vor, data = data.frame (over (vor, agZPt)))
+
+Require ("RColorBrewer")
+cCol <- brewer.pal (length (levels (vor$clust)), "Set2") # set3 = longest
+
+pdf ("~/tmp/LCI_noaa/media/KBayZoopBioGeo.pdf", width = 11, height = 8.5)
+plot (agZPt)  # set-up area
+plot (vor, add = TRUE, col = cCol [vor@data$clust])
+plot (coast, col = "beige", add = TRUE)
+# plot (agZPt, col = "black", pch = 19, add = TRUE)
+text (agZPt, agZPt$Match_Name, cex = 0.5)
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -223,8 +305,12 @@ if (1){
 #      , xlab = "N stations-seasons"
        , xlab = "")
 
-  axis (1, at = rdS$Nsamp, labels = rdS$drop, las = 3, tick = FALSE, cex.axis = 0.5, line = 1.5
-        , gap.axis = 0.1)
+  ## with seasons
+#  axis (1, at = rdS$Nsamp, labels = rdS$drop, las = 3, tick = FALSE, cex.axis = 0.5, line = 1.5, gap.axis = 0.1)
+  ## without seasons
+  axis (1, at = rdS$Nsamp - 0.5, labels = rdS$drop, las = 3, tick = FALSE
+        , cex.axis = 0.8, line = 1.5, gap.axis = 0.1)
+
   xS <- agZoop [-grep ("^3_E", row.names (agZoop), value = FALSE),]
   abline (h = dM (xS), col = "gray")
   points (nrow (xS), dM (xS), pch = 19, col = "red")
@@ -240,7 +326,8 @@ if (1){
   pdf ("~/tmp/LCI_noaa/media/zoopStation-LOO_zoom.pdf")
   plot (divM~Nsamp, rdS, type = "s"
         , xlab = "N station-seasons", ylab = "species diversity"
-        , ylim = c (3.3, 3.7), xlim = c(30, 55)
+        # , ylim = c (3.3, 3.7), xlim = c(30, 55)  ## with seasons
+        , ylim = c(2.14, 2.35), xlim = c(10, 19)  ## without seasons
         )
   ## all but 3_E
   xS <- agZoop [-grep ("^3_E", row.names (agZoop), value = FALSE),]
@@ -257,6 +344,12 @@ if (1){
   xS <- xS [-grep ("^7_E", row.names (xS), value = FALSE),]
   points (nrow (xS), dM (xS), pch = 19, col = "red")
   text (nrow (xS), dM (xS), labels = "-T7 and - T6", pos = 4, offset = 0.5)
+
+  xS <- agZoop [-grep ("^7_E", row.names (agZoop), value = FALSE),]
+  #  xS <- xS [-grep ("^7_E", row.names (xS), value = FALSE),]
+  points (nrow (xS), dM (xS), pch = 19, col = "red")
+  text (nrow (xS), dM (xS), labels = "-T7", pos = 2, offset = 0.5)
+
   dev.off()
 
 

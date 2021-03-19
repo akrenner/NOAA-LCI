@@ -123,11 +123,15 @@ load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
 ## univariate summaries for each CTD cast ##
 ############################################
 
+
 poSS <- with (physOc, data.frame (File.Name = levels (File.Name)))
-poSS$Match_Name <- physOc$Match_Name [match (poSS$File.Name, physOc$File.Name)]
-poSS$latitude_DD <- physOc$latitude_DD [match (poSS$File.Name, physOc$File.Name)]
-poSS$longitude_DD <- physOc$longitude_DD [match (poSS$File.Name, physOc$File.Name)]
-poSS$timeStamp <- physOc$isoTime [match (poSS$File.Name, physOc$File.Name)]
+
+poM <- match (poSS$File.Name, physOc$File.Name)
+
+poSS$Match_Name <- physOc$Match_Name [poM]
+poSS$latitude_DD <- physOc$latitude_DD [poM]
+poSS$longitude_DD <- physOc$longitude_DD [poM]
+poSS$timeStamp <- physOc$isoTime [poM]
 poSS$Date <- format (poSS$timeStamp, format = "%Y-%m-%d", usetz = FALSE)
 poSS$Time <- format (poSS$timeStamp, format = "%H:%M:%S", usetz = FALSE)
 poSS$Year <- as.numeric (format (poSS$timeStamp, "%Y"))
@@ -140,6 +144,12 @@ poSS$SampleID <- with (poSS, paste (Match_Name
 poSS$SampleID_H = with (poSS, paste (Match_Name # some days >1 sample (tide cycle)
                                    , format (timeStamp, format = "%Y-%m-%d_%H", usetz = FALSE)
                                      ))
+## XXX
+## should not need this -- fix in CTD processing!!
+poSS <- subset (poSS, !is.na (poM))
+rm (poM)
+
+
 ## multiple samples of same station on one day!
 ## x <- summary (factor (poSS$SampleID_H), maxsum = 10000)
 ## sort (poSS$File.Name [poSS$SampleID_H %in% names (which (x>1))])
@@ -179,6 +189,7 @@ tRange <- function (tstmp){
     return (diff (range (tid$TideHeight)))
 }
 ## this step takes a while! [approx 5 min, depending on computer]
+# if (0){ ## can't handle NAs? fix/exclude NAs!
 poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores = nCPUs))
 ## rerun tideRange
 poSS$tideRange <- as.numeric (poSS$tideRange)
@@ -197,13 +208,15 @@ rm (tRange, i)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){
     ## return radians degree of tidal phase during cast
-}
+# }
 rm (tPhase)
+
+
 Require ("suncalc")
 poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
 ## Require (oce)
 ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
-
+}
 poSS$SST <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                  , subset = Depth.saltwater..m. <= 3
                  , FUN = mean)$Temperature_ITS90_DegC
