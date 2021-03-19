@@ -189,7 +189,6 @@ tRange <- function (tstmp){
     return (diff (range (tid$TideHeight)))
 }
 ## this step takes a while! [approx 5 min, depending on computer]
-# if (0){ ## can't handle NAs? fix/exclude NAs!
 poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores = nCPUs))
 ## rerun tideRange
 poSS$tideRange <- as.numeric (poSS$tideRange)
@@ -208,7 +207,7 @@ rm (tRange, i)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){
     ## return radians degree of tidal phase during cast
-# }
+
 rm (tPhase)
 
 

@@ -98,7 +98,7 @@ if (0){
 require ("vegan")
 
 
-if (0){
+if (1){
   ## run nMDS -- not of much use here
   nM <- metaMDS (agZoop, distance = "bray", k = 3, try = 200, trymax = 500)
 
@@ -163,12 +163,34 @@ dev.off()
 
 
 
+####################################
+## plot cluster analysis on a map ##
+####################################
 
+bb <- bbox (agZPt)
+kBs <- rbind (bb [,1],c (bb [1,1], bb [2,2])
+              ,bb [,2],c (bb [1,2], bb [2,1])
+              , bb [,1])
+kBs [1,] <- c (105000, 1032000) # SW corner -- near Pnt Pogibshi
+kBs [1,] <- c (105000, 1021000) # SW corner -- incl. T3_E
+kBs [5,] <- kBs [1,]
+kBs [2,] <- c (105000, 1095560)
+kBs [3,] <- c (176000, 1095560) #1102000)  # east, north  -- extend into upper bay -- NE corner
+kBs [4,] <- c (176000,  1045000)
+p <- SpatialPolygons (list (Polygons (list (Polygon (kBs)), 1)))
+proj4string(p) <- CRS (proj4string(zooCenv))
+
+## restrict study area to water (cookie-cutter)
+Require ("rgeos")
+studyA <- gDifference (p, coast)
+# plot (studyA)
+# plot (agZPt, add = TRUE, col = "red")
 
 
 
 ## extract N groups from hclust -- or use kmeans?
 bioG <- cutree (zClust, k = 3)   ## set N groups from hclust
+ ## problem: numbers do not seem to correspond to closest groupings
 agZPt <- subset (zooCenv, !duplicated(zooCenv$Match_Name))  # remove extras
 # agZPt$clust <- factor (bioG [match (names (bioG), agZPt$Match_Name)])
 agZPt$clust <- factor (bioG [match (agZPt$Match_Name, names (bioG))])
@@ -185,23 +207,59 @@ vor <- coordinates (agZPt) %>%
 vor <- as (vor, "Spatial") ## convert sf to sp spatial
 proj4string(vor) <- CRS (proj4string(zooCenv))
 
+## cut vor down to study area
+vor <- gIntersection (vor, studyA, byid= TRUE)
+# plot (vor)
+
 ## assign bioG to points, then polygons
 vor <- SpatialPolygonsDataFrame (vor, data = data.frame (over (vor, agZPt)))
 
 Require ("RColorBrewer")
 cCol <- brewer.pal (length (levels (vor$clust)), "Set2") # set3 = longest
+## if 3 groups, fix up colors manually using PAIRED
+if (length (levels (factor (bioG))) == 3){
+  cCol <- brewer.pal (length (levels (vor$clust)), "Paired") # set3 = longest
+  cCol <- cCol [c(2,3,1)]
+}
 
-pdf ("~/tmp/LCI_noaa/media/KBayZoopBioGeo.pdf", width = 11, height = 8.5)
+
+
+pdf ("~/tmp/LCI_noaa/media/KBayZoopBioGeoClust.pdf", width = 11, height = 8.5)
 plot (agZPt)  # set-up area
 plot (vor, add = TRUE, col = cCol [vor@data$clust])
 plot (coast, col = "beige", add = TRUE)
 # plot (agZPt, col = "black", pch = 19, add = TRUE)
-text (agZPt, agZPt$Match_Name, cex = 0.5)
+text (agZPt, gsub ("AlongBay", "AB", agZPt$Match_Name), cex = 0.7)
+## title (sub = "purple and green are closer")
 dev.off()
 
 
 
 
+## same map for nMDS
+vor@data$nmds1 <- scores (nM) [match (vor@data$Match_Name, row.names (scores (nM))),1]
+
+pdf ("~/tmp/LCI_noaa/media/KBayZoopBioGeoNMDS.pdf", width = 11, height = 8.5)
+
+Require ("dismo")  # for google basemap
+Require ("raster")
+
+# base.map <- gmap (agZPt, type = "terrain")  ## would need Google API key
+Pl <- spplot (vor, "nmds1", col = "transparent"
+        , xlim = bbox (agZPt)[1,], ylim = bbox (agZPt)[2,]
+        , sp.layout = list ("sp.polygons", coast)
+#        , sp.layout = list ("sp.lines", coast, col = "beige")
+, colorkey = FALSE
+)
+# Pl + layer (panel.polygon(coast, col = "beige"))
+print (Pl)
+rm (Pl)
+# plot (agZPt)  # set-up area
+# plot (vor, add = TRUE, col = cCol [vor@data$clust])
+# plot (coast, col = "beige", add = TRUE)
+# # plot (agZPt, col = "black", pch = 19, add = TRUE)
+# text (agZPt, agZPt$Match_Name, cex = 0.5)
+dev.off()
 
 
 
