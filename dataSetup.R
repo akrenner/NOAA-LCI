@@ -13,7 +13,7 @@ rm (list = ls())
 ## CAREFUL with this!!
 # system ("rm -r ~/tmp/LCI_noaa/")
 # unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
-
+print (Sys.time())
 
 
 ## file structure:
@@ -47,14 +47,17 @@ x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 ############################
 
 PDF <- function (fN, ...){
-   pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
-if (width < 50){
-  width <- 100*width
-  height <- 100*height
-}else{
-  width <- 480; height <- 480
-}
-#     png (paste0 ("~/tmp/LCI_noaa/media/", fN, ".png"), ...) # automatically adjust scale?
+  if (1){
+    pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
+  }else{
+    if (width < 50){
+      width <- 100*width
+      height <- 100*height
+    }else{
+      width <- 480; height <- 480
+    }
+    png (paste0 ("~/tmp/LCI_noaa/media/", fN, ".png"), ...) # automatically adjust scale?
+  }
 }
 
 if (!require("pacman")) install.packages("pacman"
@@ -348,8 +351,8 @@ pcDepth <- function (fn){
 }
 poSS$pcDepth <- unlist (mclapply (poSS$File.Name, FUN = pcDepth, mc.cores = nCPUs))
 rm (pcDepth)
-is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
-is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
+# is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
+is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
 print (summary (poSS))
 
@@ -698,8 +701,11 @@ NPPSD2 <- cbind (NPPSD2 [,1:which (names (NPPSD2) == "jdate")]
 
 
 
-
-
+cat ("\n\n## phytoplankton stations with missing coordinates:\n
+     ## removed for now -- XXX but need to fix in MasterStationLocations.csv")
+print (summary (factor (phyCenv$Match_Name [is.na (phyCenv$lon)])))
+phyC <- subset (phyC, !is.na (phyCenv$lon))
+phyCenv <- subset (phyCenv, !is.na (phyCenv$lon))
 
 ## geographically overlay seabirds and physical oceanography stations
 print (poSS [which (is.na (poSS$longitude_DD) | is.na (poSS$latitude_DD)),])
@@ -891,7 +897,7 @@ birdS <- cbind (birdS [,1:which (names (birdS) == "jdate")]
                , bC); rm (bC)
 ## pro-rate unidentified spp  XXXX
 
-rm (j,i,xo, findBirds, lBuff, birds)
+rm (findBirds, lBuff, birds)
 rm (stnB)
 
 ## birdS:

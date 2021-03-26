@@ -70,6 +70,50 @@ dev.off()
 # BUT, only for sldviaS, not sldvia (for which 2016 is highest)
 
 
+## seldovia surface 2020
+pdf ("~/tmp/LCI_noaa/media/swamp-seldovia-fluorescence-2020.pdf")
+plot (chlfluor~datetimestamp, sldviaS, type = "l", subset = year > 2019, xlab = "2020")
+dev.off()
+
+## autocorrelation: compare temp, salinity, fluorescence, turbidity
+# x <- as.ts (subset (sldviaS, year > 2019)$chlfluor, frequency = 4*24)
+# x <- as.ts (subset (sldviaS, year > 2019)$temp, frequency = 4*24)
+# x <- as.ts (subset (sldviaS, year > 2019)$sal, frequency = 4*24)
+pdf ("~/tmp/LCI_noaa/media/swamp-seldovia-fluorescence-autocorrel.pdf")
+for (i in c ("chlfluor", "sal", "temp")){
+  x <- as.ts (subset (sldviaS, year > 2019)[,which (names (sldviaS) == i)]
+              , frequency = 4*24)
+  acf (x, na.action = na.exclude
+       , lag.max = 7*24*4
+       , xlab = "Year 2020, Lag: 96=1day"
+       , main = i
+  )
+}
+dev.off()
+
+# x <- subset (sldviaS, year == 2020 & week == 20)
+pdf ("~/tmp/LCI_noaa/media/swamp-seldovia-fluorescence-2020-dailies.pdf")# , height = 30)
+for (i in 120:125){
+  x <- subset (sldviaS, year == 2020 & jday == i)
+  plot (chlfluor~datetimestamp, x, type = "l", ylim = c(0,6))
+}
+dev.off()
+# x <- subset (sldviaS, year == 2020 & jday == 125)
+# plot (chlfluor~datetimestamp, x, type = "l")
+
+# x <-as.ts (sldvia$chlfluor, frequency = 4*24 # 1 sample every 15 min
+#            # , start =
+#             )
+# acf (x, lag.max = , na.action = na.exclude)
+
+
+## daily summer pattern
+## aggregate by hours?
+sHour <- format (sldviaS$datetimestamp, "%H")
+chHour <- aggregate (sldviaS$chlfluor~sHour, FUN = mean, na.rm = TRUE)
+plot  (chHour, type = "l")
+
+
 ### Seldovia anomaly
 
 sltFit <- function (varN, tempDay = tempDay){
@@ -120,7 +164,6 @@ pdf ("~/tmp/LCI_noaa/media/t9s6-log-fluorescence-TS_byYear.pdf"
 for (i in 1:length (levels (xC$year))){
   yX <- subset (xC, year == levels (xC$year)[i])
   if (length (levels (factor (yX$File.Name))) > 2){
-## layout    
     layout (matrix (c (1,2,3), ncol = 1), heights = c (5,2,2))
     plot.station (mkSection (xC), which = "lFluorescence", zcol = oceColorsChlorophyll (4)
                   # , xrange = as.POSIXct(paste (levels (xC$year)[i], c(1, 12), c (1,31), sep = "-"))
@@ -133,7 +176,7 @@ for (i in 1:length (levels (xC$year))){
     axis (1, at = as.POSIXct (paste0 (levels (xC$year)[i], "-", 1:12, "-15")), label = month.abb, tick = FALSE)
     axis (2, at = seq (0, 100, by = 20))
     axis (3, at = yX$isoTime, labels = FALSE)
-  ## add Seldovia 
+  ## add Seldovia
     try (plot (log (chlfluor)~datetimestamp, sldviaS, lwd = 2, col = "lightgreen", type = "l"
                , subset = year == levels (xC$year)[i]
                #, ylim = range (sldviaS$chlfluor, na.rm = TRUE)
