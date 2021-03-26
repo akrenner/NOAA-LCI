@@ -14,6 +14,8 @@ tr <- require ("pacman")
 if (!tr){
   install.packages ("pacman")
 }
+
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/"); source ("dataSetup.R")
 tr <- try (load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")) # from dataSetup.R -- of interest: zooC and zooCenv
 if (class (tr) == "try-error"){
   dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
@@ -37,6 +39,10 @@ zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "AlongBay_6", "9_6", zooCenv
 
 ## fixed bad station name (temporary line)
 # zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "4_10", "9_10", zooCenv$Match_Name)
+
+
+
+
 
 
 ## cluster analysis of zoop, label by station (and year/month?)
@@ -68,13 +74,48 @@ suppressWarnings({
   rm (zD)
 })
 
+sort (summary (factor (zooCenv$Match_Name)))
+zooCenv@data [which (zooCenv$Match_Name == "6_9"),]
+x <- zooCenv@data [which (zooCenv$Date == "23-Sep-14"),]  ## there's no notebook for that date. 2014-09-25 notebook has other times and only T9.
+x [order (x$timeStamp),]
+
+zooCenv@data [which (zooCenv$Match_Name == "AlongBay_1"),]## looks legit
+zooCenv@data [which (zooCenv$Match_Name == "AlongBay_5"),]## looks legit
+zooCenv@data [which (zooCenv$Match_Name == "AlongBay_8"),]## legit
+
+zooCenv@data [which (zooCenv$Match_Name == "AlongBay_9"),]## check!
+
+
+
+
+## exclude stations that were only sampled once or twice -- remove one-offs
+## pick out stations that were present in each year-season combination
+## copied/adapted from zooCommunity-note.R
+year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))
+sttn <- gsub ("_", "-", zooCenv$Match_Name)  # with (zooCenv@data, paste (Transect, Station, sep = "-"))
+xT <- table (year_season, sttn)
+print (t (xT))
+stCount <- apply (xT, 2, FUN = function (x){sum (x > 0)})
+print (sort (stCount, decreasing = TRUE))
+print (length (levels (factor (year_season))))
+keepSt <- sttn %in% names (which (stCount > 3))
+zooC <- subset (zooC, keepSt)
+zooCenv <- subset (zooCenv, keepSt)
+## remove zero-species
+zS <- apply (zooC, 2, sum)
+zooC <- zooC [,which (zS > 0)]
+rm (zS)
+
+
+
+
 
 ## reduce to core stations -- build index to subset
 keep <- which (zooCenv$Transect %in% c ("KB", "4", "9"))
 keep <- c (keep, which (zooCenv$Match_Name %in% c ("3_E", "7_E", "6_E")))
 zooC <- zooC [keep,]
 zooCenv <- zooCenv [keep,]
-if (1){
+if (1){  ## lump seasons at each station
   agZoop <- aggregate (zooC, by = list (factor (zooCenv$Match_Name)), sum)
   row.names (agZoop) <- agZoop [,1]
   agZoop <- agZoop [,2:ncol (agZoop)]
@@ -84,6 +125,15 @@ if (1){
   agZoop <- agZoop [,3:ncol (agZoop)]
 }
 row.names (agZoop)
+
+
+# ## only use quarterly samples (standardize -- does it make a difference for AB-10?)
+# ## how many stations per day -- select relevant days only
+# x <- summary (factor (zooCenv$isoDate), maxsum = 200)
+# sort (x, decreasing = TRUE)
+# difftime (names (x) [2:length (x)], names (x)[1:(length (x)-1)])
+# ## -- complicated -- abandone this effort for now
+
 
 
 ## reduce to core stations
@@ -130,7 +180,8 @@ zClust <- hclust (vegdist (agZoop, "bray"), method = "ward.D")
 
 
 pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
-     , width = 12, height = 12)
+# PDF ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
+          , width = 12, height = 12)
 # plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
 
 Require ("ape")
@@ -163,9 +214,18 @@ dev.off()
 
 
 
+
 ####################################
 ## plot cluster analysis on a map ##
 ####################################
+
+## extract N groups from hclust -- or use kmeans?
+bioG <- cutree (zClust, k = 3)   ## set N groups from hclust
+## problem: numbers do not seem to correspond to closest groupings
+agZPt <- subset (zooCenv, !duplicated(zooCenv$Match_Name))  # remove extras
+# agZPt$clust <- factor (bioG [match (names (bioG), agZPt$Match_Name)])
+agZPt$clust <- factor (bioG [match (agZPt$Match_Name, names (bioG))])
+rm (bioG)
 
 bb <- bbox (agZPt)
 kBs <- rbind (bb [,1],c (bb [1,1], bb [2,2])
@@ -188,14 +248,6 @@ studyA <- gDifference (p, coast)
 
 
 
-## extract N groups from hclust -- or use kmeans?
-bioG <- cutree (zClust, k = 3)   ## set N groups from hclust
- ## problem: numbers do not seem to correspond to closest groupings
-agZPt <- subset (zooCenv, !duplicated(zooCenv$Match_Name))  # remove extras
-# agZPt$clust <- factor (bioG [match (names (bioG), agZPt$Match_Name)])
-agZPt$clust <- factor (bioG [match (agZPt$Match_Name, names (bioG))])
-
-rm (bioG)
 
 ## voronoi diagram / biogeography from cluster diagram
 Require ("sf")
@@ -217,7 +269,7 @@ vor <- SpatialPolygonsDataFrame (vor, data = data.frame (over (vor, agZPt)))
 Require ("RColorBrewer")
 cCol <- brewer.pal (length (levels (vor$clust)), "Set2") # set3 = longest
 ## if 3 groups, fix up colors manually using PAIRED
-if (length (levels (factor (bioG))) == 3){
+if (length (levels (agZPt$clust)) == 3){
   cCol <- brewer.pal (length (levels (vor$clust)), "Paired") # set3 = longest
   cCol <- cCol [c(2,3,1)]
 }
@@ -415,7 +467,42 @@ if (1){
 }
 
 
+save.image ("~/tmp/LCI_noaa/cache/zoopDecimate3.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDecimate3.RData")
 
+## reduce sampling from 18 to 12 sites
+rdS$divM [which (rdS$Nsamp == round (max (rdS$Nsamp) * 0.75))] / max (rdS$divM)
+rdS$Nsamp [which (rdS$Nsamp == round (max (rdS$Nsamp) * 0.75))] / max (rdS$Nsamp)
+
+R1 <- data.frame (station = rownames (agZoop)
+                  , div = sapply (1:nrow (agZoop)
+                                   ,FUN = function (i){dM (agZoop [-i,])})
+)
+
+R2 <- data.frame (station = c ("4-2, 4-7, 9-1, 9-10"
+                               , "4-2, 4-7, 9-1, 9-10, 3-E"
+                               , "4-2, 9-1, 9-10"
+                               , "4-7, 4-2, 9-1, 9-10")
+                  ##                  , div = sapply (1:nrow (agZoop)
+                  , div = sapply (list (which (rownames (agZoop) %in%
+                                                   c("4_2", "4_7", "9_1", "9_10"))
+                                        , which (rownames (agZoop) %in%
+                                                   c("4_2", "4_7", "9_1", "9_10", "3_E"))
+                                        , which (rownames (agZoop) %in%
+                                                   c ("4_2", "9_1", "9_10"))
+                                        , which (rownames (agZoop) %in%
+                                                   c ("4_2", "4_7", "9_1", "9_10"))
+                  )
+                  , FUN = function (i){dM (agZoop [-i,])})
+)
+
+Rx <- rbind (R1, R2)
+Rx$prop <- 1 - Rx$div / dM (agZoop)
+Rx <- Rx [order (Rx$div, decreasing = TRUE),]
+with (Rx, data.frame (station, prop = round (prop, 3)))
+rm (R1, R2, Rx)
+
+## XXX here!
 
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopDec.RData")
@@ -470,12 +557,12 @@ bestYofX <- function (zM, nOut = 10, nIter = 1000#, seed = 8  ## -- evolutionary
 
 
 nRuns <- 600
-nRuns <- 4  # better to have few long runs
-nIter <- 10
+nRuns <- 25  # better to have few long runs
+nIter <- 100
 
-## big run
-nRuns <- 100
-nIter <- 1000
+# ## big run
+# nRuns <- 100
+# nIter <- 1000
 
 ncutStn <-  1:(nrow (agZoop)-2) # N stations x seasons to cut
 
@@ -574,7 +661,7 @@ dev.off()
 
 pdf ("~/tmp/LCI_noaa/media/zoopDecimate_site-frequency.pdf"
      , height = 4, width = 12)
-siteFreq <- summary (factor (row.names (agZoop)[unlist (parBest[[60]])]))
+siteFreq <- summary (factor (row.names (agZoop)[unlist (parBest[[length (parBest)]])]))
 sO <- order (siteFreq)
 barplot (siteFreq [sO], col = sColC [sO])
 legend ("topleft", fill = sCol, legend = c("spring", "summer", "fall", "winter"))
@@ -604,7 +691,7 @@ dev.off()
 
 
 
-if (0){
+if (nrow (agZoop) < 15){
 
 
 
@@ -648,8 +735,9 @@ for (i in 1:(nrow (agZoop)-1)){
   }
   oVect <- cbn [,oCbn]
   # rdS$Nsamp [i] <- nrow (cbn)
-  rdS$divE [i] <- dM (agZoop [oVect,]) # could recycle above
+  rdS$diveE [i] <- dM (agZoop [oVect,]) # could recycle above
   rdS$stnsE [i] <- paste (rownames (agZoop)[oVect], collapse = ", ")
+  rdS$stnExcl [i] <- paste (rownames (agZoop)[-oVect], collapse = ", ")
   save.image (paste0 ("~/tmp/LCI_noaa/cache/zoopDecStatYear", i, ".RData"))
   cat (i, difftime (Sys.time(), sT, units = "min"), " min\n")
 }
@@ -674,15 +762,20 @@ if (version$os == "mingw32"){
 
 
 pdf ("~/tmp/LCI_noaa/media/zoopStation-exactoptimization.pdf")
-plot(divM~Nsamp, rdS, type = "l", lwd = 2, ylab = "species diversity", xlab = "N stations")
-lines (divE~Nsamp, rdS, lwd = 2, col = "green")
+par (mar = c (5,4,1,4))
+plot(divM~Nsamp, rdS, type = "s", lwd = 2, ylab = "Shannon's species diversity", xlab = "N stations")
+lines (diveE~Nsamp, rdS, lwd = 2, col = "green", type = "s")
+legend ("bottomright", lwd = 2, legend = c ("leave-one-out", "exact"), col = c ("black", "green"))
+## add 2nd axis on the right: proportion of species diversity
+axis (4, at = max (rdS$diveE) * seq (0, 1, 0.1), labels = seq (0, 1, 0.1))
+mtext ("proportion of diversity", side = 4, line = 2.5)
 dev.off()
 
+rdS$propLoss <- with (rdS, 1- diveE / max (diveE))
 write.csv (rdS, file = "~/tmp/LCI_noaa/media/zoopStation-exactoptimization.csv", row.names = FALSE)
 
-
-
-
-## map of all and subset stations
 }
+save.image ("~/tmp/LCI_noaa/cache/zoopStations-exact.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopStations-exact.RData")
+
 ## EOF
