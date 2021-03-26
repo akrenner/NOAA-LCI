@@ -1,16 +1,20 @@
 #!/usr/bin/env Rscript
 
-## zooplankton comparison across years
+## zooplankton comparison across years and seasons
+## after many iterations, have this cleared-up for the publication/note on
+## annual cycle and spring progression
+
+
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 set.seed (8)
 Require ("sp")
 Require ("raster")
 Require ("vegan")
-dir.create ("~/tmp/LCI_noaa/media/2019-zoop/", recursive = TRUE, showWarnings = FALSE)
+dir.create ("~/tmp/LCI_noaa/media/2019-zoopCircle/", recursive = TRUE, showWarnings = FALSE)
 
 PDF <- function (fN, ...){
-  pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoop/", fN, ".pdf"), ...)
+  pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoopCircle/", fN, ".pdf"), ...)
 }
 
 ### standardize survey effort and distribution!!
@@ -98,8 +102,8 @@ print (names (zooCenv@data))
 
 ## replot SeldoviaTemp graph -- re-assigning temperatures
                                 # seldovia temperature
-# PDF ("2019/SeldTempAnomaly-recategorize", width = 12, height = 7)
-pdf ("~/tmp/LCI_noaa/media/2019/SeldTempAnomaly-recategorize.pdf", width = 12, height = 7)
+PDF ("SeldTempAnomaly-recategorize", width = 12, height = 7)
+# pdf ("~/tmp/LCI_noaa/media/2019/SeldTempAnomaly-recategorize.pdf", width = 12, height = 7)
   nArgs <- with (tempDay, ifelse ((month == 1)&(Day == 1)&(year %% 3 == 0), year, NA))
 poDay <- with (tempDay, as.POSIXct (paste (year, month, Day, sep = "-")))
 tempDay$AJ <- tempDay$days90 - mean (zooCenv$TempAnom) # set zero to mean of samples
@@ -212,71 +216,38 @@ Require ("colorspace")
 mCol <- rainbow_hcl (12)
 
 
-pdf ("~/tmp/LCI_noaa/media/2019-zoop/Zoop_nMDS-T=All.pdf")
-for (i in TransN){
-  # PDF ("Zoop_nMDS-T9monthly")
-  # pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoop/Zoop_nMDS-T=", TransN, ".pdf"))
+PDF ("Zoop_nMDS-T9monthly")
 
-  ## first subset?
-  # T9 <- subset (nMScores, zooCenv$Transect == 9)
-  T9 <- subset (nMScores, zooCenv$Transect == i)
-  ## recalc nMDS axes
-  ## T9 <- scores (metaMDS (subset (zooC, zooCenv$Transect == 9), distance = "bray"
-  ##                      , k = 2, try = 200, trymax = 500, parallel = 12)
-  ##               , "sites")
-  # T9env <- subset (zooCenv, zooCenv$Transect == 9)
-  T9env <- subset (zooCenv, zooCenv$Transect == i)
-  T9env$month <- factor (T9env$month)
-  # T9env$zoopSum <- rowSums (subset (zooC, zooCenv$Transect == 9))
-  T9env$zoopSum <- rowSums (subset (zooC, zooCenv$Transect == i))
-
-  ## test densities -- something is wrong
-  ## plot (volSample~month, T9env)           # volSamples not right!!
-  # plot (zoopSum~month, T9env)           # volSamples not right!!
-
-  par (mar = c(5,4,2,1) + 0.1)
-  plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month]
-        , pch = 19 # as.numeric (factor (T9env$Station))
-        ##, cex = (10* (T9env$zoopSum/T9env$volSample) / max (T9env$zoopSum/T9env$volSample))+0.2
-        #   , cex = 10 * (T9env$zoopSum / max (T9env$zoopSum))
-        , main = paste0 ("Transect=", i)
-  )
-  for (i in 1:length (levels (T9env$month))){
-    cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
-  }
-  # legend ("topleft", legend = month.abb, pch = 19, col = mCol)
-  text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
-#  dev.off()
-  # write.csv (data.frame (T9, T9env, subset (zooC, zooCenv$Transect == 9))
-  #          , file = "~/tmp/LCI_noaa/cache/zoopT9monthly.csv", row.names = FALSE)
-  rm (T9, T9env)
-}
-dev.off()
-
-## same for T4
-tP <- "9"
-tPs <- zooCenv$Transect == tP
-# tPs <- zooCenv$Match_Name == "9_6"
-
-PDF (paste0 ("Zoop_nMDS-T-", tP, "monthly"))
-T9 <- subset (nMScores, tPs)
+## first subset?
+T9 <- subset (nMScores, zooCenv$Transect == 9)
 ## recalc nMDS axes
 ## T9 <- scores (metaMDS (subset (zooC, zooCenv$Transect == 9), distance = "bray"
 ##                      , k = 2, try = 200, trymax = 500, parallel = 12)
 ##               , "sites")
-T9env <- subset (zooCenv, tPs)
+T9env <- subset (zooCenv, zooCenv$Transect == 9)
 T9env$month <- factor (T9env$month)
-T9env$zoopSum <- rowSums (subset (zooC, tPs))
+T9env$zoopSum <- rowSums (subset (zooC, zooCenv$Transect == 9))
+
+## test densities -- something is wrong
+## plot (volSample~month, T9env)           # volSamples not right!!
+# plot (zoopSum~month, T9env)           # volSamples not right!!
 
 par (mar = c(5,4,2,1) + 0.1)
-plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month], pch = 19)
+plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month]
+      , pch = 19 # as.numeric (factor (T9env$Station))
+      ##, cex = (10* (T9env$zoopSum/T9env$volSample) / max (T9env$zoopSum/T9env$volSample))+0.2
+      #   , cex = 10 * (T9env$zoopSum / max (T9env$zoopSum))
+      , main = paste0 ("Transect=", i)
+)
 for (i in 1:length (levels (T9env$month))){
   cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
 }
-## text (T9 [,1:2], labels = T9env$transO)
 # legend ("topleft", legend = month.abb, pch = 19, col = mCol)
 text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
 dev.off()
+# write.csv (data.frame (T9, T9env, subset (zooC, zooCenv$Transect == 9))
+#          , file = "~/tmp/LCI_noaa/cache/zoopT9monthly.csv", row.names = FALSE)
+rm (T9, T9env)
 
 
 
@@ -294,6 +265,12 @@ sLM <- lm (nMDS1 ~ TempAnom, spDF)
 Require ("MCMCglmm")
 # sLM <- glmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM, varcomps.names = "month")
 sLM <- MCMCglmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM)
+# MCMCglmm (count ~ surveyYear + 1, random = ~ us (1+SurveyYear):location
+#           data, mD, family = "poisson"
+#           nitt = 2000, thin = 10, burnin = 5000, pr = TRUE, pl = FALSE)
+
+
+
 ## better: glmm, random factor = station
 summary (sLM)
 
@@ -384,8 +361,9 @@ fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 # fCol <- adjustcolor (fCol, alpha.f = 0.4)
 ## annual zooplankton cycle
 
-# PDF ("2019/Zoop_nMDS_seasonal")
-pdf ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal2.pdf")
+
+PDF ("2019/Zoop_nMDS_seasonal-all")
+# pdf ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal2.pdf")
 # png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
 plot (nMScores [,1:2], type = "n")
 ## add convex hulls
@@ -394,12 +372,8 @@ for (i in 1:length (levels (nMCol))){
 }
 points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
       , pch = ifelse (zooCenv$Transect == 9, 1, 19)
-      , cex = ifelse (zooCenv$Transect == 4, 2, 1)
+      # , cex = ifelse (zooCenv$Transect == 4, 2, 1)
         )
-# T4 <- nMScore [order (zooCenv$month),]
-# # T4 <- nMScores [grep ("^4_", row.names (nMScores)),]
-# T4 <- T4 [grep ("^4_", row.names (T4)),]
-# lines (T4 [,1:2])
 text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
 ## pSym <- c(25,1,17)
 ## legend ("bottomleft", legend = levels (factor (zooCenv$warmCat))
@@ -408,9 +382,9 @@ text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
 legend ("topleft", legend = levels (nMCol)
         ##, col = 1:length (levels (nMCol))
         , col = fCol, pch = 19, bty = "n")
-legend ("topright", legend = c("T9", "T4", "others")
-        , pch = c(1, 19, 19)
-        , pt.cex = c(1, 2, 1)
+legend ("topright", legend = c("T9", "others")
+        , pch = c(1, 19)
+#        , pt.cex = c(1, 2, 1)
         , bty = "n"
         )
 dev.off()
@@ -425,99 +399,7 @@ zooCenv$Year <- factor (zooCenv$Year)
 save.image ("~/tmp/LCI_noaa/cache/zoopCommInSplot.RData")
 ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopCommInSplot.RData") #; require (vegan)
 
-## within-season plots
-plotInSeason <- function (pdfN, plotCat = "warmCat"
-                        , colP # = 1:length (levels (which Cat))
-                        , hull = TRUE, legLoc = "topleft"
-                          , reScale = FALSE
-                          ){
-    if (!(plotCat %in% names (zooCenv))){stop("plotCat=", plotCat, "needs to be a name in zooCenv, like", names (zooCenv))}
-#    for (k in 1:2){
-    for (k in 1){
-        PDF (paste0 ("2019/", pdfN, k))
-        par (mfrow = c(2,2))
-        for (i in 1:length (levels (zooCenv$season))){
-            if (reScale){
-                Require (vegan)
-                cat ("\n##\n", i, levels (zooCenv$season) [i], "\n\n##\n")
-                subSc <- metaMDS (subset (zooC
-                                        , zooCenv$season == levels (zooCenv$season)[i])
-                                  , distance = "bray", k = 3, trymax = 100, try = 50, parallel = 12)
-                subSc <- scores (subSc, "sites")[,matrix (c(1,2,2,3), nrow = 2)[,k]]
-            }else{
-                subSc <- subset (nMScores [,matrix (c(1,2,2,3), nrow = 2)[,k]] # subset axis 2/3 as y-axis
-                               , zooCenv$season == levels (zooCenv$season)[i])
-            }
-            ze <- subset (zooCenv@data, zooCenv$season == levels (zooCenv$season)[i])
-            ze$Cat <- factor (ze [,which (names (ze) == plotCat)])
-            if (length (levels (ze$Cat)) != length (colP)){
-                warning ("number of levels unequal to number of colors")
-            }
-            plot (subSc, col = colP [as.numeric (ze$Cat)]
-                , main = levels (ze$season)[i]
-                , pch = 19
-                , axes = FALSE)
-            box()
-            if (i %in% c(1,3)){axis (2)}
-            if (i %in% c(3,4)){axis (1)}
-            if (i == 1){
-                legend (legLoc, legend = levels (ze$Cat), col = colP [1:length (levels (ze$Cat))]
-                      , pch = 19, bty = "n")
-            }
-#            nL <- as.numeric (levels (factor (as.numeric (ze$Cat))))
-#            for (j in 1:length (nL)){
-            for (j in 1:length (levels (ze$Cat))){
-                cH (fac = ze$Cat == levels (ze$Cat)[j]
-                  , colC = colP [j]
-                  , pts = subSc, hull = hull)
-            }
-            rm (subSc)
-        }
-        dev.off()
-    }
-}
 
-
-## warm/cold
-plotInSeason (pdfN = "Zoop_intraseasonal-nMDS_warm-cold"
-            , plotCat = "warmCat"
-            , colP = c ("blue", "gray", "red")
-            , hull = TRUE, legLoc = "bottomleft")
-
-## compare location (Transects; Stations)
-Require ("RColorBrewer")
-plotInSeason ("Zoop_intraseasonal-nMDS_location"
-            , plotCat = "Transect"
-            , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
-                                        # brewer.pal (length (levels (zooCenv$Transect)), name = "Set3")
-            , hull = TRUE, legLoc = "bottomleft")
-
-plotInSeason ("Zoop_intraseasonal-nMDS_years"
-            , plotCat = "Year"
-            , colP =  rainbow_hcl (length (levels (zooCenv$Year)))
-            , hull = TRUE, legLoc = "bottomleft")
-
-# print (summary (zooCenv$SalCat))
-plotInSeason ("Zoop_intraseasonal-nMDS_Sal"
-            , plotCat = "SalCat"
-            , colP = brewer.pal (length (levels (zooCenv$SalCat)), name = "Dark2")
-            , hull = TRUE, legLoc = "bottomleft")
-## error in file(con, "w") : cannot open the connection -- XX not sure what the issue
-# plotInSeason ("Zoop_intraseasonal-reScalenMDS_location"
-#             , plotCat = "Transect"
-#             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
-#             , hull = TRUE, legLoc = "bottomleft"
-#             , reScale = TRUE
-#               )
-# plotInSeason ("Zoop_intraseasonal-reScalenMDS_years"
-#             , plotCat = "Year"
-#             , colP = rainbow_hcl (length (levels (zooCenv$Year)))
-#             , hull = TRUE #, legLoc = "bottomleft"
-#             , reScale = TRUE
-#               )
-
-rm (plotInSeason)
-###
 
 
 save.image ("~/tmp/LCI_noaa/cache/zoopCommModel.RData")
@@ -534,7 +416,7 @@ zooCenv@data$jDate <- as.numeric (format (zooCenv@data$timeStamp, format = "%j")
 # nMScores <- nMScores [order (zooCenv$timeStamp),]
 # zooC <- zooC []
 # zooCenv <- zooCenv [order (zooCenv$timeStamp),]
-PDF ("2019/nmds1daily")
+PDF ("nmds1daily")
 # Require ("lattice")
 # wideT <- data.frame (jDate = zooCenv$jDate, nMScores)
 # longT <- with (wideT, data.frame (jDate = rep (jDate, 2)
@@ -565,6 +447,11 @@ dev.off()
 ##     ## print (summary (lm (as.formula (paste0 ("nMScores [,1]~", varName, "* isoDate"))
 ## }
 ## rm (varName, i)
+
+
+# MCMCglmm (count ~ surveyYear + 1, random = ~ us (1+SurveyYear):location
+#           data, mD, family = "poisson"
+#           nitt = 2000, thin = 10, burnin = 5000, pr = TRUE, pl = FALSE)
 
 Require ("AICcmodavg")
 zooCenv@data$month <- factor (zooCenv@data$month)
@@ -733,8 +620,11 @@ dev.off()
 # }, mc.cores = nCPUs)
 # rm (pdfFl, pngFl, outP)
 
-unlink (paste0 (dirL[3], "/2019-zoop"), recursive = TRUE, force = TRUE)
-file.rename(paste0 (dirL[3], "/2019"), paste0 (dirL[3], "/2019-zoop"))
+if (0){
+  unlink (paste0 (dirL[3], "/2019-zoop"), recursive = TRUE, force = TRUE)
+  file.rename(paste0 (dirL[3], "/2019"), paste0 (dirL[3], "/2019-zoop"))
+}
+
 print (Sys.time())
 
 ## EOF
