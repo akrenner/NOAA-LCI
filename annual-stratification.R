@@ -51,7 +51,7 @@ sL <- prepDF (dat = sldviaS, varName = "strat", maO = maO, currentYear = current
 hY <- 2014:2017
 
 ## plot stratification
-pdf ("~/tmp/LCI_noaa/media/sa-stratificationYear.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stratificationYear.pdf")
 par (mfrow = c(2,1), mar = c(3,4,3,1))
 aPlot (sL, "strat", currentCol = currentCol, ylab = "water column stability", main = "Seldovia"
        , ylim = c(1, 1.3)) # c(0,5))

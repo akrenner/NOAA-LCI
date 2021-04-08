@@ -85,21 +85,24 @@ instSite <- c ("sldviaS", "sldvia", "homerS")
   for (j in 1: length (instSite)){
     tDay <- prepDF (dat = list (sldviaS, sldvia, homerS)[[j]], varName = "temp" # c ("temp", "tempF")[i]
                     , qntl = qntl, maO = maO)
-    pdf (paste0 ("~/tmp/LCI_noaa/media/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer")[j]
-                 , c ("-C", "-F")[i]
+    pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer")[j]
+                 # , c ("-C", "-F")[i]
                  , ".pdf"), width = 9, height = 6)
     par (mar = c(3,4,2,4))
-    aPlot (tDay, c("temp", "tempF")[i], currentCol = currentCol
-           , ylab = c (expression('Temperature'~'['*degree~'C'*']')
-                       , expression('Temperature'~'['*degree~'F'*']'))[i]
-                       , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
+    # aPlot (tDay, c("temp", "tempF")[i], currentCol = currentCol
+           # , ylab = c (expression('Temperature '~'['*degree~'C'*']')
+           #             , expression('Temperature'~'['*degree~'F'*']'))[i]
+    aPlot (tDay, "temp", currentCol = currentCol
+           , ylab = expression('Temperature'~'['*degree~'C'*']')
+           , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
            )
-    fAxis(c (0, 15))
+    fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
     box()
     dev.off()
   }
 # }
-rm (tScale, instSite, tDay)
+# rm (tScale, instSite, tDay)
+rm (instSite, tDay)
 
 
 

@@ -12,49 +12,54 @@
 
 ## set-up parameters
 
-if (.Platform$OS.type == "windows"){
-  require ("R.utils")
-  SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-}else{ # MacOS or Linux
-  SMPfile <- "~/GISdata/LCI/SWMP/current"
-}
-
-# SMPfile <- paste0 ("~/GISdata/LCI/SeloviaWaterTemp/", "528292.zip") # "http://cdmo.baruch.sc.edu/aqs/output/528292.zip"
-# SMPfile <- paste0 ("~/GISdata/LCI/SWMP/", "528292.zip") # "http://cdmo.baruch.sc.edu/aqs/output/528292.zip"
+# if (.Platform$OS.type == "windows"){
+#   require ("R.utils")
+#   SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
+# }else{ # MacOS or Linux
+#   SMPfile <- "~/GISdata/LCI/SWMP/current"
+# }
+require ("R.utils")
+SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # works on all platforms?
 
 
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
 setwd("~/myDocs/amyfiles/NOAA-LCI/")
-source ("annualPlotFct.R")
 
 
 
 ## load and process SWMP data
-require ("SWMPr")
-sldvia <- import_local (SMPfile, "kacsdwq") # Seldovia deep
-sldvia1 <- import_local (SMPfile, "kacsewq") # Seldovia deep -- early
+source ("annualPlotFct.R") # already loads SWMPr
+# require ("SWMPr")
+# sldvia <- import_local (SMPfile, "kacsdwq") # Seldovia deep
+sldvia <- getSWMP ("kacsdwq") # Seldovia deep
+# sldvia1 <- import_local (SMPfile, "kacsewq") # Seldovia deep -- early, no longer updated
+sldvia1 <- getSWMP ("kacsewq") # Seldovia deep -- early, no longer updated
 sldvia <- rbind (sldvia1, sldvia); rm (sldvia1)
-sldvia$station <- "kacsdwq"
+# sldvia$station <- "kacsdwq"
 sldvia$station <- "SeldoviaDeep"
 
 ## seldovia surface
-sldviaS <- import_local (SMPfile, "kacsswq") # Seldovia shallow
-# sldvia1 <- import_local (SMPfile, "kacsewq")
-# sldvia <- rbind (sldvia1, sldvia); rm (sldvia1)
-sldviaS$station <- "kacsswq"
+# sldviaS <- import_local (SMPfile, "kacsswq") # Seldovia shallow
+sldviaS <- getSWMP ("kacsswq") # Seldovia shallow
+# sldviaS$station <- "kacsswq"
 sldviaS$station <- "SeldoviaShallow"
 
 # homer as well or water temp and salinity?
-homer <- import_local  (SMPfile, "kachdwq")      ## also see kacdlwq
-homer1 <- import_local  (SMPfile, "kachowq")      ## also see kacdlwq
+# homer <- import_local  (SMPfile, "kachdwq")      ## also see kacdlwq
+homer <- getSWMP ("kachdwq")
+# homer1 <- import_local  (SMPfile, "kachowq")      ## also see kacdlwq  ## kachowq not active
+homer1 <- getSWMP ("kachowq") ## legacy, no longer updated
 homer <- rbind (homer1, homer); rm (homer1)
-homer$station <- "kachdwq"
+# homer$station <- "kachdwq"
 homer$station <- "HomerDeep"
 
-# homerDL <- import_local (SMPfile, "kacdlwq") # Homer Dolphin -- deep/shallow??
-homerS <- import_local (SMPfile, "kachswq") # Homer Dolphin shallow
-homerS1 <- import_local (SMPfile, "kach3wq") # Homer Dolphin surface 3
+## homerDL <- import_local (SMPfile, "kacdlwq") # Homer Dolphin -- deep/shallow??
+# homerDL <- getSWMP ("kacdlwq")                 # Homer Dolphin -- deep/shallow??
+# homerS <- import_local (SMPfile, "kachswq")  # Homer Dolphin shallow -- legacy
+# homerS1 <- import_local (SMPfile, "kach3wq") # Homer Dolphin surface 3
+homerS <- getSWMP ("kachswq") # Homer Dolphin shallow
+homerS1 <- getSWMP ("kach3wq") # Homer Dolphin surface 3
 homerS <- rbind (homerS, homerS1); rm (homerS1)
 homerS$station <- "HomerShallow"
 
@@ -69,23 +74,27 @@ sldvia <- rbind (sldvia, sldviaS, homer, homerS); rm (homer, homerS)
 
 
 
+# sldvia <- qaqc (sldvia, qaqc_keep = "0")  # scrutinize this further?
+
 names (sldvia) <- tolower (names (sldvia))
-sldvia$f_temp <- substr (sldvia$f_temp, 1, 4)
-sldvia$f_temp <- trimws (sldvia$f_temp)
-is.na (sldvia$temp)[!sldvia$f_tem %in% c("<0>", "<1>", "<4>")] <- TRUE
-print (summary (sldvia$temp)) # ; q()
 
-sldvia$f_sal <- substr (sldvia$f_sal, 1,4)
-sldvia$f_sal <- trimws (sldvia$f_sal)
-is.na (sldvia$sal)[!sldvia$f_sal %in% c("<0>", "<1>", "<4>")] <- TRUE
+if (0){
+  sldvia$f_temp <- substr (sldvia$f_temp, 1, 4)
+  sldvia$f_temp <- trimws (sldvia$f_temp)
+  is.na (sldvia$temp)[!sldvia$f_tem %in% c("<0>", "<1>", "<4>")] <- TRUE
+  print (summary (sldvia$temp)) # ; q()
 
-sldvia$f_chlfluor <- substr (sldvia$f_chlfluor, 1,4)
-sldvia$f_chlfluor <- trimws (sldvia$f_chlfluor)
-is.na (sldvia$chlfluor)[!sldvia$f_chlfluor %in% c("<0>", "<1>", "<4>")] <- TRUE
+  sldvia$f_sal <- substr (sldvia$f_sal, 1,4)
+  sldvia$f_sal <- trimws (sldvia$f_sal)
+  is.na (sldvia$sal)[!sldvia$f_sal %in% c("<0>", "<1>", "<4>")] <- TRUE
 
+  sldvia$f_chlfluor <- substr (sldvia$f_chlfluor, 1,4)
+  sldvia$f_chlfluor <- trimws (sldvia$f_chlfluor)
+  is.na (sldvia$chlfluor)[!sldvia$f_chlfluor %in% c("<0>", "<1>", "<4>")] <- TRUE
+}
 
 ## Farenheit
-sldvia$tempF <- sldvia$temp * 9/5 + 32
+# sldvia$tempF <- sldvia$temp * 9/5 + 32
 
 
 

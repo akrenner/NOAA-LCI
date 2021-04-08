@@ -11,21 +11,40 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 ## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
 ## SeldoviaTemp currently only other file using SWMP data
 # file name ---> could use Windows shortcut?
-if (1){ ## start over with new data set?
 
-  if (.Platform$OS.type == "windows"){
-    require ("R.utils")
-    SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-  }else{ # MacOS or Linux
-    SMPfile <- "~/GISdata/LCI/SWMP/current"
-  }
-  require ("SWMPr")
-  hmr <- import_local(SMPfile, "kachomet")
-  save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
-}else{
-  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
-}
-source ("annualPlotFct.R")
+# if (1){ ## start over with new data set?
+#
+#   if (.Platform$OS.type == "windows"){
+#     require ("R.utils")
+#     SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
+#   }else{ # MacOS or Linux
+#     SMPfile <- "~/GISdata/LCI/SWMP/current"
+#   }
+#   require ("SWMPr")
+#   hmr <- import_local(SMPfile, "kachomet")
+#   save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
+# }else{
+#   rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
+#
+#   ## updated to the latest data
+#   require ("SWMPr")
+#   # hmr2 <- all_params_dtrng ("kachomet", c ('01/01/2013', '02/01/2013'))
+#
+#   fN <- difftime(Sys.time(), max (hmr$datetimestamp), units = "hours")
+#   hmr2 <- try (all_params ("kachomet", Max = ceiling (as.numeric(fN)*4)))  # XXX needs registered (static?) IP address. NCCOS VPN ok?
+#   if (class (hmr2)[1] == "swmpr"){
+#     ## order of field names does not match between hmr2 and hmr
+#     hmr3 <- hmr2 [,sapply (1:ncol (hmr), FUN = function (i){
+#       which (names (hmr)[i] == names (hmr2))
+#     })]
+#     hmr <- rbind (hmr, hmr3)
+#     rm (hmr2, hmr3, fN)
+#     hmr <- hmr [which (!duplicated(hmr$datetimestamp)),]
+#     save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
+#   }
+# }
+#
+
 
 
 ##########################################################
@@ -44,11 +63,19 @@ currentCol <- c ("blue", "lightblue")
 ##########################################################
 
 
-## QAQC ##
 
-is.na (hmr$atemp [which (hmr$atemp < -30)]) <- TRUE
+## get up-to-date SWMP data
+source ("annualPlotFct.R")
+hmr <- getSWMP ("kachomet")
 
-##########
+
+## apply QAQC flaggs ##
+# is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
+# is.na (hmr$)
+hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further?
+
+#######################
+
 
 
 # also try max, sum of h over gale, N gale days...
@@ -77,6 +104,7 @@ meanNA <- function (x){mean (x, na.rm = TRUE)}
 
 ## apply QCQA -- ask Steve, check Seldovia -- not working as-is!
 # summary (factor (hmr$f_wspd))
+if (0){
 qaqcM <- function (fVar, tVar){
   fVar <- gsub ("[<>]", "", fVar)
   fVar <- gsub ("[GIT]", "", fVar, fixed = TRUE)
@@ -95,7 +123,7 @@ hmr$totprcp <- qaqcM (hmr$f_totprcp, hmr$totprcp)
 hmr$totprcp <- with (hmr, ifelse (datetimestamp < as.POSIXct("2004-01-01"), NA, totprcp)) # no zeros in 2003 data
 hmr$rh <- qaqcM (hmr$f_rh, hmr$rh)
 rm (qaqcM)
-
+}
 ## find missing values, gaps in TS
 # summary (as.numeric (diff (hmr$datetimestamp)))
 # which (as.numeric (diff (hmr$datetimestamp)) > 15)
@@ -287,8 +315,8 @@ save (hmr, file = "~/tmp/LCI_noaa/cache/metDat.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
 
-
-pdf ("~/tmp/LCI_noaa/media/sa-wind.pdf", width = 9, height = 6)
+x <- mkdirs("~/tmp/LCI_noaa/media/StateOfTheBay/"); rm (x)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind.pdf", width = 9, height = 6)
 # png ("~/tmp/LCI_noaa/media/wind-MA.png"), width = 9*100, height = 7*100)
 
 
@@ -423,8 +451,8 @@ rm (xGrenz, bP, img, pCo)
 
 # openair:windRose -- lattice-plot; struggling with type for class other than times
 require ("openair")
-pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)
-# pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
 # hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
 for (i in 1:12){
@@ -445,8 +473,8 @@ windRose(hmrS, ws = "wspd", wd = "wdir"
 }
 dev.off()
 
-# pdf ("~/tmp/LCI_noaa/media/dayBreeze.pdf", width = 9, height = 6)
-pdf ("~/tmp/LCI_noaa/media/winterStorms.pdf", width = 9, height = 6)
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
   hmrS <- subset (hmr, year < 2020)
   hmrS <- subset (hmrS, month == 12)
@@ -467,7 +495,7 @@ hmrS <- subset (hmr, year < 2020)
 hmrS$date <- as.POSIXct(hmrS$datetimestamp)
 hmrS$yClass <- factor (ifelse (hmrS$year < currentYear, "average", currentYear))
 
-pdf ("~/tmp/LCI_noaa/media/windRose.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose.pdf", width = 9, height = 6)
 windRose(hmrS, ws = "wspd", wd = "wdir"
          # , type = "yClass"
          , type = c("season", "yClass")
@@ -506,7 +534,7 @@ windR <- function (subsV, ...){
 # subplot (windR (dM$year == currentYear)
 #          , x = 260, y = 12.8, vadj = 1, size = c (spSi, spSi)) #, main = currentYear)
 # text (260, 13, paste ("Dec", currentYear))
-pdf ("~/tmp/LCI_noaa/media/windRoseBase.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/windRoseBase.pdf", width = 9, height = 6)
 par (mfrow = c(1,2))
 windR (dM$year < currentYear)
 windR (dM$year == currentYear)
@@ -547,7 +575,7 @@ climD <- function (cDF){
 
 # png ("~/tmp/LCI_noaa/media/climateDiag.png", width = 480, height = 960)
 # par (mfrow = c(2,1))
-pdf ("~/tmp/LCI_noaa/media/climateDiag.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
 hmrC <- subset (hmr, year < currentYear)
 ## alternative: wldiag in dgolicher/giscourse on github
 ## for same but with more customization, see library (iki.dataclim)

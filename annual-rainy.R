@@ -63,7 +63,7 @@ rm (aF, yA2, cOffY)
 
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/precipAx.pdf", width = 9, height = 6)
- pdf (paste0 ("~/tmp/LCI_noaa/media/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
        , MA = TRUE)
@@ -144,7 +144,7 @@ source ("annualPlotFct.R") # important to call after defining currentCol!
 
 tDay <- prepDF (varName = "rh", dat = hmr, maO = maO, qntl = qntl)
 
-pdf ("~/tmp/LCI_noaa/media/sa-relativeHumidity.pdf", width = 9, height = 6)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width = 9, height = 6)
 aPlot (tDay, "rh", ylab = "% relative humidity", currentCol = currentCol, MA = TRUE)
 cLegend ("topleft", qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = NULL, currentYear = currentYear

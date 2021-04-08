@@ -306,4 +306,66 @@ fAxis <- function (cGrad, side = 4, line = 3, mT = "Fahrenheit", ...){
   mtext (mT, side = side, line = line, ...)
 }
 
+
+
+## load cached SWMP data and update it with the latest from CDMO
+getSWMP <- function (station){
+  ## load SWMP data from local zip file. Update to the most current data
+  ## from CDMO and cache those updates for the next run.
+  ## need to specify location of zip file from SWMP and cache folder below
+  ## an initial zip file from CDMO is required.
+  ## It is recommended to update this zip file on occasion.
+  ## cacheFolder should be deleted, when zip file was updated
+
+  require ("SWMPr")
+
+  cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
+  zipFile <- "~/GISdata/LCI/SWMP/current"
+
+  dir.create(cacheFolder, showWarnings = FALSE)
+  suppressWarnings (lT <- try (load (paste0 (cacheFolder, "/", station, ".RData"))
+                               , silent=TRUE)) # yields smp
+  if (class (lT)[1] == "try-error"){
+    #    if (.Platform$OS.type == "windows"){
+    require ("R.utils")
+    SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
+    #    }else{ # MacOS or Linux
+    #      SMPfile <- zipFile
+    #    }
+    smp <- import_local(SMPfile, station) ## this is initially required!
+    smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+  }
+  if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
+  #  ## not sure whyere the bad line is coming from, but it has to go
+  #smp <- smp [!is.na (smp$datetimestamp),]
+  fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "hours")
+  ## catch for stations that are inactive?
+  if (as.numeric (fN) > 24){ # skip downloads for less than 1 day
+    ## skip downloads for legacy stations
+    if (difftime (Sys.time(), max (smp$datetimestamp), units = "days") < 5*365){
+      smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
+      if (class (smp2)[1] == "swmpr"){
+        ## remove bad lines
+        if (any (is.na (smp2$datetimestamp))){
+          smp2 <- smp2 [!is.na (smp2$datetimestamp),]
+        }
+        ## order of field names does not match between hmr2 and hmr
+        ## re-assemble and remove duplicates
+        smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
+          which (names (smp)[i] == names (smp2))
+        })]
+        smp <- rbind (smp, smp3)
+        if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
+
+        rm (smp2, smp3, fN)
+        smp <- smp [which (!duplicated(smp$datetimestamp)),]
+      }
+    }
+  }
+  ## fixGap() here??
+  save (smp, file = paste0 (cacheFolder, "/", station, ".RData"))
+  return (smp)
+}
+
+
 #EOF

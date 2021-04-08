@@ -106,7 +106,7 @@ for (sitePickNo in c(1003, 1062, 987)){
   ## ColorBrewer for pretty colors
 
   ## plotting
-  pdf (paste0 ("~/tmp/LCI_noaa/media/sa-snowPack", sitePickNo, ".pdf"), width = 9, height = 6)
+  pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-snowPack", sitePickNo, ".pdf"), width = 9, height = 6)
   aPlot (df, "snow_water_equivalent", MA = FALSE, currentCol = currentCol #"lightblue"
          , ylab = "snow-water equivalent [mm]"
          , ylim = c (0, max (snowMc$snow_water_equivalent, na.rm = TRUE))
@@ -212,7 +212,7 @@ df <- prepDF (snowMc, varName = "snow_water_equivalent"
               , qntl = qntl[1], maO = maO, currentYear = currentYear)
 
 
-pdf (paste0 ("~/tmp/LCI_noaa/media/sa-snowPackPCA.pdf"), width = 9, height = 6)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-snowPackPCA.pdf"), width = 9, height = 6)
 aPlot (df, "snow_water_equivalent", MA = FALSE, currentCol = currentCol
        , ylab = "PCA1 of snow-water equivalent [mm]"
        , ylim = c(-1, max (snowMc$snow_water_equivalent))

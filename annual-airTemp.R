@@ -40,7 +40,8 @@ tDay <- prepDF (varName = "atemp", dat = hmr, maO = maO, qntl = qntl)
 #
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width = 9, height = 6)
-pdf (paste0 ("~/tmp/LCI_noaa/media/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+x <- mkdirs("~/tmp/LCI_noaa/media/StateOfTheBay/"); rm (x)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 par (mar = c(4,4,1,4))
 aPlot (tDay, "atemp"
        , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
