@@ -295,4 +295,15 @@ fixGap <- function (df, intvl = 15*60){ # interval of TS in seconds
   return (addTimehelpers (nD))
   }
 
+
+## add Fahrenheit scale to temperature plot
+fAxis <- function (cGrad, side = 4, line = 3, mT = "Fahrenheit", ...){
+  slope <- 9/5
+  offset <- 32
+  alt.ax <- pretty (slope * cGrad + offset)
+  alt.at <- (alt.ax - offset) / slope
+  axis (side = side, at = alt.at, labels = alt.ax, srt = 90)
+  mtext (mT, side = side, line = line, ...)
+}
+
 #EOF

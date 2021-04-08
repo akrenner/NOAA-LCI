@@ -79,25 +79,26 @@ if (0){
 currentCol <- c ("navyblue", "aquamarine")
 currentCol <- c ("red", "aquamarine")
 
-tScale <- c ("celsius", "fahrenheit")
+# tScale <- c ("celsius", "fahrenheit")
 instSite <- c ("sldviaS", "sldvia", "homerS")
-for (i in 1:length (tScale)){
+# for (i in 1:length (tScale)){
   for (j in 1: length (instSite)){
-    tDay <- prepDF (dat = list (sldviaS, sldvia, homerS)[[j]], varName = c ("temp", "tempF")[i]
+    tDay <- prepDF (dat = list (sldviaS, sldvia, homerS)[[j]], varName = "temp" # c ("temp", "tempF")[i]
                     , qntl = qntl, maO = maO)
     pdf (paste0 ("~/tmp/LCI_noaa/media/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer")[j]
                  , c ("-C", "-F")[i]
                  , ".pdf"), width = 9, height = 6)
-    par (mar = c(3,4,2,1))
+    par (mar = c(3,4,2,4))
     aPlot (tDay, c("temp", "tempF")[i], currentCol = currentCol
            , ylab = c (expression('Temperature'~'['*degree~'C'*']')
                        , expression('Temperature'~'['*degree~'F'*']'))[i]
                        , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
            )
+    fAxis(c (0, 15))
     box()
     dev.off()
   }
-}
+# }
 rm (tScale, instSite, tDay)
 
 

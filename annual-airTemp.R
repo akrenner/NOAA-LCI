@@ -18,7 +18,7 @@ SWMP <- TRUE
 source ("annualPlotFct.R")
 
 if (SWMP){
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
+  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
   source ("noaaWeather.R")
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
@@ -31,24 +31,29 @@ if (SWMP){
 ## QCQA moved to windTrend.R
 
 
-## adjust units
-## change C to F
-hmr$atempF <- hmr$atemp * 9/5 + 32
+## units: use both, C and F (F = 2nd axis on the right)
+
 
 ## aggregate data
-tDay <- prepDF (varName = "atempF", dat = hmr, maO = maO, qntl = qntl)
+tDay <- prepDF (varName = "atemp", dat = hmr, maO = maO, qntl = qntl)
 
+#
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width = 9, height = 6)
 pdf (paste0 ("~/tmp/LCI_noaa/media/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
-
-aPlot (tDay, "atempF"
-       , ylab = expression('air'~'temperature'~'['*degree~'F'*']')
-       #, ylab = "air temperature [̊F]"
+par (mar = c(4,4,1,4))
+aPlot (tDay, "atemp"
+       , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
        , currentCol = currentCol, MA = TRUE)
-# box()
+# mtext ("Fahrenheit", side = 4, line = par ("mgp")[1])
+# fAxis(with (tDay, c(max_atemp, min_atemp, cYMA_atemp, pYMA_atemp)))
+# for (i in 1:length (levels (factor (hmr$year)))){
+#   lines (atemp~jday, subset (hmr, year == levels (factor (hmr$year))[i]))
+# }
+fAxis (c (-15, 15), mT = expression ('air'~'temperature '~'['*degree~'F'*']'))
+box()
 ## legend
-cLegend ("topleft", inset = 0.05
+cLegend ("bottomright", inset = 0.05
          , currentYear = currentYear, mRange = c (min (hmr$year), currentYear-1)
          , cYcol = currentCol
          , title = paste (maO, "day moving average")

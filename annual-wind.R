@@ -44,6 +44,12 @@ currentCol <- c ("blue", "lightblue")
 ##########################################################
 
 
+## QAQC ##
+
+is.na (hmr$atemp [which (hmr$atemp < -30)]) <- TRUE
+
+##########
+
 
 # also try max, sum of h over gale, N gale days...
 ## alternative approach: gales per month with gale = max_wspd > 30 knots
