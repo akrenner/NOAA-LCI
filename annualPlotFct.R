@@ -338,28 +338,26 @@ getSWMP <- function (station){
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
   #  ## not sure whyere the bad line is coming from, but it has to go
   #smp <- smp [!is.na (smp$datetimestamp),]
-  fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "hours")
+  fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  if (as.numeric (fN) > 24){ # skip downloads for less than 1 day
-    ## skip downloads for legacy stations
-    if (difftime (Sys.time(), max (smp$datetimestamp), units = "days") < 5*365){
-      smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
-      if (class (smp2)[1] == "swmpr"){
-        ## remove bad lines
-        if (any (is.na (smp2$datetimestamp))){
-          smp2 <- smp2 [!is.na (smp2$datetimestamp),]
-        }
-        ## order of field names does not match between hmr2 and hmr
-        ## re-assemble and remove duplicates
-        smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
-          which (names (smp)[i] == names (smp2))
-        })]
-        smp <- rbind (smp, smp3)
-        if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
-
-        rm (smp2, smp3, fN)
-        smp <- smp [which (!duplicated(smp$datetimestamp)),]
+  if ((2 < fN) & (fN < 5*365)){ # skip downloads for less than 2 day and legacy stations
+    # ## skip downloads for legacy stations
+    smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
+    if (class (smp2)[1] == "swmpr"){
+      ## remove bad lines
+      if (any (is.na (smp2$datetimestamp))){
+        smp2 <- smp2 [!is.na (smp2$datetimestamp),]
       }
+      ## order of field names does not match between hmr2 and hmr
+      ## re-assemble and remove duplicates
+      smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
+        which (names (smp)[i] == names (smp2))
+      })]
+      smp <- rbind (smp, smp3)
+      if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
+
+      rm (smp2, smp3, fN)
+      smp <- smp [which (!duplicated(smp$datetimestamp)),]
     }
   }
   ## fixGap() here??

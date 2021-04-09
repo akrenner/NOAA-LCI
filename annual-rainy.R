@@ -63,7 +63,7 @@ rm (aF, yA2, cOffY)
 
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/precipAx.pdf", width = 9, height = 6)
- pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
        , MA = TRUE)
@@ -82,14 +82,14 @@ if (1){ # mark big rain events (yes) OR plot 1/10 or daily rain
   #              , xright = jday - 6 + wdh, ytop = pYMA_totprcp + 0.1 + hgt))
   # rm (hgt, wdh)
 
-  bP <- cLegend (x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
+  bP <- cLegend ("top" # x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
                  , qntl = qntl, title = paste (maO, "day moving average")
                  , title.adj = 0.5, currentYear = currentYear
                  , mRange = c (min (hmr$year), currentYear-1)
                  , cYcol = currentCol
   )
-#  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
-  legend (x = bP$rect$left+2, y = bP$rect$top - 1.5, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
+  #  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
+  legend (x = bP$rect$left+2, y = bP$rect$top - 1.2, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
 }else{
   lines (pY_totprcp/10~jday, tDay, col = "blue", type = "s", lwd = 1)
   bP <- cLegend (x = 140, y = 4.2
@@ -112,7 +112,7 @@ text (xAl + 35, yAl
       )
       , col = "darkgray", pos = 4)
 # box()
- dev.off()
+dev.off()
 
 rm (bP, xAl, yAl)
 
@@ -146,7 +146,7 @@ tDay <- prepDF (varName = "rh", dat = hmr, maO = maO, qntl = qntl)
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width = 9, height = 6)
 aPlot (tDay, "rh", ylab = "% relative humidity", currentCol = currentCol, MA = TRUE)
-cLegend ("topleft", qntl = qntl, title = paste (maO, "day moving average")
+cLegend ("bottomright", qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = NULL, currentYear = currentYear
          , mRange = c(min (hmr$year), currentYear - 1)
          , cYcol = currentCol)

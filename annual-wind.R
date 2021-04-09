@@ -320,34 +320,33 @@ pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind.pdf", width = 9, height = 6)
 # png ("~/tmp/LCI_noaa/media/wind-MA.png"), width = 9*100, height = 7*100)
 
 
-  if (0){  ## farewell my good friend ##
-    ## combine several panels in one plot
-    layout (matrix(c(1,2,3), nrow = 3)
-            , widths = rep (3,3), heights = c(0.5,0.5,3))
-    # par (fig = c(), new = TRUE) # see https://www.statmethods.net/advgraphs/layout.html
-    ## wind vectors
-    sF = 0.7
-    lW = 1.0
-    xGrenz <- c(5,360)
-    par (mar = c(0,4,0,0.1))
-    plot (1:nrow (tDay), seq (-10, 10, length.out = nrow (tDay)), type = "n", asp = 1
-          , axes = FALSE, xlab = "", ylab = "long-term", xlim = xGrenz)
-    with  (tDay, segments(x0 = jday, y0 = 0, x1 = jday - uw*sF, y1 = 0 - vw*sF, col = "blue", lwd = lW))
-    plot (1:nrow (tDay), seq (-10, 10, length.out = nrow (tDay)), type = "n", asp = 1
-          , axes = FALSE, xlab = "", ylab = currentYear, xlim = xGrenz)
-    with (tDay, segments(x0 = jday, y0 = 0, x1 = jday - p365uw*sF, y1 = 0 - p365vw*sF
-                         , col = ifelse (p365scaDay == 1, "black", "red")
-                         , lwd = lW + p365galDay*2))
-    rm (sF, lW)
-  }
+if (0){  ## farewell my good friend ##
+  ## combine several panels in one plot
+  layout (matrix(c(1,2,3), nrow = 3)
+          , widths = rep (3,3), heights = c(0.5,0.5,3))
+  # par (fig = c(), new = TRUE) # see https://www.statmethods.net/advgraphs/layout.html
+  ## wind vectors
+  sF = 0.7
+  lW = 1.0
+  xGrenz <- c(5,360)
+  par (mar = c(0,4,0,0.1))
+  plot (1:nrow (tDay), seq (-10, 10, length.out = nrow (tDay)), type = "n", asp = 1
+        , axes = FALSE, xlab = "", ylab = "long-term", xlim = xGrenz)
+  with  (tDay, segments(x0 = jday, y0 = 0, x1 = jday - uw*sF, y1 = 0 - vw*sF, col = "blue", lwd = lW))
+  plot (1:nrow (tDay), seq (-10, 10, length.out = nrow (tDay)), type = "n", asp = 1
+        , axes = FALSE, xlab = "", ylab = currentYear, xlim = xGrenz)
+  with (tDay, segments(x0 = jday, y0 = 0, x1 = jday - p365uw*sF, y1 = 0 - p365vw*sF
+                       , col = ifelse (p365scaDay == 1, "black", "red")
+                       , lwd = lW + p365galDay*2))
+  rm (sF, lW)
+}
 
 ## better to move to standard var names above
 par (mar = c(3,4,0.1,0.1))
 plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption)
 
-if (1){
-  ## windrose insert
-  oP <- par()
+oP <- par()
+if (1){ ## windrose insert
   ## lattice plot will start a new page, no matter what -- use temp file
   ## lattice plot is the best-looking amongst the ggplot, base-plot and lattice options
   ## all attempts to place graphics at the appropriate position in base-plot
@@ -394,6 +393,7 @@ if (1){
   rasterImage (img2, xleft = 60, ybottom = 8.3
                , xright = 340, ytop = 14.8, interpolate = FALSE)
   rm (img2)
+  #rm (xGrez, pCo)
 }
 
 par (oP)# reset to original plotting geometry
@@ -432,13 +432,9 @@ text (365, 5.3, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos = 2)
 rasterImage (img, xleft = 280, xright = 280+wdh, ybottom = 5.6, ytop = 5.6+hgt)
 text (365, 5.8, paste0 ("storm (>", stormT, " knots)"), pos = 2)
 par (oP)
-rm(hgt, wdh)
-
 
 dev.off()
-rm (xGrenz, bP, img, pCo)
-
-
+rm(hgt, wdh, bP, img)
 
 
 ## start-over/add windrose
@@ -452,7 +448,6 @@ rm (xGrenz, bP, img, pCo)
 # openair:windRose -- lattice-plot; struggling with type for class other than times
 require ("openair")
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
-# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
 # hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
 for (i in 1:12){
@@ -473,7 +468,6 @@ windRose(hmrS, ws = "wspd", wd = "wdir"
 }
 dev.off()
 
-# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/winterStorms.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
   hmrS <- subset (hmr, year < 2020)
