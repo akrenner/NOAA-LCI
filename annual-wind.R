@@ -50,7 +50,7 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 ##########################################################
 ## parameters to agree upon
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
-maO <- 31  # moving average window
+maO <- 30   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 40
