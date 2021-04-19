@@ -1,12 +1,12 @@
 ## alternative to SWMP: try with NOAA airport data
-
+rm (list = ls())
 
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 # pacman::p_load(package1, package2, package_n)
 # pacman::p_load ("parallel")
 Require <- pacman::p_load
-
+setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 Require ("rnoaa")
 ## see https://recology.info/2015/07/weather-data-with-rnoaa/
@@ -49,7 +49,7 @@ if (0){
 }
 
 Require ("dplyr")
-# source ("annualPlotFct.R")
+source ("annualPlotFct.R")
 
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               , date_min = "1970-01-01"  # goes back to 1932-09-01
@@ -98,4 +98,15 @@ if(0){
   #
   ##
   ak [grep ("HOM", ak$station_name),]
+
+
+  ak <- df [grep ("AK", df$state),]
+  as.data.frame (ak [grep ("AUG", ak$station_name),])
+
+  # allStn <- ghcnd_stations()
+  # AK <- allStn [grep ("AK", allStn$state),]
+  # as.data.frame (AK [grep ("AUGU", AK$name),])
 }
+
+
+## EOF

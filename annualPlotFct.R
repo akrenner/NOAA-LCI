@@ -96,6 +96,12 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
   }else{
     lines (current [,1]~jday, col = currentCol [1], lwd = 4)
     lines (current [,2]~jday, col = currentCol [2], lwd = 4)
+
+    # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
+    #        , lty = "dashed", lwd = 2, col = currentCol [1])
+    if (ncol (current) > 2){
+      lines (current [,3]~jday, col = currentCol [1], lwd = 2, lty = "dashed")
+    }
   }
   axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
   return()
@@ -111,59 +117,24 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
   if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
     stop ("extra line length not consistent")
   }
-  # if (length (sYears) == 0){
-  #   sYears <- NULL
-  # }
-#  print (currentYear)
   if (length (cYcol) > 1){currentYear <- c (currentYear, currentYear + 1)}
-
-#  currentYear <- c(2015, 2016)
-# currentYear <- c (currenctYear, currentYear+1)
-
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , currentYear
                        , sYears
-                      , paste0 (qntl * 100, "%-ile") ## skip range or 2nd quantile
-#                       , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
+                       #, currentYear - 1
+                       , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
+                       #                       , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
           , lty = c(1, rep (1, length (currentYear)), sLty, 0)
           , lwd = c (3, rep (4, length (currentYear)), sLwd, 0)
           , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
           , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]
-                       )
-          , col = c(meanCol, cYcol, sLcol, "black") #qantCol [1])
+          )
+          , col = c(meanCol, cYcol, meanCol, sLcol, "black") #qantCol [1])
   )
-
-  #   if (length (cYcol) > 1){
-  # legend (..., bty = "n"
-  #         , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
-  #                      , currentYear
-  #                      , currentYear + 1  ## addition of present year -- automate this part! XXX
-  #                      , sYears
-  #                      , paste0 (qntl * 100, "%-ile") ## skip range or 2nd quantile
-  #                      )
-  #         , lty = c(1, 1, 1, sLty, 0), lwd = c (3, 4, 4, sLwd, 0)
-  #         , pch = c(NA, NA, NA, rep (NA, length (sYears)), 22), pt.cex = 2
-  #         , pt.bg = c (NA, NA, NA, rep (NA, length (sYears)), qantCol [1])
-  #         , col = c(meanCol, cYcol, sLcol, qantCol [1])
-  # )
-  # }else{
-  #   legend (..., bty = "n"
-  #           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
-  #                        , currentYear
-  #                        , sYears
-  #                        , paste0 (qntl * 100, "%-ile") ## skip range or 2nd quantile
-  #           )
-  #           , lty = c(1, 1, sLty, 0), lwd = c (3, 4, 4, sLwd, 0)
-  #           , pch = c(NA, NA, rep (NA, length (sYears)), 22), pt.cex = 2
-  #           , pt.bg = c (NA, NA, rep (NA, length (sYears)), qantCol [1])
-  #           , col = c(meanCol, cYcol, sLcol, qantCol [1])
-  #   )
-  #
-  # }
-  }
+}
 
 
 
@@ -179,6 +150,8 @@ aPlot <- function (df, vName, MA = TRUE, ...){
     cpo <- df [, which (names (df) == paste0 ("cYMA_", vName))]
     maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
     minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
+    #allY <- df [,which (names (df) == paste0 ("y_")]
+    allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
   }else{
     longMean <- df [,which (names (df) == vName)]
     percL <- df [,which (names (df) == paste0 ("perL1_", vName))]
@@ -195,12 +168,12 @@ aPlot <- function (df, vName, MA = TRUE, ...){
 
 
 
-
 prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
-                    , maO = 31
-                    , currentYear = as.numeric (format (Sys.Date(), "%Y"))-1
-                    , qntl = c(0.8, 0.9)
-                    ){
+                     , maO = 31
+                     #                   , MA=smoother
+                     , currentYear = as.numeric (format (Sys.Date(), "%Y"))-1
+                     , qntl = c(0.8, 0.9)
+){
   if (! all (c("jday", "year", varName) %in% names (dat))){
     stop (paste ("Data frame must contain the variables jday, year, and", varName))
   }
@@ -211,42 +184,53 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
   ## current/past year
   xVar <- dat [,which (names (dat) == varName)]
   dMeans <- aggregate (xVar~jday+year, dat, FUN = sumFct) # daily means
-  ## moving average in here or supply as varName?
+
+    ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
+if (1){
+  require ("zoo")
+#  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "center")
+  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
+  dMeans$MA <- rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
+                          , fill = NA, partial = FALSE, align = "center")
+  # or align = "left" ?
+}else{
+    ## bug in SWMPr smoothing function: last day = up-tick?
+    require ("SWMPr")
+    dMeans$MA <- unlist (smoother(dMeans$xVar, window = maO, sides = 2)) # sides = 2 for centered
+    # dMeans$MA <- maT (dMeans$xVar, maO)
 
-  require ("SWMPr")
-  dMeans$MA <- unlist (smoother(dMeans$xVar, window = maO, sides = 1)) # sides = 2 for centered
-  # dMeans$MA <- maT (dMeans$xVar, maO)
+    ## alternative to smoother?!  this uses moving-AVERAGE, rather than moving sumFct XXX
+    ## sides = 2 or sides = 1?
 
+    # dMeans$XXX <- XX$varName [match (...)
+    ## match ().... when length (varName) > 1
+}
+  dLTmean <- subset (dMeans, year < currentYear)
+    tDay <- aggregate (xVar~jday, dLTmean, FUN = mean, na.rm = TRUE)  # not sumFct here! it's a mean!
+    tDay$sd <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)$xVar
+    tDay$MA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)$MA
 
-  # dMeans$XXX <- XX$varName [match (...)
-  ## match ().... when length (varName) > 1
-
-  tDay <- aggregate (xVar~jday, dMeans, FUN = sumFct, subset = year < currentYear)  # add ... for sumFct?
-  tDay$sd <- aggregate (xVar~jday, dMeans, FUN = sd, na.rm = TRUE
-                        , subset = year < currentYear)$xVar
-  tDay$MA <- aggregate (MA~jday, dMeans, FUN = sumFct, subset = year < currentYear)$MA
-
-  qN <- function (x, q, lQ = FALSE){
+  qN <- function (x, qntl = 0.9, lQ = FALSE){
     quantile (x, probs = 0.5 + (lQ * -1)+ 0.5 * qntl, na.rm = TRUE)
   }
 
-#  for (j in c (varName, MA)){
+  #  for (j in c (varName, MA)){
   for (i in 1:length (qntl)){
-#    tDay$perL <- aggregate (xVar~jday, dMeans, FUN = qN, q = qntl [i])$xVar
-    tDay$perL <- aggregate (xVar~jday, dMeans, FUN = quantile, probs = 0.5-0.5*qntl [i])$xVar
-    tDay$perU <- aggregate (xVar~jday, dMeans, FUN = quantile, probs = 0.5+0.5*qntl [i])$xVar
+    #    tDay$perL <- aggregate (xVar~jday, dMeans, FUN = qN, q = qntl [i])$xVar
+    tDay$perL <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i])$xVar
+    tDay$perU <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i])$xVar
     names (tDay)[which (names (tDay) == "perL")] <- paste0 ("perL", i)
     names (tDay)[which (names (tDay) == "perU")] <- paste0 ("perU", i)
-    tDay$maL <- aggregate (MA~jday, dMeans, FUN = quantile, probs = 0.5-0.5*qntl [i])$MA
-    tDay$maU <- aggregate (MA~jday, dMeans, FUN = quantile, probs = 0.5+0.5*qntl [i])$MA
+    tDay$maL <- aggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i])$MA
+    tDay$maU <- aggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i])$MA
     names (tDay)[which (names (tDay) == "maL")] <- paste0 ("maL", i)
     names (tDay)[which (names (tDay) == "maU")] <- paste0 ("maU", i)
   }
-  tDay$max <- aggregate (xVar~jday, dMeans, FUN = max, na.rm = TRUE)$xVar
+  tDay$max <- aggregate (xVar~jday, dMeans, FUN = max, na.rm = TRUE)$xVar # dLTmean?? XX
   tDay$min <- aggregate (xVar~jday, dMeans, FUN = min, na.rm = TRUE)$xVar
-  tDay$maxMA <- aggregate (MA~jday, dMeans, FUN = max, na.rm = TRUE)$MA
-  tDay$minMA <- aggregate (MA~jday, dMeans, FUN = min, na.rm = TRUE)$MA
+  tDay$maxMA <- aggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE)$MA
+  tDay$minMA <- aggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE)$MA
 
 
   tDay$yearN <- aggregate ((!is.na (xVar))~jday, dMeans, FUN = sum, na.rm = TRUE)[,2]
@@ -256,6 +240,15 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
   tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]
   tDay$pYMA <- pY$MA [match (tDay$jday, pY$jday)]
   rm (pY)
+
+  ## all years
+  yr <- sapply (levels (factor (dMeans$year)), function (x){
+    pY <- subset (dMeans, year == x)
+    pY$MA [match (tDay$jday, pY$jday)]}
+  )
+  colnames(yr) <- paste0 ("y_", colnames(yr))
+  tDay <- cbind (tDay, yr); rm (yr)
+
 
   ## current year (incomplete)
   cY <- subset (dMeans, year == currentYear+1)
@@ -270,6 +263,8 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
 
   return (tDay)
 }
+
+
 
 
 addTimehelpers <- function (df){
