@@ -37,9 +37,9 @@ meanCol <- bCol [4]
 
 
 plotSetup <- function(longMean, current, ...){
-  plot (1:365
+  plot (1:366
         , seq (min (c(longMean, current), na.rm = TRUE)
-               , max (c(longMean, current), na.rm = TRUE), length.out = 365)
+               , max (c(longMean, current), na.rm = TRUE), length.out = 366)
         , type = "n", axes = FALSE
         , xlim = c(5,355)
         , xlab = "", ...
@@ -96,12 +96,7 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
   }else{
     lines (current [,1]~jday, col = currentCol [1], lwd = 4)
     lines (current [,2]~jday, col = currentCol [2], lwd = 4)
-
-    # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
-    #        , lty = "dashed", lwd = 2, col = currentCol [1])
-    if (ncol (current) > 2){
-      lines (current [,3]~jday, col = currentCol [1], lwd = 2, lty = "dashed")
-    }
+    lines (current [,3]~jday, col = currentCol [1], lwd = 2, lty = "dashed") ## new: previous year
   }
   axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
   return()
@@ -117,22 +112,21 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
   if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
     stop ("extra line length not consistent")
   }
-  if (length (cYcol) > 1){currentYear <- c (currentYear, currentYear + 1)}
+  if (length (cYcol) > 1){currentYear <- c (currentYear, currentYear + 1, currentYear - 1)}
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , currentYear
                        , sYears
-                       #, currentYear - 1
                        , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
-                       #                       , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
+                       # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
-          , lty = c(1, rep (1, length (currentYear)), sLty, 0)
-          , lwd = c (3, rep (4, length (currentYear)), sLwd, 0)
+          , lty = c(1, rep (1, length (currentYear)-1), 2, sLty, 0)
+          , lwd = c (3, rep (4, length (currentYear)-1), 2, sLwd, 0)
           , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
           , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]
           )
-          , col = c(meanCol, cYcol, meanCol, sLcol, "black") #qantCol [1])
+          , col = c(meanCol, cYcol [c(1,2,1)], meanCol, sLcol, "black") #qantCol [1])
   )
 }
 
@@ -148,6 +142,7 @@ aPlot <- function (df, vName, MA = TRUE, ...){
     percU <- df [,which (names (df) == paste0 ("maU1_", vName))]
     current <-df [,which (names (df) == paste0 ("pYMA_", vName))]
     cpo <- df [, which (names (df) == paste0 ("cYMA_", vName))]
+    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))]
     maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
     minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
     #allY <- df [,which (names (df) == paste0 ("y_")]
@@ -158,11 +153,13 @@ aPlot <- function (df, vName, MA = TRUE, ...){
     percU <- df [,which (names (df) == paste0 ("perU1_", vName))]
     current <-df [,which (names (df) == paste0 ("pY_", vName))]
     cpo <- df [, which (names (df) == paste0 ("cY_", vName))]
+    pcpo <- df [, which (names (df) == paste0 ("pcY_", vName))]
     maxV <- df [,which (names (df) == paste0 ("max_", vName))]
     minV <- df [,which (names (df) == paste0 ("min_", vName))]
+
   }
   annualPlot (longMean, percL, percU
-              , cbind (current, cpo) #, current, cpo
+              , cbind (current, cpo, pcpo) #, current, cpo
               , df$jday, maxV = maxV, minV = minV, ...)
 }
 
@@ -170,7 +167,6 @@ aPlot <- function (df, vName, MA = TRUE, ...){
 
 prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
                      , maO = 31
-                     #                   , MA=smoother
                      , currentYear = as.numeric (format (Sys.Date(), "%Y"))-1
                      , qntl = c(0.8, 0.9)
 ){
@@ -211,13 +207,8 @@ if (1){
     tDay$sd <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)$xVar
     tDay$MA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)$MA
 
-  qN <- function (x, qntl = 0.9, lQ = FALSE){
-    quantile (x, probs = 0.5 + (lQ * -1)+ 0.5 * qntl, na.rm = TRUE)
-  }
-
   #  for (j in c (varName, MA)){
   for (i in 1:length (qntl)){
-    #    tDay$perL <- aggregate (xVar~jday, dMeans, FUN = qN, q = qntl [i])$xVar
     tDay$perL <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i])$xVar
     tDay$perU <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i])$xVar
     names (tDay)[which (names (tDay) == "perL")] <- paste0 ("perL", i)
@@ -227,8 +218,8 @@ if (1){
     names (tDay)[which (names (tDay) == "maL")] <- paste0 ("maL", i)
     names (tDay)[which (names (tDay) == "maU")] <- paste0 ("maU", i)
   }
-  tDay$max <- aggregate (xVar~jday, dMeans, FUN = max, na.rm = TRUE)$xVar # dLTmean?? XX
-  tDay$min <- aggregate (xVar~jday, dMeans, FUN = min, na.rm = TRUE)$xVar
+  tDay$max <- aggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE)$xVar # dLTmean?? XX
+  tDay$min <- aggregate (xVar~jday, dLTmean, FUN = min, na.rm = TRUE)$xVar
   tDay$maxMA <- aggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE)$MA
   tDay$minMA <- aggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE)$MA
 
@@ -257,7 +248,14 @@ if (1){
   rm (cY)
   ## add circular spline?
 
-  ## fix names
+  ## previous year
+  pcY <- subset (dMeans, year == currentYear - 1)
+  tDay$pcY <- pcY$xVar [match (tDay$jday, pcY$jday)]
+  tDay$pcYMA <- pcY$MA [match (tDay$jday, pcY$jday)]
+  rm (pcY)
+
+    ## fix names
+#  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
   names (tDay) <- gsub ("xVar", varName, names (tDay))
   names (tDay)[3:ncol (tDay)] <- paste0 (names (tDay)[3:ncol (tDay)], "_", varName)
 
@@ -335,7 +333,7 @@ getSWMP <- function (station){
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  if ((2 < fN) & (fN < 5*365)){ # skip downloads for less than 2 day and legacy stations
+  if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
     if (class (smp2)[1] == "swmpr"){

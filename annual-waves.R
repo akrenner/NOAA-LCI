@@ -23,7 +23,7 @@ if (0){
     cat (dset [i])
     try (print (head (buoy (dset [i], buoyid = stn [1]))))
   }
-
+  rm (i)
 
   lci <- buoy (dataset = 'swden', buoyid = 46108)  # spectral wave height
   lci <- buoy (dataset = 'dart', buoyid = 46108, year = 2020)
@@ -64,7 +64,6 @@ if (endD < as.numeric (format (Sys.Date(), "%Y"))){
                              , year = i))
                 }
   )
-  rm (nw, endD)
 
   for (i in 1:length (wB)){
     if (!exists ("wDB")){
@@ -75,8 +74,10 @@ if (endD < as.numeric (format (Sys.Date(), "%Y"))){
       }
     }
   }
-  rm (wB)
+  rm (wB, i)
 }
+rm (nw, endD)
+
 ## add most recent
 cD <- try (buoy (dataset="stdmet", buoyid = 46108, year = 9999))
 if (class (cD) == "buoy"){
@@ -93,6 +94,7 @@ wDB <- wDB [!duplicated(wDB$time),]
 tm <- gsub ("T", "", wDB$time)
 tm <- gsub ("Z", "", tm)
 wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC")
+rm (tm)
 is.na (wDB$wave_height)[which (wDB$wave_height == 99)] <- TRUE
 is.na (wDB$dominant_wpd)[which (wDB$dominant_wpd == 99)] <- TRUE  # dominant wave period [s]
 is.na (wDB$average_wpd)[which (wDB$average_wpd == 99)] <- TRUE  # dominant wave period [s]
@@ -124,9 +126,10 @@ if (class (tl) == "try-error"){
       }
     }
   }
-  rm (aB, tl, pF)
+  rm (aB, pF, i)
   save (aDB, file = "~/tmp/LCI_noaa/cache/noaa-Augustine.RData")
 }
+rm (tl)
 source ("annualPlotFct.R")
 aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
 aDB <- addTimehelpers(aDB)
@@ -185,7 +188,7 @@ if (1){ ## mean daily wave height -- for when do we have data
   plot (wave_height~average_wpd, wDBx, col = wDB$wave_dir_cat)
   rm (wDBx)
   dev.off()
-  rm (dailyW)
+  rm (dailyW, i)
 }
 
 # pdf ("~/tmp/LCI_noaa/media/wavePeriod.pdf")
@@ -241,13 +244,14 @@ alt.ax <- pretty (wFt)
 alt.at <- (alt.ax) * 0.3048
 axis (side = 4, at = alt.at, labels = alt.ax, srt = 90)
 mtext ("wave height [ft]", side = 4, line = 2.5)
-
-for (i in 2011:2018){
-  try (lines (tDayW$jday
-        , tDayW [,which (names (tDayW) == paste0 ("y_", i, "_wave_height"))]
-        , lwd = 0.5, col = i))
-}
-legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
+rm (wFt, alt.ax, alt.at)
+# for (i in 2011:2018){
+#   x <- try (lines (tDayW$jday
+#         , tDayW [,which (names (tDayW) == paste0 ("y_", i, "_wave_height"))]
+#         , lwd = 0.5, col = i))
+# }
+# rm (x)
+# legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
 dev.off()
 rm (tDayW)
 
@@ -286,5 +290,123 @@ cLegend ("bottomleft"
 )
 dev.off()
 rm (tDayP)
+
+
+
+## when were surf conditions good?
+## long-term = logistic model?
+
+
+## good surf conditions:
+## wave period: > 5 s
+## wave height: > 1 m
+## tide: at least xx feet (ask Vince)
+## wind offshore
+## daylight
+## => epic!
+
+
+## find tide
+## find daylight
+require ("rtide")
+# tStn <- tide_stations("Kasitsna.*")
+tStn <- tide_stations("Seldovia*")
+timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
+wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow
+rm (tStn, timetable)
+require ("suncalc")
+wDB$sunAlt <- getSunlightPosition (date = wDB$datetimestamp
+                                   , lat = 59.643, lon = -151.526)$altitude # in radians
+## interpolate home wind direction -- fail (why = ?)
+## need hourly or better data => SWMP.  Use buoy data for now
+# wDB$windDir_hom x <- approx (hmr$datetimestamp, hmr$wdf5, xout = wDB$datetimestamp)
+
+wDB <- addTimehelpers(wDB)
+
+save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
+
+## surf score
+wDB$surf <- 1
+wDB$surf <- ifelse (wDB$wave_height > 1, wDB$surf * 1, 0)
+wDB$surf <- ifelse (wDB$wave_height > 2, wDB$surf * 2, wDB$surf)
+wDB$surf <- ifelse (wDB$average_wpd > 6, wDB$surf * 2, wDB$surf)
+wDB$surf <- ifelse (wDB$wave_dir_cat == "SW", wDB$surf * 2, wDB$surf)
+wDB$surf <- ifelse (wDB$sunAlt > 0, wDB$surf * 2, wDB$surf)  # NA?
+wDB$surf <- ifelse (wDB$tideHght > 1, wDB$surf * 2, wDB$surf)
+summary (wDB$surf) # 4,8,16
+
+
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf")
+
+plot (surf~datetimestamp, wDB, ylab = "surf-score")
+
+
+surfC <- aggregate (surf ~ jday + year, wDB # calendar
+                       , FUN = function (x){mean (x > 15)}
+                       )
+summary (surfC$surf)
+plot (surf~jday, surfC
+      , pch = 19, col = ifelse (year == 2021, "red"
+                                , ifelse(year == 2020, "blue", "black"))
+      , ylab = "daily surf score")
+legend ("top", bty = "n", pch = 19, col = c("red", "blue", "black"),
+        legend = c("2021", "2020", "2011-2019"))
+
+
+wDB$surfs <- ifelse (wDB$surf > 15, 1, 0)
+sTday <- prepDF(wDB, "surfs"
+#                , sumFct = function (x){mean (x, na.rm = TRUE)}
+                , sumFct = function (x){any (x > 0)}
+)
+aPlot (sTday, "surfs", ylab = "chance of good surf"
+       , currentCol = currentCol, MA = TRUE, main = "Days with surf")
+cLegend ("top"
+         , qntl = qntl, title = paste (maO, "day moving average")
+         , title.adj = 0.5, currentYear = currentYear
+         , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+         , cYcol = currentCol
+)
+
+sTday <- prepDF(wDB, "surfs")
+aPlot (sTday, "surfs", ylab = "chance of good surf"
+       , currentCol = currentCol, MA = TRUE, main = "Proportion of time with surf")
+cLegend ("top"
+         , qntl = qntl, title = paste (maO, "day moving average")
+         , title.adj = 0.5, currentYear = currentYear
+         , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+         , cYcol = currentCol
+)
+
+sTday <- prepDF(wDB, "surf")
+aPlot (sTday, "surf", ylab = "chance of good surf"
+       , currentCol = currentCol, MA = TRUE, main = "Mean surf score")
+cLegend ("top"
+         , qntl = qntl, title = paste (maO, "day moving average")
+         , title.adj = 0.5, currentYear = currentYear
+         , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+         , cYcol = currentCol
+)
+
+
+dev.off()
+
+
+## https://geologycafe.com/oceans/chapter10.html
+## shallow water wave:
+## approaching shore, wave period stays constant,
+## but wave length and velocity decrease
+## => wave height increases
+## wave breaks when depth (d) is about the same as wave height (h).
+## wave starts to break when wave height to wavelength exceeds a ratio of 1:7
+## gentle slope: spilling breakers
+## moderate slopes: plunging breakers
+## sttep slope: surging breakers
+
+
+# ## smoothing spline, cyclical
+# require ("pbs")
+# mdl <- glm (surf~pbs:pbs (jday, df = 4, Boundary.knots = c(1,366)), data = surfC)
+
 
 ## EOF
