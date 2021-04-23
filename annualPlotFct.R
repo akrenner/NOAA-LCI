@@ -94,9 +94,9 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
     if (class (current) == "matrix"){current <- as.numeric (current [,1])}
     lines (current~jday, col = currentCol, lwd = 4)
   }else{
+    lines (current [,3]~jday, col = currentCol [3], lwd = 2, lty = "dashed") ## new: previous year
     lines (current [,1]~jday, col = currentCol [1], lwd = 4)
     lines (current [,2]~jday, col = currentCol [2], lwd = 4)
-    lines (current [,3]~jday, col = currentCol [1], lwd = 2, lty = "dashed") ## new: previous year
   }
   axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
   return()
@@ -106,13 +106,15 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
 cLegend <- function (..., mRange = NULL, currentYear = NULL
                      , cYcol # = currentCol
                      , qntl = NULL
-                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL){
+                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL){ # sYears = ??
   ## combined legend for both box and line elements.
   ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
   if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
     stop ("extra line length not consistent")
   }
-  if (length (cYcol) > 1){currentYear <- c (currentYear, currentYear + 1, currentYear - 1)}
+  if (length (cYcol) > 1){
+    currentYear <- c (currentYear - 1, currentYear, currentYear + 1)
+    }
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , currentYear
@@ -120,13 +122,14 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
                        , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
                        # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
-          , lty = c(1, rep (1, length (currentYear)-1), 2, sLty, 0)
-          , lwd = c (3, rep (4, length (currentYear)-1), 2, sLwd, 0)
+          , lty = c(1, 2, rep (1, length (currentYear)-1), sLty, 0)
+          , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
           , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
           , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]
           )
-          , col = c(meanCol, cYcol [c(1,2,1)], meanCol, sLcol, "black") #qantCol [1])
+  #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
+          , col = c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
   )
 }
 
@@ -224,8 +227,9 @@ if (1){
   tDay$minMA <- aggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE)$MA
 
 
-  tDay$yearN <- aggregate ((!is.na (xVar))~jday, dMeans, FUN = sum, na.rm = TRUE)[,2]
-
+  # is this critically needed??
+  tDay$yearN <- aggregate ((!is.na (xVar))~jday, dMeans, FUN = sum
+                           , na.rm = TRUE)[1:nrow (tDay),2] # some scripts fail at 366
   ## current year-1
   pY <- subset (dMeans, year == currentYear)
   tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]
