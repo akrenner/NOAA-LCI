@@ -30,6 +30,8 @@ setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 ## load and process SWMP data
 source ("annualPlotFct.R") # already loads SWMPr
+# unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
+
 # require ("SWMPr")
 # sldvia <- import_local (SMPfile, "kacsdwq") # Seldovia deep
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
