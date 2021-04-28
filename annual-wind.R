@@ -55,7 +55,7 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 40
 galeT <- 30
-currentCol <- c ("blue", "lightblue")
+currentCol <- c ("blue", "lightblue", "dark")
 # currentCol <- "blue"
 # currentCol <- "red"
 # currentCol <- c ("red", "magenta")
@@ -138,6 +138,17 @@ hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 ###############################################################
 
 
+
+## table of number of gales/storms -- mean vs current year
+## count number of days with max wind above threshold
+windSum <- nEvents (hmr, "maxwspd", thrht = c(galeT, stormT))
+windSum$mean <- round (windSum$mean, 1)
+## number of gales and storms per year
+print (windSum)
+rm (windSum)
+## end of wind summary
+
+
 ## current/past year = year of report
 dMeans <- aggregate (wspd~jday+year, hmr, FUN = meanNA) # daily means full time series
 Gust <- aggregate (maxwspd~jday+year, hmr, FUN = agFct, thd = stormT)
@@ -171,6 +182,8 @@ dMeans$wDirCM <- wDir2$circWind [match (paste (dMeans$jday, dMeans$year), paste 
 rm (circWind, wDir2)
 
 ## MA of current/past year -- Moving Average
+##--- this (and others should be handled with prepPDF) XXX
+
 # require (forecast)
 # load ("~/tmp/LCI_noaa/cache/MAfunction.RData") ## gets maT -- function -- backwards MA -- is that what we want? XXX
 # ma <- maT
@@ -226,27 +239,14 @@ rm (past365, c365)
 tWeek <- aggregate (cbind (jday, uw, vw, p365uw, p365vw)~I(factor (jday %/% 7)), data = tDay, meanNA)
 names (tWeek)[1] <- "week"
 
+
+
+
+
+
+
 ## cardinal wind direction
 ## following https://community.rstudio.com/t/convert-wind-direction-degrees-into-factors-in-a-data-frame/14636/4
-cDir <- function (wd, nDir = 8){
-  if (!(nDir %in% c(4,8,16))){
-    error ("nDir has to be 4, 8, or 16")
-  }
-  if (nDir == 4){
-    rose_breaks <- c (0, 360/8, (1/8 + (1:3 / 4)) * 360, 360)
-    rose_labs <- c("N", "E", "S", "W", "N")
-  }else if (nDir == 8){
-    rose_breaks <- c (0, 360/16, (1/16 + (1:7 / 8)) * 360, 360)
-    rose_labs <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW", "N")
-  }else{
-    rose_breaks <- c(0, 360/32, (1/32 + (1:15 / 16)) * 360, 360)
-    rose_labs <- c("N", "NNE", "NE", "ENE","E", "ESE", "SE", "SSE",
-                   "S", "SSW", "SW", "WSW","W", "WNW", "NW", "NNW","N")
-  }
-  wd <- ifelse (wd < 0, 360 + wd, wd)
-  cut (wd, breaks = rose_breaks, labels = rose_labs
-       , right = FALSE, include.lowest = TRUE)
-}
 ## example
 # cE <- c (358, 2, 89, 177, 92, 265, 46, 20); data.frame (cDir (cE), cE)
 

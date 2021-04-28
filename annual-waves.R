@@ -318,9 +318,12 @@ tStn <- tide_stations("Seldovia*")
 timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
 wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
 rm (tStn, timetable)
+require ("lubridate") # time zone conversion
+wDB$localTime <- with_tz (wDB$datetimestamp, "America/Anchorage")
 require ("suncalc")
-wDB$sunAlt <- getSunlightPosition (date = wDB$datetimestamp
+wDB$sunAlt <- getSunlightPosition (date = wDB$localTime
                                    , lat = 59.643, lon = -151.526)$altitude # in radians
+wDB$sunDeg <- wDB$sunAlt / pi * 180
 ## interpolate home wind direction -- fail (why = ?)
 ## need hourly or better data => SWMP.  Use buoy data for now
 # wDB$windDir_hom x <- approx (hmr$datetimestamp, hmr$wdf5, xout = wDB$datetimestamp)
@@ -332,39 +335,76 @@ wDB$windspd <- approx (hmr$datetimestamp, hmr$wspd, xout = wDB$datetimestamp)$y
 
 wDB <- addTimehelpers(wDB)
 
+
+
+
 save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
+
+
+
 
 ################
 ## surf score ##
 ################
 
-wDB$onshoreWind <- ifelse ((120 < wDB$windDir) | (wDB$windDir < 270), TRUE, FALSE)
+wDB$onshoreWind <- ifelse ((120 < wDB$windDir) & (wDB$windDir < 270), TRUE, FALSE)
 
-
-wDB$surf <- 0
-wDB$surf <- ifelse (wDB$wave_height > 1, wDB$surf + (wDB$wave_height-1)*3, wDB$surf)
-wDB$surf <- ifelse (wDB$dominant_wpd > 10, wDB$surf + (wDB$dominant_wpd - 10)/2, wDB$surf) # make this gradual?
-wDB$surf <- ifelse (wDB$wave_dir_cat == "SW", wDB$surf + 1, wDB$surf)
-wDB$surf <- ifelse (wDB$tideHght > 5, wDB$surf + 1, wDB$surf) # according to Vince, 16'
+## good conditions
+if (0){
+  wDB$surf <- 0
+wDB$surf <- ifelse (wDB$wave_height > 1.0, wDB$surf + (wDB$wave_height-1)*3, wDB$surf)
+wDB$surf <- ifelse (wDB$dominant_wpd > 6, wDB$surf + (wDB$dominant_wpd - 6)/2, wDB$surf) # make this gradual?
+# wDB$surf <- ifelse (wDB$wave_dir_cat == "SW", wDB$surf + 1, wDB$surf)
+wDB$surf <- ifelse ((220 < wDB$mean_wave_dir) & (wDB$mean_wave_dir < 270), wDB$surf + 1, wDB$surf)
+wDB$surf <- ifelse (wDB$tideHght > 4.5, wDB$surf + 1, wDB$surf) # according to Vince, 16'
 # wDB$surf <- ifelse (wDB$windDir)
 ## wind: onshore / offshore
 wDB$surf <- ifelse ((120 < wDB$windDir) & (wDB$windDir < 270) & (wDB$windspd > 5)
-                    , wDB$surf - 5, wDB$surf)
+                    , wDB$surf - 5, wDB$surf)  ## onshore wind = bad
 wDB$surf <- ifelse ((wDB$windDir > 270) | (wDB$windDir < 120), wDB$surf + 1, wDB$surf)
 
+
 ## deal-breakers
-wDB$surf <- ifelse (wDB$wave_height > 1, wDB$surf, 0)
-wDB$surf <- ifelse (wDB$sunAlt > 0, wDB$surf, 0)  # NA?
-wDB$surf <- ifelse (wDB$average_wpd > 5, wDB$surf, 0) # make this gradual?
+wDB$surf <- ifelse (wDB$wave_height > 0.1, wDB$surf, 0)
+wDB$surf <- ifelse (wDB$sunDeg > -6.0, wDB$surf, 0)  # within civil twilight,  < 6 degree below horizon
+
+wDB$surf <- ifelse (wDB$dominant_wpd > 5, wDB$surf, 0)
+wDB$surf <- ifelse (wDB$mean_wave_dir < 190, 0, wDB$surf) # need SW-erly swell
+wDB$surf <- ifelse (wDB$mean_wave_dir > 275, 0, wDB$surf)
+wDB$surf <- ifelse ((120 < wDB$windDir) & (wDB$windDir < 270) & (wDB$windspd > 15)
+                    , 0, wDB$surf) # onshore wind = bad
 
 wDB$surf <- ifelse (wDB$surf < 0, 0, wDB$surf)
 summary (wDB$surf) # 4,8,16
+}
+
+## start over -- keep it simple
+## make it great: big waves, long period, offshore wind
+wDB$sscore <- 0
+wDB$sscore <- ifelse (wDB$wave_height > 2, 2, wDB$sscore)
+wDB$sscore <- ifelse (wDB$dominant_wpd > 10, wDB$sscore + 1, wDB$sscore)
+wDB$sscore <- ifelse ((wDB$windDir < 120) | (wDB$windDir > 270), wDB$sscore + 1, wDB$sscore)
+
+## minimum criteria:
+## waves 1 m+, SW swell, tide 5m+, daylight, no strong onshore wind
+wDB$sscore <- ifelse (wDB$wave_height> 1, wDB$sscore, 0)
+wDB$sscore <- ifelse (wDB$dominant_wpd > 5, wDB$sscore, 0)
+wDB$sscore <- ifelse ((220 < wDB$mean_wave_dir) & (wDB$mean_wave_dir < 270), wDB$sscore, 0)
+wDB$sscore <- ifelse (wDB$tideHght > 4.5, wDB$sscore, 0)
+wDB$sscore <- ifelse (wDB$sunDeg > -6, wDB$sscore, 0)
+wDB$sscore <- ifelse ((120 < wDB$windDir) & (wDB$windDir < 270) & (wDB$windspd > 15)
+                     , 0, wDB$sscore)  ## strong onshore -- take this out?
+
+wDB$surf <- wDB$sscore
+
+### END of surfscore ##
+#######################
 
 
 
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/surf-exploration.pdf")
 
 plot (surf~datetimestamp, wDB, ylab = "surf-score")
 plot (dominant_wpd~datetimestamp, wDB)
@@ -375,25 +415,26 @@ hist (wDB$tideHght)
 hist (wDB$surf)
 hist (subset (wDB$surf, wDB$surf > 0))
 
-surfC <- aggregate (surf ~ jday + year, wDB # calendar
-                       , FUN = function (x){mean (x > 1)}
-                       )
+## time series of surf score
+surfC <- aggregate (surf ~ jday + year, wDB # calendar -- proportion of time > 1
+#                    , FUN = function (x){mean (x >= 1)}
+                    , FUN = mean
+)
 summary (surfC$surf)
 plot (surf~jday, surfC
       , pch = 19, col = ifelse (year == 2021, "red"
                                 , ifelse(year == 2020, "blue", "black"))
-      , ylab = "daily surf score")
+      , ylab = "daily mean surf score")
 legend ("top", bty = "n", pch = 19, col = c("red", "blue", "black"),
         legend = c("2021", "2020", "2011-2019"))
 
-
-wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
+## proportion of surfable time
+wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
-#                , sumFct = function (x){mean (x, na.rm = TRUE)}
-                , sumFct = function (x){any (x > 0)}
+              , sumFct = function (x){mean (x >= 1)}
 )
-aPlot (sTday, "surfs", ylab = "chance of good surf"
-       , currentCol = currentCol, MA = TRUE, main = "Days with surf")
+aPlot (sTday, "surfs", ylab = "propotion of surfable time"
+       , currentCol = currentCol, MA = TRUE, main = paste ("Daily surf"))
 cLegend ("top"
          , qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = 0.5, currentYear = currentYear
@@ -401,9 +442,16 @@ cLegend ("top"
          , cYcol = currentCol
 )
 
-sTday <- prepDF(wDB, "surfs")
-aPlot (sTday, "surfs", ylab = "chance of good surf"
-       , currentCol = currentCol, MA = TRUE, main = "Proportion of time with surf")
+
+## proportion of surf days
+wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
+sTday <- prepDF(wDB, "surfs"
+                #                , sumFct = function (x){mean (x, na.rm = TRUE)}
+                # , sumFct = function (x){sum (x >= 1) > 1 }
+                , sumFct = function (x){maO * any (x >= 1)}
+)
+aPlot (sTday, "surfs", ylab = "days with surf"
+       , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
 cLegend ("top"
          , qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = 0.5, currentYear = currentYear
@@ -411,8 +459,10 @@ cLegend ("top"
          , cYcol = currentCol
 )
 
-wDB$surfs <- ifelse (wDB$surf > 4, maO, 0)
-sTday <- prepDF(wDB, "surfs", sumFct = function (x){any (x > 0)})
+
+## proportion of GREAT days
+wDB$surfs <- ifelse (wDB$surf >= 2, 1, 0) # use maO so that mean over MA windows = N days
+sTday <- prepDF(wDB, "surfs", sumFct = function (x){maO * any (x > 0)})
 aPlot (sTday, "surfs", ylab = "days with GREAT surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days"))
 cLegend ("top"
@@ -421,11 +471,11 @@ cLegend ("top"
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
 )
-
-
+## mean score per day
 sTday <- prepDF(wDB, "surf")
-aPlot (sTday, "surf", ylab = "chance of good surf"
-       , currentCol = currentCol, MA = TRUE, main = "Mean surf score")
+aPlot (sTday, "surf", ylab = "mean surf score"
+       , currentCol = currentCol, MA = TRUE #, main = "Mean surf score"
+       )
 cLegend ("top"
          , qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = 0.5, currentYear = currentYear
@@ -433,8 +483,110 @@ cLegend ("top"
          , cYcol = currentCol
 )
 
+## airtemp when surf is great
+hist (subset (wDB$air_temperature, wDB$surf > 1)
+      , main = "Air temperature when surf is good"
+      , xlab = expression ('air'~'temperature '~'['*degree~'C'*']'))
+
+wSpd <- wDB$windspd / 1.852
+windchill <- 13.12 + 0.6215*wDB$air_temperature - 11.37 * wSpd ^ 0.16 +
+  0.3965*wDB$air_temperature*wSpd^0.16
+rm (wSpd)
+hist (subset (windchill, wDB$surf >= 1)
+      , xlab = expression ('windchill when surf is good '~'['*degree~'C'*']'))
+# hist (subset (wDB$sea_surface_temperature, wDB$surf > 4)
+#       , main = "Water temperature when surf is good"
+#       , xlab = "temperature [C]")
+
 
 dev.off()
+
+
+## number of good and great surfdays
+## only useful if there's a complete record for the year!
+sEvent <- nEvents (wDB, "surf", thrht = c(1,4))
+print (sEvent)
+
+
+
+
+### the plot to keep for the report
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf")
+## background: surfer plunging into wave
+# wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
+# sTday <- prepDF(wDB, "surfs"
+#                 #                , sumFct = function (x){mean (x, na.rm = TRUE)}
+#                 , sumFct = function (x){sum (x >= 1) > 1 }
+# )
+# aPlot (sTday, "surfs", ylab = "chance of good surf"
+#        , currentCol = currentCol, MA = TRUE, main = "Days with surf")
+# cLegend ("top"
+#          , qntl = qntl, title = paste (maO, "day moving average")
+#          , title.adj = 0.5, currentYear = currentYear
+#          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+#          , cYcol = currentCol
+# )
+wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
+sTday <- prepDF(wDB, "surfs"
+                , sumFct = function (x){maO * any (x >= 1)}
+)
+aPlot (sTday, "surfs", ylab = "days with surf"
+       , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
+cLegend ("top"
+         , qntl = qntl, title = paste (maO, "day moving average")
+         , title.adj = 0.5, currentYear = currentYear
+         , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+         , cYcol = currentCol
+)
+dev.off()
+
+
+
+if (1){ ## windrose of wave height
+  require ("openair")
+  wRD <- with (wDB, data.frame (ws = wave_height, wd = mean_wave_dir
+                                , date = datetimestamp
+  ))
+
+  pdf ("~/tmp/LCI_noaa/media/waves_windrose.pdf")
+  wR <- windRose (wRD
+                  #, type = "yClass"
+                  , type = c("season") #, "yClass")
+                  , auto.text = FALSE, paddle = FALSE, annotate = FALSE
+                  , breaks = c (0, 1, 2, 3, 4)
+                  , key.footer = "meters"
+                  , grid.line = 10 #list (value = 10, lty = 5, col = "purple")
+                  #  , statistic = "prop.mean"
+                  #, max.freq = 30
+  )
+  # print (wR)
+  dev.off()
+}
+
+
+## hind-cast
+goodDays <- as.POSIXct (c("2021-03-06 19:40"
+, "2020-11-02 16:18"
+, "2018-10-28 18:32"
+, "2020-11-13 13:20")
+, tz = "America/Anchorage")
+as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))
+
+mW <- 16 # window in min
+gS <- as.data.frame (t (sapply (goodDays, function (x){
+  subset (wDB, ((x - mW*60) < wDB$datetimestamp) &
+                                          wDB$datetimestamp < (x + mW*60))}
+  )))
+print (gS)
+
+rm (mW)
+## calm days
+as.data.frame (approx(wDB$datetimestamp, wDB$surf
+                      , xout = as.POSIXct ("2020-12-31 15:00")))
+
+
+getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
+
 
 
 ## https://geologycafe.com/oceans/chapter10.html
