@@ -61,15 +61,19 @@ save.image ("~/tmp/LCI_noaa/cache/zoopC1.RData")
 
 ## k-means
 # kM <- kmeans (zooC, centers = 4)
+## parted ?
 
 # load ("~/tmp/LCI_noaa/cache/tempAnomalyMonth.RData") # gets tempM
 load ("~/tmp/LCI_noaa/cache/dailyTempAnomalies.RData") # gets tempDay from SeldoviaTemp.R
+   # tempDay has duplicates -- SHOULD NOT! fix!!
 zooCenv$month <- as.numeric (strftime (zooCenv$timeStamp, format = "%m"))
 
 tempDATE <- with (tempDay, paste (Day, month.abb [month], year-2000, sep = "-")) # somewhat dirty! clean up
 tempMatch <- match (zooCenv$Date, tempDATE); rm (tempDATE)
+## only 6 years of available data! (2012-2018) -- may be too tight to find anything!
 
-zooCenv$TempAnom <- tempDay$days90 [tempMatch]
+# zooCenv$TempAnom <- tempDay$days90 [tempMatch]
+zooCenv$TempAnom <- tempDay$days180 [tempMatch]
 tempDay$warmCat <- with (tempDay, cut (days90    ## need to update days90 -- lots of NAs!
                                        , breaks = c(-100
                                                     , mean (days90, na.rm = TRUE)+c(-1,1)*
@@ -102,16 +106,19 @@ print (names (zooCenv@data))
 
 ## replot SeldoviaTemp graph -- re-assigning temperatures
                                 # seldovia temperature
+if (0){
 PDF ("SeldTempAnomaly-recategorize", width = 12, height = 7)
 # pdf ("~/tmp/LCI_noaa/media/2019/SeldTempAnomaly-recategorize.pdf", width = 12, height = 7)
   nArgs <- with (tempDay, ifelse ((month == 1)&(Day == 1)&(year %% 3 == 0), year, NA))
+
+  # tempDay <- subset (tempDay, !is.na (days180))
 poDay <- with (tempDay, as.POSIXct (paste (year, month, Day, sep = "-")))
-tempDay$AJ <- tempDay$days90 - mean (zooCenv$TempAnom) # set zero to mean of samples
-tempDay$AJ <- tempDay$days90
+tempDay$AJ <- tempDay$days180 - mean (zooCenv$TempAnom) # set zero to mean of samples
+# tempDay$AJ <- tempDay$days180
 
 nRange <- sd (tempDay$AJ)/4
 
-barplot (tempDay$AJ~poDay
+barplot (tempDay$AJ~poDay  # XXX breaks here -- reasons = n
        , space = 0
        , col = ifelse (tempDay$AJ < (mean (tempDay$AJ)-nRange), "blue"
                      , ifelse (tempDay$AJ < (mean (tempDay$AJ)+nRange)
@@ -138,9 +145,33 @@ axis (3, at = which (tempDay$Sample), label = FALSE)
 abline (h = mean (tempDay$AJ) + c(1, -1)* nRange, col = "gray", lty = "dashed")
 dev.off()
 rm (tempDay, nArgs, poDay, nRange)
+}
 
 
+anAx <- function (){
+  monD <- cumsum (c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  axis (2)
+  axis (1, label = FALSE, at = c (1, monD))
+  axis (1, at = monD - 14, tick = FALSE, label = month.abb)
+  box()
+}
 
+
+PDF ("SeldTempAllYears")
+# nArgs <- with (tempDay, ifelse ((month == 1)&(Day == 1)&(year %% 3 == 0), year, NA))
+par (las = 1, xaxs = "i")
+plot (Temp~jday, tempDay, type = "n", axes = FALSE, ylab = "Seldovia SST [°C]", xlab ="")
+anAx ()
+## spline smoother for seasonal signal
+require ("pbs")
+splS <- glm (Temp~pbs::pbs (jday, df = 4, Boundary.knots = c(1,366)), data = tempDay)
+splP <- predict (splS, type = "response", newdata = data.frame (jday = 1:366))
+lines (1:366, splP, lwd = 4, lty = "dashed")
+x <- lapply (1:length (levels (factor (tempDay$year))), FUN = function (i){
+  lines (Temp~jday, tempDay, subset = tempDay$year == levels (factor (tempDay$year))[i]
+         , col = i)
+  })
+dev.off()
 
 
 
@@ -216,8 +247,6 @@ Require ("colorspace")
 mCol <- rainbow_hcl (12)
 
 
-PDF ("Zoop_nMDS-T9monthly")
-
 ## first subset?
 T9 <- subset (nMScores, zooCenv$Transect == 9)
 ## recalc nMDS axes
@@ -231,13 +260,13 @@ T9env$zoopSum <- rowSums (subset (zooC, zooCenv$Transect == 9))
 ## test densities -- something is wrong
 ## plot (volSample~month, T9env)           # volSamples not right!!
 # plot (zoopSum~month, T9env)           # volSamples not right!!
-
+PDF ("Zoop_nMDS-T9monthly")
 par (mar = c(5,4,2,1) + 0.1)
 plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month]
       , pch = 19 # as.numeric (factor (T9env$Station))
       ##, cex = (10* (T9env$zoopSum/T9env$volSample) / max (T9env$zoopSum/T9env$volSample))+0.2
       #   , cex = 10 * (T9env$zoopSum / max (T9env$zoopSum))
-      , main = paste0 ("Transect=", i)
+      # , main = paste0 ("Transect=", i)
 )
 for (i in 1:length (levels (T9env$month))){
   cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
@@ -247,32 +276,103 @@ text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
 dev.off()
 # write.csv (data.frame (T9, T9env, subset (zooC, zooCenv$Transect == 9))
 #          , file = "~/tmp/LCI_noaa/cache/zoopT9monthly.csv", row.names = FALSE)
+# rm (T9, T9env)
+
+
+
+## combine T9 and all-spots into one graphic?
+nMCol <- factor (zooCenv$month)
+Require ("RColorBrewer")
+# fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
+fCol <- rainbow_hcl (12)
+# fCol <- adjustcolor (fCol, alpha.f = 0.4)
+## annual zooplankton cycle
+
+
+PDF ("Zoop_nMDS_seasonal-T9+all")
+plot (nMScores [,1:2], type = "n")
+## add convex hulls
+for (i in 1:length (levels (T9env$month))){
+  cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
+}
+points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
+        , pch = ifelse (zooCenv$Transect == 9, 1, 19)
+)
+text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
+legend ("topright", legend = c("T9", "others")
+        , pch = c(1, 19)
+        , bty = "n"
+)
+dev.off()
+
 rm (T9, T9env)
+
+
+
 
 
 
 ## model to dig into this further?
 ## progression of spring compared to spring temp
 
+save.image ("~/tmp/LCI_noaa/cache/zoopCommVar2.RData")
+## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopCommVar2.RData") #; require (vegan)
+
+
 spDF <- data.frame (nMDS1 = nMScores [,1], zooCenv)
 # spDF <- subset (spDF, month %in% 2:4 & Transect == "9")
 spDF <- subset (spDF, month %in% 2:4)
-spDF <- subset (spDF, month %in% 3)
+# spDF <- subset (spDF, month %in% 3)
+spDF <- subset (spDF, !is.na (Temp))  ## fix this!!
+
 sLM <- lm (nMDS1 ~ TempAnom, spDF)
+
+## better to use CCA instead of nMDS here?!?
 
 
 # Require ("glmm")  ## better
 Require ("MCMCglmm")
 # sLM <- glmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM, varcomps.names = "month")
-sLM <- MCMCglmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM)
+# sLM <- MCMCglmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM)
 # MCMCglmm (count ~ surveyYear + 1, random = ~ us (1+SurveyYear):location
 #           data, mD, family = "poisson"
 #           nitt = 2000, thin = 10, burnin = 5000, pr = TRUE, pl = FALSE)
 
-
-
-## better: glmm, random factor = station
+spDF$jday <- as.numeric (format (spDF$timeStamp, "%j"))
+spDF$Match_Name <- factor (spDF$Match_Name)
+sLM <- MCMCglmm (nMDS1 ~ TempAnom + jday
+                 #, random = us (1+Match_Name)
+                 , random = ~ us (jday):Match_Name
+                 , data = spDF
+                 #, family = c("gaussian", "gaussian")
+                 , nitt = 20000, thin = 10, burnin = 5000, pr = TRUE, pl = FALSE
+                 )
 summary (sLM)
+HPDinterval (mcmc (sLM$Sol))
+
+
+
+plot (sLM)
+## trellis-plot, 1 per station, showing relationship between anomaly and nMDS1
+## march only
+## month as random factor
+## fall
+spDF <- data.frame (nMDS1 = nMScores [,1], zooCenv)
+# spDF <- subset (spDF, month %in% 5:12)
+spDF <- subset (spDF, month %in% 8:10)
+spDF <- subset (spDF, !is.na (Temp))  ## fix this!!
+spDF$jday <- as.numeric (format (spDF$timeStamp, "%j"))
+spDF$Match_Name <- factor (spDF$Match_Name)
+sLM <- MCMCglmm (nMDS1 ~ TempAnom + jday
+                 , random = ~ us (jday):Match_Name
+                 , data = spDF
+                 , nitt = 20000, thin = 10, burnin = 5000, pr = TRUE, pl = FALSE
+)
+summary (sLM)
+
+## are lengths of summer/winter temperature-dependent? nMDS2
+
+
 
 
 PDF ("SpringTemp")
@@ -330,8 +430,7 @@ rm (zoo.hc, mT9, T9, T9env, mCol)
 
 
 ## explore spatial independence
-# PDF ("2019/zoop-all-cluster")
-pdf (paste0 (dirL[3], "/2019/zoopall-cluster.pdf"))
+PDF ("zoop-all-cluster")
 # row.names(zooC) <- zooCenv$SampleID ## duplicated sample IDs! ok??
 zoo.hc <- zooC %>%
   #  aggregate(x, list (zooCenv$Sampling.location)) %>%
@@ -362,9 +461,7 @@ fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 ## annual zooplankton cycle
 
 
-PDF ("2019/Zoop_nMDS_seasonal-all")
-# pdf ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal2.pdf")
-# png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
+PDF ("Zoop_nMDS_seasonal-all")
 plot (nMScores [,1:2], type = "n")
 ## add convex hulls
 for (i in 1:length (levels (nMCol))){
@@ -514,7 +611,7 @@ if (0){## quantify variability within seasons, comparing warm/cold (why??)
 sDz <- aggregate (nMScores [,1:3]~season+warmCat, data = zooCenv, FUN = sd)
 Require (lattice)
 # bargraph
-PDF ("2019/Zoop_seasonal-SD")
+PDF ("Zoop_seasonal-SD")
 for (i in 1:3){
     barchart (sDz [,2+i]~warmCat|season, data = sDz, ylab = paste ("SD nMDS", i))
 }
@@ -574,7 +671,7 @@ print (tail (sort (scores (nM, "species")[,2])))
 
 if (0){            # plot not ready yet
 ## canonical correspondence analysis WITHIN seasons
-PDF ("2019/Zoop_intraseasonal-CCA")
+PDF ("Zoop_intraseasonal-CCA")
 par (mfrow = c(2,2))
 for (i in 1:length (levels (zooCenv$season))){
     ccaZ <- cca (zooC~zooCenv$TempAnom, subset = zooCenv$season == levels (zooCenv$season)[i])
