@@ -1,4 +1,5 @@
 ## current year salinity for state of bay report -- modeled on rainy.R
+## also plot water temperature, shallow and deep
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 maO <- 31  # 7 days certainly not working, 14 days not enough either
@@ -76,8 +77,8 @@ if (0){
 
 
 ## for completeness -- SST temperature
-currentCol <- c ("navyblue", "aquamarine")
-currentCol <- c ("red", "aquamarine")
+# currentCol <- c ("navyblue", "aquamarine")
+currentCol <- c ("red", "pink", "orange")
 
 # tScale <- c ("celsius", "fahrenheit")
 instSite <- c ("sldviaS", "sldvia", "homerS")
@@ -97,6 +98,14 @@ instSite <- c ("sldviaS", "sldvia", "homerS")
            , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
            )
     fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
+    cLegend ("topleft", inset = 0.05
+             , currentYear = currentYear
+             , mRange = c (min (hmr$year), currentYear-1)
+             , cYcol = currentCol
+             , title = paste (maO, "day moving average")
+             , qntl = qntl
+    )
+
     box()
     dev.off()
   }

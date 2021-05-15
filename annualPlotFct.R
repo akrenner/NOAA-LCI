@@ -227,10 +227,10 @@ if (1){
   tDay$minMA <- aggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE)$MA
 
 
-  # is this critically needed??
+  # is this critically needed?? -- N years of data per date
   tDay$yearN <- aggregate ((!is.na (xVar))~jday, dMeans, FUN = sum
                            , na.rm = TRUE)[1:nrow (tDay),2] # some scripts fail at 366
-  ## current year-1
+  ## present/pretend/current year-1
   pY <- subset (dMeans, year == currentYear)
   tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]
   tDay$pYMA <- pY$MA [match (tDay$jday, pY$jday)]

@@ -3,7 +3,7 @@
 ## wave height from bouy data ##
 ################################
 
-
+setwd("~/myDocs/amyfiles/NOAA-LCI/")
 rm (list = ls())
 
 ## also wave direction?
@@ -204,7 +204,7 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 
 ## order: current, present, previous
 # currentCol <- c("darkblue", "blue", "lightblue")
-currentCol <- c("darkblue", "blue", "lightblue")
+currentCol <- c("black", "blue", "lightblue")
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # maO <- 3 # 30
@@ -511,34 +511,92 @@ print (sEvent)
 
 
 ### the plot to keep for the report
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf")
-## background: surfer plunging into wave
-# wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
-# sTday <- prepDF(wDB, "surfs"
-#                 #                , sumFct = function (x){mean (x, na.rm = TRUE)}
-#                 , sumFct = function (x){sum (x >= 1) > 1 }
-# )
-# aPlot (sTday, "surfs", ylab = "chance of good surf"
-#        , currentCol = currentCol, MA = TRUE, main = "Days with surf")
-# cLegend ("top"
-#          , qntl = qntl, title = paste (maO, "day moving average")
-#          , title.adj = 0.5, currentYear = currentYear
-#          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
-#          , cYcol = currentCol
-# )
-wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
+
+## try to do it all in R
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
+     , width = 8, height = 6)
+## import image, use ggplot to set background
+## see https://guangchuangyu.github.io/2018/04/setting-ggplot2-background-with-ggbackground/
+# require(magick)
+# require (ggplot2)
+# require (ggimage)  ## yes, this is what I want,
+## no ggplot too complex with existing functions
+wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
                 , sumFct = function (x){maO * any (x >= 1)}
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
+require ("jpeg")
+img <- readJPEG ("~/My Pictures/surf/_J5A9758-s.jpg", native = TRUE)
+lim <- par()
+rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4])
+addGraphs (longMean = sTday$MA_surfs
+           , percL = sTday$maL1_surfs
+           , percU = sTday$maU1_surfs
+           , current = cbind (sTday$pYMA_surfs,
+                              sTday$cYMA_surfs,
+                              sTday$pcYMA_surfs)
+           , jday = sTday$jday, maxV = NA, minV = NA
+           , currentCol = currentCol # = currentCol # "red"
+)
 cLegend ("top"
          , qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
+         , text.col = "blue"
 )
 dev.off()
+
+
+if (0){  ## use the one above
+  # require ("gridSVG")  # could also just use svg()
+  svg ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf4inkscape.svg") # combine with image in Inkscape
+  ## in inkscape: open sa-surf-inkscape. Import sa-surf4inkscape.svg
+  ## ungroup plot, delete background. group. align. Export to PDF.
+
+  mCol <- "yellow"
+  par (bg = NA
+       , col.lab = mCol
+       , col.axis = mCol
+       , col.main = "blue"
+       , fg = mCol
+       , col = mCol); rm (mCol)
+  wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
+  sTday <- prepDF(wDB, "surfs"
+                  , sumFct = function (x){maO * any (x >= 1)}
+  )
+  aPlot (sTday, "surfs", ylab = "days with surf"
+         , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
+  cLegend ("top"
+           , qntl = qntl, title = paste (maO, "day moving average")
+           , title.adj = 0.5, currentYear = currentYear
+           , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+           , cYcol = currentCol
+           , text.col = "blue"
+  )
+  dev.off()
+
+
+  ## the original
+  pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf-simple.pdf")
+  ## background: surfer plunging into wave
+  wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
+  sTday <- prepDF(wDB, "surfs"
+                  #                , sumFct = function (x){mean (x, na.rm = TRUE)}
+                  , sumFct = function (x){sum (x >= 1) > 1 }
+  )
+  aPlot (sTday, "surfs", ylab = "chance of good surf"
+         , currentCol = currentCol, MA = TRUE, main = "Days with surf")
+  cLegend ("top"
+           , qntl = qntl, title = paste (maO, "day moving average")
+           , title.adj = 0.5, currentYear = currentYear
+           , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+           , cYcol = currentCol
+  )
+  dev.off()
+}
 
 
 
@@ -568,7 +626,9 @@ if (1){ ## windrose of wave height
 goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2020-11-02 16:18"
 , "2018-10-28 18:32"
-, "2020-11-13 13:20")
+, "2020-11-13 13:20"
+, "2021-04-30 04:30"   # big loud waves at dawn (high tide). pretty tight, short wave period
+)
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))
 
@@ -577,7 +637,7 @@ gS <- as.data.frame (t (sapply (goodDays, function (x){
   subset (wDB, ((x - mW*60) < wDB$datetimestamp) &
                                           wDB$datetimestamp < (x + mW*60))}
   )))
-print (gS)
+print (gS [,c(1,7,8,0,10, 12, 13, 18:ncol (gS))])
 
 rm (mW)
 ## calm days

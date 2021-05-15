@@ -1,5 +1,5 @@
 
-## precipitation -- standardized plot
+## air temperature -- standardized plot
 rm (list = ls())
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
@@ -8,10 +8,10 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
-currentCol <- c("red", "magenta")
+currentCol <- c("red", "magenta", "purple")
 # currentCol <- "red"
 SWMP <- TRUE
-# SWMP <- FALSE
+ SWMP <- FALSE
 
 
 
@@ -29,6 +29,7 @@ if (SWMP){
 # plot (totprcp~datetimestamp, data = hmr, subset = year < 2006, type = "l")
 
 ## QCQA moved to windTrend.R
+hmr$atemp <- ifelse (hmr$atemp < -30, NA, hmr$atemp)
 
 
 ## units: use both, C and F (F = 2nd axis on the right)
@@ -40,8 +41,10 @@ tDay <- prepDF (varName = "atemp", dat = hmr, maO = maO, qntl = qntl)
 #
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width = 9, height = 6)
-x <- mkdirs("~/tmp/LCI_noaa/media/StateOfTheBay/"); rm (x)
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE
+           , recursive = TRUE)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
+             , ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
 par (mar = c(4,4,1,4))
 aPlot (tDay, "atemp"
        , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
@@ -54,7 +57,7 @@ aPlot (tDay, "atemp"
 fAxis (c (-15, 15), mT = expression ('air'~'temperature '~'['*degree~'F'*']'))
 box()
 ## legend
-cLegend ("bottomright", inset = 0.05
+cLegend ("bottom", inset = 0.05
          , currentYear = currentYear, mRange = c (min (hmr$year), currentYear-1)
          , cYcol = currentCol
          , title = paste (maO, "day moving average")

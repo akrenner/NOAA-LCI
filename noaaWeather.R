@@ -1,5 +1,8 @@
 ## alternative to SWMP: try with NOAA airport data
-rm (list = ls())
+# rm (list = ls())
+
+## bug?? year shifted by 1?? data doesn't appear current??
+
 
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
