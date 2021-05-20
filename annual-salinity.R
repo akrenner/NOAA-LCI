@@ -100,7 +100,7 @@ instSite <- c ("sldviaS", "sldvia", "homerS")
     fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
     cLegend ("topleft", inset = 0.05
              , currentYear = currentYear
-             , mRange = c (min (hmr$year), currentYear-1)
+             , mRange = c (min (list (sldviaS, sldvia, homerS)[[j]]$year), currentYear -1)
              , cYcol = currentCol
              , title = paste (maO, "day moving average")
              , qntl = qntl

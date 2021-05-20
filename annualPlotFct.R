@@ -94,7 +94,7 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
     if (class (current) == "matrix"){current <- as.numeric (current [,1])}
     lines (current~jday, col = currentCol, lwd = 4)
   }else{
-    lines (current [,3]~jday, col = currentCol [3], lwd = 2, lty = "dashed") ## new: previous year
+    lines (current [,3]~jday, col = currentCol [3], lwd = 2) #, lty = "dashed") ## new: previous year
     lines (current [,1]~jday, col = currentCol [1], lwd = 4)
     lines (current [,2]~jday, col = currentCol [2], lwd = 4)
   }
@@ -122,7 +122,7 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
                        , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
                        # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
-          , lty = c(1, 2, rep (1, length (currentYear)-1), sLty, 0)
+          , lty = c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
           , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
           , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
@@ -303,6 +303,15 @@ fAxis <- function (cGrad, side = 4, line = 3, mT = "Fahrenheit", ...){
   mtext (mT, side = side, line = line, ...)
 }
 
+## add scale in inches
+iAxis <- function (mmL, side = 4, line = 3, lab = "", ...){
+  mmperinch <- 25.4
+  alt.ax <- pretty (mmL / mmperinch)
+  alt.at <- alt.ax * mmperinch
+  axis (side = side, at = alt.at, labels = alt.ax, srt = 90)
+  mtext (lab, side = side, line = line, ...)
+}
+
 
 
 ## load cached SWMP data and update it with the latest from CDMO
@@ -381,13 +390,14 @@ nEvents <- function (dat, varName, thrht){
                                         , FUN = sum)
 
                       c (mean = mean (agY$xvar, na.rm = TRUE)
+                         , median = median(agY$xvar, na.rm = TRUE)
                          , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
                          , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
                          , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)])
                     })
   colnames(eventL) <- paste0 ("T", thrht)
   rownames(eventL)[4:5] <- paste0 ("Y", max (dat$year)-c(2,1))
-  t (eventL)
+  as.data.frame (t (eventL))
 }
 
 

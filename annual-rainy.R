@@ -8,8 +8,7 @@ maO <- 30  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("blue", "lightblue")
-# currentCol <- "blue"
+currentCol <- c("blue", "lightblue", "black")
 SWMP <- FALSE
 SWMP <- TRUE
 
@@ -62,44 +61,37 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-# pdf ("~/tmp/LCI_noaa/media/precipAx.pdf", width = 9, height = 6)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+par (mar = c (3,4,1,4)+0.1)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
        , MA = TRUE)
 # box()
+## add inch scale
+iAxis (tDay$totprcp, lab = "daily precipitation [inch]")
+
+## mark high rain days
+cCex <- 2
+text (tDay$jday, ifelse (tDay$pY_totprcp > 10, tDay$pYMA_totprcp + 0.2, NA), labels = "*", col = "blue", cex = cCex)
+# require ("png")
+# img <- readPNG ("pictograms/rain-cloud.png")
+# hgt <- 0.5; wdh <- 15
+# tRain <- subset (tDay, pY_totprcp > 10)
+# with (tRain, rasterImage (img, xleft = jday - 6, ybottom = pYMA_totprcp + 0.1
+#              , xright = jday - 6 + wdh, ytop = pYMA_totprcp + 0.1 + hgt))
+# rm (hgt, wdh)
 
 ## legend
-if (1){ # mark big rain events (yes) OR plot 1/10 or daily rain
-  cCex <- 2
-  text (tDay$jday, ifelse (tDay$pY_totprcp > 10, tDay$pYMA_totprcp + 0.2, NA), labels = "*", col = "blue", cex = cCex)
-
-  # require ("png")
-  # img <- readPNG ("pictograms/rain-cloud.png")
-  # hgt <- 0.5; wdh <- 15
-  # tRain <- subset (tDay, pY_totprcp > 10)
-  # with (tRain, rasterImage (img, xleft = jday - 6, ybottom = pYMA_totprcp + 0.1
-  #              , xright = jday - 6 + wdh, ytop = pYMA_totprcp + 0.1 + hgt))
-  # rm (hgt, wdh)
-
-  bP <- cLegend ("top" # x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
-                 , qntl = qntl, title = paste (maO, "day moving average")
-                 , title.adj = 0.5, currentYear = currentYear
-                 , mRange = c (min (hmr$year), currentYear-1)
-                 , cYcol = currentCol
-  )
-  #  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
-  legend (x = bP$rect$left+2, y = bP$rect$top - 1.2, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
-}else{
-  lines (pY_totprcp/10~jday, tDay, col = "blue", type = "s", lwd = 1)
-  bP <- cLegend (x = 140, y = 4.2
-                 , qntl = qntl, title = paste (maO, "day moving average")
-                 , title.adj = 0.5, currentYear = currentYear
-                 , mRange = c (min (hmr$year), currentYear-1)
-                 , cYcol = currentCol
-                 , sYears = "2019/10, no smooth", sLwd = 1, sLty = 1, sLcol = "blue"
-  )
-}
+bP <- legend ("topleft", bty = "n", legend = "")
+# bP <- cLegend ("topleft" # x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
+bP <- cLegend (x = bP$rect$left + 55, y = bP$rect$top
+               , qntl = qntl, title = paste (maO, "day moving average")
+               , title.adj = 0.5, currentYear = currentYear
+               , mRange = c (min (hmr$year), currentYear-1)
+               , cYcol = currentCol
+)
+#  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
+legend (x = bP$rect$left+2, y = bP$rect$top - 1.2, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
 
 ## totals
 xAl <- bP$rect$left - 50; yAl <- bP$rect$top + 0.3
@@ -117,9 +109,13 @@ dev.off()
 rm (bP, xAl, yAl)
 
 
-
-
-
+## table of average N vs current year N high-rain days
+hmrD <- aggregate(totprcp~jday+year, hmr, FUN = sum)
+# hmrD <- addTimehelpers(hmrD)
+rainSum <- nEvents(hmrD, "totprcp", thrht = 10)
+print (rainSum)
+rm (hmrD, rainSum)
+## end of rain summary
 
 
 

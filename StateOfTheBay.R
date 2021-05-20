@@ -4,7 +4,7 @@
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 rm (list = ls())
 
-sT <- Sys.time()
+print (sT <- Sys.time())
 
 
 ## State of the Bay Report 2019

@@ -55,7 +55,7 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 40
 galeT <- 30
-currentCol <- c ("blue", "lightblue", "dark")
+currentCol <- c ("blue", "lightblue", "black")
 # currentCol <- "blue"
 # currentCol <- "red"
 # currentCol <- c ("red", "magenta")
@@ -194,7 +194,7 @@ dMeans$maW <- unlist (smoother (dMeans$wspd, maO, sides = 1))
 dMeans$galeMA <- unlist (smoother (dMeans$gale, maO, sides = 1))
 
 
-## annual data
+## annual data                 ## use prepDF instead?? XXX
 tDay <- aggregate (wspd~jday, dMeans, FUN = meanNA, subset = year < currentYear) # exclude current year
 tDay$sdWind <- aggregate (wspd~jday, dMeans, FUN = sd, subset = year < currentYear)$wspd
 tDay$smoothWindMA <- aggregate (maW~jday, dMeans, FUN = meanNA, subset = year < currentYear)$maW
@@ -232,7 +232,9 @@ tDay$p365scaDay <- past365$sca [match (tDay$jday, past365$jday)]
 c365 <- subset (dMeans, subset = year == currentYear + 1)
 tDay$c365 <- c365$wspd [match (tDay$jday, c365$jday)]
 tDay$c365ma <-c365$maW [match (tDay$jday, c365$jday)]
-rm (past365, c365)
+pp365 <- subset (dMeans, subset = year == currentYear -1)
+tDay$pp365ma <- pp365$maW [match (tDay$jday, pp365$jday)]
+rm (past365, c365, pp365)
 
 ## weekly summary of annual data -- for wind uv only
 # tWeek <- aggregate (wspd~week, hmr, meanNA)
@@ -314,8 +316,7 @@ save.image("~/tmp/LCI_noaa/cache/wind2.RData")
 save (hmr, file = "~/tmp/LCI_noaa/cache/metDat.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
-
-x <- mkdirs("~/tmp/LCI_noaa/media/StateOfTheBay/"); rm (x)
+x <- dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE); rm (x)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind.pdf", width = 9, height = 6)
 # png ("~/tmp/LCI_noaa/media/wind-MA.png"), width = 9*100, height = 7*100)
 
@@ -342,7 +343,7 @@ if (0){  ## farewell my good friend ##
 }
 
 ## better to move to standard var names above
-par (mar = c(3,4,0.1,0.1))
+par (mar = c(3,4,0.5,0.1))
 plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption)
 
 oP <- par()
@@ -396,10 +397,15 @@ if (1){ ## windrose insert
   #rm (xGrez, pCo)
 }
 
-par (oP)# reset to original plotting geometry
+# par (oP)# reset to original plotting geometry
+par (crt = oP$crt # reset to original plotting geometry
+     , fig = oP$fig, fin = oP$fin, lab = oP$lab, mai = oP$mai, mar = oP$mar, mfg = oP$mfg
+     , mgp = oP$mgp, omd = oP$omd, pin = oP$pin, plt = oP$plt, ps = oP$ps, pty = oP$pty
+     , usr = oP$usr, xaxp = oP$xaxp, xaxs = oP$xaxs, xaxt = oP$xaxt, yaxp = oP$yaxp
+     , yaxs = oP$yaxs, ylbias = oP$ylbias)
 ## plot lines AFTER windrose to be able to wrap tigher around white corners of inserted plot
 with (tDay, addGraphs (longMean = smoothWindMA, percL = lowPerMA, percU = uppPerMA
-                       , current = cbind (p365ma, c365ma)
+                       , current = cbind (p365ma, c365ma, pp365ma)
                        , jday = jday
                        , currentCol = currentCol
 ))
@@ -431,7 +437,12 @@ bP <- cLegend ("bottomleft", qntl = qntl [1], inset = 0.02
 text (365, 5.3, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos = 2)
 rasterImage (img, xleft = 280, xright = 280+wdh, ybottom = 5.6, ytop = 5.6+hgt)
 text (365, 5.8, paste0 ("storm (>", stormT, " knots)"), pos = 2)
-par (oP)
+# par (oP)
+par (crt = oP$crt # reset to original plotting geometry
+     , fig = oP$fig, fin = oP$fin, lab = oP$lab, mai = oP$mai, mar = oP$mar, mfg = oP$mfg
+     , mgp = oP$mgp, omd = oP$omd, pin = oP$pin, plt = oP$plt, ps = oP$ps, pty = oP$pty
+     , usr = oP$usr, xaxp = oP$xaxp, xaxs = oP$xaxs, xaxt = oP$xaxt, yaxp = oP$yaxp
+     , yaxs = oP$yaxs, ylbias = oP$ylbias)
 
 dev.off()
 rm(hgt, wdh, bP, img)
