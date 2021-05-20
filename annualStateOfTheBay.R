@@ -20,6 +20,7 @@ source ("annual-airTemp.R")
 
 source ("annual-snowpack.R")
 source ("annual-stratification.R")
+source ("annual-waves.R")
 
 
 cat ("all done\n")

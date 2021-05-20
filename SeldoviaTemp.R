@@ -18,7 +18,7 @@
 # }else{ # MacOS or Linux
 #   SMPfile <- "~/GISdata/LCI/SWMP/current"
 # }
-require ("R.utils")
+suppressMessages (require ("R.utils"))
 SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # works on all platforms?
 
 

@@ -343,7 +343,7 @@ if (0){  ## farewell my good friend ##
 }
 
 ## better to move to standard var names above
-par (mar = c(3,4,0.5,0.1))
+par (mar = c(3,4,1.5,0.1))
 plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption)
 
 oP <- par()
@@ -369,7 +369,7 @@ if (1){ ## windrose insert
                     , type = "yClass"
                     #, type = c("season") #, "yClass")
                     , auto.text = FALSE, paddle = FALSE, annotate = FALSE
-                    , breaks = c (0, 10, 20, 30, 60)
+                    #, breaks = c (0, 10, 20, 30, 60)
                     , key.footer = "knots"
                     , grid.line = 10 #list (value = 10, lty = 5, col = "purple")
                     #  , statistic = "prop.mean"

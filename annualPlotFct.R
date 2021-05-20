@@ -187,7 +187,7 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
     ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
 if (1){
-  require ("zoo")
+  suppressMessages (require ("zoo"))
 #  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "center")
   dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
   dMeans$MA <- rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
@@ -273,7 +273,7 @@ addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
   df$jday <- as.numeric (strftime (df$datetimestamp, "%j"))
   df$year <- as.numeric (strftime (df$datetimestamp, "%Y"))
-  require (lubridate)
+  suppressMessages (require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
   return (df)
@@ -393,10 +393,10 @@ nEvents <- function (dat, varName, thrht){
                          , median = median(agY$xvar, na.rm = TRUE)
                          , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
                          , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
-                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)])
+                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)]) #the current and previous year
                     })
   colnames(eventL) <- paste0 ("T", thrht)
-  rownames(eventL)[4:5] <- paste0 ("Y", max (dat$year)-c(2,1))
+  rownames(eventL)[5:6] <- paste0 ("Y", max (dat$year)-c(2,1))
   as.data.frame (t (eventL))
 }
 
