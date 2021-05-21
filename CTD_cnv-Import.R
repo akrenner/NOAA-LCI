@@ -109,10 +109,19 @@ Require (oce)
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
-## cut-out bad files for now -- fix this later
-if (length (fNf) > 100){
-  fNf <- fNf [-c(195, 720, 762, 900, 1858, 1864, 3527)] ## temporary hack
+## cut-out bad files for now -- fix this later -- why bad?
+badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
+           , "2012_10-29_t4_s07b_cast065_4141"
+           , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
+           , "2013_04-19_t6_s05b_cast076_5028"
+           , "2015_06-26_t9_s01b_cast117_5028"
+           , "2015_06-26_t9_s06b_cast111_5028"
+           , "2021_05-01_ab_s06_surface-duplicate_cast036_5028")
+for (i in 1:length (badF)){
+  fNf <- fNf [-grep (badF [i], fNf)]
 }
+
+
 ## to make things run with SEABIRD loopedit
 
 

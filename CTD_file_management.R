@@ -15,7 +15,7 @@
 
 
 
-rm (list = ls())
+# rm (list = ls())
 
 # TESTrun <- TRUE
 # TESTrun <- FALSE
@@ -45,7 +45,8 @@ rm (x)
 
 rL <- function (f, p = NULL){ # recursive listing of files
   ## NULL because some files are .txt -- gobble all up
-  x <- list.files(paste0 ("~/GISdata/LCI/CTD-processing/Workspace/", f)
+  x <- list.files(paste0 (hexFileD, f)
+#  "~/GISdata/LCI/CTD-processing/Workspace/", f)
              , pattern = p, ignore.case = TRUE, recursive = TRUE
              , full.names = TRUE)
   # print (length (x))
@@ -71,6 +72,8 @@ rm (rL)
 ## bad files out
 fL <- fL [-grep ("Troubleshooting", fL)]
 ## manually remove duplicates -- if any -- none found
+
+
 
 ## check duplicates by name or sha256
 fDB <- data.frame (file = fL
@@ -263,6 +266,20 @@ for (i in 2:6){
 ## Required END line not found: -- SEABIRD XXX can fix this?? -- examine! XXX
 delFile ("2012-07-30-CookInlet-Tran6-cast091")  ## must be RegEx
 delFile ("2012_07-30_T6_S21_cast091.hex")
+
+
+## bad / surface or otherwise empty casts -- those that fail in CTD_cnv-Import.R
+## better to cut those out here (where other file management is done)
+## or in CTD_cnv-Import.R where failure occurs?
+## the later might give a chance to fix these ??
+# => move to CTD_cnv-Import.R!
+# delFile ("2012-10-29-cookinlet-tran4-cast065-s07_4141")
+# delFile ("2012_10-29_t4_s07b_cast065_4141")
+# delFile ("2013-04-19-cookinlet-tran6-cast076-s05b_5028")
+# delFile ("2013_04-19_t6_s05b_cast076_5028")
+# delFile ("2015_06-26_t9_s01b_cast117_5028")
+# delFile ("2015_06-26_t9_s06b_cast111_5028")
+# delFile ("2021_05-01_ab_s06_surface-duplicate_cast036_5028")
 
 
 
