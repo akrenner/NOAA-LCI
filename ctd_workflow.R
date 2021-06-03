@@ -1,5 +1,6 @@
 ##
 
+print (Sys.time())
 # CTD processing
 if (length (grep ("Martin", getwd())) > 0){
    setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -29,14 +30,24 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
 
 source ("CTD_file_management.R") ## QCQA, match hex with con file
+cat ("\n# END CTD_file_management.R #\n")
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
+cat ("\n# END CTD_hexconversion.R #\n")
 source ("CTD_cnv-Import.R")
+cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
+cat ("\n# END CTD_cleanup.R #\n")
 source ("datasetup.R")
+cat ("\n# END datasetup.R #\n")
 source ("anaCTD.R")              ## CTD profiles?
-source ("CTDwall.R")
-source ("ctd_T9-anomaly.R")
+cat ("\n# END anaCTD.R #\n")
+
+# source ("CTDwall.R")
+# source ("ctd_T9-anomaly.R")
 
 
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
+
+print (Sys.time())
+#EOF

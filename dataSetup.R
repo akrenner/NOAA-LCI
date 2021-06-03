@@ -50,7 +50,7 @@ PDF <- function (fN, ...){
   if (1){
     pdf (paste0 ("~/tmp/LCI_noaa/media/", fN, ".pdf"), ...)
   }else{
-    if (width < 50){
+    if (width > 50){
       width <- 100*width
       height <- 100*height
     }else{
@@ -184,8 +184,8 @@ tRange <- function (tstmp){
     ## only available for US, but 8x faster than webtide (with oce)
     Require ("rtide")
     kasbay <- tide_stations ("Kasitsna.*")
-    timetable <- data.frame (Station = kasbay, DateTime = seq (tstmp -12*3600, tstmp + 12*3600
-                                                             , by = 600)
+    timetable <- data.frame (Station = kasbay, DateTime =
+                               seq (tstmp -12*3600, tstmp + 12*3600, by = 600)
                              , stringsAsFactors = FALSE)
     ## return (diff (range (timetable$DateTime)))
     tid <- tide_height_data (timetable)
