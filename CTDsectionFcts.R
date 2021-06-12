@@ -14,9 +14,6 @@ pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
                   # , grid = TRUE
                   #, ztype = "contour"
                   , ztype = "image"
-                  #, ztype = "points"
-                  , ylim = c(0,max (physOc$bathy))
-                  , ... # zlim?
   ))
 #  title (main = levels (physOc$transDate)[i])
   #  if (cont){
@@ -48,7 +45,6 @@ pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
     distance <- distance [-cutS]
     zvar <- zvar [-cutS,]
   }
-
   cT <- try (contour (distance, depth, zvar, add = TRUE
                       , levels = cLev  ## error XXX
                       , col = "black", lwd = 2))
@@ -65,10 +61,11 @@ pSec1 <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){  # ylim = NU
     s <- try (plot (xsec, which = N
                   # , showBottom = FALSE
                   # , showBottom = "lines" #FALSE
-                  , axes = TRUE
+                  # , axes = TRUE
                   , zcol = zC
                   , stationTicks = TRUE
-                  , showStations = TRUE
+                  , showStations = TRUE  # or roll your own -- how?
+                  #, showBottom = TRUE # or could provide topo object
                   # , grid = TRUE
                   #, ztype = "contour"
                   , ztype = "image"

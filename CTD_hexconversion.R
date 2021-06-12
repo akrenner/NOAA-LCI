@@ -113,9 +113,9 @@ for (i in 1:length (conF)){
   ## the lines below would do the loop-edit, and binning by depth in SBEDataProcessing as well. This results about 10 files to
   ## fail (no data). Instead, do the loopedit within OCE (see CTD_cnv-Import.R). Bin-averaging by depth will run in CTD_cleanup.R
 
-  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")# new
-  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m") # new
-  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
+  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
+  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m")
+  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m")
   # l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
 #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
   ## add thermal mass or derived variables??

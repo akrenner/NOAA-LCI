@@ -498,7 +498,7 @@ tEr <- as.numeric (difftime (as.POSIXct ("2018-01-17 10:45:25 AKST")
                              , units = "secs"))
 fileDB$localTime [grep ("2018_01-17_", fileDB$file)] <- fileDB$localTime [grep ("2018_01-17_", fileDB$file)] + tEr
 
-## 2012-04-26 -- clock appears to be stuck -- fix here (rather than mess with files)
+## 2012-04-26 -- clock appears to be stuck -- fix here (rather than mess with files) ????
 fixN <- c ("2012_04-26_T9_S05_cast299.cnv", "2012_04-26_T9_S06_cast299.cnv"
            , "2012_04-26_T9_S07_cast299.cnv", "2012_04-26_T9_S08_cast299.cnv"
            , "2012_04-26_T9_S09_cast299.cnv", "2012_04-26_T9_S10_cast299.cnv")

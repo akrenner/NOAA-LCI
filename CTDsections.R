@@ -6,6 +6,15 @@
 
 
 
+## issues:
+## - fix O2perc scale across plots
+## - fix all scales across plots??
+## - add contours
+
+
+
+
+
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
 setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -28,7 +37,7 @@ require ('vizier')
 ### data prep
 require ("oce")
 ## define sections
-physOc$DateISO <- format (physOc$isoTime, "%Y-%m-%d")
+physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
 physOc$year <- factor (format (physOc$isoTime, "%Y"))
 ## combine CTD and station meta-data
@@ -118,10 +127,14 @@ rm (poP, bL)
 
 
 ################ define variables and their ranges #########################
-oVars <- c ("temperature", "salinity", "sigmaTheta", "chlorophyll"
-            , "turbidity", "PAR", "O2perc"
+oVars <- c ("temperature", "salinity" #, "sigmaTheta"
+            , "turbidity"
+            # , "logTurbidity"
+            , "chlorophyll"
+           , "logPAR"
             #, "logFluorescence"
-            , "logTurbidity", "logPAR")
+            , "O2perc"
+)
 
 ## see https://github.com/jlmelville/vizier
 # install.packages("remotes")
@@ -129,18 +142,21 @@ oVars <- c ("temperature", "salinity", "sigmaTheta", "chlorophyll"
 require ('vizier')
 oCol <- list (# turbo
   oceColorsTemperature
-  , oceColorsSalinity, oceColorsDensity
-              , oceColorsChlorophyll
-           , oceColorsTurbidity, oceColorsPAR, oceColorsOxygen
-           , oceColorsTurbidity, oceColorsPAR
-           )
-oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU", "Density_sigma.theta.kg.m.3"
-                        , "Fluorescence_mg_m3"
-                     , "Fluorescence_mg_m3", "PAR.Irradiance", "O2perc"
-                     , "logTurbidity", "logPAR")
-                 , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                  #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
-                  }))
+  , oceColorsSalinity #, oceColorsDensity
+  , oceColorsTurbidity
+  , oceColorsChlorophyll
+  , oceColorsPAR
+  , oceColorsOxygen
+)
+oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
+                        , "turbidity"
+                        # , "logTurbidity"
+                        , "Fluorescence_mg_m3" #, "PAR.Irradiance"
+                        , "logPAR"
+                        , "O2perc")
+                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
+                       #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
+                     }))
 if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
@@ -155,7 +171,9 @@ aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))}
 
 
 ## define surveys (by date)
-surveyW <- ifelse (duplicated(poAll$DateISO), 'NA', poAll$DateISO)
+# surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
+surveyW <- poAll$DateISO
+is.na (surveyW [which (duplicated (poAll$DateISO))]) <- TRUE
     # sqlite frame?  -- needs to be sequential (can't parallelize?)
 iX <- which (!is.na (surveyW))
 for (h in 1: (length (iX)-1)){
@@ -167,7 +185,7 @@ for (h in 1: (length (iX)-1)){
   }
 }
 ## fill last survey
-surveyW [is.na (surveyW)] <- max (poAll$DateISO, na.rm = TRUE)
+surveyW [which (is.na (surveyW))] <- max (poAll$DateISO, na.rm = TRUE)
 poAll$survey <- factor (surveyW); rm (surveyW, h)
 
 
@@ -185,7 +203,7 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 1}else{iX <- 1:length (levels (poAll$survey))}
+if (test){iX <- 4}else{iX <- 1:length (levels (poAll$survey))}
 for (sv in iX){
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
@@ -216,7 +234,7 @@ for (sv in iX){
     phT$transDate <- with (phT, paste0 ("T-", Transect, " ", DateISO))
 
 
-     if (length (levels (factor (phT$Match_Name))) > 2){ ## shouldn't be necessary -- what's up with Transect = NA??
+    if (length (levels (factor (phT$Match_Name))) > 2){ ## shouldn't be necessary -- what's up with Transect = NA??
       xC <- phT
       if (xC$Transect [1] %in% c("4", "9")){
         xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
@@ -234,16 +252,18 @@ for (sv in iX){
                    , " T-", levels (s$Transect)[tn]
                    # , "%02d
                    ,".png")
-           , height = 8.5*200, width = 11*200, res = 300)
+           # , height = 8.5*200, width = 11*200, res = 300  # landscape
+           , height = 11*200, width = 8.5*200, res = 300 # portrait
+      )
 
       # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/", oVars [ov]
       #              , " T-", levels (poAll$Transect)[tn]
       #              # , "_", levels (physOcY$year)[k]
       #              , ".pdf")
       #      , height = 8.5, width = 11)
-      layout (matrix (1:12, 4, byrow = FALSE)) # across, then down
-
-
+      #      layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
+      layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
+      #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
 
       # stn <- factor (sprintf ("%02d", as.numeric (xC$Station)))
@@ -259,9 +279,10 @@ for (sv in iX){
 
       for (ov in 1:length (oVars)){
         pSec1 (xCo, N = oVars [ov], zC = oCol [[ov]]
-              # , zlim = oRange [ov,]
-              #               , xlim = xRange []  # range of the Transect
-              # , custcont = pretty (oRange [ov,], 10)
+               # , zlim = oRange [ov,]
+               #               , xlim = xRange []  # range of the Transect
+               # , custcont = pretty (oRange [ov,], 10)
+               # , axes = FALSE  ## not worth the hassle of messing with it
         )
         # if (ov == 1){
         #   title (main = paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv]), col = "blue")
@@ -269,37 +290,37 @@ for (sv in iX){
       }
       mtext (paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
              , side = 3, outer = TRUE, line = -0.9, cex = 0.7)
-      plot (xCo
+      plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
             , which = 99
             , coastline = "coastlineWorldFine"
             , showStations = TRUE
             , gird = TRUE
-            , map.xlim = c(-154, -151)
-            , map.ylim = c(57.5, 60.1)
-            , clatitude = 59.4
-            , clongitude = -152
-            , span = 250
+            , map.xlim = range (poAll$longitude_DD) # +c(-0.5, 0.5)
+            # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
+            ## , map.xlim = c(-154, -151)
+            ## , map.ylim = c(57.5, 60.1)
+             , clatitude = mean (range (poAll$latitude_DD)) # 59.4
+             , clongitude = mean (range (poAll$longitude_DD)) # -152
+             , span = 200
+            # , showSpine = TRUE
       )
       plot (xCo
             , which = 99
-            , coastline = "coastlineWorldFine"
+            , coastline = "coastlineWorldFine"  ## add hi-res topography?
             , showStations = TRUE
+            , showStart = TRUE
             , gird = TRUE
             # , col = "red"
       )
       dev.off()
-      if (tn %% 5 == 0){
-        cat (tn, " ")
-        if (tn %% 100 == 0) cat ("\n")
-      }
     }
   }
 }
 
-
 physOc <- poAll
 if (!test){
-  rm (xCo, tn, oVars, ov, poAll, pSec)
+ # rm (xCo, tn, oVars, ov, poAll, pSec)
+  gc()
 }
 
 

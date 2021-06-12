@@ -444,8 +444,9 @@ physOc$File.Name <- factor (physOc$File.Name)
 rm (gC)
 
 
-## fluorescence -- has to be always positive!  -- about 150 readings
+## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
+is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
 
 
 ## plot all casts: depth-density, temp, salinity
