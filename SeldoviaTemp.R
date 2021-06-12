@@ -77,7 +77,7 @@ sldvia <- rbind (sldvia, sldviaS, homer, homerS); rm (homer, homerS)
 
 
 # sldvia <- qaqc (sldvia, qaqc_keep = "0")  # scrutinize this further?
-
+sldvia$temp <- ifelse (sldvia$temp < 5, NA, sldvia$temp)  # -99 = NA code
 names (sldvia) <- tolower (names (sldvia))
 
 if (0){
@@ -135,7 +135,7 @@ tempM$TempAnom <- tempM$temp - (moMean$temp [match (tempM$month, moMean$month)])
 rm (moMean)
 
 # save (tempM, file = "~/tmp/LCI_noaa/cache/tempAnomalyMonth.RData")
-save.image ("~/tmp/LCI_noaa/cache/SeldTemp.RData")
+save.image ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## pass this on to annual-salinity.R etc.
 ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")
 
 
@@ -506,7 +506,7 @@ pdf ("~/tmp/LCI_noaa/media/2019/Seldovia_tempTS_tbats.pdf")
 plot (tB)
 plot (tARMA)
 dev.off()
-save.image ("~/tmp/LCI_noaa/cache/SeldTemp.RData")
+save.image ("~/tmp/LCI_noaa/cache/SeldTempx.RData")
 
 
 

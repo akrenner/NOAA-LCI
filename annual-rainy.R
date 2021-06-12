@@ -65,7 +65,9 @@ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE"
 par (mar = c (3,4,1,4)+0.1)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
-       , MA = TRUE)
+       , MA = TRUE
+       , pastYear = FALSE, newYear = FALSE)
+if (SWMP){title (main = "Precipitation at Homer Spit")}
 # box()
 ## add inch scale
 iAxis (tDay$totprcp, lab = "daily precipitation [inch]")

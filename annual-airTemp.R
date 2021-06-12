@@ -8,9 +8,10 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
-currentCol <- c("red", "magenta", "purple")
+currentCol <- c("red" , "magenta"
+                , "purple")
 SWMP <- TRUE
-# SWMP <- FALSE
+SWMP <- FALSE
 
 
 
@@ -29,10 +30,18 @@ if (SWMP){
 
 ## QCQA moved to windTrend.R
 hmr$atemp <- ifelse (hmr$atemp < -30, NA, hmr$atemp)
-
+hmr$atemp <- ifelse (hmr$atemp < 0 & hmr$month == 7, NA, hmr$atemp)  # 2005-07-29, -17.8 C
+hmr$atemp <- ifelse (hmr$atemp > 29, NA, hmr$atemp) # 12.8, 13.9, 11.1, 29.4, 8.9, 8.9, 8.3 -- 2002-09-07
 
 ## units: use both, C and F (F = 2nd axis on the right)
-
+if (0){
+  hmr$yearF <- factor (hmr$year)
+  plot (atemp~jday,data = hmr, type = "n")
+  for (i in 1:length (levels (hmr$yearF))){
+    #  plot (atemp ~ jday, data = hmr, subset = hmr$yearF == levels (hmr$yearF)[i], col = i, type = "l")
+    lines (atemp ~ jday, data = hmr, subset = hmr$yearF == levels (hmr$yearF)[i], col = i)
+  }
+}
 
 ## aggregate data
 tDay <- prepDF (varName = "atemp", dat = hmr, maO = maO, qntl = qntl)
@@ -47,9 +56,10 @@ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
 par (mar = c(4,4,1,4))
 aPlot (tDay, "atemp"
        , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
-       , currentCol = currentCol, MA = TRUE)
-# mtext ("Fahrenheit", side = 4, line = par ("mgp")[1])
-# fAxis(with (tDay, c(max_atemp, min_atemp, cYMA_atemp, pYMA_atemp)))
+       , currentCol = currentCol, MA = TRUE
+       , pastYear = TRUE, newYear = FALSE
+       )
+if (SWMP){title (main = "Air Temperature at Homer Spit")}else{title (main = "Air Temperature at Homer Airport")}
 # for (i in 1:length (levels (factor (hmr$year)))){
 #   lines (atemp~jday, subset (hmr, year == levels (factor (hmr$year))[i]))
 # }
@@ -61,6 +71,7 @@ cLegend ("bottom", inset = 0.05
          , cYcol = currentCol
          , title = paste (maO, "day moving average")
          , qntl = qntl
+         , pastYear = TRUE, newYear = FALSE
 )
 dev.off()
 

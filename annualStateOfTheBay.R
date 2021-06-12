@@ -11,7 +11,7 @@ print (sT <- Sys.time())
 
 ## plot SWMP weather data for annual state of the bay report
 source ("SeldoviaTemp.R")
-source ("annual-wind.R")
+source ("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
 source ("annual-rainy.R")

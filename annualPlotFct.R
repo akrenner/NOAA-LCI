@@ -36,13 +36,14 @@ meanCol <- bCol [4]
 # plot (1:12, pch = 19, cex = 3, col = brewer.pal (12, "Paired"))
 
 
-plotSetup <- function(longMean, current, ...){
+plotSetup <- function(longMean, current, ylab = NULL, ...){
   plot (1:366
         , seq (min (c(longMean, current), na.rm = TRUE)
                , max (c(longMean, current), na.rm = TRUE), length.out = 366)
         , type = "n", axes = FALSE
         , xlim = c(5,355)
-        , xlab = "", ...
+        , xlab = ""
+        , ylab = ylab
   )
   axis (2)
   axis (1, at = 15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
@@ -56,25 +57,27 @@ annualPlot <- function (longMean, percL, percU, current  ## current may be a N x
                         , jday , perc2L = NA, perc2U = NA, maxV = NA, minV = NA
                         , ylab = ""
                         , currentCol # = currentCol # "red"
+                        , pastYear = TRUE, newYear = FALSE
                         , ...){
   plotSetup (longMean, current, ylab = ylab, ...)
 
   addGraphs (longMean, percL, percU, current, jday, perc2L = NA, perc2U = NA, maxV = NA, minV = NA
-             , currentCol)
+             , currentCol, pastYear = pastYear, newYear = newYear)
   # axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
   return()
 }
 
 addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 2 matrix
-                        , jday , perc2L = NA, perc2U = NA, maxV = NA, minV = NA
-                        , currentCol # = currentCol # "red"
-                        ){
+                       , jday , perc2L = NA, perc2U = NA, maxV = NA, minV = NA
+                       , currentCol # = currentCol # "red"
+                       , pastYear = TRUE, newYear = FALSE, plotRange = TRUE
+){
   if (0){  # abandone range
-  # if (!all (is.na (maxV)) && !all (is.na (minV))){
+    # if (!all (is.na (maxV)) && !all (is.na (minV))){
     pCo <- data.frame (x = c(jday, rev (jday))
                        , y = c (maxV, rev (minV)))
-   # polygon (pCo, col = "lightyellow", border = "yellow")
-     polygon (pCo, col = rangCol [1], border = rangCol [2])
+    # polygon (pCo, col = "lightyellow", border = "yellow")
+    polygon (pCo, col = rangCol [1], border = rangCol [2])
   }
 
   pCo <- data.frame (x = c (jday, rev (jday))
@@ -85,17 +88,23 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
     pCo <- data.frame (x = c (jday, rev (jday))
                        , y = c(perc2L, rev (perc2U)))
     pCo <- subset (pCo, !is.na (y))
-     polygon (pCo, col = qantCol [2], border = NA)
-      }else{
-        polygon (pCo, col = qantCol [1], border = NA)
-      }
-  lines (longMean~jday, col = meanCol, lwd = 3)
-  if (length (currentCol) < 1){
-    if (class (current) == "matrix"){current <- as.numeric (current [,1])}
-    lines (current~jday, col = currentCol, lwd = 4)
+    polygon (pCo, col = qantCol [2], border = NA)
   }else{
+    if (plotRange){
+      polygon (pCo, col = qantCol [1], border = NA)
+    }
+  }
+  lines (longMean~jday, col = meanCol, lwd = 3)
+
+  # if (length (currentCol) < 1){
+  #   if (class (current) == "matrix"){current <- as.numeric (current [,1])}
+  #   lines (current~jday, col = currentCol, lwd = 4)
+  # }else{
+  if (pastYear){
     lines (current [,3]~jday, col = currentCol [3], lwd = 2) #, lty = "dashed") ## new: previous year
-    lines (current [,1]~jday, col = currentCol [1], lwd = 4)
+  }
+  lines (current [,1]~jday, col = currentCol [1], lwd = 4)
+  if (newYear){
     lines (current [,2]~jday, col = currentCol [2], lwd = 4)
   }
   axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
@@ -103,10 +112,12 @@ addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 
 }
 
 
-cLegend <- function (..., mRange = NULL, currentYear = NULL
+cLegendO <- function (..., mRange = NULL, currentYear = NULL
                      , cYcol # = currentCol
                      , qntl = NULL
-                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL){ # sYears = ??
+                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL
+                     , pastYear = FALSE, newYear = TRUE
+){ # sYears = ??
   ## combined legend for both box and line elements.
   ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
   if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
@@ -114,22 +125,73 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
   }
   if (length (cYcol) > 1){
     currentYear <- c (currentYear - 1, currentYear, currentYear + 1)
-    }
+  }
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , currentYear
                        , sYears
-                       , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
+                       , "10-90 percentile"
+                       # , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
                        # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
-          , lty = c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
+           , lty = c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
           , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
           , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
-          , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]
-          )
-  #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
+          , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
+          #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
           , col = c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+  )
+}
+
+
+cLegend <- function (..., mRange = NULL, currentYear = NULL
+                     , cYcol # = currentCol
+                     , qntl = NULL
+                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL
+                     , pastYear = TRUE, newYear = FALSE
+){ # sYears = ??
+  ## combined legend for both box and line elements.
+  ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
+  if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
+    stop ("extra line length not consistent")
+  }
+  if (pastYear && newYear){
+    yT <- c (currentYear-1, currentYear, currentYear + 1)
+    bg <- c (NA, NA, NA, NA, qantCol [1]) #c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]) ## XX
+    lC <- c (meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+    lW <- c (3, 2, 4, 4)
+  }else if (pastYear && !newYear){
+    yT <- c (currentYear -1, currentYear)
+    bg <- c (NA, NA, NA, qantCol [1])
+    lC <- c (meanCol, cYcol [c (3, 1)], meanCol, sLcol, "black")
+    lW <- c (3, 2, 4)
+  }else if (!pastYear && newYear){
+    yT <- c (currentYear, currentYear + 1)
+    bg <- c (NA, NA, NA, qantCol [1])
+    lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
+    lW <- c (3, 4, 4)
+  }else{
+    yT <- currentYear
+    bg <- c (NA, NA, qantCol [1])
+    lC <- c (meanCol, cYcol [c (1)], meanCol, sLcol, "black")
+    lW <- c (3, 4, 4)
+  }
+  legend (..., bty = "n"
+          , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
+                       , yT
+                       , "10th-90th percentile"
+          )
+          , lty = c (rep (1, length (yT)+1), 0)
+          , lwd = c (lW, 0)
+          , pch = c (NA, rep (NA, length (yT)), 22)
+                 #   , lty = c(1, 1, rep (1, length (yT)-1), sLty, 0)
+      #    , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
+      #    , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
+          , pt.cex = 2
+          , pt.bg = bg # c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
+          #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
+          , col = lC #     c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
   )
 }
 
@@ -367,6 +429,7 @@ getSWMP <- function (station){
     }
   }
   ## fixGap() here??
+  ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
   save (smp, file = paste0 (cacheFolder, "/", station, ".RData"))
   return (smp)
 }

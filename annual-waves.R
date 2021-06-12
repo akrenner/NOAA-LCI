@@ -205,6 +205,7 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 ## order: current, present, previous
 # currentCol <- c("darkblue", "blue", "lightblue")
 currentCol <- c("black", "blue", "lightblue")
+currentCol <- c("blue", "lightblue", "black")
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # maO <- 3 # 30
@@ -269,6 +270,7 @@ aPlot (tDayP, "dominant_wpd", ylab = "dominant wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
+       , pastYear = FALSE, newYear = TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -278,12 +280,14 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
+         , pastYear = FALSE, newYear = TRUE
 )
 tDayP <- prepDF (dat = tDay, varName = "average_wpd") #, maO = 1)
 aPlot (tDayP, "average_wpd", ylab = "average wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
+       , pastYear = FALSE, newYear = TRUE
 )
 box()
 cLegend ("bottomleft"
@@ -291,6 +295,7 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
+         , pastYear = FALSE, newYear = TRUE
 )
 dev.off()
 rm (tDayP)
@@ -528,25 +533,49 @@ sTday <- prepDF(wDB, "surfs"
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
 require ("jpeg")
-img <- readJPEG ("~/My Pictures/surf/_J5A9758-s.jpg", native = TRUE)
+# img <- readJPEG ("~/My Pictures/surf/_J5A9758-s.jpg", native = TRUE) # fall
+img <- readJPEG ("~/My Pictures/surf/_J5A9729-sc.jpg", native = TRUE)
 lim <- par()
-rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4])
-addGraphs (longMean = sTday$MA_surfs
-           , percL = sTday$maL1_surfs
-           , percU = sTday$maU1_surfs
-           , current = cbind (sTday$pYMA_surfs,
-                              sTday$cYMA_surfs,
-                              sTday$pcYMA_surfs)
-           , jday = sTday$jday, maxV = NA, minV = NA
-           , currentCol = currentCol # = currentCol # "red"
+# img <- img^0.5
+# require ("magick")
+# img <- image_contrast(img, sharpen = 0.5)
+
+rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4]) # covers up plot above. Just add lines now
+# extending limits will not plot past the plotting area, but result in crop
+# on special request, only lines, no percentile polygon
+box()
+lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
+lines (cYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
+lines (pYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
+# lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
+legend ("top", title = paste0 (maO, "day moving average")
+        , bty = "0"
+        , box.col = "gray"
+        , bg = rgb (200,200,200, max = 255, alpha = 125, names = "tgray")
+        , legend = c(paste0 ("mean [", min (as.numeric (format (wDB$datetimestamp, "%Y")))
+                             , "-", currentYear-1, "]"), currentYear, currentYear + 1)
+        , lwd = c (3,4)
+        , col = c ("black", currentCol [1], currentCol [2])
 )
-cLegend ("top"
-         , qntl = qntl, title = paste (maO, "day moving average")
-         , title.adj = 0.5, currentYear = currentYear
-         , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
-         , cYcol = currentCol
-         , text.col = "blue"
-)
+
+# addGraphs (longMean = sTday$MA_surfs
+#            , percL = sTday$maL1_surfs
+#            , percU = sTday$maU1_surfs
+#            , current = cbind (sTday$pYMA_surfs,
+#                               sTday$cYMA_surfs,
+#                               sTday$pcYMA_surfs)
+#            , jday = sTday$jday, maxV = NA, minV = NA
+#            , currentCol = currentCol # = currentCol # "red"
+#            , pastYear = FALSE, newYear = TRUE
+# )
+# cLegend ("top"
+#          , qntl = qntl, title = paste (maO, "day moving average")
+#          , title.adj = 0.5, currentYear = currentYear
+#          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
+#          , cYcol = currentCol
+#          , text.col = "blue"
+#          , pastYear = FALSE, newYear = TRUE
+# )
 dev.off()
 
 

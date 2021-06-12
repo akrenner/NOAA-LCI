@@ -81,12 +81,13 @@ if (0){
 currentCol <- c ("red", "pink", "orange")
 
 # tScale <- c ("celsius", "fahrenheit")
-instSite <- c ("sldviaS", "sldvia", "homerS")
+instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
 # for (i in 1:length (tScale)){
   for (j in 1: length (instSite)){
-    tDay <- prepDF (dat = list (sldviaS, sldvia, homerS)[[j]], varName = "temp" # c ("temp", "tempF")[i]
+    tDay <- prepDF (dat = list (sldviaS, sldvia, homerS, homer)[[j]], varName = "temp" # c ("temp", "tempF")[i]
                     , qntl = qntl, maO = maO)
-    pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer")[j]
+    pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
+                                                              "Temp-Deep-Homer")[j]
                  # , c ("-C", "-F")[i]
                  , ".pdf"), width = 9, height = 6)
     par (mar = c(3,4,2,4))
@@ -95,12 +96,13 @@ instSite <- c ("sldviaS", "sldvia", "homerS")
            #             , expression('Temperature'~'['*degree~'F'*']'))[i]
     aPlot (tDay, "temp", currentCol = currentCol
            , ylab = expression('Temperature'~'['*degree~'C'*']')
-           , main = c("Seldovia SST", "Seldovia bottom temperature", "Homer SST")[j]
            )
+    title (main = c("Seldovia SST", "Water temperature at Seldovia Harbor, near the bottom", "Homer SST", "Homer bottom temperature")[j])
+
     fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
     cLegend ("topleft", inset = 0.05
              , currentYear = currentYear
-             , mRange = c (min (list (sldviaS, sldvia, homerS)[[j]]$year), currentYear -1)
+             , mRange = c (min (list (sldviaS, sldvia, homerS, homer)[[j]]$year), currentYear -1)
              , cYcol = currentCol
              , title = paste (maO, "day moving average")
              , qntl = qntl
