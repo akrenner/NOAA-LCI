@@ -9,7 +9,7 @@ if (!require("pacman")) install.packages("pacman"
 # pacman::p_load(package1, package2, package_n)
 # pacman::p_load ("parallel")
 Require <- pacman::p_load
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 Require ("rnoaa")
 ## see https://recology.info/2015/07/weather-data-with-rnoaa/

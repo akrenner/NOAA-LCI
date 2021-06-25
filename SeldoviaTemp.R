@@ -24,7 +24,7 @@ SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # work
 
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
+#  setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 

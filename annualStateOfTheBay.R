@@ -2,6 +2,14 @@
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+#  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+
+
+
+# Surf - legend appears to have 2020 and 2021 reversed.
+# Precip - remove 2019 from legend
+# Wave height - remove 2019, put 2021 back in.
+
 rm (list = ls())
 
 print (sT <- Sys.time())

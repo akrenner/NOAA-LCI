@@ -1,7 +1,7 @@
 
 ## air temperature -- standardized plot
 rm (list = ls())
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either

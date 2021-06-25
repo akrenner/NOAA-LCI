@@ -3,7 +3,7 @@
 ## wave height from bouy data ##
 ################################
 
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# setwd("~/myDocs/amyfiles/NOAA-LCI/")
 rm (list = ls())
 
 ## also wave direction?
@@ -110,7 +110,7 @@ is.na (wDB$average_wpd)[which (wDB$average_wpd == 99)] <- TRUE  # dominant wave 
 # Aug <- isd ("994700", wban = 99999, year = 2020)
 tl <- try (load ("~/tmp/LCI_noaa/cache/noaa-Augustine.RData"))
 if (class (tl) == "try-error"){
-  aB <- lapply (as.numeric (levels (factor (format (aDB$datetimestamp, "%Y"))))
+  aB <- lapply (as.numeric (levels (factor (format (wDB$datetimestamp, "%Y"))))
                 , function (x){try (isd ("994700", wban = 99999, year = x))}
   )
   pF <- function (df){
@@ -225,6 +225,7 @@ tDayW <- prepDF (dat = tDay, varName = "wave_height"
 )
 
 
+dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", recursive = TRUE, showWarnings = FALSE)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
 par (mar = c(3,4,1,4)) # space for 2nd y-axis (feet)
 

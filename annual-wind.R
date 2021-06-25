@@ -5,7 +5,8 @@
 
 
 rm (list = ls())
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 
 
 ## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
