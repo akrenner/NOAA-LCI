@@ -239,10 +239,9 @@ rm (past365, c365, pp365)
 
 ## weekly summary of annual data -- for wind uv only
 # tWeek <- aggregate (wspd~week, hmr, meanNA)
-tWeek <- aggregate (cbind (jday, uw, vw, p365uw, p365vw)~I(factor (jday %/% 7)), data = tDay, meanNA)
+tWeek <- aggregate (cbind (jday, uw, vw #, p365uw, p365vw  ## p365uw and vw are all NAs -- still needed?
+                           )~I(factor (jday %/% 7)), data = tDay, meanNA)
 names (tWeek)[1] <- "week"
-
-
 
 
 
@@ -253,7 +252,11 @@ names (tWeek)[1] <- "week"
 ## example
 # cE <- c (358, 2, 89, 177, 92, 265, 46, 20); data.frame (cDir (cE), cE)
 
-tDay$p365wCar <- cDir (tDay$p365wdir) # cardinal directions
+if (all (is.na (tDay$p365wdir))){
+  tDay$p365wCar <- rep (NA, nrow (tDay))  # 2020 has only NAs
+}else{
+  tDay$p365wCar <- cDir (tDay$p365wdir) # cardinal directions  ## Error in 2020: all NAs.
+}
 # rm (cDir)
 
 
