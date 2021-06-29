@@ -9,6 +9,7 @@ maO <- 30  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c("blue", "lightblue", "black")
+currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
 
@@ -84,16 +85,18 @@ text (tDay$jday, ifelse (tDay$pY_totprcp > 10, tDay$pYMA_totprcp + 0.2, NA), lab
 # rm (hgt, wdh)
 
 ## legend
-bP <- legend ("topleft", bty = "n", legend = "")
+bP <- legend ("topleft", bty = "n", legend = "") # to get coordinates
 # bP <- cLegend ("topleft" # x = 140, y = max (tDay$totprcp, na.rm = TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
 bP <- cLegend (x = bP$rect$left + 55, y = bP$rect$top
                , qntl = qntl, title = paste (maO, "day moving average")
                , title.adj = 0.5, currentYear = currentYear
                , mRange = c (min (hmr$year), currentYear-1)
                , cYcol = currentCol
+               , pastYear = FALSE, newYear = FALSE
 )
 #  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
-legend (x = bP$rect$left+2, y = bP$rect$top - 1.2, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
+legend (x = bP$rect$left+2, y = bP$rect$top - 0.9 # use -1.2 when plotting 2 years
+        , legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
 
 ## totals
 xAl <- bP$rect$left - 50; yAl <- bP$rect$top + 0.3

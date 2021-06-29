@@ -232,7 +232,8 @@ par (mar = c(3,4,1,4)) # space for 2nd y-axis (feet)
 aPlot (tDayW, "wave_height", ylab = "wave height [m]"
        , currentCol = currentCol
        , MA = TRUE
-#       , ylim = c (0,1.2)
+       #       , ylim = c (0,1.2)
+       , pastYear = FALSE, newYear = TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -242,6 +243,7 @@ cLegend ("top"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
+         , pastYear = FALSE, newYear = TRUE
 )
 
 wFt <- tDayW$wave_height / 0.3048
@@ -457,7 +459,8 @@ sTday <- prepDF(wDB, "surfs"
                 , sumFct = function (x){maO * any (x >= 1)}
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
-       , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
+       , currentCol = currentCol, MA = TRUE
+       , main = paste ("Days per", maO, "days with surf"))
 cLegend ("top"
          , qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = 0.5, currentYear = currentYear
@@ -535,7 +538,8 @@ aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
 require ("jpeg")
 # img <- readJPEG ("~/My Pictures/surf/_J5A9758-s.jpg", native = TRUE) # fall
-img <- readJPEG ("~/My Pictures/surf/_J5A9729-sc.jpg", native = TRUE)
+# img <- readJPEG ("~/My Pictures/surf/_J5A9729-sc.jpg", native = TRUE)
+img <- readJPEG ("pictograms/_J5A9729-sc.jpg", native = TRUE)
 lim <- par()
 # img <- img^0.5
 # require ("magick")
@@ -546,8 +550,8 @@ rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4]) # covers up pl
 # on special request, only lines, no percentile polygon
 box()
 lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
-lines (cYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
-lines (pYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
+lines (cYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
+lines (pYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
 # lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
 legend ("top", title = paste0 (maO, "day moving average")
         , bty = "0"

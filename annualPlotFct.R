@@ -166,16 +166,17 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
     bg <- c (NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c (3, 1)], meanCol, sLcol, "black")
     lW <- c (3, 2, 4)
-  }else if (!pastYear && newYear){
+  }else if (!pastYear && newYear){ # current and new year
     yT <- c (currentYear, currentYear + 1)
     bg <- c (NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
     lW <- c (3, 4, 4)
-  }else{
+  }else{ # only current year
     yT <- currentYear
     bg <- c (NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c (1)], meanCol, sLcol, "black")
     lW <- c (3, 4, 4)
+    lW <- c (4,4)
   }
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
