@@ -58,18 +58,30 @@ cOffY <- ifelse (SWMP, 2005, 1970)
 yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY)&(year < currentYear))
                   , FUN = sum, na.rm = TRUE)
 ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm = TRUE)
+
+## violin plot of annua rain
+if (0){
+  require ("vioplot")
+  yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
+                    , FUN = sum, na.rm = TRUE)
+  x <- vioplot(yA2$totprcp)
+  cYtotprcp <- yA2$totprcp [which (yA2$year == currentYear)]
+  lines (c(0.9, 1.1), rep (cYtotprcp,2), col = "red")
+  # points (0.5, cYtotprcp
+  #         , col  =  "red", pch = 16)
+  text (1.15, cYtotprcp, currentYear, col = "red")
+}
 rm (aF, yA2, cOffY)
 
 
 ## plot
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
-par (mar = c (3,4,1,4)+0.1)
+par (mar = c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
        , MA = TRUE
        , pastYear = FALSE, newYear = FALSE)
 if (SWMP){title (main = "Precipitation at Homer Spit")}
-# box()
 ## add inch scale
 iAxis (tDay$totprcp, lab = "daily precipitation [inch]")
 
@@ -108,7 +120,7 @@ text (xAl + 35, yAl
                 , qntl [1]*100, "%-ile]"
       )
       , col = "darkgray", pos = 4)
-# box()
+box()
 dev.off()
 
 rm (bP, xAl, yAl)

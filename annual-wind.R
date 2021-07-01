@@ -147,6 +147,19 @@ windSum$mean <- round (windSum$mean, 1)
 ## number of gales and storms per year
 print (windSum)
 rm (windSum)
+
+if (0){ ## violin plot of frequency of storms/gales
+  yGale <- aggregate  (maxwspd~year
+                       , data = aggregate (maxwspd~jday+year, data = hmr
+                                           , FUN = function (x){any (x > stormT)}
+                       )
+                       , FUN = sum)
+  require("vioplot")
+  vioplot (yGale$maxwspd, ylab = "N gales")
+  ## abline (h = yGale$maxwspd [yGale$year == currentYear])
+  points (1, yGale$maxwspd [yGale$year == currentYear]
+          , pch = 16, col = "red", )
+}
 ## end of wind summary
 
 
