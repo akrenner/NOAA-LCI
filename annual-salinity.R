@@ -97,7 +97,7 @@ instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
     aPlot (tDay, "temp", currentCol = currentCol
            , ylab = expression('Temperature'~'['*degree~'C'*']')
            )
-    title (main = c("Seldovia SST", "Water temperature at Seldovia Harbor, near the bottom", "Homer SST", "Homer bottom temperature")[j])
+    title (main = c("Seldovia SST", "Near bottom water temperature at Seldovia Harbor", "Homer SST", "Homer bottom temperature")[j])
 
     fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
     cLegend ("topleft", inset = 0.05

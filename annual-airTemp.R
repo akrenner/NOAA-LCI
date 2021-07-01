@@ -53,7 +53,7 @@ dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE
            , recursive = TRUE)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
              , ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
-par (mar = c(4,4,1,4))
+par (mar = c(4,4,2,4))
 aPlot (tDay, "atemp"
        , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
        , currentCol = currentCol, MA = TRUE
