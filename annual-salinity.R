@@ -77,8 +77,8 @@ if (0){
 
 
 ## for completeness -- SST temperature
-# currentCol <- c ("navyblue", "aquamarine")
-currentCol <- c ("red", "pink", "orange")
+currentCol <- c ("navyblue", "aquamarine", "lightblue")
+# currentCol <- c ("red", "pink", "orange")
 
 # tScale <- c ("celsius", "fahrenheit")
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
@@ -97,7 +97,7 @@ instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
     aPlot (tDay, "temp", currentCol = currentCol
            , ylab = expression('Temperature'~'['*degree~'C'*']')
            )
-    title (main = c("Seldovia SST", "Near bottom water temperature at Seldovia Harbor", "Homer SST", "Homer bottom temperature")[j])
+    title (main = c("Seldovia SST", "Bottom water temperature at Seldovia Harbor", "Homer SST", "Homer bottom temperature")[j])
 
     fAxis(c (0, 15), mT = expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
     cLegend ("topleft", inset = 0.05

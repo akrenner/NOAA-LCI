@@ -64,7 +64,7 @@ if (0){
   require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
                     , FUN = sum, na.rm = TRUE)
-  x <- vioplot(yA2$totprcp)
+  x <- vioplot(yA2$totprcp, ylab = "annual precipitation [mm]")
   cYtotprcp <- yA2$totprcp [which (yA2$year == currentYear)]
   lines (c(0.9, 1.1), rep (cYtotprcp,2), col = "red")
   # points (0.5, cYtotprcp
