@@ -1,9 +1,11 @@
 #! /usr/bin/env Rscript
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-#  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-
+if (grep ("darwin", version$os) == 1){
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}else{
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}
 
 
 # Surf - legend appears to have 2020 and 2021 reversed.

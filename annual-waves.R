@@ -366,7 +366,9 @@ wDB$surf <- ifelse (wDB$wave_height > 1.0, wDB$surf + (wDB$wave_height-1)*3, wDB
 wDB$surf <- ifelse (wDB$dominant_wpd > 6, wDB$surf + (wDB$dominant_wpd - 6)/2, wDB$surf) # make this gradual?
 # wDB$surf <- ifelse (wDB$wave_dir_cat == "SW", wDB$surf + 1, wDB$surf)
 wDB$surf <- ifelse ((220 < wDB$mean_wave_dir) & (wDB$mean_wave_dir < 270), wDB$surf + 1, wDB$surf)
-wDB$surf <- ifelse (wDB$tideHght > 4.5, wDB$surf + 1, wDB$surf) # according to Vince, 16'
+# wDB$surf <- ifelse (wDB$tideHght > 4.5, wDB$surf + 1, wDB$surf) # according to Vince, 16'
+wDB$surf <- ifelse (wDB$tideHght > 2, wDB$surf + 1, wDB$surf) # according to Vince, 16'
+
 # wDB$surf <- ifelse (wDB$windDir)
 ## wind: onshore / offshore
 wDB$surf <- ifelse ((120 < wDB$windDir) & (wDB$windDir < 270) & (wDB$windspd > 5)
@@ -521,7 +523,6 @@ print (sEvent)
 
 
 ### the plot to keep for the report
-
 ## try to do it all in R
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
 #      , width = 8, height = 6)
@@ -556,7 +557,9 @@ lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
 lines (cYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
 lines (pYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
 # lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
-legend ("top", title = paste0 (maO, "day moving average")
+lL <- legend ("top", bty = "n", legend = "")
+# legend ("top", title = paste0 (maO, "day moving average")
+legend (lL$rect$left - 72, lL$rect$top - 0.1
         , bty = "0"
         , box.col = "gray"
         , bg = rgb (200,200,200, max = 255, alpha = 125, names = "tgray")
