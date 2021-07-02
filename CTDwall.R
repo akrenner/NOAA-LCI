@@ -21,60 +21,6 @@ require ("oce")
 load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 
 source ("CTDsectionFcts.R")
-# pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
-#   s <- try (plot (xsec, which = N
-#                   # , showBottom = FALSE
-#                   # , showBottom = "lines" #FALSE
-#                   , axes = TRUE
-#                   , zcol = zC
-#                   , stationTicks = TRUE
-#                   , showStations = TRUE
-#                   # , grid = TRUE
-#                   #, ztype = "contour"
-#                   , ztype = "image"
-#                   #, ztype = "points"
-#                   , ylim = c(0,max (physOc$bathy))
-#                   , ... # zlim?
-#   ))
-#   title (main = levels (physOc$transDate)[i])
-#   #  if (cont){
-#     distance <- xsec [["distance", "byStation"]]
-#   depth <- xsec [["station", 1]][["depth"]]
-#   zvar <- matrix (xsec [[N]], byrow = TRUE, nrow = length (xsec [["station"]]))
-#
-#   if (0){  ## need to get clean data in first --- binned by depth, not pressure
-#     # deepest <- max (sapply (1:length (xsec@data$station), function (x){length (xsec@data[[1]][[x]]@data$scan)}))
-#     deeps <- sapply (1:length (xsec@data$station), function (x){length (xsec [["depth", "byStation"]][[x]])})
-#     depth <- xsec [["station", which.max (deeps)]][["depth"]] ## depth needs to be gridded first?!?
-#
-#     zvar <- sapply (1:length (xsec@data$station), function (x){
-#       out <- xsec [[N, "byStation"]][[x]]
-#       length (out) <- max (deeps)
-#       out
-#     }
-#     )
-#   }
-#
-#   if (length (custcont) > 1){
-#     cLev <- custcont
-#   }else{
-#     cLev <- pretty (range (as.numeric (zvar), na.rm = TRUE), 4)
-#   }
-#   ## dirty hack -- still got to find out why some distances are NA! XXX
-#   if (any (is.na (distance))){
-#     cutS <- which (is.na (distance))
-#     distance <- distance [-cutS]
-#     zvar <- zvar [-cutS,]
-#   }
-#
-#   cT <- try (contour (distance, depth, zvar, add = TRUE
-#                       , levels = cLev  ## error XXX
-#                       , col = "black", lwd = 2))
-#   if (class (cT) == "try-error"){
-#     legend ("bottomleft", legend = "no contours")
-#   }
-#   #if (cont){return (s)}
-# }
 
 
 
@@ -226,41 +172,6 @@ for (ov in iX){
                 , ylim = c(0,max (physOc$bathy))
                 # , showBottom = bathyL
           )
-
-          # if (ov == 1){
-          #   ## see https://github.com/jlmelville/vizier
-          #   # install.packages("remotes")
-          #   # remotes::install_github("jlmelville/vizier")
-          #    require ('vizier')
-          #    s <- pSec (xCo, "temperature", turbo # odvColors #turbo  # turbo is superior to jet colors
-          #   # require ("pals")
-          #   # s <- pSec (xCo, "temperature", parula
-          #   # s <- pSec (xCo, "temperature", oceColorsTemperature
-          #                                      , zlim = range (poAll$Temperature_ITS90_DegC) # c(1, 15.4)
-          #              , custcont = seq (-1, 20, by = 1)
-          #   )
-          #   ## trouble-shoot
-          #   # xsec = s; N = "salinity"; zC = oceColorsTemperature
-          # } else if (ov == 2){
-          #   pSec (xCo, "salinity", oceColorsSalinity
-          #         , zlim = range (poAll$Salinity_PSU, na.rm =TRUE)
-          #         ) #, zlim = c(15.97, 33.22)) # non-linear scaleing?
-          # }else if (ov == 3){
-          #   pSec (xCo, "sigmaTheta", oceColorsDensity
-          #         , zlim = range (poAll$Density_sigma.theta.kg.m.3))
-          # }else if (ov == 4){
-          #   pSec (xCo, "chlorophyll", oceColorsChlorophyll)
-          # }else if (ov == 5){
-          #   pSec (xCo, "turbidity", oceColorsTurbidity) # should NOT have negative flourescence XXX
-          # }else if (ov == 6){
-          #   pSec (xCo, "PAR", oceColorsPAR)  # should NOT have negative PAR XXX
-          # }else if (ov == 7){
-          #   pSec (xCo, "logTurbidity", oceColorsTurbidity)
-          # }else if (ov == 8){
-          #   pSec (xCo, "logPAR", oceColorsPAR)
-          #   # }else if (ov == 7){
-          #   #   pSec (xCo, "logFluorescence", oceColorsChlorophyll)
-          # }
         }
 
         if (i %% 5 == 0){
@@ -368,13 +279,5 @@ mp <- function() {
           latitudelim = c(58.5, 60.5), col='grey')
 }
 
-
-# pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/studyareaMap.pdf")
-# mp()
-# # mapImage (bathy, col = oceColorsGebco, breaks = seq (-500, 0, 500))
-# mapImage (bathy, col = oceColorsGebco, breaks = c (seq (-300, 0, 20), 2000))
-# mapPolygon (coastlineWorldFine, col = "gray")
-# mapGrid()
-# dev.off()
 
 # EOF
