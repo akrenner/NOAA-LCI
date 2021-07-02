@@ -75,7 +75,8 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+# pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png"), width = 1800, height = 1200, res=300)
 par (mar = c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
@@ -107,8 +108,8 @@ bP <- cLegend (x = bP$rect$left + 55, y = bP$rect$top
                , pastYear = FALSE, newYear = FALSE
 )
 #  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
-legend (x = bP$rect$left+2, y = bP$rect$top - 0.9 # use -1.2 when plotting 2 years
-        , legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
+legend (x = bP$rect$left+2, y = bP$rect$top-bP$rect$h + 0.3 # use -1.2 when plotting 2 years
+        , legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)  # add transparent line to fix alignment
 
 ## totals
 xAl <- bP$rect$left - 50; yAl <- bP$rect$top + 0.3
@@ -157,7 +158,8 @@ source ("annualPlotFct.R") # important to call after defining currentCol!
 
 tDay <- prepDF (varName = "rh", dat = hmr, maO = maO, qntl = qntl)
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width = 9, height = 6)
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width = 9, height = 6)
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.png", width = 1800, height = 1200, res = 300)
 aPlot (tDay, "rh", ylab = "% relative humidity", currentCol = currentCol, MA = TRUE)
 cLegend ("bottomright", qntl = qntl, title = paste (maO, "day moving average")
          , title.adj = NULL, currentYear = currentYear

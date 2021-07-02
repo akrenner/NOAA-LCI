@@ -226,7 +226,8 @@ tDayW <- prepDF (dat = tDay, varName = "wave_height"
 
 
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", recursive = TRUE, showWarnings = FALSE)
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
+# pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.png"), width = 1800, height = 1200, res = 300)
 par (mar = c(3,4,1,4)) # space for 2nd y-axis (feet)
 
 aPlot (tDayW, "wave_height", ylab = "wave height [m]"
@@ -349,7 +350,7 @@ wDB <- addTimehelpers(wDB)
 save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 
-
+8
 
 
 ################
@@ -522,8 +523,10 @@ print (sEvent)
 ### the plot to keep for the report
 
 ## try to do it all in R
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
-     , width = 8, height = 6)
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
+#      , width = 8, height = 6)
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.png"
+     , width = 1600, height = 1200, res = 200)
 ## import image, use ggplot to set background
 ## see https://guangchuangyu.github.io/2018/04/setting-ggplot2-background-with-ggbackground/
 # require(magick)

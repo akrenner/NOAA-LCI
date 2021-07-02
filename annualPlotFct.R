@@ -158,7 +158,7 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
   }
   if (pastYear && newYear){
     yT <- c (currentYear-1, currentYear, currentYear + 1)
-    bg <- c (NA, NA, NA, NA, qantCol [1]) #c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1]) ## XX
+    bg <- c (NA, NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
     lW <- c (3, 2, 4, 4)
   }else if (pastYear && !newYear){
@@ -181,18 +181,14 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
   legend (..., bty = "n"
           , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , yT
-                       , "10th-90th percentile"
+                       , "10th-90th %ile" #percentile"
           )
           , lty = c (rep (1, length (yT)+1), 0)
           , lwd = c (lW, 0)
           , pch = c (NA, rep (NA, length (yT)), 22)
-                 #   , lty = c(1, 1, rep (1, length (yT)-1), sLty, 0)
-      #    , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
-      #    , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
           , pt.cex = 2
-          , pt.bg = bg # c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
-          #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
-          , col = lC #     c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+          , pt.bg = bg
+          , col = lC
   )
 }
 

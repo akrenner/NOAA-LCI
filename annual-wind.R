@@ -148,30 +148,32 @@ windSum$mean <- round (windSum$mean, 1)
 print (windSum)
 rm (windSum)
 
+
+yGale <- aggregate  (maxwspd~year
+                     , data = aggregate (maxwspd~jday+year, data = hmr
+                                         , FUN = function (x){any (x > stormT)}
+                     )
+                     , FUN = sum)
+yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.pdf")
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.png", width = 1200, height = 1200, res = 300)
+barplot(yGale$maxwspd, names.arg = yGale$year
+        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+        , ylab = "Storms per year")
+abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+        , lty = "dashed", lwd = 2)
+#  box()
+
+# plot (maxwspd~year, yGale, type = "l", ylab = "Number of storms")
+# abline (h = mean (yGale$maxwspd), lty = "dashed")
+# points (maxwspd~year, yGale, subset = year == currentYear, col = "red", pch = 16)
+#
+# hist (yGale$maxwspd, xlab = "N storms", main = "")
+# abline (v = yGale$maxwspd [which (yGale$year == currentYear)])
+dev.off()
+
 if (0){ ## violin plot of frequency of storms/gales
-  yGale <- aggregate  (maxwspd~year
-                       , data = aggregate (maxwspd~jday+year, data = hmr
-                                           , FUN = function (x){any (x > stormT)}
-                       )
-                       , FUN = sum)
-  yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-
-  pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.pdf")
-  barplot(yGale$maxwspd, names.arg = yGale$year
-          , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
-          , ylab = "Number of storms")
-  abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
-          , lty = "dashed", lwd = 2)
-  #  box()
-
-  # plot (maxwspd~year, yGale, type = "l", ylab = "Number of storms")
-  # abline (h = mean (yGale$maxwspd), lty = "dashed")
-  # points (maxwspd~year, yGale, subset = year == currentYear, col = "red", pch = 16)
-  #
-  # hist (yGale$maxwspd, xlab = "N storms", main = "")
-  # abline (v = yGale$maxwspd [which (yGale$year == currentYear)])
-  dev.off()
-
   require("vioplot")
   vioplot (yGale$maxwspd, ylab = "N gales")
   ## abline (h = yGale$maxwspd [yGale$year == currentYear])

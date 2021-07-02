@@ -51,8 +51,11 @@ tDay <- prepDF (varName = "atemp", dat = hmr, maO = maO, qntl = qntl)
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width = 9, height = 6)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE
            , recursive = TRUE)
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
-             , ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+# pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
+#              , ifelse (SWMP, "LE", "AP"), ".pdf"), width = 9, height = 6)
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
+             , ifelse (SWMP, "LE", "AP"), ".png"), width = 1800, height = 1200, res = 300)
+
 par (mar = c(4,4,2,4))
 aPlot (tDay, "atemp"
        , ylab = expression ('air'~'temperature '~'['*degree~'C'*']')
