@@ -194,58 +194,72 @@ tRange <- function (tstmp){
 ## this step takes a while! [approx 5 min, depending on computer]
 poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores = nCPUs))
 ## rerun tideRange
-poSS$tideRange <- as.numeric (poSS$tideRange)
-if (any (is.na (poSS$tideRange))){
+if (1){ # keep in case mclapply fails
+  poSS$tideRange <- as.numeric (poSS$tideRange)
+  if (any (is.na (poSS$tideRange))){
     for (i in which (is.na (poSS$tideRange))){
-        print (poSS$timeStamp [i])
-        if (!is.na (poSS$timeStamp [i])){
-            poSS$tideRange [i] <- tRange (poSS$timeStamp [i])
-            print (poSS$tideRange [i])
-        }else{
-            print (poSS [i,])
-        }
+      print (poSS$timeStamp [i])
+      if (!is.na (poSS$timeStamp [i])){
+        poSS$tideRange [i] <- tRange (poSS$timeStamp [i])
+        print (poSS$tideRange [i])
+      }else{
+        print (poSS [i,])
+      }
     }
+  }
 }
 rm (tRange, i)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){
-    ## return radians degree of tidal phase during cast
-
+  ## return radians degree of tidal phase during cast
+  Require ("suncalc")
+  poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
+  ## Require (oce)
+  ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
+}
 rm (tPhase)
 
 
-Require ("suncalc")
-poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
-## Require (oce)
-## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
+daylight <- function (dt){
+  require ("suncalc")
+  sunAlt <- getSunlightPosition (date = dt
+                                 , lat = 59.643, lon = -151.526)$altitude # in radians
+  sunDeg <- sunAlt / pi * 180
+  dayNight <- ifelse (sunDeg > -6, "day", "night")  # civil twighlight
+  dayNight <- ifelse (sunDeg > 0, "day", "night")  # direct solar radiation
+  dayNight
 }
+poSS$dayLight <- dalight (poSS$timeStamp)
+rm (daylight)
+
+
 poSS$SST <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                 , subset = Depth.saltwater..m. <= 3
-                 , FUN = mean)$Temperature_ITS90_DegC
+                       , subset = Depth.saltwater..m. <= 3
+                       , FUN = mean)$Temperature_ITS90_DegC
 poSS$aveTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                         , FUN = mean)$Temperature_ITS90_DegC
+                           , FUN = mean)$Temperature_ITS90_DegC
 poSS$minTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                         , FUN = min)$Temperature_ITS90_DegC
+                           , FUN = min)$Temperature_ITS90_DegC
 poSS$deepTemp <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Temperature_ITS90_DegC"
-                                , mc.cores = nCPUs))
+                                   , mc.cores = nCPUs))
 poSS$SSS <- aggregate (Salinity_PSU~File.Name, data = physOc
-                 , subset = Depth.saltwater..m. <= 3
-                 , FUN = mean)$Salinity_PSU
+                       , subset = Depth.saltwater..m. <= 3
+                       , FUN = mean)$Salinity_PSU
 poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
-                             , FUN = mean)$Salinity_PSU
+                               , FUN = mean)$Salinity_PSU
 ## poSS$deepSal_old <- aggregate (Salinity_PSU~File.Name, data = physOc, FUN = function (x){
 ##     if (length (x) > 50){mean (x [50:length (x)])}else{NA}
 ## })$Salinity_PSU
 poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
-                                , mc.cores = nCPUs))
+                                  , mc.cores = nCPUs))
 rm (dMean)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
 ## almost the same als salinity. skip it
 
 minPAR <- function (fn){
-    cast <- subset (physOc, File.Name == fn)
-    PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
-    return (min (PARscl))
+  cast <- subset (physOc, File.Name == fn)
+  PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
+  return (min (PARscl))
 }
 mP <- unlist (mclapply (poSS$File.Name, FUN =minPAR, mc.cores = nCPUs))
 print (quantile (mP, probs = seq (0.8, 0.95, by = 0.05), na.rm = TRUE))
@@ -588,9 +602,15 @@ if (any (is.na (zoop$Lon_decDegree))){
 
 ### fix species names
 ## fix Mueller's larvae in source!
+zoop$Species <- ifelse (zoop$Species == "M\xfcller's larvae", "Mullers larvae", zoop$Species)
 zoop$Species <- tolower (as.character (zoop$Species))
-substring (zoop$Species, 1,1) <- toupper (substring (zoop$Species, 1,1))
+if (length (grep ("plastic", zoop$Species)) > 0){
+  zoop <- zoop [-grep ("plastic", zoop$Species),]
+}
+# substring (zoop$Species, 1,1) <- toupper (substring (zoop$Species, 1,1)) # not working ?
+zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
+
 
 save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")

@@ -54,8 +54,9 @@ currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 30   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
-stormT <- 40
-galeT <- 30
+stormT <- 48
+galeT <- 34
+scAdvT <- 21
 currentCol <- c ("blue", "lightblue", "black")
 # currentCol <- "blue"
 # currentCol <- "red"
@@ -142,10 +143,12 @@ hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 
 ## table of number of gales/storms -- mean vs current year
 ## count number of days with max wind above threshold
-windSum <- nEvents (hmr, "maxwspd", thrht = c(galeT, stormT))
+windSum <- nEvents (hmr, "maxwspd", thrht = c(scAdvT, galeT, stormT))
 windSum$mean <- round (windSum$mean, 1)
-## number of gales and storms per year
+row.names (windSum) <- c ("SCA", "gales", "storms")
+cat ("\n\n# number of gales and storms per year\n")
 print (windSum)
+
 rm (windSum)
 
 
@@ -158,11 +161,21 @@ yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial 
 
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.pdf")
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.png", width = 1200, height = 1200, res = 300)
+
+par (mar = c (4, 5, 1, 5))
 barplot(yGale$maxwspd, names.arg = yGale$year
         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
         , ylab = "Storms per year")
 abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
         , lty = "dashed", lwd = 2)
+
+cYg <- aggregate (maxwspd~jday+year, data = hmr, FUN = function (x){any (x > stormT)})
+cYg <- subset (cYg, year == currentYear & maxwspd)
+sDate <- as.POSIXct (paste0 (currentYear, "-01-01")) + 3600*24 * cYg$jday
+for (i in 1:length (sDate)){
+ mtext (format (sDate [i], "%d %b"), side = 4, at = i, las = 1, line = -0.0)
+}
+rm (cYg, sDate)
 #  box()
 
 # plot (maxwspd~year, yGale, type = "l", ylab = "Number of storms")
@@ -173,6 +186,41 @@ abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
 # abline (v = yGale$maxwspd [which (yGale$year == currentYear)])
 dev.off()
 
+
+yGale <- aggregate  (maxwspd~year
+                     , data = aggregate (maxwspd~jday+year, data = hmr
+                                         , FUN = function (x){any (x > galeT)}
+                     )
+                     , FUN = sum)
+yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
+barplot(yGale$maxwspd, names.arg = yGale$year
+        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+        , ylab = "Gales per year")
+abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+        , lty = "dashed", lwd = 2)
+dev.off()
+
+yGale <- aggregate  (maxwspd~year
+                     , data = aggregate (maxwspd~jday+year, data = hmr
+                                         , FUN = function (x){any (x > scAdvT)}
+                     )
+                     , FUN = sum)
+yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+barplot(yGale$maxwspd, names.arg = yGale$year
+        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+        , ylab = "SCAs per year")
+abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+        , lty = "dashed", lwd = 2)
+dev.off()
+
+
+
+rm (yGale)
+
+
+
 if (0){ ## violin plot of frequency of storms/gales
   require("vioplot")
   vioplot (yGale$maxwspd, ylab = "N gales")
@@ -181,7 +229,6 @@ if (0){ ## violin plot of frequency of storms/gales
           , pch = 16, col = "red", )
 }
 ## end of wind summary
-
 
 ## current/past year = year of report
 dMeans <- aggregate (wspd~jday+year, hmr, FUN = meanNA) # daily means full time series
@@ -455,7 +502,7 @@ with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
 # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels = p365wCar))
 require ("png")
 hgt <- 0.7; wdh <- 15
-img <- readPNG("~/myDocs/amyfiles/NOAA-LCI/pictograms/cloud.png")
+img <- readPNG ("pictograms/cloud.png")
 with (subset (tDay, p365galDay > 0), rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
                                                   , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
                                                   #                                                 , angle = p365wdir+ 90
