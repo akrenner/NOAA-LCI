@@ -185,6 +185,70 @@ rm (cYg, sDate)
 # hist (yGale$maxwspd, xlab = "N storms", main = "")
 # abline (v = yGale$maxwspd [which (yGale$year == currentYear)])
 dev.off()
+yS <- yGale
+
+yGale <- aggregate  (maxwspd~year
+                     , data = aggregate (maxwspd~jday+year, data = hmr
+                                         , FUN = function (x){any (x > galeT)}
+                     )
+                     , FUN = sum)
+yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
+barplot(yGale$maxwspd, names.arg = yGale$year
+        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+        , ylab = "Gales per year")
+abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+        , lty = "dashed", lwd = 2)
+dev.off()
+yG <- yGale
+
+yGale <- aggregate  (maxwspd~year
+                     , data = aggregate (maxwspd~jday+year, data = hmr
+                                         , FUN = function (x){any (x > scAdvT)}
+                     )
+                     , FUN = sum)
+yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+barplot(yGale$maxwspd, names.arg = yGale$year
+        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+        , ylab = "SCAs per year")
+abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+        , lty = "dashed", lwd = 2)
+dev.off()
+ys <- yGale
+rm (yGale)
+
+# exclude storms from gales
+ys$maxwspd <- ys$maxwspd- yG$maxwspd
+yG$maxwspd <- yG$maxwspd - yS$maxwspd
+
+## stacked bar chart
+sTab <- rbind (gale = yG$maxwspd, storm = yS$maxwspd)
+colnames (sTab) <- yG$year
+## different color for current year
+sTab <- rbind (sTab, galeC = ifelse (1:ncol (sTab) == ncol (sTab), sTab [1,], 0))
+sTab <- rbind (sTab, stormC = ifelse (1:ncol (sTab) == ncol (sTab), sTab [2,], 0))
+sTab [1:2, ncol (sTab)] <- 0
+
+# gCols <- c("lightblue", "blue")
+# gCols <- c("gray", "lightblue")
+# gCols <- c("lightgray", "darkgray")
+gCols <- c("lightgray", "darkgray", "lightblue", "blue")
+
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_WindStack.png", width = 1200, height = 1200, res = 300)
+par (mar = c (4,5,1,1))
+barplot (sTab [4:1,]
+         , col = gCols [4:1]
+#         , ylab = "N per year"
+         , ylab = "High-wind days per year"
+)
+legend ("top", legend = row.names(sTab)[1:2], fill = gCols[1:2], bty = "n")
+abline (h = mean (colSums(sTab)), lwd = 2, lty = "dashed")
+abline (h = mean (as.data.frame (t (sTab))$storm), lwd = 3, lty = "dotted", col = "black") #, "darkgray")
+dev.off()
+
+rm (yS, yG, ys, gCols)
+
 
 
 yGale <- aggregate  (maxwspd~year
