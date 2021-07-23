@@ -1,6 +1,7 @@
 ## replot CTD wallpaper for office
 ## provide line-graph alternatives
 
+rm (list = ls())
 
 
 ## problemss:
@@ -24,8 +25,8 @@ source ("CTDsectionFcts.R")
 
 
 
-test <- TRUE
-# test <- FALSE
+# test <- TRUE
+test <- FALSE
 
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){

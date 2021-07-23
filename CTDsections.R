@@ -14,12 +14,16 @@
 
 
 
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## get CTD data (physOc) directly from CTD_cleanup.R, rather than through dataSetup.R
 
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## get CTD data (physOc) directly from CTD_cleanup.R, rather than through dataSetup.R
+if (length (grep ("darwin", version$os)) >0 ){
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}else{
+  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+}
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
@@ -61,9 +65,12 @@ bathy <- "polygon"
 require ("raster")
 require ("marmap")
 
+## FIX !!  -- already in prepData?
+
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
-if (.Platform$OS.type == "unix"){   ## no longer necessary!
+# if (.Platform$OS.type == "unix"){   ## no longer necessary!
+if (1){
   ##  bR <- resample (bR, nGrid)
   bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf") ## not working in RStudio -- need to use decompressed after all?
   ## need to reproject to longlat
@@ -74,11 +81,14 @@ if (.Platform$OS.type == "unix"){   ## no longer necessary!
   save (bathy, bathyP, file = "~/tmp/LCI_noaa/cache/bathymetryZ.RData")
 #  rm (bR, bRg, bRb)
 }else{
-  # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
-  # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-  bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE) # too coarse for KBay
   load ("~/tmp/LCI_noaa/cache/bathymetryZ.RData")
 }
+
+## more bathymetry to fill in parts zimmerman bathymetry missses
+  # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
+  # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+
 
 require ("ocedata") # coastlineWorldFine
 
@@ -121,8 +131,10 @@ poP <- poAll
 coordinates (poP) <- ~longitude_DD+latitude_DD
 proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
 poAll$bathy <- extract (bathyP, poP)
+if (exists ("bathyL")){
 bL <- extract (as.raster (bathyL), poP)
 poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy)
+}
 rm (poP, bL)
 
 
