@@ -14,6 +14,7 @@ pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
                   # , grid = TRUE
                   #, ztype = "contour"
                   , ztype = "image"
+                  , ...
   ))
 #  title (main = levels (physOc$transDate)[i])
   #  if (cont){

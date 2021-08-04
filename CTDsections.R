@@ -135,14 +135,14 @@ if (exists ("bathyL")){
 bL <- extract (as.raster (bathyL), poP)
 poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy)
 }
-rm (poP, bL)
+rm (poP, bL, bathyP, bathyL, bathy)
 
 
 ################ define variables and their ranges #########################
 oVars <- c ("temperature", "salinity" #, "sigmaTheta"
             , "turbidity"
             # , "logTurbidity"
-            , "chlorophyll"
+            , "fluorescence" #, "chlorophyll"
            , "logPAR"
             #, "logFluorescence"
             , "O2perc"
@@ -196,10 +196,10 @@ for (h in 1: (length (iX)-1)){
     surveyW [iX [h] : (iX [h+1])-1] <- surveyW [iX [h]]
   }
 }
+rm (iX)
 ## fill last survey
 surveyW [which (is.na (surveyW))] <- max (poAll$DateISO, na.rm = TRUE)
 poAll$survey <- factor (surveyW); rm (surveyW, h)
-
 
 
 

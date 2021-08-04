@@ -16,22 +16,40 @@ rm (list = ls())
 ## by season/month and year. Asterix if there are 2 per slot
 
 
+## 2021-08-03 -- issues
+# - multiple transects per season/month are merged -> pick first
+# - fix color scale across all graphs (across Transects as well?)
+
+
+
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
-load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
+x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 
 source ("CTDsectionFcts.R")
 
 
 
-# test <- TRUE
+test <- TRUE
 test <- FALSE
+
+# varRange <- sapply (oVars, function (x){
+#   xv <- poAll [,which (names (poAll) == x)]
+#   xv <- poAll [,grep (x, tolower(names (poAll)))]
+#   # xv <- replace (xv, is.infinite (xv, NA))
+#   xv <- ifelse (is.infinite (xv), NA, xv)
+#   range (xv, na.rm= TRUE)
+# })
+# oRange from CDsections.R!
+
+
+## loop over variable, then transects and then seasons
 
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){
-  if (test){iX <- 2}else{iX <-   1:length (levels (poAll$Transect))}# by transect
-  for (tn in iX){  ## XXX testing XXX
+  if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
+  for (tn in iY){  ## XXX testing XXX
 # for (ov in 1:length (oVars)){
 #  for (tn in 1:length (levels (poAll$Transect))){
     ## for testing
@@ -52,9 +70,19 @@ for (ov in iX){
       poAll$Transect [(poAll$Transect == "AlongBay") & (poAll$Station == "6")] <- "9"
     }
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
+#    physOcY <- with (physOcY, physOcY [order (),])
+
     physOcY$year <- factor  (physOcY$year)
     # physOcY$transDate <- factor (with (physOcY, paste0 ("T-", Transect, " ", DateISO)))
     physOcY$transDate <- with (physOcY, paste0 ("T-", Transect, " ", DateISO))
+    physOcY$month <- factor (format (physOcY$DateISO, "%m"))
+    physOcY$season <- cut (as.numeric (as.character (physOcY$month))
+                                   , c(0,2,4,8,10, 13)
+                           , labels = c ("winter", "spring", "summer", "fall", "winter")
+                           )
+    physOcY$season <- factor (physOcY$season
+                              , levels = c ("winter", "spring", "summer", "fall")
+                              , ordered = TRUE)
 
 
     # png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
@@ -63,58 +91,100 @@ for (ov in iX){
     #              , "%02d.png")
     #      , height = 8.5*200, width = 11*200, res = 300)
 
+
+    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+      pH <- 22; pW <- 17  # 2x2 legal size
+    }else{
+      pH <- 8.5; pW <- 11
+    }
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
                  , " T-", levels (poAll$Transect)[tn]
                  # , "_", levels (physOcY$year)[k]
                  , ".pdf")
-         , height = 8.5, width = 11)
-    layout (matrix (1:12, 4, byrow = FALSE)) # across, then down
+         , height = pH, width = pW)
+
+
+    ### force sampling regime -- plot empty for missing survey
+    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+      ## monthly
+      physOcY$smplIntvl <- physOcY$month
+      layout (matrix (1:(12*5), 12, byrow = FALSE)) # across, then down
+    }else{
+      # quarterly
+      physOcY$smplIntvl <- physOcY$season
+      layout (matrix (1:12, 4, byrow = FALSE)) # across, then down
+    }
 
 
 
 
-    if (test){iX <- 1}else{iX <- 1:length (levels (physOcY$year))}# by year
-    for (k in iX){
+
+
+    if (test){iZ <- 1}else{iZ <- 1:length (levels (physOcY$year))}# by year
+    iZ <- 1:length (levels (physOcY$year)) # by year
+    for (k in iZ){
 #     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
       ## for testing:
       # k <- 8
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
-      ## allow x-day window to make up a composite transect
-      ## better to apply to allPo?
-      # algorithm:
-      # set start Dates
-      # give all data same ID as start date as h, IF they after element h, and are
-      # within X days of start date of h
-      ## make this a universal function to all data? -> to datasetup?
-      physOc <- physOc [order (physOc$isoTime),]
-      surveyW <- ifelse (duplicated(physOc$transDate), 'NA', physOc$transDate)
-      for (h in 2:nrow (physOc)){
-        surveyW <- ifelse (1:length (surveyW) >= h
-                           , ifelse (difftime (physOc$isoTime, physOc$isoTime [h-1]
-                                               , units = "days") < 7
-                                     , surveyW [h-1], surveyW)
-                           , surveyW)
+
+      if (0){
+        ## allow x-day window to make up a composite transect
+        ## better to apply to allPo?
+        # algorithm:
+        # set start Dates
+        # give all data same ID as start date as h, IF they after element h, and are
+        # within X days of start date of h
+        ## make this a universal function to all data? -> to datasetup?
+        physOc <- physOc [order (physOc$isoTime),]
+        surveyW <- ifelse (duplicated(physOc$transDate), 'NA', physOc$transDate)
+        for (h in 2:nrow (physOc)){
+          surveyW <- ifelse (1:length (surveyW) >= h
+                             , ifelse (difftime (physOc$isoTime, physOc$isoTime [h-1]
+                                                 , units = "days") < 7
+                                       , surveyW [h-1], surveyW)
+                             , surveyW)
+        }
+        # ## faster version?  -- not worth the trouble
+        # for (h in which (!duplicated (physOc$transDate))[-1]){
+        # }
+        physOc$transDate <- factor (surveyW); rm (surveyW, h)
+        # physOc$transDate <- factor (physOc$transDate)
       }
-      # ## faster version?  -- not worth the trouble
-      # for (h in which (!duplicated (physOc$transDate))[-1]){
-      # }
-      physOc$transDate <- factor (surveyW); rm (surveyW, h)
-      # physOc$transDate <- factor (physOc$transDate)
+
+
+      ## replace transDate from above!
+      ## also making surveyW redundant
+      physOc$transDate <- with (physOc, paste0 ("T-", Transect, " ", year, "-", smplIntvl))
+      # tdL <- with (physOc, expand.grid (levels (smplIntvl), levels (Transect)))
+      # physOc$transDate <- factor (physOc$transDate
+      #                             , levels = paste0 ("T-", tdL$Var2, " "
+      #                                                , levels (physOcY$year)[k]
+      #                                                , "-", tdL$Var1)
+      # )
+      physOc$transDate <- with (physOc, factor (transDate
+                                                , levels = paste0 ("T-", Transect [1]
+                                                                   , " ", year [1], "-"
+                                                                   , levels (smplIntvl))))
 
 
       ## define and plot sections
       cat ("Sections to process: ", length (levels (physOc$transDate)), "\n")
 
-      if (test){iX <- 4}else{iX <-  1:length (levels (physOc$transDate))} # survey #
-      for (i in iX){
+      if (test){iA <- 4}else{iA <-  1:length (levels (physOc$transDate))} # survey #
+      iA <-  1:length (levels (physOc$transDate))
+      for (i in iA){
       # for (i in 1:length (levels (physOc$transDate))){
           # for testing:
         # i <- 4
         cat ("sec: ", i, " ")
-        xCt <- subset (physOc, transDate == levels (physOc$transDate)[i])
-        if (length (levels (factor (xCt$Match_Name))) > 2){ ## shouldn't be necessary -- what's up with Transect = NA??
-          xC <- xCt
+        xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
+        if (length (levels (factor (xC$Match_Name))) < 3){
+          ## blank plot for missing data
+          plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
+                , main = paste (levels (physOc$transDate)[i], "-- no data"))
+        }else{ ## shouldn't be necessary -- what's up with Transect = NA??
           if (xC$Transect [1] %in% c("4", "9")){
             xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
           }else{
@@ -152,7 +222,7 @@ for (ov in iX){
                                                     ))
                                       # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
                                       ocOb@metadata$waterDepth <- sCTD$bathy [1]
-                                      ocOb <- oceSetData (ocOb, "chlorophyll", sCTD$Fluorescence_mg_m3)
+                                      ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                                      # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
                                       ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
                                       ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)
@@ -166,19 +236,24 @@ for (ov in iX){
           # xCo <- sectionGrid (xCo, method = "boxcar")  -- no good; need depth, not pressure
           rm (stn)
 
+          # T 3 4 6 7 9 Along
+          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
           pSec (xCo, N = oVars [ov], zC = oCol [[ov]]
-                , zlim = oRange [ov,]
+                , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
-                , custcont = pretty (oRange [ov,], 10)
+                , custcont = pretty (oRange [ov,], 100)  ## may often fail? -- no contours in range
+                # , custcont = ov
                 , ylim = c(0,max (physOc$bathy))
+                # , xlim = c(0, TD [tn])
                 # , showBottom = bathyL
           )
+          title (main = paste (levels (physOc$transDate)[i]))
         }
 
-        if (i %% 5 == 0){
-          cat (i, " ")
-          if (i %% 100 == 0) cat ("\n")
-        }
+        # if (i %% 5 == 0){
+        #   cat (i, " ")
+        #   if (i %% 100 == 0) cat ("\n")
+        # }
       }
     }
     plot (xCo
@@ -205,7 +280,8 @@ for (ov in iX){
 
 
 physOc <- poAll
-rm (xCt, xCo, i, k, tn, oVars, ov, poAll, pSec, physOcY)
+
+rm (xCo, i, k, tn, oVars, ov, poAll, pSec, physOcY)
 
 
 
