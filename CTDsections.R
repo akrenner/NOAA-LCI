@@ -105,7 +105,6 @@ poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Ga
 
 ## AlongBay (tn=6), i = 2, sections to process: 4, k= 5 fails
 
-dir.create ("~/tmp/LCI_noaa/media/CTDwall", recursive = TRUE, showWarnings = FALSE)
 
 poAll <- subset (poAll, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate
 poAll$Transect <- factor (poAll$Transect)
@@ -196,7 +195,7 @@ for (h in 1: (length (iX)-1)){
     surveyW [iX [h] : (iX [h+1])-1] <- surveyW [iX [h]]
   }
 }
-rm (iX)
+rm (iX, iY)
 ## fill last survey
 surveyW [which (is.na (surveyW))] <- max (poAll$DateISO, na.rm = TRUE)
 poAll$survey <- factor (surveyW); rm (surveyW, h)
@@ -219,8 +218,8 @@ if (test){iX <- 4}else{iX <- 1:length (levels (poAll$survey))}
 for (sv in iX){
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
-  if (test){iX <- 1}else{iX <-  1:length (levels (s$Transect))}# by transect
-  for (tn in iX){  ## XXX testing XXX
+  if (test){iY <- 1}else{iY <-  1:length (levels (s$Transect))}# by transect
+  for (tn in iY){  ## XXX testing XXX
     #  for (tn in 1:length (levels (poAll$Transect))){
     ## for testing
     ## sv <- 21; tn <- 1

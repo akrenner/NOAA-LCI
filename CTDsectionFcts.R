@@ -96,7 +96,7 @@ makeSection <- function (xC, stn){
                                       ))
                         # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
                         ocOb@metadata$waterDepth <- sCTD$bathy [1]
-                        ocOb <- oceSetData (ocOb, "chlorophyll", sCTD$Fluorescence_mg_m3)
+                        ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
                         ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
                         ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)

@@ -238,7 +238,7 @@ for (ov in iX){
 
           # T 3 4 6 7 9 Along
           TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
-          pSec (xCo, N = oVars [ov], zC = oCol [[ov]]
+          pSec1 (xCo, N = oVars [ov], zC = oCol [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
                 , custcont = pretty (oRange [ov,], 100)  ## may often fail? -- no contours in range
