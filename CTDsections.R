@@ -277,16 +277,7 @@ for (sv in iX){
       #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
 
-      # stn <- factor (sprintf ("%02d", as.numeric (xC$Station)))
-      stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
-      if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn)), ordered = TRUE)} # only transect that's numbered in other direction
-
-
-      xC$Match_Name <- factor (xC$Match_Name)
-      #          xC <- as.section (lapply (1:length (levels (xC$Match_Name)) # XX rewrite with %>% pipes? XX as function?
-      ## need to use station to keep factors in correct order?!?!!
-      xCo <- makeSection (xC, stn)
-      rm (stn)
+      xCo <- sectionize (xC)
 
       for (ov in 1:length (oVars)){
         pSec1 (xCo, N = oVars [ov], zC = oCol [[ov]]

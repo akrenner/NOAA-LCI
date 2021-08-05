@@ -5,8 +5,7 @@
 
 pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
   s <- try (plot (xsec, which = N
-                  # , showBottom = FALSE
-                  # , showBottom = "lines" #FALSE
+                  # , showBottom = FALSE, showBottom = "lines" #FALSE
                   , axes = TRUE
                   , zcol = zC
                   , stationTicks = TRUE
@@ -16,8 +15,10 @@ pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
                   , ztype = "image"
                   , ...
   ))
-#  title (main = levels (physOc$transDate)[i])
-  #  if (cont){
+
+
+  ## add contours
+    #  if (cont){
   distance <- xsec [["distance", "byStation"]]
   depth <- xsec [["station", 1]][["depth"]]
   zvar <- matrix (xsec [[N]], byrow = TRUE, nrow = length (xsec [["station"]]))
@@ -56,27 +57,25 @@ pSec <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
 }
 
 
-pSec1 <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){  # ylim = NULL,
-    # if (exists (""))
-    # c(0,max (physOc$bathy))
+pSec1 <- function (xsec, N, zC, cont = TRUE, custcont = NULL, ...){
+  ## old version without contours -- keep for now, but eventually replace with pSec
     s <- try (plot (xsec, which = N
-                  # , showBottom = FALSE
-                  # , showBottom = "lines" #FALSE
-                  # , axes = TRUE
                   , zcol = zC
                   , stationTicks = TRUE
                   , showStations = TRUE  # or roll your own -- how?
-                  #, showBottom = TRUE # or could provide topo object
-                  # , grid = TRUE
-                  #, ztype = "contour"
                   , ztype = "image"
-                  #, ztype = "points"
-                 #  , ylim = yL
-                  , ... # zlim?
+                  , ...
   ))
 }
 
 
+sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
+  stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
+  if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn)), ordered = TRUE)}
+  xC$Match_Name <- factor (xC$Match_Name)
+  xCo <- makeSection (xC, stn)
+  xCo
+}
 
 makeSection <- function (xC, stn){
   # xC = data.frame of ctd data
@@ -108,6 +107,22 @@ makeSection <- function (xC, stn){
                         ocOb
                       }))
 
+}
+
+
+
+seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
+# use seasonal breaks from zooplankton study
+   if (is.factor (mon)){
+   mon <- as.numeric (as.character (mon))
+ }else if (class (mon)[1] == "POSIXct"){
+   mon <- as.numeric (format (mon, "%m"))
+ }
+  season <- cut (mon, breaks, labels = c ("winter", "spring", "summer", "fall", "winter"))
+  # season <- factor (season
+  #                   , levels = c ("winter", "spring", "summer", "fall")
+  #                   , ordered = TRUE)
+  season
 }
 
 
