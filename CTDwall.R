@@ -7,7 +7,6 @@ rm (list = ls())
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
 ## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
-## - missing latest data -- processing = ok??
 ## fix contours! -- make sure to have most recent data!
 
 ## PAR: flag night; mark 1% light level contour
@@ -17,10 +16,12 @@ rm (list = ls())
 
 
 ## 2021-08-03 -- issues
-# - multiple transects per season/month are merged -> pick first
-# - fix color scale across all graphs (across Transects as well?)
+# x multiple transects per season/month are merged -> pick first
+# x fix color scale across all graphs (across Transects as well?)
 
-
+## decisions made:
+# if more than 1 survey per survey-window, plot the longest section
+# only AlongBay and 9 are monthly -- 4?
 
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
@@ -42,6 +43,16 @@ test <- FALSE
 #   range (xv, na.rm= TRUE)
 # })
 # oRange from CDsections.R!
+
+
+
+
+## tests
+xC <- subset (poAll, (Transect == 9)&(survey == "2021-01-13") )
+xCo <- sectionize (xC)
+rm (xC, xCo)
+
+
 
 
 ## loop over variable, then transects and then seasons
@@ -80,9 +91,7 @@ for (ov in iX){
                                    , c(0,2,4,8,10, 13)
                            , labels = c ("winter", "spring", "summer", "fall", "winter")
                            )
-    physOcY$season <- factor (physOcY$season
-                              , levels = c ("winter", "spring", "summer", "fall")
-                              , ordered = TRUE)
+    physOcY$season <- seasonize (physOcY$month)
 
 
     # png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
@@ -129,31 +138,6 @@ for (ov in iX){
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
-      if (0){
-        ## allow x-day window to make up a composite transect
-        ## better to apply to allPo?
-        # algorithm:
-        # set start Dates
-        # give all data same ID as start date as h, IF they after element h, and are
-        # within X days of start date of h
-        ## make this a universal function to all data? -> to datasetup?
-        physOc <- physOc [order (physOc$isoTime),]
-        surveyW <- ifelse (duplicated(physOc$transDate), 'NA', physOc$transDate)
-        for (h in 2:nrow (physOc)){
-          surveyW <- ifelse (1:length (surveyW) >= h
-                             , ifelse (difftime (physOc$isoTime, physOc$isoTime [h-1]
-                                                 , units = "days") < 7
-                                       , surveyW [h-1], surveyW)
-                             , surveyW)
-        }
-        # ## faster version?  -- not worth the trouble
-        # for (h in which (!duplicated (physOc$transDate))[-1]){
-        # }
-        physOc$transDate <- factor (surveyW); rm (surveyW, h)
-        # physOc$transDate <- factor (physOc$transDate)
-      }
-
-
       ## replace transDate from above!
       ## also making surveyW redundant
       physOc$transDate <- with (physOc, paste0 ("T-", Transect, " ", year, "-", smplIntvl))
@@ -170,7 +154,7 @@ for (ov in iX){
 
 
       ## define and plot sections
-      cat ("Sections to process: ", length (levels (physOc$transDate)), "\n")
+      cat ("   ",  formatC (k, width = 3), "/", max (iZ), " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
       if (test){iA <- 4}else{iA <-  1:length (levels (physOc$transDate))} # survey #
       iA <-  1:length (levels (physOc$transDate))
@@ -178,13 +162,50 @@ for (ov in iX){
       # for (i in 1:length (levels (physOc$transDate))){
           # for testing:
         # i <- 4
-        cat ("sec: ", i, " ")
+        cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 3){
-          ## blank plot for missing data
-          plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                , main = paste (levels (physOc$transDate)[i], "-- no data"))
-        }else{ ## shouldn't be necessary -- what's up with Transect = NA??
+          ## blank plot for missing data -- unless in the future
+          ## use empty slots for map rather than starting on blank page if level would be in future
+          if (as.numeric (physOc$year)[1] >= as.numeric (format (Sys.time(), "%y")) &&
+              i/length (iA) <= as.numeric (format (Sys.time(), "%m"))/12){
+            plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
+                  , main = paste (levels (physOc$transDate)[i], "-- no data"))
+          }
+        }else{
+
+          ## check whether there is more than one survey per survey-interval
+
+            ## allow x-day window to make up a composite transect
+            ## better to apply to allPo?
+            # algorithm:
+            # set start Dates
+            # give all data same ID as start date as h, IF they after element h, and are
+            # within X days of start date of h
+            ## make this a universal function to all data? -> to datasetup?
+            xC <- xC [order (xC$isoTime),]
+            surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
+            for (h in 2:nrow (xC)){
+              surveyW <- ifelse (1:length (surveyW) >= h
+                                 , ifelse (difftime (xC$isoTime, xC$isoTime [h-1]
+                                                     , units = "days") < 7
+                                           , surveyW [h-1], surveyW)
+                                 , surveyW)
+            }
+            # ## faster version?  -- not worth the trouble
+            # for (h in which (!duplicated (physOc$transDate))[-1]){
+            # }
+            xC$surveys <- factor (surveyW); rm (surveyW, h)
+            # physOc$transDate <- factor (physOc$transDate)
+
+          nSurv <- length (levels (xC$surveys))
+          if (nSurv > 1){
+            nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
+            xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
+            # xC$Station <-
+            rm (nR)
+          }
+
           if (xC$Transect [1] %in% c("4", "9")){
             xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
           }else{
@@ -198,43 +219,49 @@ for (ov in iX){
           ## average multiple casts on same date?? XXX
 
 
-          # stn <- factor (sprintf ("%02d", as.numeric (xC$Station)))
-          stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
-          if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn)), ordered = TRUE)} # only transect that's numbered in other direction
+          # # stn <- factor (sprintf ("%02d", as.numeric (xC$Station)))
+          # stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
+          # if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn)), ordered = TRUE)} # only transect that's numbered in other direction
+          #
+          #
+          # xC$Match_Name <- factor (xC$Match_Name)
+          # #          xC <- as.section (lapply (1:length (levels (xC$Match_Name)) # XX rewrite with %>% pipes? XX as function?
+          # ## need to use station to keep factors in correct order?!?!!
+          # xCo <- makeSection (xC, stn)
 
 
-          xC$Match_Name <- factor (xC$Match_Name)
-          #          xC <- as.section (lapply (1:length (levels (xC$Match_Name)) # XX rewrite with %>% pipes? XX as function?
-          ## need to use station to keep factors in correct order?!?!!
-          xCo <- as.section (lapply (1:length (levels (stn))
-                                    , FUN = function (x){
-                                      #                                      sCTD <- subset (xC, Match_Name == levels (Match_Name)[x])
-                                      sCTD <- subset (xC, stn == levels (stn)[x])
-                                      ocOb <- with (sCTD,
-                                                    as.ctd (salinity = Salinity_PSU
-                                                            , temperature = Temperature_ITS90_DegC
-                                                            , pressure = Pressure..Strain.Gauge..db.
-                                                            , longitude = longitude_DD
-                                                            , latitude = latitude_DD
-                                                            , station = Match_Name
-                                                            #, sectionId = transDate
-                                                            , time = isoTime
-                                                    ))
-                                      # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
-                                      ocOb@metadata$waterDepth <- sCTD$bathy [1]
-                                      ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
-                                     # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
-                                      ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
-                                      ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)
-                                      ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
-                                      ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
-                                      ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
-                                    # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
-                                    # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
-                                      ocOb
-                                    }))
+          xCo <- sectionize (xC)
+
+          # xCo <- as.section (lapply (1:length (levels (stn))
+          #                           , FUN = function (x){
+          #                             #                                      sCTD <- subset (xC, Match_Name == levels (Match_Name)[x])
+          #                             sCTD <- subset (xC, stn == levels (stn)[x])
+          #                             ocOb <- with (sCTD,
+          #                                           as.ctd (salinity = Salinity_PSU
+          #                                                   , temperature = Temperature_ITS90_DegC
+          #                                                   , pressure = Pressure..Strain.Gauge..db.
+          #                                                   , longitude = longitude_DD
+          #                                                   , latitude = latitude_DD
+          #                                                   , station = Match_Name
+          #                                                   #, sectionId = transDate
+          #                                                   , time = isoTime
+          #                                           ))
+          #                             # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
+          #                             ocOb@metadata$waterDepth <- sCTD$bathy [1]
+          #                             ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
+          #                            # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
+          #                             ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
+          #                             ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)
+          #                             ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
+          #                             ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
+          #                             ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
+          #                           # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+          #                           # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
+          #                             ocOb
+          #                           }))
           # xCo <- sectionGrid (xCo, method = "boxcar")  -- no good; need depth, not pressure
           rm (stn)
+
 
           # T 3 4 6 7 9 Along
           TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
@@ -242,21 +269,23 @@ for (ov in iX){
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
                 , custcont = pretty (oRange [ov,], 100)  ## may often fail? -- no contours in range
-                # , custcont = ov
                 , ylim = c(0,max (physOc$bathy))
                 # , xlim = c(0, TD [tn])
-                # , showBottom = bathyL
           )
-          title (main = paste (levels (physOc$transDate)[i]))
-        }
+          if (nSurv > 1){
+            title (main = paste (levels (physOc$transDate)[i], "* -", nSurv), col.main = "red")
+          }else{
+            title (main = paste (levels (physOc$transDate)[i]))
+          }
+          rm (nSurv)
 
-        # if (i %% 5 == 0){
-        #   cat (i, " ")
-        #   if (i %% 100 == 0) cat ("\n")
-        # }
+          if (!exists ("xMap")){xMap <- xCo; xMc <- xC}  # keep longest section for map
+          if (nrow (xMc) < nrow (xC)){xMap <- xCo}
+        }
       }
+      cat ("\n")
     }
-    plot (xCo
+    plot (xMap
           , which = 99
           , coastline = "coastlineWorldFine"
           , showStations = TRUE
@@ -267,12 +296,13 @@ for (ov in iX){
           , clongitude = -152
           , span = 250
     )
-    plot (xCo
+    plot (xMap
           , which = 99
           , coastline = "coastlineWorldFine"
           , showStations = TRUE
           , gird = TRUE
     )
+    rm (xCo, xMap, xCo)
     dev.off()
     cat ("\n")
   }
@@ -329,20 +359,20 @@ if (0){
 # double-used plots may appear out-of-line in chronology
 
 if (0){
-pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
-for (i in 1:length ())
-plot (xC
-      , which = 99
-      , coastline = "coastlineWorldFine"
-      , showStations = TRUE
-      , gird = TRUE
-      , map.xlim = c(-154, -151)
-      , map.ylim = c(57.5, 60.1)
-      , clatitude = 59.4
-      , clongitude = -152
-      , span = 250
-)
-dev.off()
+  pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
+  for (i in 1:length ())
+    plot (xC
+          , which = 99
+          , coastline = "coastlineWorldFine"
+          , showStations = TRUE
+          , gird = TRUE
+          , map.xlim = c(-154, -151)
+          , map.ylim = c(57.5, 60.1)
+          , clatitude = 59.4
+          , clongitude = -152
+          , span = 250
+    )
+  dev.off()
 }
 
 
