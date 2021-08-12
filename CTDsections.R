@@ -33,7 +33,7 @@ if (length (grep ("darwin", version$os)) >0 ){
 #   ## see https://github.com/jlmelville/vizier
 #   # install.packages("remotes")
 #   # remotes::install_github("jlmelville/vizier")
-require ('vizier')
+# require ('vizier')
 
 
 ## set-up plot and paper size
@@ -137,55 +137,11 @@ poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy)
 rm (poP, bL, bathyP, bathyL, bathy)
 
 
-################ define variables and their ranges #########################
-oVars <- c ("temperature", "salinity" #, "sigmaTheta"
-            , "turbidity"
-            # , "logTurbidity"
-            , "fluorescence" #, "chlorophyll"
-           , "logPAR"
-            #, "logFluorescence"
-            , "O2perc"
-)
-
-## see https://github.com/jlmelville/vizier
-# install.packages("remotes")
-# remotes::install_github("jlmelville/vizier")
-require ('vizier')
-oCol <- list (# turbo
-  oceColorsTemperature
-  , oceColorsSalinity #, oceColorsDensity
-  , oceColorsTurbidity
-  , oceColorsChlorophyll
-  , oceColorsPAR
-  , oceColorsOxygen
-)
-oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
-                        , "turbidity"
-                        # , "logTurbidity"
-                        , "Fluorescence_mg_m3" #, "PAR.Irradiance"
-                        , "logPAR"
-                        , "O2perc")
-                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
-                     }))
-if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
-###########################################################################
-
-
-## show data availability by year
-aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
-
-## standard-layout based on season?
-## aggregate T9 and AB by season?
-## special layout for T9 and AB?
-
-
-
 ## define surveys (by date)
 # surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
 surveyW <- poAll$DateISO
 is.na (surveyW [which (duplicated (poAll$DateISO))]) <- TRUE
-    # sqlite frame?  -- needs to be sequential (can't parallelize?)
+# sqlite frame?  -- needs to be sequential (can't parallelize?)
 iX <- which (!is.na (surveyW))
 for (h in 1: (length (iX)-1)){
   if (difftime (poAll$isoTime [iX [h+1]], poAll$isoTime [iX [h]]
@@ -195,10 +151,74 @@ for (h in 1: (length (iX)-1)){
     surveyW [iX [h] : (iX [h+1])-1] <- surveyW [iX [h]]
   }
 }
-rm (iX, iY)
+rm (iX)
 ## fill last survey
 surveyW [which (is.na (surveyW))] <- max (poAll$DateISO, na.rm = TRUE)
 poAll$survey <- factor (surveyW); rm (surveyW, h)
+
+
+save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData") # use this for CTDwall.R
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
+
+
+################ define variables and their ranges #########################
+# now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
+
+oVars <- c ("temperature"
+            , "salinity" #, "sigmaTheta"
+            , "turbidity"
+            # , "logTurbidity"
+            , "fluorescence" #, "chlorophyll"
+            , "PAR"
+            #, "logPAR"
+            #, "logFluorescence"
+            , "O2perc"
+)
+
+## see https://github.com/jlmelville/vizier
+# install.packages("remotes")
+# remotes::install_github("jlmelville/vizier")
+require ('vizier')
+oCol <- list (
+  # turbo
+  oceColorsTemperature
+  , oceColorsSalinity #, oceColorsDensity
+  , oceColorsTurbidity
+  , oceColorsChlorophyll
+  , oceColorsPAR  #, turbo #
+  , oceColorsOxygen
+)
+
+oCol <- function (i, N = NULL){
+#oCol <- list (
+  outC <- list (
+  # turbo (N)
+  oceColorsTemperature (N)
+  , oceColorsSalinity (N) #, oceColorsDensity
+  , oceColorsTurbidity (N)
+  , oceColorsChlorophyll (N)
+  , oceColorsPAR (N)  #, turbo #
+  , oceColorsOxygen (N)
+  )
+  outC [[i]]
+}
+
+oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
+                        , "turbidity"
+                        # , "logTurbidity"
+                        , "Fluorescence_mg_m3" #, "PAR.Irradiance"
+                        , "logPAR"
+                        , "O2perc")
+                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
+                       #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
+                     }))
+# if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
+###########################################################################
+
+
+## show data availability by year
+aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
+
 
 
 
@@ -216,6 +236,7 @@ dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FAL
 
 if (test){iX <- 4}else{iX <- 1:length (levels (poAll$survey))}
 for (sv in iX){
+  if (sv %% 10 == 0){cat (sv, "/", max (iX), "\n")}
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
   if (test){iY <- 1}else{iY <-  1:length (levels (s$Transect))}# by transect
@@ -280,12 +301,21 @@ for (sv in iX){
       xCo <- sectionize (xC)
 
       for (ov in 1:length (oVars)){
-        pSec1 (xCo, N = oVars [ov], zC = oCol [[ov]]
+        if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
+          zR <- oRange [ov,]
+        }else{
+          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, logPAR, O2perc))
+          cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
+          zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
+        }
+        pSec (xCo, N = oVars [ov], zcol = oCol [[ov]]
                # , zlim = oRange [ov,]
+               , zlim = zR
                #               , xlim = xRange []  # range of the Transect
                # , custcont = pretty (oRange [ov,], 10)
                # , axes = FALSE  ## not worth the hassle of messing with it
         )
+        rm (zR)
         # if (ov == 1){
         #   title (main = paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv]), col = "blue")
         # }
@@ -318,6 +348,8 @@ for (sv in iX){
     }
   }
 }
+
+rm (iY)
 
 physOc <- poAll
 if (!test){

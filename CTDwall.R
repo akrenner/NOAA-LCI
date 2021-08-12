@@ -7,51 +7,47 @@ rm (list = ls())
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
 ## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
-## fix contours! -- make sure to have most recent data!
+## FIX CONTOURS! -- make sure to have most recent data!
 
 ## PAR: flag night; mark 1% light level contour
 ## fix distancescale to full transect
 ## Kris: check on surface PAR and salinity measurements
 ## by season/month and year. Asterix if there are 2 per slot
 
-
 ## 2021-08-03 -- issues
 # x multiple transects per season/month are merged -> pick first
 # x fix color scale across all graphs (across Transects as well?)
+
+# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.
 
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 # only AlongBay and 9 are monthly -- 4?
 
-
+rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
 x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
-
 source ("CTDsectionFcts.R")
+
+
+
+## tests
+if (0){
+  levels (factor (subset (poAll, year == 2012)$DateISO))
+  xC <- subset (poAll, (Transect == "9")&(DateISO == "2019-09-16") )
+ # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
+  xCo <- sectionize (xC)
+  plot (xCo)
+  pSec (xCo, 1, zcol = oCol [[1]])
+  pSec (xCo, 1, zcol = turbo (10), custcont = c(10, 11, 11.1))
+  rm (xC, xCo)
+}
 
 
 
 test <- TRUE
 test <- FALSE
-
-# varRange <- sapply (oVars, function (x){
-#   xv <- poAll [,which (names (poAll) == x)]
-#   xv <- poAll [,grep (x, tolower(names (poAll)))]
-#   # xv <- replace (xv, is.infinite (xv, NA))
-#   xv <- ifelse (is.infinite (xv), NA, xv)
-#   range (xv, na.rm= TRUE)
-# })
-# oRange from CDsections.R!
-
-
-
-
-## tests
-xC <- subset (poAll, (Transect == 9)&(survey == "2021-01-13") )
-xCo <- sectionize (xC)
-rm (xC, xCo)
-
 
 
 
@@ -102,9 +98,9 @@ for (ov in iX){
 
 
     if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
-      pH <- 22; pW <- 17  # 2x2 legal size
+      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
     }else{
-      pH <- 8.5; pW <- 11
+      pH <- 8.5; pW <- 14
     }
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
                  , " T-", levels (poAll$Transect)[tn]
@@ -117,11 +113,14 @@ for (ov in iX){
     if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
       ## monthly
       physOcY$smplIntvl <- physOcY$month
-      layout (matrix (1:(12*5), 12, byrow = FALSE)) # across, then down
+    #  layout (matrix (1:(12*5), 12, byrow = TRUE)) # across, then down
+      nY <- as.numeric (format (Sys.time(), "%Y")) - 2012 + 1
+      layout (matrix (1:(12*nY), nY, byrow = TRUE)) # across, then down
+      rm (nY)
     }else{
       # quarterly
       physOcY$smplIntvl <- physOcY$season
-      layout (matrix (1:12, 4, byrow = FALSE)) # across, then down
+      layout (matrix (1:16, 4, byrow = TRUE)) # across, then down
     }
 
 
@@ -129,8 +128,8 @@ for (ov in iX){
 
 
 
-    if (test){iZ <- 1}else{iZ <- 1:length (levels (physOcY$year))}# by year
-    iZ <- 1:length (levels (physOcY$year)) # by year
+    if (test){iZ <- 1:3}else{iZ <- 1:length (levels (physOcY$year))}# by year
+    # iZ <- 1:length (levels (physOcY$year)) # by year
     for (k in iZ){
 #     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
       ## for testing:
@@ -164,7 +163,7 @@ for (ov in iX){
         # i <- 4
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
-        if (length (levels (factor (xC$Match_Name))) < 3){
+        if (length (levels (factor (xC$Match_Name))) < 2){
           ## blank plot for missing data -- unless in the future
           ## use empty slots for map rather than starting on blank page if level would be in future
 
@@ -222,10 +221,11 @@ for (ov in iX){
 
           # T 3 4 6 7 9 Along
           TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
-          pSec1 (xCo, N = oVars [ov], zC = oCol [[ov]]
+          pSec (xCo, N = oVars [ov]
+                , zCol = oCol [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
-                , custcont = pretty (oRange [ov,], 100)  ## may often fail? -- no contours in range
+                , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOc$bathy))
                 # , xlim = c(0, TD [tn])
           )

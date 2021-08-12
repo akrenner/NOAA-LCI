@@ -447,6 +447,8 @@ rm (gC)
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
+is.na (physOc$attenuation[which (physOc$attenuation <= 0)]) <- TRUE
+# is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
 
 
 ## plot all casts: depth-density, temp, salinity

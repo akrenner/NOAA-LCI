@@ -229,7 +229,7 @@ daylight <- function (dt){
   dayNight <- ifelse (sunDeg > 0, "day", "night")  # direct solar radiation
   dayNight
 }
-poSS$dayLight <- dalight (poSS$timeStamp)
+poSS$dayLight <- daylight (poSS$timeStamp)
 rm (daylight)
 
 
