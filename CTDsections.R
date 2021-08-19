@@ -62,10 +62,10 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## bathymetry and coastline
 bathy <- "polygon"
 ## Zimmermann bathymetry
-require ("raster")
+require ("raster", showWarnings = FALSE)
 require ("marmap")
 
-## FIX !!  -- already in prepData?
+## FIX !!  -- already in prepData? -- move to prepData!
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
@@ -189,7 +189,7 @@ oCol <- list (
   , oceColorsOxygen
 )
 
-oCol <- function (i, N = NULL){
+oCol2 <- function (i, N = NULL){
 #oCol <- list (
   outC <- list (
   # turbo (N)
@@ -206,8 +206,8 @@ oCol <- function (i, N = NULL){
 oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
                         , "turbidity"
                         # , "logTurbidity"
-                        , "Fluorescence_mg_m3" #, "PAR.Irradiance"
-                        , "logPAR"
+                        , "Fluorescence_mg_m3"
+                        , "PAR.Irradiance"  #, "logPAR"
                         , "O2perc")
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
@@ -234,9 +234,10 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 4}else{iX <- 1:length (levels (poAll$survey))}
+if (test){iX <- 8}else{iX <- 1:length (levels (poAll$survey))}
 for (sv in iX){
-  if (sv %% 10 == 0){cat (sv, "/", max (iX), "\n")}
+  cat (sv, " ")
+  if (sv %% 10 == 0){cat (" ", sv, "/", max (iX), "\n", sep = "")}
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
   if (test){iY <- 1}else{iY <-  1:length (levels (s$Transect))}# by transect
@@ -304,21 +305,21 @@ for (sv in iX){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
           zR <- oRange [ov,]
         }else{
-          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, logPAR, O2perc))
+          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, PAR.Irradiance, O2perc))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
           zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
         }
-        pSec (xCo, N = oVars [ov], zcol = oCol [[ov]]
-               # , zlim = oRange [ov,]
+        # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
+        pSec (xCo
+              , N = oVars [ov]
+               , zcol = oCol [[ov]]
+          #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                , zlim = zR
-               #               , xlim = xRange []  # range of the Transect
+               # , xlim = xRange []  # range of the Transect
                # , custcont = pretty (oRange [ov,], 10)
                # , axes = FALSE  ## not worth the hassle of messing with it
         )
         rm (zR)
-        # if (ov == 1){
-        #   title (main = paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv]), col = "blue")
-        # }
       }
       mtext (paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
              , side = 3, outer = TRUE, line = -0.9, cex = 0.7)

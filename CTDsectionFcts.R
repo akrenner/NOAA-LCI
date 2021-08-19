@@ -6,14 +6,18 @@
 
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
   ## old version without contours -- keep for now, but eventually replace with pSec
-    s <- try (plot (xsec, which = N
-                 # , zcol = zC  # use ... for zcol
+  s <- try (plot (xsec, which = N
+                  # , zcol = zC  # use ... for zcol
                   , stationTicks = TRUE
                   , showStations = TRUE  # or roll your own -- how?
                   , ztype = "image"
                   # , grid = TRUE
                   , ...
-  ))
+  ), silent = TRUE)
+  if (class (s) == "try-error"){
+    plot (1:10, type = "n", new = FALSE)
+    text (5,5, paste0 (N, " all values NA"))
+  }
 }
 
 
@@ -30,40 +34,62 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
                   # , ztype = "contour"
                   , ztype = "image"
                   , ...
-  ))
+  )
+  , silent = TRUE)
 
 
-  ## add contours -- see last example ?plot.section
-  #  if (cont){
-  distance <- xsec [["distance", "byStation"]]  ## s:  all NAs -- how/why?
-  try (depth <- s [["station", 1]][["depth"]])
-  # zvar <- matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (s[["station"]])) # important: s, not xsec
-  zvar <- try (matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (distance)), silent = TRUE) # important: s, not xsec
-  # if (class (zvar) == "try-error"){}
+  if (class (s) != "try-error"){
+
+    s <- xsec
+    nstation <- length(s[['station']])
+    depth <- unique(s[['depth']])
+    np <- length(depth)
+    zvar <- array(NA, dim=c(nstation, np))
+    for (ik in 1:nstation) {
+      zvar [ik, ] <- s[['station']][[ik]][[ N ]]
+    }
+    distance <- unique(s[['distance']])
+
+    if (sum (!apply (zvar, 2, FUN = function (x){all (is.na (x))})) < 2){
+      plot (1:10, type = "n", new = FALSE)
+      text (5,5, paste0 (N, " all values NA"))
+    }
 
 
-  if (length (custcont) > 1){
-    cLev <- custcont
-  }else{
-    cLev <- pretty (range (as.numeric (zvar), na.rm = TRUE), 4)
-  }
-  ## dirty hack -- still got to find out why some distances are NA! XXX
-  if (any (is.na (distance))){
-    cat ("bad distance\n")
-    cutS <- which (is.na (distance))
-    distance <- distance [-cutS]
-    zvar <- zvar [-cutS,]
-  }
-  cT <- try (contour (distance, depth, zvar, add = TRUE
-                      , levels = cLev  ## error XXX
-                      , col = "black", lwd = 2), silent = TRUE)
-  if (class (cT) == "try-error"){
-    legend ("bottomleft", legend = "no contours")
+
+    # ## add contours -- see last example ?plot.section
+    # #  if (cont){
+    # distance <- xsec [["distance", "byStation"]]  ## s:  all NAs -- how/why?
+    # try (depth <- s [["station", 1]][["depth"]])
+    # # zvar <- matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (s[["station"]])) # important: s, not xsec
+    # zvar <- try (matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (distance)), silent = TRUE) # important: s, not xsec
+    # # if (class (zvar) == "try-error"){}
+
+    if (1){
+      if (length (custcont) > 1){
+        cLev <- custcont
+      }else{
+        cLev <- try (pretty (range (as.numeric (zvar), na.rm = TRUE), custcont), silent = TRUE)
+      }
+      ## dirty hack -- still got to find out why some distances are NA! XXX
+      if (any (is.na (distance))){
+        cat ("bad distance\n")
+        cutS <- which (is.na (distance))
+        distance <- distance [-cutS]
+        zvar <- zvar [-cutS,]
+      }
+      cT <- try (contour (distance, depth, zvar, add = TRUE
+                          # , levels = cLev  ## error XXX
+                          , col = "black", lwd = 2), silent = TRUE)
+      if (class (cT) == "try-error"){
+        legend ("bottomleft", legend = "no contours")
+      }
+    }
   }
 }
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
+pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
   ## take code from
   ## https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 # s <- sectionGrid (xsec, p = "levitus'")
@@ -77,12 +103,26 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
     S[i, ] <- s[['station']][[i]][['salinity']]
   }
   distance <- unique(s[['distance']])
-  imagep (distance, p, T, ..., flipy = TRUE)
+
+  if (exists ("zrange")){
+    cm <- colormap (T
+                    , breaks = seq (zrange [1], zrange [2], length.out = 20)
+                    , col = zcol)
+  }
+
+
+  imagep (distance, p, T, col = zcol, ..., flipy = TRUE
+          , filledContour = TRUE
+          , ylab = "depth [m]")
+  if (!is.null (custcont)){
+
+  }
 }
 
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
+  require ("oce")
   stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
   if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn)), ordered = TRUE)}
   xC$Match_Name <- factor (xC$Match_Name)
@@ -92,6 +132,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
 }
 
 makeSection <- function (xC, stn){
+  require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
   as.section (lapply (1:length (levels (stn))
@@ -113,9 +154,9 @@ makeSection <- function (xC, stn){
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
                         ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
                         ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)
-                        ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
                         ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                         ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
+                        ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
                         # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                         # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
                         ocOb
