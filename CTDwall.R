@@ -28,7 +28,23 @@ rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
 x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
+#rm (oCol3)
 source ("CTDsectionFcts.R")
+
+
+## should not be here -- desperate
+
+# ## execute for each run rather than pull from .RData (which gets messed up)
+# require ("cmocean")
+# oCol3 <- list (
+#   cmocean ("thermal")
+#   , cmocean ("haline")
+#   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+#   , cmocean ("algae")
+#   , cmocean ("solar")
+#   , cmocean ("oxy")
+# )
+
 
 
 
@@ -222,7 +238,7 @@ for (ov in iX){
           # T 3 4 6 7 9 Along
           TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
           pSec (xCo, N = oVars [ov]
-                , zCol = oCol [[ov]]
+                , zCol = oCol3 [[ov]]
                 # , zCol = oCol2 (ov, 10)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect

@@ -62,7 +62,7 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## bathymetry and coastline
 bathy <- "polygon"
 ## Zimmermann bathymetry
-require ("raster", showWarnings = FALSE)
+require ("raster", quietly = TRUE)
 require ("marmap")
 
 ## FIX !!  -- already in prepData? -- move to prepData!
@@ -179,6 +179,17 @@ oVars <- c ("temperature"
 # install.packages("remotes")
 # remotes::install_github("jlmelville/vizier")
 require ('vizier')
+require ("cmocean")
+oCol3 <- list (
+  cmocean ("thermal")
+  , cmocean ("haline")
+  , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+  , cmocean ("algae")
+  , cmocean ("solar")
+  , cmocean ("oxy")
+  , cmocean ("haline")
+
+)
 oCol <- list (
   # turbo
   oceColorsTemperature
@@ -203,15 +214,16 @@ oCol2 <- function (i, N = NULL){
   outC [[i]]
 }
 
-oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
-                        , "turbidity"
-                        # , "logTurbidity"
+oRange <- t (sapply (c ("Temperature_ITS90_DegC"
+                        , "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
+                        , "turbidity" # , "logTurbidity"
                         , "Fluorescence_mg_m3"
                         , "PAR.Irradiance"  #, "logPAR"
                         , "O2perc")
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
+oRange [5,] <- c(0,100)
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
@@ -312,7 +324,7 @@ for (sv in iX){
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
         pSec (xCo
               , N = oVars [ov]
-               , zcol = oCol [[ov]]
+               , zcol = oCol3 [[ov]]
           #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                , zlim = zR
                # , xlim = xRange []  # range of the Transect

@@ -24,6 +24,8 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
 
 pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
   ## as pSec, but add contours. Replace pSec once this is working
+  ## hybrid approach -- still use build-in plot.section (for bathymetry)
+  ## but manually add contours
   s <- try (plot (xsec, which = N
                   # , showBottom = FALSE, showBottom = "lines" #FALSE
                   , axes = TRUE
@@ -46,7 +48,7 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
     np <- length(depth)
     zvar <- array(NA, dim=c(nstation, np))
     for (ik in 1:nstation) {
-      zvar [ik, ] <- s[['station']][[ik]][[ N ]]
+      try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
     }
     distance <- unique(s[['distance']])
 
@@ -80,7 +82,7 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
                           # , levels = cLev  ## error XXX
-                          , col = "black", lwd = 2), silent = TRUE)
+                          , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
         legend ("bottomleft", legend = "no contours")
       }
@@ -92,6 +94,9 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
 pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
   ## take code from
   ## https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
+  ## this is essentially a re-write of plot.section.
+  ## Reason for re-write: better bathymetry, custom-stretch distance.
+
 # s <- sectionGrid (xsec, p = "levitus'")
   s <- xsec
   nstation <- length(s[['station']])
@@ -182,5 +187,14 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
 
 
 
-
+## execute for each run rather than pull from .RData (which gets messed up)
+require ("cmocean")
+oCol3 <- list (
+  cmocean ("thermal")
+  , cmocean ("haline")
+  , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+  , cmocean ("algae")
+  , cmocean ("solar")
+  , cmocean ("oxy")
+)
 
