@@ -28,23 +28,7 @@ rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
 x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
-#rm (oCol3)
 source ("CTDsectionFcts.R")
-
-
-## should not be here -- desperate
-
-# ## execute for each run rather than pull from .RData (which gets messed up)
-# require ("cmocean")
-# oCol3 <- list (
-#   cmocean ("thermal")
-#   , cmocean ("haline")
-#   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
-#   , cmocean ("algae")
-#   , cmocean ("solar")
-#   , cmocean ("oxy")
-# )
-
 
 
 
@@ -73,8 +57,6 @@ if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){
   if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  ## XXX testing XXX
-# for (ov in 1:length (oVars)){
-#  for (tn in 1:length (levels (poAll$Transect))){
     ## for testing
     ## ov <- 1; tn <- 2
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
@@ -140,10 +122,6 @@ for (ov in iX){
     }
 
 
-
-
-
-
     if (test){iZ <- 1:3}else{iZ <- 1:length (levels (physOcY$year))}# by year
     # iZ <- 1:length (levels (physOcY$year)) # by year
     for (k in iZ){
@@ -156,12 +134,6 @@ for (ov in iX){
       ## replace transDate from above!
       ## also making surveyW redundant
       physOc$transDate <- with (physOc, paste0 ("T-", Transect, " ", year, "-", smplIntvl))
-      # tdL <- with (physOc, expand.grid (levels (smplIntvl), levels (Transect)))
-      # physOc$transDate <- factor (physOc$transDate
-      #                             , levels = paste0 ("T-", tdL$Var2, " "
-      #                                                , levels (physOcY$year)[k]
-      #                                                , "-", tdL$Var1)
-      # )
       physOc$transDate <- with (physOc, factor (transDate
                                                 , levels = paste0 ("T-", Transect [1]
                                                                    , " ", year [1], "-"
@@ -238,11 +210,11 @@ for (ov in iX){
           # T 3 4 6 7 9 Along
           TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
           pSec (xCo, N = oVars [ov]
+                #, zCol = oColF (ov)
                 , zCol = oCol3 [[ov]]
-                # , zCol = oCol2 (ov, 10)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
-                , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
+                # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOc$bathy))
                 # , xlim = c(0, TD [tn])
           )

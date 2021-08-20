@@ -178,10 +178,28 @@ oVars <- c ("temperature"
 ## see https://github.com/jlmelville/vizier
 # install.packages("remotes")
 # remotes::install_github("jlmelville/vizier")
+## move these into CTDsectionFcts.R -- or not?
+
 require ('vizier')
 require ("cmocean")
-oCol3 <- list (
-  cmocean ("thermal")
+
+oColF <- function (i){
+  require ("cmocean")
+  options ('cmocean-version' = "2.0")
+  cF <- oCol3 <- list (  ## fix versions?
+    turbo # cmocean ("thermal")
+    , cmocean ("haline")
+    , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+    , cmocean ("algae")
+    , cmocean ("solar")
+    , cmocean ("oxy")
+    , cmocean ("haline")
+  )
+  cF [[i]]
+}
+
+oCol3 <- list (  ## fix versions?
+  turbo # cmocean ("thermal")
   , cmocean ("haline")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
@@ -239,6 +257,8 @@ save.image ("~/tmp/LCI_noaa/cache/ctdwall1.RData") # use this for CTDwall.R
 
 
 source ("CTDsectionFcts.R")  # get pSec to plot sections
+save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall2.RData")
 
 
 test <- TRUE
@@ -324,8 +344,9 @@ for (sv in iX){
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
         pSec (xCo
               , N = oVars [ov]
-               , zcol = oCol3 [[ov]]
-          #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
+               , zCol = oCol3 [[ov]]
+          #    , zCol = oColF (ov)
+              #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                , zlim = zR
                # , xlim = xRange []  # range of the Transect
                # , custcont = pretty (oRange [ov,], 10)

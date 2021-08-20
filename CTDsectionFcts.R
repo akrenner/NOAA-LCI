@@ -4,10 +4,10 @@
 ## emulate/evolve from ODV
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
   ## old version without contours -- keep for now, but eventually replace with pSec
   s <- try (plot (xsec, which = N
-                  # , zcol = zC  # use ... for zcol
+                  , zcol = zCol
                   , stationTicks = TRUE
                   , showStations = TRUE  # or roll your own -- how?
                   , ztype = "image"
@@ -22,19 +22,19 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
 
 
 
-pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
   ## as pSec, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   s <- try (plot (xsec, which = N
                   # , showBottom = FALSE, showBottom = "lines" #FALSE
                   , axes = TRUE
-                  # , zcol = zC  # use ... for zcol
                   , stationTicks = TRUE
                   , showStations = TRUE
                   # , grid = TRUE
                   # , ztype = "contour"
                   , ztype = "image"
+                  , zcol = zCol
                   , ...
   )
   , silent = TRUE)
@@ -56,8 +56,6 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
       plot (1:10, type = "n", new = FALSE)
       text (5,5, paste0 (N, " all values NA"))
     }
-
-
 
     # ## add contours -- see last example ?plot.section
     # #  if (cont){
@@ -81,6 +79,7 @@ pSec2 <- function (xsec, N, cont = TRUE, custcont = NULL, ...){
         zvar <- zvar [-cutS,]
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
+                          , nlevels = 5
                           # , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
@@ -172,12 +171,13 @@ makeSection <- function (xC, stn){
 
 
 seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
-# use seasonal breaks from zooplankton study
-   if (is.factor (mon)){
-   mon <- as.numeric (as.character (mon))
- }else if (class (mon)[1] == "POSIXct"){
-   mon <- as.numeric (format (mon, "%m"))
- }
+  # use seasonal breaks from zooplankton study
+  if (is.factor (mon)){
+     mon <- as.numeric (as.character (mon))
+    # mom <- as.numeric (levels(mon))[mon]
+  }else if (class (mon)[1] == "POSIXct"){
+    mon <- as.numeric (format (mon, "%m"))
+  }
   season <- cut (mon, breaks, labels = c ("winter", "spring", "summer", "fall", "winter"))
   # season <- factor (season
   #                   , levels = c ("winter", "spring", "summer", "fall")
@@ -187,14 +187,14 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
 
 
 
-## execute for each run rather than pull from .RData (which gets messed up)
-require ("cmocean")
-oCol3 <- list (
-  cmocean ("thermal")
-  , cmocean ("haline")
-  , cmocean ("turbid") #, cmocean ("matter")  # or turbid
-  , cmocean ("algae")
-  , cmocean ("solar")
-  , cmocean ("oxy")
-)
+# ## execute for each run rather than pull from .RData (which gets messed up)
+# require ("cmocean")
+# oCol3 <- list (
+#   cmocean ("thermal")
+#   , cmocean ("haline")
+#   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+#   , cmocean ("algae")
+#   , cmocean ("solar")
+#   , cmocean ("oxy")
+# )
 
