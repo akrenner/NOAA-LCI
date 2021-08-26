@@ -7,18 +7,16 @@ rm (list = ls())
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
 ## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
-## FIX CONTOURS! -- make sure to have most recent data!
 
 ## PAR: flag night; mark 1% light level contour
 ## fix distancescale to full transect
 ## Kris: check on surface PAR and salinity measurements
-## by season/month and year. Asterix if there are 2 per slot
 
 ## 2021-08-03 -- issues
 # x multiple transects per season/month are merged -> pick first
 # x fix color scale across all graphs (across Transects as well?)
 
-# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.
+# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.  --  or plotter
 
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
@@ -27,7 +25,8 @@ rm (list = ls())
 rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
-x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
+load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+# x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 source ("CTDsectionFcts.R")
 
 
@@ -53,7 +52,7 @@ test <- FALSE
 
 ## loop over variable, then transects and then seasons
 
-if (test){iX <- 1}else{iX <- 1:length (oVars)}
+if (test){iX <- 6}else{iX <- 1:length (oVars)}
 for (ov in iX){
   if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  ## XXX testing XXX
@@ -100,7 +99,7 @@ for (ov in iX){
     }else{
       pH <- 8.5; pW <- 14
     }
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
+    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
                  , " T-", levels (poAll$Transect)[tn]
                  # , "_", levels (physOcY$year)[k]
                  , ".pdf")
@@ -188,13 +187,24 @@ for (ov in iX){
             xC$surveys <- factor (surveyW); rm (surveyW, h)
             # physOc$transDate <- factor (physOc$transDate)
 
-          nSurv <- length (levels (xC$surveys))
-          if (nSurv > 1){
-            nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
-            xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
-            # xC$Station <-
-            rm (nR)
-          }
+            nSurv <- length (levels (xC$surveys))
+            if (nSurv > 1){
+              ## use the survey with the most stations
+              if (1){
+                nS <- sapply (levels (xC$surveys), FUN = function (x){
+                  length (levels (factor (subset (xC$Station, xC$surveys == x))))
+                })
+                xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
+                rm (nS)
+              }else{
+
+                ## use only the first survey
+                nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
+                xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
+                # xC$Station <-
+                rm (nR)
+              }
+            }
 
           if (xC$Transect [1] %in% c("4", "9")){
             xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]

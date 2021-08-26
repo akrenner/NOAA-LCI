@@ -41,9 +41,11 @@ cat ("\n# END datasetup.R #\n")
 source ("anaCTD.R")              ## CTD profiles?
 cat ("\n# END anaCTD.R #\n")
 
-source ("CTDsections.R")
-source ("CTD-testSectionPlot.R")  # look for plots
 
+## the Wall
+source ("CTDwall-setup.R")
+source ("CTDsections.R")
+# source ("CTD-testSectionPlot.R")  # look for plots
 source ("CTDwall.R")
 cat ("\n# END CTDwall.R #\n", Sys.time())
 

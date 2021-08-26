@@ -161,6 +161,7 @@ makeSection <- function (xC, stn){
                         ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                         ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
                         ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
+                        ocOb <- oceSetData (ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
                         # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                         # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
                         ocOb
@@ -185,6 +186,25 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
   season
 }
 
+
+
+is.night <- function (ctd){
+  require ("suncalc")
+  sunAlt <- getSunlightPosition (date = as.POSIXct (ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
+                                 , lat = ctd@data$latitude [1]
+                                 , lon = ctd@data$longitude [1])$altitude # in radians
+  sunDeg <- sunAlt / pi * 180
+  isTRUE (sunDeg < 0)
+}
+isNightsection <- function (ctdsection){
+  ## check whether sun is below horizon at any one station
+  sM <- ctdsection@metadata
+  sunAlt <- sapply (1:length (sM$time), FUN = function (i){
+    getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
+  })
+  sunDeg <- sunAlt / pi * 180
+  isTRUE (any (sunDeg < 0))
+}
 
 
 # ## execute for each run rather than pull from .RData (which gets messed up)
