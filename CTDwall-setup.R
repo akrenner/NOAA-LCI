@@ -6,7 +6,7 @@
 ## - fix O2perc scale across plots
 ## - fix all scales across plots??
 ## - add contours
-
+## attenuation vs turbidity
 
 
 
@@ -90,8 +90,8 @@ require ("ocedata") # coastlineWorldFine
 
 
 
-poAll <- physOc
-poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Gauge..db.)),]
+# poAll <- physOc
+# poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Gauge..db.)),]
 
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
@@ -102,13 +102,18 @@ poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Ga
 ## AlongBay (tn=6), i = 2, sections to process: 4, k= 5 fails
 
 
-poAll <- subset (poAll, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate
+poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate
+rm (physOc)
 poAll$Transect <- factor (poAll$Transect)
 
 
 ## histogram and QAQC -- do this in previous script?!?
 ## add some thresholds/QAQC; log-scale?
 # poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
+
+## attenuation vs turbidy -- mix them here?!?
+poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$attenuation, poAll$turbidity) ## is this wise or correct ? XXX
+
 
 poAll$Density_sigma.theta.kg.m.3 <- ifelse (poAll$Density_sigma.theta.kg.m.3 < 15, NA, poAll$Density_sigma.theta.kg.m.3)
 poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
@@ -118,6 +123,7 @@ poAll$logPAR <- log (poAll$PAR.Irradiance)
 poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < 20, NA, poAll$Salinity_PSU)
 # poAll$logFluorescence <- log (poAll$Fluorescence_mg_m3)
 poAll$logTurbidity <- log (poAll$turbidity)
+
 
 
 ## add bathymetry to CTD metadata
@@ -133,31 +139,48 @@ if (exists ("bathyL")){
 rm (poP, bL, bathyP, bathyL, bathy)
 
 
-## define surveys (by date)
-# surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
-surveyW <- poAll$DateISO
-is.na (surveyW [which (duplicated (poAll$DateISO))]) <- TRUE
-# sqlite frame?  -- needs to be sequential (can't parallelize?)
-iX <- which (!is.na (surveyW))
-for (h in 1: (length (iX)-1)){
-  if (difftime (poAll$isoTime [iX [h+1]], poAll$isoTime [iX [h]]
-                , units = "days") < 7){
-    surveyW [iX [h] : iX [h+1]] <- surveyW [iX [h]]
-  }else{
-    surveyW [iX [h] : (iX [h+1])-1] <- surveyW [iX [h]]
-  }
-}
-rm (iX)
-## fill last survey
-surveyW [which (is.na (surveyW))] <- max (poAll$DateISO, na.rm = TRUE)
-poAll$survey <- factor (surveyW); rm (surveyW, h)
-
-
-
-
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
+
+
+
+##################### define surveys (by date-range) ##########################
+# surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
+# poAll <- poAll [order (poAll$Transect, poAll$isoTime),]
+# surveyT <- factor (with (poAll, paste (Transect,)))
+#
+# for (i in 1:length (levels (factor (poAll$Transect)))){
+# }
+
+
+poAll <- poAll [order (poAll$isoTime),]
+surveyW <- factor (poAll$DateISO)
+
+for (h in 2:length (levels (surveyW))){
+  if (difftime (levels (surveyW)[h], levels (surveyW)[h-1], units = "days") < 7){
+    surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h-1]
+  }
+}
+poAll$survey <- factor (surveyW)  ## need to reset factor levels
+rm (surveyW, h)
+
+# ## new, slow version -- but reliable?
+# for (h in 2:length (surveyW)){
+#   if (difftime (poAll$isoTime [h], poAll$isoTime [h-1], units = "days") < 7){
+#     surveyW [h] <- surveyW [h-1]
+#   }
+# }
+# poAll$survey <- factor (surveyW); rm (surveyW, h)
+
+## check --- QAQC
+for (i in 1:length (levels (poAll$survey))){
+  x <- subset (poAll, survey == levels (poAll$survey)[i])
+  cat (i, levels (factor (x$DateISO)), "\n")
+}
+rm (x, i)
+
+
 
 
 ################ define variables and their ranges #########################
@@ -165,22 +188,16 @@ save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
 
 oVars <- c ("temperature"
             , "salinity" #, "sigmaTheta"
-            , "turbidity"
-            # , "logTurbidity"
-            , "fluorescence" #, "chlorophyll"
-            , "PAR"
-            #, "logPAR"
-            #, "logFluorescence"
+            , "turbidity" # , "logTurbidity"
+            , "fluorescence" #, "chlorophyll" #, "logFluorescence"
+            , "PAR"  #, "logPAR"
             , "O2 [mg/L]"  # , "O2perc"
 )
-oVarsF <- c ("temperature"
+oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity" #, "sigmaTheta"
-             , "turbidity"
-             # , "logTurbidity"
-             , "fluorescence" #, "chlorophyll"
-             , "PAR"
-             #, "logPAR"
-             #, "logFluorescence"
+             , "turbidity" # , "logTurbidity"
+             , "fluorescence" #, "chlorophyll" #, "logFluorescence"
+             , "PAR" #, "logPAR"
              , "Oxygen"  # , "O2perc"
 )
 
@@ -189,23 +206,8 @@ oVarsF <- c ("temperature"
 # remotes::install_github("jlmelville/vizier")
 ## move these into CTDsectionFcts.R -- or not?
 
-require ('vizier')
+# require ('vizier')
 require ("cmocean")
-
-oColF <- function (i){ ## not used
-  require ("cmocean")
-  options ('cmocean-version' = "2.0")
-  cF <- oCol3 <- list (  ## fix versions?
-    oceColorsTurbo # cmocean ("thermal")
-    , cmocean ("haline")
-    , cmocean ("turbid") #, cmocean ("matter")  # or turbid
-    , cmocean ("algae")
-    , cmocean ("solar")
-    , cmocean ("oxy")
-    , cmocean ("haline")
-  )
-  cF [[i]]
-}
 
 
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
@@ -224,16 +226,17 @@ oCol3 <- list (  ## fix versions?
   , cmocean ("haline")
 
 )
-oCol <- list (  ## old, not used
-  # turbo
-  oceColorsTemperature
-  , oceColorsSalinity #, oceColorsDensity
-  , oceColorsTurbidity
-  , oceColorsChlorophyll
-  , oceColorsPAR  #, turbo #
-  , oceColorsOxygen
-)
-
+if (0){
+  oCol <- list (  ## old, not used
+    # turbo
+    oceColorsTemperature
+    , oceColorsSalinity #, oceColorsDensity
+    , oceColorsTurbidity
+    , oceColorsChlorophyll
+    , oceColorsPAR  #, turbo #
+    , oceColorsOxygen
+  )
+}
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
