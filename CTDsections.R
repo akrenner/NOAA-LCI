@@ -8,7 +8,7 @@ load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 
 
 source ("CTDsectionFcts.R")  # get pSec to plot sections
-save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
+# save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall2.RData")
 
 
@@ -17,7 +17,7 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 8}else{iX <- 1:length (levels (poAll$survey))}
+if (test){iX <- 10}else{iX <- 1:length (levels (poAll$survey))}
 for (sv in iX){
   cat (sv, " ")
   if (sv %% 10 == 0){cat (" ", sv, "/", max (iX), "\n", sep = "")}
@@ -27,11 +27,10 @@ for (sv in iX){
   for (tn in iY){  ## XXX testing XXX
     #  for (tn in 1:length (levels (poAll$Transect))){
     ## for testing
-    ## sv <- 21; tn <- 1
-    # s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
+    ## sv <- 10; tn <- 1; s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
     # s$Transect <- factor (s$Transect)
 
-    ## double-use stations:
+    ## doubly-used stations:
     # 4-3 = AlongBay-3
     # 9-6 = AlongBay-6
     if (levels (s$Transect)[tn] == "AlongBay"){
@@ -93,18 +92,22 @@ for (sv in iX){
           zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
         }
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
-        pSec (xCo
-              , N = oVars [ov]
-               , zCol = oCol3 [[ov]]
-          #    , zCol = oColF (ov)
-              #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
-               , zlim = zR
-               # , xlim = xRange []  # range of the Transect
-               # , custcont = pretty (oRange [ov,], 10)
-               # , axes = FALSE  ## not worth the hassle of messing with it
-        )
-        rm (zR)
-
+        if (all (is.na (zR))){
+          plot (1:10, type = "n")
+          text (5,5, labels = "no good data")
+        }else{
+          pSec (xCo
+                , N = oVars [ov]
+                , zCol = oCol3 [[ov]]
+                #    , zCol = oColF (ov)
+                #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
+                , zlim = zR
+                # , xlim = xRange []  # range of the Transect
+                # , custcont = pretty (oRange [ov,], 10)
+                # , axes = FALSE  ## not worth the hassle of messing with it
+          )
+          rm (zR)
+        }
         ## mark PAR at night
       #   if (oVars [ov] == "PAR"){
       #     if (is.night(xCo@data [[1]][[1]]))

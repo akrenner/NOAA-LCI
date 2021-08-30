@@ -22,13 +22,15 @@ rm (list = ls())
 # if more than 1 survey per survey-window, plot the longest section
 # only AlongBay and 9 are monthly -- 4?
 
-rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 # x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 source ("CTDsectionFcts.R")
 
+
+
+mnthly <- c ("9", "AlongBay", "4")
 
 
 ## tests
@@ -52,7 +54,7 @@ test <- FALSE
 
 ## loop over variable, then transects and then seasons
 
-if (test){iX <- 6}else{iX <- 1:length (oVars)}
+if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){
   if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  ## XXX testing XXX
@@ -60,7 +62,7 @@ for (ov in iX){
     ## ov <- 1; tn <- 2
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
 
-    ## double-use stations:
+    ## doubly-used stations:
     # 4-3 = AlongBay-3
     # 9-6 = AlongBay-6
     if (levels (poAll$Transect)[tn] == "AlongBay"){
@@ -94,7 +96,7 @@ for (ov in iX){
     #      , height = 8.5*200, width = 11*200, res = 300)
 
 
-    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+    if (levels (poAll$Transect)[tn] %in% mnthly){
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
     }else{
       pH <- 8.5; pW <- 14
@@ -107,7 +109,7 @@ for (ov in iX){
 
 
     ### force sampling regime -- plot empty for missing survey
-    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+    if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       physOcY$smplIntvl <- physOcY$month
     #  layout (matrix (1:(12*5), 12, byrow = TRUE)) # across, then down
@@ -121,7 +123,9 @@ for (ov in iX){
     }
 
 
-    if (test){iZ <- 1:3}else{iZ <- 1:length (levels (physOcY$year))}# by year
+    # if (test){iZ <- 1:3}else{
+      iZ <- 1:length (levels (physOcY$year))
+      # }# by year
     # iZ <- 1:length (levels (physOcY$year)) # by year
     for (k in iZ){
 #     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve

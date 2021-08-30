@@ -107,6 +107,16 @@ rm (physOc)
 poAll$Transect <- factor (poAll$Transect)
 
 
+## compare attenuation and turbidity -- ok to merge? QAQC
+summary (poAll$turbidity)
+summary (poAll$attenuation)
+pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
+par (mfrow = c (2,1))
+hist (log (poAll$attenuation), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
+hist (log (poAll$turbidity), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
+dev.off()
+
+
 ## histogram and QAQC -- do this in previous script?!?
 ## add some thresholds/QAQC; log-scale?
 # poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
@@ -188,7 +198,7 @@ rm (x, i)
 
 oVars <- c ("temperature"
             , "salinity" #, "sigmaTheta"
-            , "turbidity" # , "logTurbidity"
+            , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
             , "fluorescence" #, "chlorophyll" #, "logFluorescence"
             , "PAR"  #, "logPAR"
             , "O2 [mg/L]"  # , "O2perc"
