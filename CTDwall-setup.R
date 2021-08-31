@@ -117,6 +117,23 @@ hist (log (poAll$turbidity), xlim = range (log (c (poAll$attenuation, poAll$turb
 dev.off()
 
 
+pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
+plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = year)
+# legend ("bottomleft", col = levels (poAll$year), pch = 19, legend = levels (poAll$year))
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = as.numeric (CTD.serial))
+for (i in 1:length (levels (poAll$year))){
+  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll
+        , subset = year == levels (poAll$year)[i], col = as.numeric (CTD.serial))
+  legend ("topright", col = levels (factor (as.numeric (poAll$CTD.serial)))
+          , legend = levels (factor (poAll$CTD.serial)), pch = 19
+          , title = levels (poAll$year)[i])
+}
+## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
+## 2020: 5028 looks quite different than 4141. 4141 has two groups
+dev.off()
+
+
+
 ## histogram and QAQC -- do this in previous script?!?
 ## add some thresholds/QAQC; log-scale?
 # poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
