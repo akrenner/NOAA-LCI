@@ -668,6 +668,7 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2018-10-28 18:32"
 , "2020-11-13 13:20"
 , "2021-04-30 04:30"   # big loud waves at dawn (high tide). pretty tight, short wave period
+, "2021-08-28 16:00"   # check time (around high tide). 5 Surfers catching waves.
 )
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))
