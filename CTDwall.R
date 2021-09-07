@@ -221,8 +221,6 @@ for (ov in iX){
 
 
 
-          # T 3 4 6 7 9 Along
-          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
           pSec (xCo, N = oVars [ov]
                 #, zCol = oColF (ov)
                 , zCol = oCol3 [[ov]]
@@ -238,6 +236,10 @@ for (ov in iX){
             title (main = paste (levels (physOc$transDate)[i]))
           }
           rm (nSurv)
+          # T 3 4 6 7 9 Along
+          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance (N stations) per transect -- could/should calc TD above
+          TD <- c (12, 10, 12, 12, 10, 12) # fixed distance (N stations) per transect -- could/should calc TD above
+#         addBorder (xCo, TD[ov]-1)
 
           if (!exists ("xMap")){xMap <- xCo; xMc <- xC}  # keep longest section for map
           if (length (levels (factor (xMc$Station))) < length (levels (factor (xC$Station)))){

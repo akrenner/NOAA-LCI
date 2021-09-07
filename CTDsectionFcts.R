@@ -41,7 +41,6 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
 
 
   if (class (s) != "try-error"){
-
     s <- xsec
     nstation <- length(s[['station']])
     depth <- unique(s[['depth']])
@@ -58,14 +57,6 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
     }
 
     # ## add contours -- see last example ?plot.section
-    # #  if (cont){
-    # distance <- xsec [["distance", "byStation"]]  ## s:  all NAs -- how/why?
-    # try (depth <- s [["station", 1]][["depth"]])
-    # # zvar <- matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (s[["station"]])) # important: s, not xsec
-    # zvar <- try (matrix (s [[oVars [N] ]], byrow = TRUE, nrow = length (distance)), silent = TRUE) # important: s, not xsec
-    # # if (class (zvar) == "try-error"){}
-
-    if (1){
       if (length (custcont) > 1){
         cLev <- custcont
       }else{
@@ -85,7 +76,15 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
       if (class (cT) == "try-error"){
         legend ("bottomleft", legend = "no contours")
       }
-    }
+  }
+}
+
+
+addBorder <- function (s, fullT){
+  ## add black border to sections that are incomplete
+  distance <- unique (s [['distance']])
+  if (length (distance) < fullT){
+    box (lwd = 3, lty = "dashed")
   }
 }
 
