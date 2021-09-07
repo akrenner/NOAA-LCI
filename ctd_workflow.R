@@ -36,6 +36,11 @@ cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
 cat ("\n# END CTD_cleanup.R #\n")
 
+## update Access tables from Notebook database
+system("cmd.exe"
+       , input = paste('"C:/Users/Martin.Renner/Documents/Applications/R-Portable/App/R-Portable/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+
+
 source ("datasetup.R")
 cat ("\n# END datasetup.R #\n")
 source ("anaCTD.R")              ## CTD profiles?
