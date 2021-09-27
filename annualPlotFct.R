@@ -398,7 +398,7 @@ getSWMP <- function (station){
     #      SMPfile <- zipFile
     #    }
     smp <- import_local(SMPfile, station) ## this is initially required!
-    smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+   # smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
   #  ## not sure whyere the bad line is coming from, but it has to go
@@ -408,6 +408,7 @@ getSWMP <- function (station){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
+    # smp2 <- qaqc (smp2)
     if (class (smp2)[1] == "swmpr"){
       ## remove bad lines
       if (any (is.na (smp2$datetimestamp))){
@@ -482,6 +483,42 @@ cDir <- function (wd, nDir = 8){
   cut (wd, breaks = rose_breaks, labels = rose_labs
        , right = FALSE, include.lowest = TRUE)
 }
+
+
+
+
+## combine several PNGs into one PDF
+merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
+  ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
+  #### Package Install ####
+  pngPackageExists <- require ("png")
+  if ( !pngPackageExists ) {
+    install.packages ("png")
+    library ("png")
+  }
+  require ("grid")
+  #########################
+
+  pdf(pdfFile) ## could/should load aspect ratio of PNGs?
+  par (mar = rep (0.2, 4))
+  n <- length(pngFiles)
+  for(i in 1:n) {
+    pngFile <- pngFiles[i]
+    pngRaster <- readPNG(pngFile)
+    grid.raster(pngRaster, width=unit(0.8, "npc"), height= unit(0.8, "npc"))
+#    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
+    if (i < n) plot.new()
+  }
+  dev.off()
+  if (deletePngFiles) {
+    unlink(pngFiles)
+  }
+}
+
+
+
+
+
 
 
 #EOF
