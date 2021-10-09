@@ -216,7 +216,7 @@ rm (x, i)
 oVars <- c ("temperature"
             , "salinity" #, "sigmaTheta"
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-            , "fluorescence" #, "chlorophyll" #, "logFluorescence"
+            , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
             , "PAR"  #, "logPAR"
             , "O2 [mg/L]"  # , "O2perc"
 )
@@ -272,8 +272,9 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Fluorescence_mg_m3"
                         , "PAR.Irradiance"  #, "logPAR"
                         , "Oxygen_SBE.43..mg.l.")
-                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
+                     #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
+                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.05,0.95), na.rm = TRUE)
+                         #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
 oRange [2,1] <- 25 # fix min salinity
 oRange [5,] <- c(0,100)      # fix PAR range

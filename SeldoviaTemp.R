@@ -32,7 +32,7 @@ dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
 source ("annualPlotFct.R") # already loads SWMPr
 # unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
 
-# require ("SWMPr")
+require ("SWMPr")
 # sldvia <- import_local (SMPfile, "kacsdwq") # Seldovia deep
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
 # sldvia1 <- import_local (SMPfile, "kacsewq") # Seldovia deep -- early, no longer updated

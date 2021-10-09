@@ -89,7 +89,8 @@ for (sv in iX){
         }else{
           cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, PAR.Irradiance, O2perc))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
-          zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
+        # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
+          zR <- quantile (cDF [,ov], probs = c(0.05, 0.95), na.rm = TRUE); rm (cDF)
         }
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
         if (all (is.na (zR))){

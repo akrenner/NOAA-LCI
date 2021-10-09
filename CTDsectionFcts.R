@@ -105,7 +105,7 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
     T[i, ] <- s[['station']][[i]][['temperature']]
     S[i, ] <- s[['station']][[i]][['salinity']]
   }
-  distance <- unique(s[['distance']])
+  distance <- unique(s[['distance']])  ## look these up from full transect. Then fix xlim
 
   if (exists ("zrange")){
     cm <- colormap (T

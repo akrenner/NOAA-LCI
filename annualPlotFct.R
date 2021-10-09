@@ -491,12 +491,16 @@ cDir <- function (wd, nDir = 8){
 merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
   ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
   #### Package Install ####
+  gridExists <- require ("grid")
+  if ( !gridExists ) {
+    install.packages ("grid")
+    library ("grid")
+  }
   pngPackageExists <- require ("png")
   if ( !pngPackageExists ) {
     install.packages ("png")
     library ("png")
   }
-  require ("grid")
   #########################
 
   pdf(pdfFile) ## could/should load aspect ratio of PNGs?
