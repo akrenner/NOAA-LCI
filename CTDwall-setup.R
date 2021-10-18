@@ -292,3 +292,5 @@ aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))}
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
+# EOF
