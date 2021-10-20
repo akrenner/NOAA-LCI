@@ -365,23 +365,37 @@ yearFits <- lapply (1:length (levels (sL$station)), function (j){
     fit <- try (nls (csum~logF (L,k,x0,b,x=jday), data = s, start = svf))
     #     fit <- try (nls (s$csum~SSlogis (s$jday, Asym, xmid, scal)))
     # if (class (fit) == "try-error"){fit <- }
+    #fit <- list (fit, levels (dat$year)[i])
     fit
   })
+  names (yFit) <- paste0 ("Y", levels (dat$year))
+  yFit
 })
 
-yearCoef <- t (sapply (1:length (yearFits), function (i){
-  fits <- yearFits [[i]]
-  ## fits is still a list XXXX!!!!
-  if (class (fit) == "try-error"){
-    cf <- rep (NA, 4)
-  }else{
-    cf <- coefficients(fit)
-  }
-  cf
-}))
-colnames(yearCoef) <- names (svf)
-row.names(yearCoef) <- levels (dat$year)[1:length(levels (dat$year))]
-
+yearCoef <- lapply (1:length (yearFits), function (j){
+  fits <- yearFits [[j]]
+  coefs <- t (sapply (1:length (fits), function (i){
+    fit <- fits [[i]]
+    if (class (fit) == "try-error"){
+       cf <- as.numeric (rep (NA, 4))
+      names (cf) <- c("L","k","x0","b") # as.numeric (c (L=NA, k=NA,x0=NA,b=NA))
+    }else{
+      cf <- coefficients(fit)
+    }
+    # cf <- data.frame (cf, year = fits [[j]][[2]])
+    cf
+  }))
+  # coef <- cbind (coefs, year = as.numeric (gsub ("^Y", "", names (fits))))
+  #  row.names(coefs) <- names (fits)
+  coefs <- data.frame (station = rep (levels (sL$station)[j], nrow (coefs))
+                         , year = as.numeric (rep (gsub ("^Y", "", names (fits))))
+                         , coefs)
+  coefs
+})
+# names (yearCoef) <- levels (sL$station)
+yearCoef <- do.call (rbind, yearCoef)
+# colnames(yearCoef) <- names (svf)
+yearCoef
 
 
 pdf ("~/tmp/LCI_noaa/media/sprintTimeFluoAnnual.pdf", height = 6, width = 12)
