@@ -31,24 +31,24 @@ as.num <- function (x){
 ## do this after aggregation to dailys?
 ## need to make sure even climatologies have all dates
 
-insertMA <- function (df, start = as.POSIXct ("2001-07-12 08:00 -9"), end = Sys.time()){
-  dtsmp <- start + 15*60 * (1:floor (as.numeric (difftime (end, start, units = "hours"))*4))
-  newDf <- data.frame (df [match (dtsmp, df$datetimestamp),])
-  newDf$datetimestamp <- dtsmp
-  if (length (levels (factor (df$station))) > 1){stop ("more than one station in DF")}
-  newDf$station <- df$station [1]
-  newDf$jday <- as.numeric (strftime (newDf$datetimestamp, format = "%j"))
-  newDf$week <- as.numeric (strftime(newDf$datetimestamp, format='%U'))
-  newDf$week <- as.numeric (strftime(newDf$datetimestamp, format='%m'))
-  newDf$year <- as.numeric (strftime (newDf$datetimestamp, format = '%Y'))
-  newDf
-}
-
-sldvia <- insertMA (sldvia)
-sldviaS <- insertMA (sldviaS)
-homer <- insertMA (homer)
-homerS <- insertMA (homerS)
-rm (insertMA)
+# insertMA <- function (df, start = as.POSIXct ("2001-07-12 08:00 -9"), end = Sys.time()){
+#   dtsmp <- start + 15*60 * (1:floor (as.numeric (difftime (end, start, units = "hours"))*4))
+#   newDf <- data.frame (df [match (dtsmp, df$datetimestamp),])
+#   newDf$datetimestamp <- dtsmp
+#   if (length (levels (factor (df$station))) > 1){stop ("more than one station in DF")}
+#   newDf$station <- df$station [1]
+#   newDf$jday <- as.numeric (strftime (newDf$datetimestamp, format = "%j"))
+#   newDf$week <- as.numeric (strftime(newDf$datetimestamp, format='%U'))
+#   newDf$week <- as.numeric (strftime(newDf$datetimestamp, format='%m'))
+#   newDf$year <- as.numeric (strftime (newDf$datetimestamp, format = '%Y'))
+#   newDf
+# }
+#
+# sldvia <- insertMA (sldvia)
+# sldviaS <- insertMA (sldviaS)
+# homer <- insertMA (homer)
+# homerS <- insertMA (homerS)
+# rm (insertMA)
 
 
 # dtsmp <- min (sL$datetimestamp, na.rm = TRUE) + 15*60 *
@@ -138,7 +138,7 @@ for (i in vN){
              , xlab = "Homer deep", ylab = "Seldovia deep", asp=1))
  dev.off()
 }
-
+rm (vN)
 }
 
 
@@ -221,18 +221,6 @@ sineF <- function (A, omega, phi, x, C){
   A * sin (omega * x + phi) + C
 }
 
-
-prepDF <- function (df, i, mR = 2:8){
-  require("zoo")
-  s <- subset (df, year == levels (df$year)[i])
-  s <- subset (s, month %in% mR)
-  #  s <- subset (s, month <= 9)
-  s$jday <- s$jday + as.numeric (format (s$datetimestamp, "%H"))/24 +
-    as.numeric (format (s$datetimestamp, "%M"))/24 / 60
-  # s$chlfluor <- na.approx(s$chlfluor, x = s$jday, na.rm = FALSE) ## do this earlier
-  s$cumFlu <- cumsum(s$chlfluor)
-  return (s)
-}
 
 
 # starting values
@@ -317,20 +305,23 @@ pdf ("~/tmp/LCI_noaa/media/springTimeFluorescClimatology-bySite.pdf", height = 6
 par (mfrow = c(1,2))
 for (j in 1:length (levels (cliFL$station))){
 # for (j in 1:length (cliFL)){
-#  s <- cliFL [[j]]  #subset (sL, station == levels (sL$station)[j])
   s <- subset (cliFL, station == levels (cliFL$station)[j])
   s$csum <- cumsum (s$chlfluor)  ## no NAs in climatology
-  plot (chlfluor~jday, s, lwd = 2, type = "l"
-        , main = c("Seldovia-deep", "Seldovia-shallow", "Homer-deep", "Homer-shallow")[j])
+  plot (chlfluor~jday, s, lwd = 2, type = "l", col = "black"
+        , main = levels (cliFL$station)[j]
+        #, main = c("Seldovia-deep", "Seldovia-shallow", "Homer-deep", "Homer-shallow")[j]
+        , ylab = "chlorophyll"
+          )
   plot (csum~jday, s, lwd = 2, type = "l", ylab = "cumulative chlorophyl")
   # fit <- nls (csum~logF (L,k,x0,b,x=jday), data = s, start = svf)
   # fit.val <- data.frame (jday = s$jday, csum = predict (fit, list (jday = s$jday)))
   # lines (csum~jday, fit.val, col = "blue")
   fit.val <- data.frame (jday = s$jday, csum = predict (cliFit [[j]], list (jday = s$jday)))
-    lines (csum~jday, fit.val, col = "red")
+  lines (csum~jday, fit.val, col = "red", lwd = 2, lty = "dashed")
+  # mtext (text = levels (cliFL$station)[j], outer = FALSE, line = 0, side = 1)
 }
 dev.off()
-
+rm (svf, svt)
 
 
 
@@ -372,24 +363,22 @@ sLt <- data.frame (jday = rep (1:366, times = Ns*Ny, each = 1)
               , year = rep (min (sL$year):max (sL$year), Ns, each = 366)
               , station = rep (lS, each = 366 * Ny)
 )
+
 sLt$chlfluor <- sL$chlfluor [match (paste (sLt$station, sLt$jday, sLt$year)
                                       , paste (sL$station, sL$jday, sL$year))]
-# sLt$chlfluorNNa <- sLt$chlfluor
-# sLt$chlfluorNNa [is.na(sLt$chlfluor)] <- cliFL$chlfluor [match (paste0 (as.character (sL$station), sL$jday)
-#                                                           , paste0 (as.character (cliFL$station)
-#                                                                     , cliFL$jday))][is.na (sLt$chlfluor)]
 sLt$chlfluorNNa <- ifelse (is.na(sLt$chlfluor)
-                           , cliFL$chlfluor [match (paste0 (sL$station, sL$jday)
-                                                    , paste0 (cliFL$station, cliFL$jday))]
-                           , sLt$chlfluor)
-
+                           , cliFL$chlfluor [match (paste0 (as.character (sLt$station), sLt$jday)
+                                                    , paste0 (as.character (cliFL$station), cliFL$jday))]
+                           , sLt$chlfluor)   # XXXXXXX
+# sLt$climFluor <- cliFL$chlfluor [match (paste0 (as.character (sLt$station), sLt$jday)
+#                                         , paste0 (as.character (cliFL$station), cliFL$jday))]
 sLt$station <- factor (sLt$station)
 sLt$year <- factor (sLt$year)
 sL <- sLt; rm (sLt)
 rm (lS, Ny, Ns)
 
 
-i <- 1; j <- 2
+i <- 8; j <-3
 yearFits <- lapply (1:length (levels (sL$station)), function (j){
   dat <- subset (sL, station == levels (sL$station)[j])
   #   dat$year <- factor (dat$year)  ## reset year levels
@@ -434,10 +423,16 @@ yearCoef <- lapply (1:length (yearFits), function (j){
   coefs <- t (sapply (1:length (fits), function (i){
     fit <- fits [[i]]
     if (class (fit) == "try-error"){
-       cf <- as.numeric (rep (NA, 4))
-      names (cf) <- c("L","k","x0","b") # as.numeric (c (L=NA, k=NA,x0=NA,b=NA))
+       cf <- as.numeric (rep (NA, 5))
+      names (cf) <- c("L","k","x0","b", "p365") # as.numeric (c (L=NA, k=NA,x0=NA,b=NA))
     }else{
       cf <- coefficients(fit)
+      p365 <- try (predict (fit, list (jday = 365)))
+      if (class (p365) == "try-error"){
+        cf <- c (cf, p365 = NA)
+      }else{
+        cf <- c (cf, p365 = predict (fit, list (jday = 365)))
+      }
     }
     # cf <- data.frame (cf, year = fits [[j]][[2]])
     cf
@@ -452,11 +447,15 @@ yearCoef <- lapply (1:length (yearFits), function (j){
 # names (yearCoef) <- levels (sL$station)
 yearCoef <- do.call (rbind, yearCoef)
 # colnames(yearCoef) <- names (svf)
+aSum <- aggregate (chlfluorNNa~year+station, sL, sum)
+yearCoef$sum <- aSum$chlfluorNNa [match (with (yearCoef, paste (station, year))
+                                               , with (aSum, paste (station, year)))]
+rm (aSum)
 yearCoef
 
 
 
-j <- 3; i <- 10
+j <- 1; i <- 1
 pdf ("~/tmp/LCI_noaa/media/sprintTimeFluoAnnual.pdf", height=6, width=12)
 par (mfrow = c(1,2))
 for (j in 1:length (levels (sL$station))){
@@ -465,20 +464,32 @@ for (j in 1:length (levels (sL$station))){
   for (i in 1:length (levels (dat$year))){
     #  cat ("\n\n", i, "\n")
     s <- subset (dat, year == levels (dat$year)[i])  # use homerS for now
-    if ((!all (is.na (s$chlfluor))) && (nrow (s)>3)){
-      plot (chlfluor~jday, s, lwd = 2, type = "l" #, col = "blue"
-            , main = levels (dat$year)[i])
+    if (sum (!is.na (s$chlfluor)) > 3){
+      ## first panel: data as measured/interpolated/imputed
+      plot (chlfluorNNa~jday, s, lwd = 2, type = "l" , col = "red"
+            , main = levels (dat$year)[i]
+            , ylab = "chlorophy/fluorescence")
+      # lines (chlfluor~jday, subset (cliFL, station == levels (sL$station)[j]), lwd = 1, col = "green") # XXX
+      lines (chlfluor~jday, s, lwd = 2, col = "black")
+      # lines (climFluor~jday, s, lwd = 2, col = "black", lty = "dotted")
+      legend ("topleft", col = c ("black", "red"), lwd = 2, bty = "n"
+              , legend = c ("data", "missing data"))
+
+      ## 2nd panel: cumulative fluorescence
       plot (cumsum(chlfluorNNa)~jday, s, lwd = 2, type = "l"
             , main = paste (dat$station [1], levels (dat$year)[i])
             , ylim = c(0,1870)
             , xlim = c(1,365)
+            , ylab = "cumulative chlorophy/fluorescence"
       )
+      legend ("topleft", col = c ("black", "blue", "red"), lty = c(1,1,2), lwd = 2
+              , legend = c ("data", "fit", "long-term fit"), bty = "n")
 
       ## add line for climatology-fit
       nD <- 1:365
       #      fit.val <- data.frame (jday = s$jday, csum = predict (cliFit [[j]], list (x = s$jday)))
       fit.val <- data.frame (jday = nD, csum = predict (cliFit [[j]], list (jday = nD)))
-      lines (csum~jday, fit.val, col = "red", lty = "dashed")
+      lines (csum~jday, fit.val, col = "red", lty = "dashed", lwd = 2)
       ## add line for current data fit
       fits <- yearFits [[j]][[i]]
       if (class (fits) == "try-error"){title (sub = "no year-fit")}else{
@@ -492,6 +503,7 @@ for (j in 1:length (levels (sL$station))){
   }
 }
 dev.off()
+rm (fit.val, fits, s, dat)
 
 
 
@@ -502,10 +514,32 @@ pdf ("~/tmp/LCI_noaa/media/springtiming_StationCor.pdf")
 for (i in 1:length (levels (yearCoef$station))){
   s <- subset (yearCoef, station == levels (yearCoef$station)[i])[,2:ncol (yearCoef)]
   cat ("\n\n", levels (yearCoef$station)[i], "\n")
-  print (cor (s, use = "p"))
-  plot (x0~L, s)
+  print (try (cor (s, use = "p"), silent = TRUE))
+  plot (sum~x0, s, pch = 19
+        , main = levels (yearCoef$station)[i]
+        , xlab = "central day of bloom"
+        , ylab = "total annual chlorophyll")
+  md <- try (lm (sum~x0, s), silent = TRUE)
+  if (class (md) != "try-error"){
+    nD <- list (x0 = seq (min (s$x0, na.rm = TRUE), max (s$x0, na.rm = TRUE), length.out = 100))
+    mdP <- as.data.frame (predict (md, nD, interval = "confidence", level = 0.95))
+    lines (nD$x0, mdP$fit, lwd = 2)
+    lines (nD$x0, mdP$lwr, lty = "dashed", lwd = 2)
+    lines (nD$x0, mdP$upr, lty = "dashed", lwd = 2)
+  }
 }
 dev.off()
-summary (lm (x0~L*station, yearCoef))
+summary (lm (sum~x0*station, yearCoef))
+summary (lm (sum~station, yearCoef))
+
+summary (lm (x0~station, yearCoef))
+aggregate (x0~station, yearCoef, mean, na.rm = TRUE)
+
+
+pdf ("~/tmp/LCI_noaa/media/springtiming-stationCoef.pdf")
+boxplot(sum~station, yearCoef, ylab = "total annual fluorescence/chlorophyll")
+boxplot(x0~station, yearCoef, ylab = "central day of bloom")
+dev.off()
+
 
 # EOF
