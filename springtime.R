@@ -542,4 +542,29 @@ boxplot(x0~station, yearCoef, ylab = "central day of bloom")
 dev.off()
 
 
+save.image ("~/tmp/LCI_noaa/cache/springtiming.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/springtiming.RData")
+## add annual temperature to the coefficients
+
+aTemp <- aggregate (temp~station+year, sLo, FUN = mean, na.rm = TRUE)
+yearCoef$temp <- aTemp$temp [match (with (yearCoef, paste (station, year))
+                                    , with (aTemp, paste (station, year)))]
+
+pdf ("~/tmp/LCI_noaa/media/springtimingTemp.pdf")
+for (j in 1:length (levels (yearCoef$station))){
+  s <- subset (yearCoef, station == levels (yearCoef$station)[j])
+  plot (temp~x0, s, pch=19)
+  md <- try (lm (temp~x0, s), silent = TRUE)
+  if (class (md) != "try-error"){
+    nD <- list (x0 = seq (min (s$x0, na.rm = TRUE), max (s$x0, na.rm = TRUE), length.out = 100))
+    mdP <- as.data.frame (predict (md, nD, interval = "confidence", level = 0.95))
+    lines (nD$x0, mdP$fit, lwd = 2)
+    lines (nD$x0, mdP$lwr, lty = "dashed", lwd = 2)
+    lines (nD$x0, mdP$upr, lty = "dashed", lwd = 2)
+  }
+
+}
+dev.off()
+
+
 # EOF
