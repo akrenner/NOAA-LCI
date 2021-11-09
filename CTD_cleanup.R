@@ -544,6 +544,13 @@ setwd (outD) ## zip blows up otherwise
 yr <- factor (format (physOc$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (physOc, yr == levels (yr)[i])
+  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
+  if ("Spice" %in% names (ctdA)){
+## [,1:(ncol (ctdA)-1)] # remove Spice
+   ctdA <- ctdA [,-which (names (ctdA) == "Spice")]
+  }
+  # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
+  # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (levels (yr)[i], "_Aggregatedfiles.csv")
   write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
   # zip::zip (zipfile = paste0 ("CTDaggregate", levels (yr)[i], ".zip")

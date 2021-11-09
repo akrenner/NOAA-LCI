@@ -43,8 +43,11 @@ system("cmd.exe"
 
 source ("datasetup.R")
 cat ("\n# END datasetup.R #\n")
-source ("anaCTD.R")              ## CTD profiles?
-cat ("\n# END anaCTD.R #\n")
+
+## anaCTD.R needs updates/work -- not currently working -- multiplatform issue?
+# source ("anaCTD.R")              ## CTD profiles?
+# cat ("\n# END anaCTD.R #\n")
+cat ("\n# SKIPPED anaCTD.R #\n")
 
 
 ## the Wall

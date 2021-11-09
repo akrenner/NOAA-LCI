@@ -546,13 +546,14 @@ save.image ("~/tmp/LCI_noaa/cache/springtiming.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/springtiming.RData")
 ## add annual temperature to the coefficients
 
-aTemp <- aggregate (temp~station+year, sLo, FUN = mean, na.rm = TRUE)
+aTemp <- aggregate (temp~station+year, sLo, FUN = mean, na.rm = TRUE, subset = month < 6)
 yearCoef$temp <- aTemp$temp [match (with (yearCoef, paste (station, year))
                                     , with (aTemp, paste (station, year)))]
 
 pdf ("~/tmp/LCI_noaa/media/springtimingTemp.pdf")
 for (j in 1:length (levels (yearCoef$station))){
-  s <- subset (yearCoef, station == levels (yearCoef$station)[j])
+# j <- 3
+    s <- subset (yearCoef, station == levels (yearCoef$station)[j])
   plot (temp~x0, s, pch=19)
   md <- try (lm (temp~x0, s), silent = TRUE)
   if (class (md) != "try-error"){
@@ -562,9 +563,32 @@ for (j in 1:length (levels (yearCoef$station))){
     lines (nD$x0, mdP$lwr, lty = "dashed", lwd = 2)
     lines (nD$x0, mdP$upr, lty = "dashed", lwd = 2)
   }
-
 }
 dev.off()
+summary (lm (x0~station + temp, data = yearCoef))
 
+
+
+## fluorescence and turbidity:
+plot (turb~as.num(jday), sLo)
+
+pdf ("~/tmp/LCI_noaa/media/springtimeFluores-Turb.pdf", width=7, height=14)
+mC <- seq (1, 10, by = 2)
+par (mfcol = c(length (mC),2), mar = c(3,4,0.5,0.5))
+for (i in 1:length (mC)){
+  plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "HomerShallow")
+        , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
+  legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
+if (i == 1){legend ("top", bty = "n", legend = "Homer", cex = 2.5)}
+  }
+for (i in 1:length (mC)){
+  plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "SeldoviaShallow")
+        , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
+  legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
+  if (i == 1){legend ("top", bty = "n", legend = "Seldovia", cex = 2.5)}
+}
+mtext ("chlorophyll", side = 2, outer = TRUE, line = -2)
+mtext ("turbidity", side = 1, outer = TRUE, line = -2)
+dev.off()
 
 # EOF
