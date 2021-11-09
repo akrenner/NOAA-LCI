@@ -17,6 +17,9 @@
 
 # rm (list = ls())
 
+if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
+
+
 # TESTrun <- TRUE
 # TESTrun <- FALSE
 
@@ -575,6 +578,10 @@ x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir
              , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
 xmlC <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", ".xmlcon"
                     , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+## remove 8138 and 2021 callibration until they've been used!
+# xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
+xmlC <- xmlC [-grep ("2021", xmlC)]
+
 file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", xmlC)
            , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", xmlC))
 rm (xmlC)
