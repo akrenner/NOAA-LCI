@@ -13,7 +13,7 @@
 
 
 ## open issues
-# - con (rather than .xmlcon) file doesn't include turbidity -- what do to about it?
+# - con (rather than .xmlcon) file doesn't include turbidity -- what do to about it?  => upoly!
 # any way to translate con to xmlcon file? (for convenience)
 # - automate .psa file setting. Currently have to go through each module, load,
 # configure, save, and repeat for other instrument again.
@@ -21,6 +21,10 @@
 #    -> on Windows, not worth the trouble! full run about 35 min
 # - process only newly added files: keep log of what's been processed already!
 
+
+## serious open issues:
+## loop-edit: better to do in R, but would need to resume binning by depth in SEABIRD?
+## clean-up: if doing binning by depth in R, here or in CTD_cnv-Import.R?
 
 
 
@@ -68,23 +72,23 @@ outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy
 
 # ## trouble shooting -- one file at a time
 if (0){
-# conF <- gsub ("//", "\\", conF, fixed = TRUE)
-# file.path(conF, fsep = "\\")
-i <- 3
-j <- 99
-# for (i in 1:length (conF)){
-#   for (k in 1:length (tL)){dir.create (tL [k], recursive = TRUE)}
-#   hexFiles <- list.files(dirname (conF [i]), ".hex$")
-#   for (j in 1:length (hexFiles)){
-#     l1 <- paste0 ("DatCnv /i", inD [i], "/", hexFiles [j], " /c", conF [i], " /o", tLD[1]
-#                   , " /p", psa [grep ("Dat", psa)], " #m")
-#     write (l1, file = "CTDbatch.txt")
-#     system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"))
-#   }
-#   unlink (tL, recursive = TRUE, force = TRUE)
-# }
-#
-# rm (i, j, k)
+  # conF <- gsub ("//", "\\", conF, fixed = TRUE)
+  # file.path(conF, fsep = "\\")
+  i <- 3
+  j <- 99
+  # for (i in 1:length (conF)){
+  #   for (k in 1:length (tL)){dir.create (tL [k], recursive = TRUE)}
+  #   hexFiles <- list.files(dirname (conF [i]), ".hex$")
+  #   for (j in 1:length (hexFiles)){
+  #     l1 <- paste0 ("DatCnv /i", inD [i], "/", hexFiles [j], " /c", conF [i], " /o", tLD[1]
+  #                   , " /p", psa [grep ("Dat", psa)], " #m")
+  #     write (l1, file = "CTDbatch.txt")
+  #     system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"))
+  #   }
+  #   unlink (tL, recursive = TRUE, force = TRUE)
+  # }
+  #
+  # rm (i, j, k)
 }
 
 
@@ -92,6 +96,7 @@ j <- 99
 ## create and call batch files
 ## great if this could run in parallel -- probably not on Windows?
 for (i in 1:length (conF)){
+  ## for (i in 2){ # XXX
   #sapply (1:length (tL), FUN = function (j){dir.create (tL [j], recursive = TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
@@ -99,9 +104,14 @@ for (i in 1:length (conF)){
   tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 
   for (j in 1:length (tL)){dir.create (tL [j], recursive = TRUE)}
+
+  ##
+  ## need to add code here for new CTD !!
+  ## does it report turbidity or attenuation??
+  ##
   if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
     psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
-  }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
+  }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve attenuation/turbidity
     psa <- psaL [grep ("4141", psaL)]
   }else{
     psa <- psaL [grep ("5028", psaL)]
@@ -109,19 +119,23 @@ for (i in 1:length (conF)){
 
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
   l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
-#  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
+  #  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
   ## the lines below would do the loop-edit, and binning by depth in SBEDataProcessing as well. This results about 10 files to
   ## fail (no data). Instead, do the loopedit within OCE (see CTD_cnv-Import.R). Bin-averaging by depth will run in CTD_cleanup.R
 
   l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
   l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m")
-  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m")
+  l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",               "/o", outF,  " /p", psa [grep ("BinAvg", psa)], " #m")
   # l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
-#  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
+  #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
   ## add thermal mass or derived variables??
-#  bT <- paste (l1, l2, l3, sep = "\n")
   bT <- paste (l1, l2, l3, l5, l7, sep = "\n")
+  # bT <- paste (l1, l2, sep = "\n")
+  # bT <- paste (l1, sep = "\n")
+
   write (bT, file = "~/CTDbatch.txt")
+  # write (paste (l1, l2, sep = "\n"))## XXX TEST
+
   # efforts to suppress console output failed: invisible(), capture.output()...
   x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
   ## cleanup
@@ -132,30 +146,31 @@ for (i in 1:length (conF)){
 
 ## replicate loopedit here in R.
 ## run BinAvg again in SEABIRD and/or in R.
-fNf <- list.files(tLB [3], ".cnv"
-                  , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
-require ("oce")
-for (i in 1:length (fNf)){
-  ctdF <- read.ctd(fNf [i])  ## address NA warning
-  cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
-                         # , parameters = list (minSoak = 1, maxSoak = 20)
-                         )  ## min/maxSoak = dbar (approx m)
-                , silent = TRUE)
-  if (class (cTrim) == "try-error"){
-    ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-    # could/should specify min soak times, soak depth -- min soak time = 40s
-    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
-  }else{
-    ctdF <- cTrim
+if (0){
+  fNf <- list.files(tLB [3], ".cnv"
+                    , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
+  require ("oce")
+  for (i in 1:length (fNf)){
+    ctdF <- read.ctd(fNf [i])  ## address NA warning
+    cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
+                           # , parameters = list (minSoak = 1, maxSoak = 20)
+    )  ## min/maxSoak = dbar (approx m)
+    , silent = TRUE)
+    if (class (cTrim) == "try-error"){
+      ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
+      # could/should specify min soak times, soak depth -- min soak time = 40s
+      #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+    }else{
+      ctdF <- cTrim
+    }
+    write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
+
+    ## tried, but largely failed so far with
+    ## vprr bin_cast / bin_calculate
+    ## and/or oce::ctdDecimate
+    # -- ctdDecimate seems to work but depth still a bit off
   }
-  write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
-
-  ## tried, but largely failed so far with
-  ## vprr bin_cast / bin_calculate
-  ## and/or oce::ctdDecimate
-  # -- ctdDecimate seems to work but depth still a bit off
 }
-
 
 ## alternative: run another SBEDataProcessing batch
 # unlink (tL, recursive = TRUE, force = TRUE)

@@ -14,6 +14,9 @@
 ## finding best con-file: always use con-file in the past or whatever is closest?
 
 
+cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
+
+
 
 # rm (list = ls())
 
@@ -570,6 +573,11 @@ if (any (!cpCk)){
 }
 rm (cpCk)
 unlink (nD, recursive = TRUE, force = TRUE)
+
+
+## remove config-directories with no hex files
+
+
 
 
 
