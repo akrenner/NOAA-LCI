@@ -364,11 +364,11 @@ Require ("oce")
 # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. <- O2
 # rm (O2)
 # }
-physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
-physOc$Spice <- with (physOc, swSpice (Salinity_PSU
-                                       , Temperature_ITS90_DegC
-                                       , Pressure..Strain.Gauge..db.
-))
+# physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
+# physOc$Spice <- with (physOc, swSpice (Salinity_PSU
+#                                        , Temperature_ITS90_DegC
+#                                        , Pressure..Strain.Gauge..db.
+# ))
 summary (physOc)
 
 
@@ -447,7 +447,7 @@ rm (gC)
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
-is.na (physOc$attenuation[which (physOc$attenuation <= 0)]) <- TRUE
+is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
 # is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
 
 
@@ -545,16 +545,31 @@ yr <- factor (format (physOc$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (physOc, yr == levels (yr)[i])
   ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
+  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time, File.Name
+                                  , Latitude_DD = latitude_DD
+                                  , Longitude_DD = longitude_DD
+                                  , CTD.serial
+                                  , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
+                                  , Temperature_ITS90_DegC, Salinity_PSU
+                                  , Density_sigma.theta.kg.m.3
+                                  , Oxygen_GarciaGordon_umol.kg = Oxygen.Saturation.Garcia.Gordon.umol_kg
+                                  , Oxygen.Saturation_perc=Oxygen_sat.perc.
+                                  , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                  , PAR.Irradiance
+                                  , Fluorescence_mg_m3
+                                  , Turbidity = turbidity
+                                  , Beam_attenuation = beamAttenuation
+                                  , Beam_transmission = beamTransmission
+  ))
+  ctdA <- ctdB; rm (ctdB)
   if ("Spice" %in% names (ctdA)){
 ## [,1:(ncol (ctdA)-1)] # remove Spice
    ctdA <- ctdA [,-which (names (ctdA) == "Spice")]
   }
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
-  tF <- paste0 (levels (yr)[i], "_Aggregatedfiles.csv")
+  tF <- paste0 ("CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
   write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
-  # zip::zip (zipfile = paste0 ("CTDaggregate", levels (yr)[i], ".zip")
-  #      , files = tF, include_directories = FALSE)
 }
 
 unlink ("processedCTD_annual.zip", force = TRUE)

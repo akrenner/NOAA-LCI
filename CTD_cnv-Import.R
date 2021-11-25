@@ -236,12 +236,14 @@ readCNV <- function (i){
     names (ctdF@data)[which (names (ctdF@data) == "upoly")] <- "turbidity"
   }
     if (!"beamAttenuation" %in% names (ctdF@data)){
-    ctdF@data$beamAttenuation <- meta (NA)
-  }
+      ctdF@data$beamAttenuation <- meta (NA)
+      ctdF@data$beamTransmission <- meta (NA)
+    }
   if (!"turbidity" %in% names (ctdF@data)){
     ctdF@data$turbidity <- meta (NA)
   }
 
+  # print (ctdF@metadata$units)
   cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
                       , path = meta (fNf [i])
                       #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
@@ -250,15 +252,17 @@ readCNV <- function (i){
                       , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
                       , depth = ctdF@data$depth
                       , O2 = ctdF@data$oxygen
-                      , O2GG = ctdF@data$oxygen2
+                      , O2percsat = ctdF@data$oxygen3 # S
+                      , O2GG_umol_kg = ctdF@data$oxygen8
                       , par = ctdF@data$par
                       , salinity = ctdF@data$salinity
                       , temperature = ctdF@data$temperature
                       , pressure = ctdF@data$pressure
-                      , nitrogen = ctdF@data$nitrogenSaturation
+                      , nitrogen = ctdF@data$nitrogenSaturation  # mg/l
                       , fluorescence = ctdF@data$fluorescence
                       , turbidity = ctdF@data$turbidity
-                      , attenuation = ctdF@data$beamAttenuation
+                      , beamAttenuation = ctdF@data$beamAttenuation
+                      , beamTransmission = ctdF@data$beamTransmission
   )
   cDF <- subset (cDFo, density > 0) ## still necessary?
   return (cDF)
@@ -301,27 +305,11 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 ## check timestamps vs. metadata
 ##################################################
 
-# ideal: read-in data from ACCESS database via ODBC -- may be not worth the troubles
-if (0){
-  # Require ("odbc")
-  # odbc <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess")
-  Require ("DBI")
-  dbC <- dbConnect (odbc::odbc()
-                    , driver = "Microsoft Access Driver"
-                    , database = "/Users/Martin.Renner/Documents/GISdata/LCI/EVOS_LTM.accdb"
-  )
 
-  dbC <- dbConnect (odbc::odbc(), dsn = "MicrosoftAccess", driver = )
-  channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Martin.Renner/Documents/GISdata/LCI/EVOS_LTM.accdb")
-  data <- sqlQuery( channel , paste ("select * from CUSTOMERS"))
-  odbcCloseAll()
-
-  dbq_string <- paste0 ("DBQ=", "locatoin of my file")
-  driver_string <- "Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-  db_connect_string <- paste0 ()
-  dC <- dbConnect (odbc::odbc(), .connection_string = paste0 (driver_string, dbq_string))
-  ## appropriate SQL call to link station and transect, as below...
-}
+## update Access tables from Notebook database
+## may need to adapt this to make this portable
+system("cmd.exe"
+       , input = paste('"C:/Users/Martin.Renner/Documents/Applications/R-Portable/App/R-Portable/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
 
 
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
@@ -917,7 +905,8 @@ names (physOc) <- c ("isoTime",
                      , "Density_sigma.theta.kg.m.3"
                      , "Depth.saltwater..m."
                      , "Oxygen_SBE.43..mg.l."  # verify which is exported!!
-                     , "Oxygen.Saturation.Garcia.Gordon.mg.l."
+                     , "Oxygen_sat.perc."
+                     , "Oxygen.Saturation.Garcia.Gordon.umol_kg"
                      , "PAR.Irradiance"
                      , "Salinity_PSU"
                      , "Temperature_ITS90_DegC"
@@ -925,7 +914,8 @@ names (physOc) <- c ("isoTime",
                      , "Nitrogen.saturation..mg.l."
                      , "Fluorescence_mg_m3"
                      , "turbidity"
-                     , "attenuation"
+                     , "beamAttenuation"
+                     , "beamTransmission"
 )
 # print (summary (physOc))
 rm (i)
@@ -945,12 +935,13 @@ save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 
 
 ## tmp test
-png ("~/tmp/zzTurbidity.png")
-plot (turbidity~PAR.Irradiance, physOc)
-dev.off()
-png ("~/tmp/zzAtten.png")
-plot (attenuation~PAR.Irradiance, physOc)
-dev.off()
-
+if (0){
+  png ("~/tmp/zzTurbidity.png")
+  plot (turbidity~PAR.Irradiance, physOc)
+  dev.off()
+  png ("~/tmp/zzAtten.png")
+  plot (attenuation~PAR.Irradiance, physOc)
+  dev.off()
+}
 
 ## EOF

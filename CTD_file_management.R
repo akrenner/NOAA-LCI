@@ -34,6 +34,7 @@ set.seed (8)
 
 ## define new destinations
 nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
+instL <- c ("4141", "5028", "8138")  # do this from data?
 instL <- c ("4141", "5028")  # do this from data?
 ## clean slate -- do this by hand!
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
@@ -574,9 +575,11 @@ if (any (!cpCk)){
 rm (cpCk)
 unlink (nD, recursive = TRUE, force = TRUE)
 
+### missing feature: !!! XXX
 
 ## remove config-directories with no hex files
-
+## -- this is currently not automated, but has to be done manually
+## i.e. config files are staged in a separate folder until data has been collected.
 
 
 
