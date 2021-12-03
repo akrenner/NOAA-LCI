@@ -286,7 +286,8 @@ sAgg <- function (varN, data = physOc, FUN = sum, ...){
 }
 poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
 poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
-poSS$O2perc <- sAgg ("O2perc")
+poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
+poSS$O2perc <- sAgg ("Oxygen_sat.perc.")
 if ("turbidity" %in% names (physOc)){
     ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
     ## print (summary (poSS$turbidity))
@@ -614,6 +615,18 @@ print (sort (levels (factor (zoop$Species))))
 
 save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
+
+## export zooplankton data to standardized file (matching first columns as in CTD aggregates)
+zoopOut <- with (zoop, data.frame (Station = Match_Name), Date = isoDate, Time
+                 , SampleID = SampleID_H
+                 , Latitude_DD = Lat_decDegree
+                 , Longitude_DD = Lon_decDegree, Mesh, Flow, Water.Sampled_m3 = Water.Sampled_..m3.
+                 , Split
+                 , Species
+                 , Count = RTotal)
+write.csv(zoopOut, row.names = FALSE
+          , file = "~/tmp/LCI_noaa/data-products/CookInletKachemakBay_Zooplankton.csv")
+rm (zoopOut)
 
 allZoo <- aggregate (RTotal ~ SampleID, data = zoop, FUN = sum) # ouch -- sample ID!!
 # samp <- unique (data.frame (zoop [,1:7]))

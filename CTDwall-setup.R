@@ -102,7 +102,8 @@ require ("ocedata") # coastlineWorldFine
 ## AlongBay (tn=6), i = 2, sections to process: 4, k= 5 fails
 
 
-poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate
+# poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate -- keep them in!
+poAll <- physOc
 rm (physOc)
 poAll$Transect <- factor (poAll$Transect)
 
@@ -112,7 +113,7 @@ summary (poAll$turbidity)
 summary (poAll$attenuation)
 pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
 par (mfrow = c (2,1))
-hist (log (poAll$attenuation), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
+hist (log (poAll$beamAttenuation), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
 hist (log (poAll$turbidity), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
 dev.off()
 
@@ -133,18 +134,26 @@ for (i in 1:length (levels (poAll$year))){
 dev.off()
 
 
+# png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
+# plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., poAll
+#       , col = year, main = "colored by year"
+#       , subset = Depth.saltwater..m. < 10)
+# dev.off()
+
+
 
 ## histogram and QAQC -- do this in previous script?!?
 ## add some thresholds/QAQC; log-scale?
 # poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
 
 ## attenuation vs turbidy -- mix them here?!?
-poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$attenuation, poAll$turbidity) ## is this wise or correct ? XXX
+poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$beamAttenuation, poAll$turbidity) ## is this wise or correct ? XXX
 
 
 poAll$Density_sigma.theta.kg.m.3 <- ifelse (poAll$Density_sigma.theta.kg.m.3 < 15, NA, poAll$Density_sigma.theta.kg.m.3)
 poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-poAll$Oxygen.Saturation.Garcia.Gordon.mg.l. <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.mg.l. <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.mg.l.)
+poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
+poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg)
 ## recalc other O2 values here?
 poAll$logPAR <- log (poAll$PAR.Irradiance)
 poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < 20, NA, poAll$Salinity_PSU)
@@ -239,8 +248,8 @@ require ("cmocean")
 
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
-  # oceColorsTurbo #
-  cmocean ("thermal")
+   oceColorsTurbo #
+  # cmocean ("thermal")
   , cmocean ("haline")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
@@ -271,7 +280,8 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "turbidity" # , "logTurbidity"
                         , "Fluorescence_mg_m3"
                         , "PAR.Irradiance"  #, "logPAR"
-                        , "Oxygen_SBE.43..mg.l.")
+                        , "Oxygen.Saturation.Garcia.Gordon.umol_kg" #"Oxygen_SBE.43..mg.l."
+                        )
                      #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.05,0.95), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)

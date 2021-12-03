@@ -31,8 +31,25 @@ tZ <- sqlFetch (db, sqtable = "tblZooplankton", colnames = FALSE)
 # sqlQuery
 odbcClose (db)
 rm (db)
+
+## combine degrees and minutes for QGIS
+tSe$LonDD <- tSe$LongitudeDeg - tSe$LongitudeMins/60
+tSe$LatDD <- tSe$LatitudeDeg + tSe$LatitudeMins/60
+
+## treat bad data
+tSe$LonDD <- ifelse (tSe$LonDD == 0, NA, tSe$LonDD)
+tSe$LatDD <- ifelse (tSe$LatDD == 0, NA, tSe$LatDD)
+tSe$LonDD <- ifelse (is.na (tSe$LatDD), NA, tSe$LonDD)
+tSe$LatDD <- ifelse (is.na (tSe$LonDD), NA, tSe$LatDD)
+
 save.image("~/tmp/LCI_noaa/cache/ctdAccessDBtables.RData")
 
+write.csv (taT, "~/GISdata/LCI/EVOS_LTM_tables/tblAllTransectsCTD.csv", row.names = FALSE)
+# write.csv (tC, "~/GISdata/LCI/EVOS_LTM_tables/tblCTDall.csv", row.names = FALSE)
+write.csv (tSe, "~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv", row.names = FALSE)
+write.csv (tTE, "~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv", row.names = FALSE)
+tSe <- subset (tSe, !is.na (tSe$LonDD)) # just for QGIS
+write.csv (tSe, "~/GISdata/LCI/EVOS_LTM_tables/tblStationEventQGIS.csv", row.names = FALSE)
 
 # db <- odbcConnectAccess(access.file = 'C:/Users/Martin.Renner/Documents/GISdata/LCI/EVOS_LTM.accdb')
 #
