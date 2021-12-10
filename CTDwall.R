@@ -221,8 +221,7 @@ for (ov in iX){
 
 
 
-          pSec (xCo, N = oVars [ov]
-                #, zCol = oColF (ov)
+          pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
@@ -275,7 +274,7 @@ for (ov in iX){
 
 physOc <- poAll
 
-rm (i, k, tn, oVars, ov, poAll, pSec, physOcY)
+rm (i, k, tn, oVars, oVarsF, ov, poAll, pSec, physOcY)
 
 
 

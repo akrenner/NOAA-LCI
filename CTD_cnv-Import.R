@@ -131,7 +131,7 @@ for (i in 1:length (badF)){
 
 
 fN <- gsub ("^.*/", "", fNf)
-print (length (fN))
+# print (length (fN))
 
 
 
@@ -139,7 +139,7 @@ print (length (fN))
 ## find dates to link to notebook DB
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
-fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
+getMeta <- function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
 # for (i in 1:length (fNf)){print (i)
     Require ("oce")
   ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
@@ -163,7 +163,10 @@ fileDB <- lapply (1:length (fNf), FUN = function (i){  # slow and inefficient to
                        , instSerNo, depth_bottom
                        )
   return (outDF)
-})
+}
+
+fileDB <- lapply (1:length (fNf), FUN = getMeta)
+rm (getMeta)
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 fileDB <- subset (fileDB, !is.na (time))
 ## ok to ignore warnings regarding NAs introduced by coersion
@@ -182,7 +185,9 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function (i){
   Require (oce)
-  ctdF <- try (read.ctd (fNf [i]))
+  ctdF <- try (read.ctd (fNf [i]
+                         # , columns = "define name of dV/dT"
+                         ))
   if (class (ctdF) == "try-error"){
   } #else{
   ## more CTD import processing steps
@@ -251,9 +256,10 @@ readCNV <- function (i){
                       #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
                       , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
                       , depth = ctdF@data$depth
-                      , O2 = ctdF@data$oxygen
-                      , O2percsat = ctdF@data$oxygen3 # S
-                      , O2GG_umol_kg = ctdF@data$oxygen8
+                      , oxygen_umol_kg = ctdF@data$oxygen4 # umol/kg
+                      , Oxygen_SBE.43..mg.l. = ctdF@data$oxygen
+                      , O2percsat = ctdF@data$oxygen3 # SBE43 %
+                      , O2GGsat_umol_kg = ctdF@data$oxygen8
                       , par = ctdF@data$par
                       , salinity = ctdF@data$salinity
                       , temperature = ctdF@data$temperature
@@ -270,18 +276,20 @@ readCNV <- function (i){
 
 
 ## for troubleshooting
-# for (i in 1:length (fNf)){
-# # for (i in 193:length (fNf)){  ## speed-up for testing
-#   print (paste (i, fileDB [i,c(2)]))
-#   ctdX <- readCNV (i)
-#   # if (i == 1){
-#   if (!exists ("CTD1")){
-#     CTD1 <- ctdX
-#   }else{
-#     CTD1 <- rbind (CTD1, ctdX)
-#   }
-# }
-# rm (ctdX)
+if (0){
+  for (i in 1:length (fNf)){
+    # for (i in 193:length (fNf)){  ## speed-up for testing
+    print (paste (i, fileDB [i,c(2)]))
+    ctdX <- readCNV (i)
+    # if (i == 1){
+    if (!exists ("CTD1")){
+      CTD1 <- ctdX
+    }else{
+      CTD1 <- rbind (CTD1, ctdX)
+    }
+  }
+  rm (ctdX)
+}
 ## more efficient, but doesn't ID errors -- so redundant
 CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
 # require (dplyr); CTD1x <- bind_rows (CTD1x, id = fN)
@@ -896,15 +904,16 @@ rm (xmatch, CTD1, mdata)
 
 ## DANGEROUS -- REVERSE?!?
 print (names (physOc))
-names (physOc) <- c ("isoTime",
-                     "File.Name", "Date", "Transect", "Station"
+nNames <- c ("isoTime"
+                     , "File.Name", "Date", "Transect", "Station"
                      , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
                      , "Bottom.Depth", "comments"
                      # , "timestamp"
                      # , "depth_bottom" # , "CTDserial"
                      , "Density_sigma.theta.kg.m.3"
                      , "Depth.saltwater..m."
-                     , "Oxygen_SBE.43..mg.l."  # verify which is exported!!
+                     , "Oxygen_umol_kg"  # verify which is exported!!
+                     , "Oxygen_SBE.43..mg.l."
                      , "Oxygen_sat.perc."
                      , "Oxygen.Saturation.Garcia.Gordon.umol_kg"
                      , "PAR.Irradiance"
@@ -917,6 +926,9 @@ names (physOc) <- c ("isoTime",
                      , "beamAttenuation"
                      , "beamTransmission"
 )
+if (length (nNames) == ncol (physOc)){
+  names (physOc) <- nNames
+}else{stop ("Lenght of new names does not match number of columns in physOc\n")}
 # print (summary (physOc))
 rm (i)
 

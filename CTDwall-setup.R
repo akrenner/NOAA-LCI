@@ -119,12 +119,14 @@ dev.off()
 
 
 pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
-plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = year)
+plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll, col = year)
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = year)
 # legend ("bottomleft", col = levels (poAll$year), pch = 19, legend = levels (poAll$year))
 # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = as.numeric (CTD.serial))
 for (i in 1:length (levels (poAll$year))){
-  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll
-        , subset = year == levels (poAll$year)[i], col = as.numeric (CTD.serial))
+#  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll
+  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll
+              , subset = year == levels (poAll$year)[i], col = as.numeric (CTD.serial))
   legend ("topright", col = levels (factor (as.numeric (poAll$CTD.serial)))
           , legend = levels (factor (poAll$CTD.serial)), pch = 19
           , title = levels (poAll$year)[i])
@@ -149,10 +151,12 @@ dev.off()
 ## attenuation vs turbidy -- mix them here?!?
 poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$beamAttenuation, poAll$turbidity) ## is this wise or correct ? XXX
 
-
+## remove implausible values
 poAll$Density_sigma.theta.kg.m.3 <- ifelse (poAll$Density_sigma.theta.kg.m.3 < 15, NA, poAll$Density_sigma.theta.kg.m.3)
-poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
+poAll$Oxygen_umol_kg <- ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
+poAll$Oxygen_umol_kg <-  ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
+# poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
+# poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
 poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg)
 ## recalc other O2 values here?
 poAll$logPAR <- log (poAll$PAR.Irradiance)
@@ -210,12 +214,15 @@ rm (surveyW, h)
 # poAll$survey <- factor (surveyW); rm (surveyW, h)
 
 ## check --- QAQC
-for (i in 1:length (levels (poAll$survey))){
-  x <- subset (poAll, survey == levels (poAll$survey)[i])
-  cat (i, levels (factor (x$DateISO)), "\n")
+if (0){
+  cat ("Surveys window QAQC -- testing code\n")
+  for (i in 1:length (levels (poAll$survey))){
+    x <- subset (poAll, survey == levels (poAll$survey)[i])
+    if (1){  #length (levels (factor (x$DataISO))) > 1){
+    cat (i, levels (factor (x$DateISO)), "\n")
+  }}
+  rm (x, i)
 }
-rm (x, i)
-
 
 
 
@@ -226,15 +233,17 @@ oVars <- c ("temperature"
             , "salinity" #, "sigmaTheta"
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
             , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
-            , "PAR"  #, "logPAR"
-            , "O2 [mg/L]"  # , "O2perc"
+            # , "PAR"
+            , "logPAR"
+            , "Oxygen [umol/kg]"  # , "O2perc"
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity" #, "sigmaTheta"
              , "turbidity" # , "logTurbidity"
              , "fluorescence" #, "chlorophyll" #, "logFluorescence"
-             , "PAR" #, "logPAR"
-             , "Oxygen"  # , "O2perc"
+#             , "PAR.Irradiance" #, "logPAR"
+            , "logPAR"
+             , "Oxygen_umol_kg"  # , "O2perc"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -279,29 +288,36 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
                         , "turbidity" # , "logTurbidity"
                         , "Fluorescence_mg_m3"
-                        , "PAR.Irradiance"  #, "logPAR"
-                        , "Oxygen.Saturation.Garcia.Gordon.umol_kg" #"Oxygen_SBE.43..mg.l."
+                        # , "PAR.Irradiance"
+                        , "logPAR"
+                        # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
+                        , "Oxygen_umol_kg"
                         )
                      #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.05,0.95), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
 oRange [2,1] <- 25 # fix min salinity
-oRange [5,] <- c(0,100)      # fix PAR range
+# oRange [5,] <- c(0,100)      # fix PAR range
+## what's better to use here, umol/kg or mg/l?
 # oRange [6,] <- c (-0.1,1.5)  # fix O2 perc range
-oRange [6,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
-
+# oRange [6,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
+# https://repository.oceanbestpractices.org/bitstream/handle/11329/417/56281.pdf?sequence=1&isAllowed=y
+## umol/l = 31.2512* cO2 mg/l
+oRange [6,] <- c (2,12) * 31.2512
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
 
 ## show data availability by year
-aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
-
+if (0){
+  cat ("data availability per year and transect\n")
+  aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
+}
 
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 cat ("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
-# EOF
+# EOF√

@@ -166,7 +166,8 @@ makeSection <- function (xC, stn){
                         ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                         ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
                         ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
-                        ocOb <- oceSetData (ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
+#                        ocOb <- oceSetData (ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
+                        ocOb <- oceSetData (ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
                         # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                         # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
                         ocOb

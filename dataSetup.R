@@ -206,9 +206,10 @@ if (1){ # keep in case mclapply fails
         print (poSS [i,])
       }
     }
+    rm (i)
   }
 }
-rm (tRange, i)
+rm (tRange)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){
   ## return radians degree of tidal phase during cast
@@ -285,7 +286,8 @@ sAgg <- function (varN, data = physOc, FUN = sum, ...){
     return (aDF [match (poSS$File.Name, aDF$File.Name),2])
 }
 poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
-poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
+# poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
+poSS$minO2 <- sAgg ("Oxygen_umol_kg")
 poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
 poSS$O2perc <- sAgg ("Oxygen_sat.perc.")
 if ("turbidity" %in% names (physOc)){

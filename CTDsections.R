@@ -87,7 +87,11 @@ for (sv in iX){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
           zR <- oRange [ov,]
         }else{
-          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, PAR.Irradiance, Oxygen_sat.perc.))
+          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity
+                                       , Fluorescence_mg_m3, logPAR
+                                       , Oxygen_umol_kg
+                                       # , Oxygen_sat.perc.
+                                       ))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
         # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
           zR <- quantile (cDF [,ov], probs = c(0.05, 0.95), na.rm = TRUE); rm (cDF)
@@ -98,7 +102,7 @@ for (sv in iX){
           text (5,5, labels = "no good data")
         }else{
           pSec (xCo
-                , N = oVars [ov]
+                , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
                 , zCol = oCol3 [[ov]]
                 #    , zCol = oColF (ov)
                 #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim

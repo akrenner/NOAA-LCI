@@ -31,7 +31,6 @@
 
 
 ## missing stations into master list
-## PTGR, PTPOGI....
 ## ask for updates on notebooks
 ## 2020 along-bay station names: review and adjust
 ## bottom-depth from master/notes: add
@@ -104,8 +103,8 @@ stnFNex <- gsub ("alongbay_kb", "alongbay_s", stnFNex)
 # stnFNex <- gsub ("ptgraham", "portgraham", stnFNex)
 # stnFNex <- gsub ("ptgrm", "portgraham", stnFNex)
 # stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
-stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_portgraham_", stnFNex)
-stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_pogi_", stnFNex) ## check!
+stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_PTGR", stnFNex)
+stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_POGI", stnFNex) ## check!
 
 ## bad transect! -- audit XXX
 stnFNex <- gsub ("_alongbay_chinapoot[_]*", "_subbay_chinapoot", stnFNex) ## check!
@@ -182,15 +181,15 @@ levels (factor (physOc$File.Name [bS]))
 rm (bS)
 
 if (0){
-stN <- sapply (1:length (stnSp), function (i){
-  grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
-})
-tnN <- sapply (1:length (stnSp), function (i){
-   grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
-        , stnSp[[i]], value = TRUE)[1]
-})
+  stN <- sapply (1:length (stnSp), function (i){
+    grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
+  })
+  tnN <- sapply (1:length (stnSp), function (i){
+    grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
+          , stnSp[[i]], value = TRUE)[1]
+  })
 
-# for (i in 1:length (tnN)){
+  # for (i in 1:length (tnN)){
 #   if (length (tnN [[i]]) != 1){stop (i)}
 # }
 # stnSp [[i]]
@@ -202,8 +201,10 @@ length (stN)
 levels (factor (tnN))
 tnN [grep ("^t[a-z]*\\d", tnN)] <- gsub ("^t[a-z]*", "", tnN [grep ("^t[a-z]*\\d", tnN)])
 tnN <- gsub ("9[a-z]+[0-9]*", "9", tnN) # watch carefully
+tnN <- gsub ("^0", "", tnN) # trim leading zero
 tnN [grep ("(sub|stevekibler)", tnN)] <- "subbay"
 tnN [grep ("^(along|kbay|ab)", tnN)] <- "AlongBay"  ## "AlongBay" for now, as in physOc$Match
+tnN [grep ("kachemakbay", tnN)] <- "AlongBay"
 is.na (tnN)[tnN == ""] <- TRUE
 levels (factor (tnN))
 summary (tnN == physOc$Transect)
@@ -249,6 +250,10 @@ levels (factor (physOc$Match_Name))
 rm (newMatch, stN, tnN)
 
 
+physOc$Match_Name <- gsub ("_spgrm|_sptgm", "_PTGR", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_spogi|_sptgm", "_POGI", physOc$Match_Name)
+physOc$Match_Name <- gsub ("tutkabay_intensive", "subbay_tutkabayIntensive", physOc$Match_Name)
+physOc$Match_Name <- gsub ("sadiecove_intensive", "subbay_sadiecoveIntensive", physOc$Match_Name)
 
 if (0){
 # summary (stn)
@@ -287,7 +292,8 @@ physOc$Match_Name <- gsub ("\\s", "", physOc$Match_Name)
 physOc$Match_Name <- gsub ("(Bear|ChinaPoot|Halibut|Jakolof|Kasitsna|Peterson|Sadie|Seldovia|Tutka)([ABC])$", "\\1_\\2", physOc$Match_Name) # "TutkaA" or " B"
 physOc$Match_Name <- gsub ("^Tutka0", "Tutka_", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^Tutka1", "Tutka_1", physOc$Match_Name)
-physOc$Match_Name <- gsub ("PogiPoint|Pt\\.Pogi|Pt\\.KBlandPogi", "Pogibshi", physOc$Match_Name)
+physOc$Match_Name <- gsub ("PogiPoint|Pt\\.Pogi|Pt\\.KBlandPogi|pogi|spogi", "POGI", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_graham|_spgrm|_portgraham", "_PTGR", physOc$Match_Name)
 physOc$Match_Name <- gsub ("extra$", "", physOc$Match_Name)
 
 ## fixing a few individual stations
@@ -552,8 +558,9 @@ for (i in 1:length (levels (yr))){
                                   , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
                                   , Temperature_ITS90_DegC, Salinity_PSU
                                   , Density_sigma.theta.kg.m.3
-                                  , Oxygen_GarciaGordon_umol.kg = Oxygen.Saturation.Garcia.Gordon.umol_kg
+                                  , Oxygen_umol.kg = Oxygen_umol_kg
                                   , Oxygen.Saturation_perc=Oxygen_sat.perc.
+                                  # need SBE O2 concentration umol.kg in here
                                   , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                   , PAR.Irradiance
                                   , Fluorescence_mg_m3
@@ -572,14 +579,24 @@ for (i in 1:length (levels (yr))){
   write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
 }
 
-unlink ("processedCTD_annual.zip", force = TRUE)
-zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
-zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
-          , include_directories = FALSE)
-# unlink (zFiles, force = TRUE)
-rm (zFiles)
+
+if (0){
+  ## zip-up files -- about 100 MB
+  unlink ("processedCTD_annual.zip", force = TRUE)
+  zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
+  zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
+            , include_directories = FALSE)
+  ## zip individuals files
+  unlink (gsub (".csv", ".zip", zFiles [i]))
+  for (i in 1:length (zFiles)){
+    zip::zip (gsub (".csv", ".zip", zFiles [i]), files = zFiles [i]
+              , include_directories = FALSE, mode = "cherry-pick")
+  }
+  unlink (zFiles, force = TRUE)
+  rm (zFiles)
+}
 setwd (wD); rm (wD)
-rm (showBad, oldMatch, ctdA, yr)
+rm (showBad, oldMatch, ctdA, yr, i, j)
 ls()
 
 
