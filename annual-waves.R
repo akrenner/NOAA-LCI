@@ -677,6 +677,14 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2021-10-15 11:45" # Vince out
 , "2021-10-14 11:00" # Vince et al. out
 , "2021-11-01 13:30"  # 4 surfers out
+, "2021-11-06 15:30" # 4 surfers
+, "2021-11-12 09:00" # surf's up!
+, "2021-11-13 11:00" # 5 surfers , 4 feet
+, "2021-11-17 11:45" # 1.2 m of beautiful surf
+, "2021-11-21 14:00" # 1 surfer, 0.8 m
+, "2021-11-21 14:00" # 5 surfers
+, "2021-12-02 11:50" # 1 surfer, more coming
+, "2021-12-07 15:00" # 1+ m surf, no surfers
 )
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))
