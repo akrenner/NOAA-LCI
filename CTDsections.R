@@ -51,11 +51,6 @@ for (sv in iX){
 
     if (length (levels (factor (phT$Match_Name))) > 2){ ## shouldn't be necessary -- what's up with Transect = NA??
       xC <- phT
-      if (xC$Transect [1] %in% c("4", "9")){
-        xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
-      }else{
-        xC <- xC [order (xC$longitude_DD, decreasing = FALSE),]
-      }
       ## arrange ctd data into sections
       ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
@@ -82,6 +77,13 @@ for (sv in iX){
 
 
       xCo <- sectionize (xC)
+      if (xC$Transect [1] %in% c("4", "9")){
+        xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+      }else{
+        xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
+      }
+
+
 
       for (ov in 1:length (oVars)){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR

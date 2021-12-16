@@ -23,7 +23,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
 
 
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
-  ## as pSec, but add contours. Replace pSec once this is working
+  ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   s <- try (plot (xsec, which = N
