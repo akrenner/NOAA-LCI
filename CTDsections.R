@@ -45,6 +45,13 @@ for (sv in iX){
     }
 
 
+    ## transect from station list for use with plot.section
+    transectTemplate <- with (subset (stn, Line == levels (s$Transect)[tn]),
+                                      data.frame (station = Match_Name
+                                                  , longitude = Lon_decDegree
+                                                  , latitude = Lat_decDegree))
+
+
     phT <- subset (s, Transect == levels (s$Transect)[tn])
     phT$transDate <- with (phT, paste0 ("T-", Transect, " ", DateISO))
 
@@ -78,6 +85,7 @@ for (sv in iX){
 
       xCo <- sectionize (xC)
       if (xC$Transect [1] %in% c("4", "9")){
+        ## requires new version of oce
         xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
       }else{
         xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
@@ -112,6 +120,7 @@ for (sv in iX){
                 # , xlim = xRange []  # range of the Transect
                 # , custcont = pretty (oRange [ov,], 10)
                 # , axes = FALSE  ## not worth the hassle of messing with it
+                #, transect = transectTemplate ## show at best resolution, rather than partial transect
           )
           rm (zR)
         }

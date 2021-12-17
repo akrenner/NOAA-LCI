@@ -22,7 +22,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
 
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, transect = NULL, ...){
   ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
@@ -35,6 +35,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
                   # , ztype = "contour"
                   , ztype = "image"
                   , zcol = zCol
+                  , transect = transect
                   , ...
   )
   , silent = TRUE)
