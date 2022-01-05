@@ -230,7 +230,7 @@ if (0){
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
 oVars <- c ("temperature"
-            , "salinity" #, "sigmaTheta"
+            , "salinity" , "sigmaTheta"
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
             , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
             # , "PAR"
@@ -238,7 +238,7 @@ oVars <- c ("temperature"
             , "Oxygen [umol/kg]"  # , "O2perc"
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
-             , "salinity" #, "sigmaTheta"
+             , "salinity" , "sigmaTheta"
              , "turbidity" # , "logTurbidity"
              , "fluorescence" #, "chlorophyll" #, "logFluorescence"
 #             , "PAR.Irradiance" #, "logPAR"
@@ -260,6 +260,7 @@ oCol3 <- list (  ## fix versions?
    oceColorsTurbo #
   # cmocean ("thermal")
   , cmocean ("haline")
+  , cmocean ("dense")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
@@ -268,7 +269,7 @@ oCol3 <- list (  ## fix versions?
     turbo (n, start = 0.25, end = 0.8)
   }
   , cmocean ("oxy")
-  , cmocean ("haline")
+  , cmocean ("haline") # why is this here? should it be??
 
 )
 if (0){
@@ -287,6 +288,7 @@ if (0){
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
                         , "turbidity" # , "logTurbidity"
+                        , "Density_sigma.theta.kg.m.3"
                         , "Fluorescence_mg_m3"
                         # , "PAR.Irradiance"
                         , "logPAR"

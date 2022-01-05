@@ -6,7 +6,8 @@
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")
 
-system ("mkdir -p ~/tmp/LCI_noaa/media/TSdiagrams")
+# system ("mkdir -p ~/tmp/LCI_noaa/media/TSdiagrams")
+dir.create("~/tmp/LCI_noaa/media/CTDtests/CTDcasts", recursive = TRUE, showWarnings = FALSE)
 
 
 print (summary (physOc))
@@ -27,7 +28,7 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
     }else{
         cT <- physOc
     }
-    png (paste ("~/tmp/LCI_noaa/media/TSdiagrams/", fn, ".png", sep = ""))
+    png (paste0 ("~/tmp/LCI_noaa/media/CTDtests/CTDcasts/", fn, ".png"))
     if (exists ("fctr")){
         if (class (fctr) == "character"){
             fctr <- factor (cT [,which (names (cT) == fctr)])
@@ -164,9 +165,20 @@ system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
 # require ("zip")
 # R-internal zip file generation -- still troubled
 
-system ("zip -mjr ~/tmp/LCI_noaa/media/CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles")  ## XXX Error
-# system ("zip -m -b ~/tmp/LCI_noaa/media/ --junk-paths CTDprofiles.zip CTDprofiles/*.pdf")
-# system ("zip -m -b ~/tmp/LCI_noaa/media/ CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles/*.pdf CTD.zip")
+## find windows equivalent here XXX  -- still needed?
+if (1){
+    Require ("zip")
+    unlink ("~/tmp/LCI_noaa/media/CTDprofiles.zip", force = TRUE)
+    zFiles <- list.files ("~/tmp/LCI_noaa/media/CTDprofiles", pattern = ".pdf", full.names = FALSE)
+    zip::zip ("~/tmp/LCI_noaa/media/CTDprofiles.zip", files = zFiles, recurse = FALSE
+              , include_directories = FALSE)
+#    unlink (zFiles, force = TRUE)
+    rm (zFiles)
+}else{
+    system ("zip -mjr ~/tmp/LCI_noaa/media/CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles")  ## XXX Error
+}
+## system ("zip -m -b ~/tmp/LCI_noaa/media/ --junk-paths CTDprofiles.zip CTDprofiles/*.pdf")
+## system ("zip -m -b ~/tmp/LCI_noaa/media/ CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles/*.pdf CTD.zip")
 unlink("~/tmp/LCI_noaa/media/CTDprofiles", recursive = TRUE, force = TRUE)
 rm (plotCTDprof)
 cat ("\n\n")

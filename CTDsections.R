@@ -69,8 +69,8 @@ for (sv in iX){
                    , " T-", levels (s$Transect)[tn]
                    # , "%02d
                    ,".png")
-           # , height = 8.5*200, width = 11*200, res = 300  # landscape
-           , height = 11*200, width = 8.5*200, res = 300 # portrait
+           , height = 8.5*200, width = 11*200, res = 300  # landscape
+           # , height = 11*200, width = 8.5*200, res = 300 # portrait
       )
 
       # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/", oVars [ov]
@@ -78,8 +78,8 @@ for (sv in iX){
       #              # , "_", levels (physOcY$year)[k]
       #              , ".pdf")
       #      , height = 8.5, width = 11)
-      #      layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
-      layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
+      layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
+      # layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
       #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
 
@@ -97,7 +97,9 @@ for (sv in iX){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
           zR <- oRange [ov,]
         }else{
-          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity
+          cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
+                                       , Density_sigma.theta.kg.m.3
+                                       , turbidity
                                        , Fluorescence_mg_m3, logPAR
                                        , Oxygen_umol_kg
                                        # , Oxygen_sat.perc.
