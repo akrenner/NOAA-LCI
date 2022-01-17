@@ -13,8 +13,11 @@
 
 
 
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+if (.Platform$OS.type != "unix"){setwd ("~/myDocs/amyfiles/NOAA-LCI/")}else{
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
+dir.create("~/tmp/LCI_noaa/media/spring/", recursive = TRUE, showWarnings = FALSE)
 require (zoo)
 
 
@@ -70,7 +73,7 @@ if (0){
   # pdf (paste0 ("~/tmp/LCI_noaa/media/SWMP-spectra", ".pdf"))
   ## what are the main frequencies in TS autocorrelations? -- just exploratory
   ## what can be learned from fluourescence, any use of CTD-fluorescence? Length of bloom?
-  png ("~/tmp/LCI_noaa/media/SWMP-spectra%02d.png", width = 800, height = 800, res = 120)
+  png ("~/tmp/LCI_noaa/media/spring/SWMP-spectra%02d.png", width = 800, height = 800, res = 120)
   par (mar = c(3,4,2,1))
   for (i in vN){
     oT <- homer [,c(1,i)]
@@ -90,7 +93,7 @@ if (0){
   }
   dev.off()
   require ("grid")
-  merge.png.pdf ("~/tmp/LCI_noaa/media/SWMP-spectra.pdf"
+  merge.png.pdf ("~/tmp/LCI_noaa/media/spring/SWMP-spectra.pdf"
                  , pngFiles = list.files ("~/tmp/LCI_noaa/media", "SWMP-spectra\\d+.png", full.names = TRUE)
                  , deletePngFiles=TRUE)
 
@@ -98,7 +101,7 @@ if (0){
 for (i in vN){
   ## scale of fluorescence and other measures? length of blooms?
   ## relationship between homer-seldovia, shallow-deep
-  pdf (paste0 ("~/tmp/LCI_noaa/media/SWMP-TSanalysis", names (homer)[i], ".pdf"))
+  pdf (paste0 ("~/tmp/LCI_noaa/media/spring/SWMP-TSanalysis", names (homer)[i], ".pdf"))
   oT <- homer [,c(1,i)]
   oT$x <- homerS[match (oT$datetimestamp, homerS$datetimestamp),i]
   oT$Sx <- sldvia[match (oT$datetimestamp, sldvia$datetimestamp),i]
@@ -269,10 +272,24 @@ sL$jday <- factor (sL$jday)
 #   s
 # })
 # summary (cliFL [[1]])
+
+## means of means: daily means, then climatologies of daily means
 cliFL <- aggregate (chlfluor~station+jday+year, data = sL, FUN = mean, na.rm = TRUE)
+cliTL <- aggregate (temp~station+jday+year, data = sL, FUN = mean, na.rm = TRUE)
+## climatologies
 cliFL <- aggregate (chlfluor~station+jday, data = cliFL, FUN = mean, na.rm = TRUE)
+cliTL <- aggregate (temp~station+jday, data = cliTL, FUN = mean, na.rm = TRUE)
+cliFL$chlfluorSD <- aggregate (temp~station+jday+year, data = sL, FUN = sd, na.rm = TRUE)$chlfluor
+cliTL$tempSD <- aggregate (temp~station+jday, data = cliTL, FUN = sd, na.rm = TRUE)$tempSD
+
 if (class (cliFL$jday) == "factor"){cliFL$jday <- as.num (cliFL$jday)}
 summary (subset (cliFL, cliFL$station == levels (cliFL$station)[[2]]))
+if (class (cliTL$jday) == "factor"){cliTL$jday <- as.num (cliTL$jday)}
+summary (subset (cliTL, cliTL$station == levels (cliFL$station)[[2]]))
+
+
+save.image ("~/tmp/LCI_noaa/cache/springtiming2.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/springtiming2.RData")
 
 ##############################################
 ## insert NAs and na.approx them XXXX
@@ -281,11 +298,14 @@ cliT <- data.frame (station = factor (rep (levels (cliFL$station), each = 366))
                     , jday = rep (1:366, length (levels (cliFL$station))))
 cliT$chlfluor <- cliFL$chlfluor [match (paste (cliT$station, cliT$jday)
                                         , paste (cliFL$station, cliFL$jday))]
+cliT$temp <- cliTL$temp [match (paste (cliT$station, cliT$jday)
+                                        , paste (cliTL$station, cliTL$jday))]
 
 cliT <- rbind (subset (cliT, (jday == 366) & (station == "HomerDeep")), cliT)
 cliT$chlfluor <- na.approx(cliT$chlfluor)
+cliT$temp <- na.approx(cliT$temp)
 cliT <- cliT [2:nrow (cliT),]
-cliFL <- cliT; rm (cliT)
+cliFL <- cliT; rm (cliT, cliTL)
 ##############################################
 
 
@@ -299,9 +319,8 @@ cliFit <- lapply (1:length (levels (cliFL$station)), FUN = function (j){
 })
 
 
-
 ## for each station: climatology of spring bloom
-pdf ("~/tmp/LCI_noaa/media/springTimeFluorescClimatology-bySite.pdf", height = 6, width = 12)
+pdf ("~/tmp/LCI_noaa/media/spring/TimeFluorescClimatology-bySite.pdf", height = 6, width = 12)
 par (mfrow = c(1,2))
 for (j in 1:length (levels (cliFL$station))){
 # for (j in 1:length (cliFL)){
@@ -311,8 +330,10 @@ for (j in 1:length (levels (cliFL$station))){
         , main = levels (cliFL$station)[j]
         #, main = c("Seldovia-deep", "Seldovia-shallow", "Homer-deep", "Homer-shallow")[j]
         , ylab = "chlorophyll"
+        , ylim = c (0,15)
           )
-  plot (csum~jday, s, lwd = 2, type = "l", ylab = "cumulative chlorophyl")
+  plot (csum~jday, s, lwd = 2, type = "l", ylab = "cumulative chlorophyl"
+        , ylim = c(0,1200))
   # fit <- nls (csum~logF (L,k,x0,b,x=jday), data = s, start = svf)
   # fit.val <- data.frame (jday = s$jday, csum = predict (fit, list (jday = s$jday)))
   # lines (csum~jday, fit.val, col = "blue")
@@ -321,6 +342,43 @@ for (j in 1:length (levels (cliFL$station))){
   # mtext (text = levels (cliFL$station)[j], outer = FALSE, line = 0, side = 1)
 }
 dev.off()
+
+
+## same as 4x4 panel
+
+## order factorr cliFL$station
+cliFL$station <- factor (as.character (cliFL$station), ordered = TRUE)
+levels (cliFL$station) <- levels (cliFL$station)[c(2,4,1,3)]
+
+require (lattice)
+pdf ("~/tmp/LCI_noaa/media/spring/Climatologypanel-site_fluor.pdf"
+     , width = 6, height = 4)
+print (xyplot (chlfluor~jday | station, data = cliFL, type = "l", as.table = TRUE
+               , ylab = "chlorophyll", lwd = 2, col = "green"))
+dev.off()
+pdf ("~/tmp/LCI_noaa/media/spring/Climatologypanel-site_temp.pdf"
+     , width = 6, height = 4)
+print (xyplot (temp~jday | station, data = cliFL, type = "l", as.table = TRUE
+               , ylab = "temperature", lwd = 2, col = "blue"))
+dev.off()
+
+
+
+## same for cumulative data
+pdf ("~/tmp/LCI_noaa/media/spring/fluorClimatologypanel-site-cum.pdf"
+     , width = 6, height = 4)
+par (mfrow = c(2,2))
+for (j in 1:length (levels (cliFL$station))){
+  s <- subset (cliFL, station == levels (cliFL$station)[j])
+  s$csum <- cumsum (s$chlfluor)  ## no NAs in climatology
+  plot (csum~jday, s, lwd = 2, type = "l", ylab = "cumulative chlorophyl"
+        , ylim = c(0,1200), main = levels (cliFL$station)[j])
+  fit.val <- data.frame (jday = s$jday, csum = predict (cliFit [[j]], list (jday = s$jday)))
+  lines (csum~jday, fit.val, col = "red", lwd = 2, lty = "dashed")
+}
+dev.off()
+rm (svf, svt)
+
 rm (svf, svt)
 
 
@@ -456,7 +514,7 @@ yearCoef
 
 
 j <- 1; i <- 1
-pdf ("~/tmp/LCI_noaa/media/sprintTimeFluoAnnual.pdf", height=6, width=12)
+pdf ("~/tmp/LCI_noaa/media/spring/TimeFluoAnnual.pdf", height=6, width=12)
 par (mfrow = c(1,2))
 for (j in 1:length (levels (sL$station))){
   dat <- subset (sL, station == levels (sL$station)[j])
@@ -510,7 +568,7 @@ rm (fit.val, fits, s, dat)
 
 ## parameters of temperature-fit
 yearCoef$station <- factor (yearCoef$station)
-pdf ("~/tmp/LCI_noaa/media/springtiming_StationCor.pdf")
+pdf ("~/tmp/LCI_noaa/media/spring/timing_StationCor.pdf")
 for (i in 1:length (levels (yearCoef$station))){
   s <- subset (yearCoef, station == levels (yearCoef$station)[i])[,2:ncol (yearCoef)]
   cat ("\n\n", levels (yearCoef$station)[i], "\n")
@@ -536,7 +594,7 @@ summary (lm (x0~station, yearCoef))
 aggregate (x0~station, yearCoef, mean, na.rm = TRUE)
 
 
-pdf ("~/tmp/LCI_noaa/media/springtiming-stationCoef.pdf")
+pdf ("~/tmp/LCI_noaa/media/spring/timing-stationCoef.pdf")
 boxplot(sum~station, yearCoef, ylab = "total annual fluorescence/chlorophyll")
 boxplot(x0~station, yearCoef, ylab = "central day of bloom")
 dev.off()
@@ -550,7 +608,7 @@ aTemp <- aggregate (temp~station+year, sLo, FUN = mean, na.rm = TRUE, subset = m
 yearCoef$temp <- aTemp$temp [match (with (yearCoef, paste (station, year))
                                     , with (aTemp, paste (station, year)))]
 
-pdf ("~/tmp/LCI_noaa/media/springtimingTemp.pdf")
+pdf ("~/tmp/LCI_noaa/media/spring/timingTemp.pdf")
 for (j in 1:length (levels (yearCoef$station))){
 # j <- 3
     s <- subset (yearCoef, station == levels (yearCoef$station)[j])
@@ -572,7 +630,7 @@ summary (lm (x0~station + temp, data = yearCoef))
 ## fluorescence and turbidity:
 plot (turb~as.num(jday), sLo)
 
-pdf ("~/tmp/LCI_noaa/media/springtimeFluores-Turb.pdf", width=7, height=14)
+pdf ("~/tmp/LCI_noaa/media/spring/timeFluores-Turb.pdf", width=7, height=14)
 mC <- seq (1, 10, by = 2)
 par (mfcol = c(length (mC),2), mar = c(3,4,0.5,0.5))
 for (i in 1:length (mC)){
