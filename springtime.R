@@ -612,7 +612,7 @@ pdf ("~/tmp/LCI_noaa/media/spring/timingTemp.pdf")
 for (j in 1:length (levels (yearCoef$station))){
 # j <- 3
     s <- subset (yearCoef, station == levels (yearCoef$station)[j])
-  plot (temp~x0, s, pch=19)
+  plot (temp~x0, s, pch=19, xlab = "t0")
   md <- try (lm (temp~x0, s), silent = TRUE)
   if (class (md) != "try-error"){
     nD <- list (x0 = seq (min (s$x0, na.rm = TRUE), max (s$x0, na.rm = TRUE), length.out = 100))

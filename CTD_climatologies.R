@@ -60,9 +60,10 @@ save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
 
-pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3"))# , "AlongBay_10"))
-# for (k in 1:length (levels (physOc$Match_Name))){
-for (k in pickStn){
+pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
+for (k in 1:length (levels (physOc$Match_Name))){
+  try ({
+# for (k in pickStn){
   stnK <- levels (physOc$Match_Name)[k]
   cat (stnK, "\n")
   xC <- subset (physOc, Match_Name == stnK)
@@ -284,20 +285,29 @@ for (k in pickStn){
     axis (1, at = as.POSIXct (as.Date (paste0 ("2000-", 1:12, "-15"))), label = month.abb, tick = FALSE)
     axis (2, at = dAx)
   }
-  clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11)){
+  clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11), ...){
     plot (cT, which = which, xtype = "time", ztype = "image", zcol = zcol
           , xlim = c(as.POSIXct (as.Date (c("2000-01-01", "2000-12-31"))))
-          , axes = FALSE)
+          , axes = FALSE
+          , ...)
   }
 
   pdf (paste0 ("~/tmp/LCI_noaa/media/ctdClimatologies/"
                , stnK, "-climatology.pdf")
        , height = 11.5, width = 8)
   par (mfrow = c (2,1))
-  clPlot (cT9, which = "temperature", zcol = oceColorsTemperature (11))
+  clPlot (cT9, which = "temperature"
+          , zcol = oceColorsTemperature (11)
+          , zbreaks = seq (3,13, length.out = 12)
+          # , zlim = c(4,12)
+          )
   # clPlot (cT9, which = "sTemp", zcol = oceColorsTemperature (11))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
-  clPlot (cT9, which = "salinity", zcol = oceColorsSalinity(11))
+  clPlot (cT9, which = "salinity"
+           , zcol = oceColorsSalinity(11)
+          , zbreaks = seq (28, 31.5, length.out = 12)
+          # , zlim = c(28,31.5)
+          )
   # clPlot (cT9, which = "sSal", zcol = oceColorsSalinity(11))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
@@ -312,8 +322,8 @@ for (k in pickStn){
 #  anAx(dAx = seq (0, 100, by = 20))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
+})
 }
-
 ## alternative display of this data:
 
 
