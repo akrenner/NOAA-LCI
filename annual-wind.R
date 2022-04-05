@@ -74,7 +74,8 @@ hmr <- getSWMP ("kachomet")
 ## apply QAQC flaggs ##
 # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
 # is.na (hmr$)
-hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further?
+# hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further?
+## XXX do qaqc already in getSWMP
 
 #######################
 
@@ -170,12 +171,16 @@ abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
         , lty = "dashed", lwd = 2)
 
 cYg <- aggregate (maxwspd~jday+year, data = hmr, FUN = function (x){any (x > stormT)})
-cYg <- subset (cYg, year == currentYear & maxwspd)
-sDate <- as.POSIXct (paste0 (currentYear, "-01-01")) + 3600*24 * cYg$jday
-for (i in 1:length (sDate)){
- mtext (format (sDate [i], "%d %b"), side = 4, at = i, las = 1, line = -0.0)
+cYg <- subset (cYg, (year == currentYear) & maxwspd) # stormdays in current year
+
+if (nrow (cYg) > 0){  # only if there were any storm days
+  sDate <- as.POSIXct (paste0 (currentYear, "-01-01")) + 3600*24 * cYg$jday
+  for (i in 1:length (sDate)){
+    mtext (format (sDate [i], "%d %b"), side = 4, at = i, las = 1, line = -0.0)
+  }
+  rm (sDate)
 }
-rm (cYg, sDate)
+rm (cYg)
 #  box()
 
 # plot (maxwspd~year, yGale, type = "l", ylab = "Number of storms")
@@ -567,13 +572,15 @@ with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
 require ("png")
 hgt <- 0.7; wdh <- 15
 img <- readPNG ("pictograms/cloud.png")
-with (subset (tDay, p365galDay > 0), rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
-                                                  , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
-                                                  #                                                 , angle = p365wdir+ 90
-                                                  ## rotation would be desirable -- but rotates around bottom-left point -- would need compensation
-)
-)
-with (subset (tDay, p365galDay > 0), text (jday, p365ma + 1.8, labels = p365wCar, cex = 0.6))
+if (max (tDay$p365galDay, na.rm = TRUE) > 0){  # only IF there are any storms
+  with (subset (tDay, p365galDay > 0), rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
+                                                    , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
+                                                    #                                                 , angle = p365wdir+ 90
+                                                    ## rotation would be desirable -- but rotates around bottom-left point -- would need compensation
+  )
+  )
+  with (subset (tDay, p365galDay > 0), text (jday, p365ma + 1.8, labels = p365wCar, cex = 0.6))
+}
 
 ## legend
 bP <- cLegend ("bottomleft", qntl = qntl [1], inset = 0.02
@@ -665,35 +672,36 @@ dev.off()
 
 
 ### base-graphics windrose
-dM <- subset (dMeans, jday >= 335) # 1 Dec = 335
+if (0){
+  dM <- subset (dMeans, jday >= 335) # 1 Dec = 335
 
-windR <- function (subsV, ...){
-  require ("climatol")
-  wndfr <- with (subset (dM, subsV)
-                 , table (cut (wspd, breaks = c(0,3,6,9,60), include.lowest = TRUE)
-                          , cDir (wdir, nDir = 16)))
-  # convert table to data.frame so rosavent will accept it
-  wndfr <- reshape (as.data.frame(wndfr), timevar = "Var2", idvar = "Var1", direction = "wide")
-  row.names (wndfr) <- wndfr$Var1
-  wndfr <- wndfr [,2:ncol (wndfr)]
-  names (wndfr) <- gsub ("Freq.", "", names (wndfr))
-  rosavent (as.data.frame (wndfr), uni = vUnit, key = TRUE, flab = 1)
+  windR <- function (subsV, ...){
+    require ("climatol")
+    wndfr <- with (subset (dM, subsV)
+                   , table (cut (wspd, breaks = c(0,3,6,9,60), include.lowest = TRUE)
+                            , cDir (wdir, nDir = 16)))
+    # convert table to data.frame so rosavent will accept it
+    wndfr <- reshape (as.data.frame(wndfr), timevar = "Var2", idvar = "Var1", direction = "wide")
+    row.names (wndfr) <- wndfr$Var1
+    wndfr <- wndfr [,2:ncol (wndfr)]
+    names (wndfr) <- gsub ("Freq.", "", names (wndfr))
+    rosavent (as.data.frame (wndfr), uni = vUnit, key = TRUE, flab = 1)
+  }
+  # require("Hmisc") # subplot incompatible with layout() :(
+  # spSi <- 1.7
+  # subplot (windR (dM$year < currentYear)
+  #          , x = 160, y = 12.8, vadj = 1, size = c(spSi, spSi))
+  # text (160, 13, "mean Dec")
+  # subplot (windR (dM$year == currentYear)
+  #          , x = 260, y = 12.8, vadj = 1, size = c (spSi, spSi)) #, main = currentYear)
+  # text (260, 13, paste ("Dec", currentYear))
+  pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/windRoseBase.pdf", width = 9, height = 6)
+  par (mfrow = c(1,2))
+  windR (dM$year < currentYear)
+  windR (dM$year == currentYear)
+  dev.off()
+  rm (dM)
 }
-# require("Hmisc") # subplot incompatible with layout() :(
-# spSi <- 1.7
-# subplot (windR (dM$year < currentYear)
-#          , x = 160, y = 12.8, vadj = 1, size = c(spSi, spSi))
-# text (160, 13, "mean Dec")
-# subplot (windR (dM$year == currentYear)
-#          , x = 260, y = 12.8, vadj = 1, size = c (spSi, spSi)) #, main = currentYear)
-# text (260, 13, paste ("Dec", currentYear))
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/windRoseBase.pdf", width = 9, height = 6)
-par (mfrow = c(1,2))
-windR (dM$year < currentYear)
-windR (dM$year == currentYear)
-dev.off()
-
-
 # library(devtools)
 # install_github("tomhopper/windrose")   ## not that pretty -- looks like ggplot2
 # require ("windrose")
@@ -726,6 +734,10 @@ climD <- function (cDF){
   monthT
 }
 
+
+
+if (0){   # XXX currently blows up at 2nd diagwl (climD -- no idea at the moment. NAs?
+
 # png ("~/tmp/LCI_noaa/media/climateDiag.png", width = 480, height = 960)
 # par (mfrow = c(2,1))
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
@@ -741,7 +753,7 @@ diagwl (climD (subset (hmr, year == currentYear))
                , est = "Homer Spit"
                , per = currentYear)
 dev.off()
-
+}
 
 
 cat ("Finished windTrend.R\n")

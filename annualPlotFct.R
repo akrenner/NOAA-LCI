@@ -398,7 +398,8 @@ getSWMP <- function (station){
     #      SMPfile <- zipFile
     #    }
     smp <- import_local(SMPfile, station) ## this is initially required!
-   # smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+    ## smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1? -- default = 0
+    ## trust SWMP qaqc or apply own? XXX
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
   #  ## not sure whyere the bad line is coming from, but it has to go
