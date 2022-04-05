@@ -24,63 +24,48 @@ SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # work
 
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
+dir.create ("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursive = TRUE)
 #  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-
 
 
 ## load and process SWMP data
 source ("annualPlotFct.R") # already loads SWMPr
+## defines getSWMP () -- use this to replace import_local()
 # unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
 
 require ("SWMPr")
-# sldvia <- import_local (SMPfile, "kacsdwq") # Seldovia deep
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
-# sldvia1 <- import_local (SMPfile, "kacsewq") # Seldovia deep -- early, no longer updated
 sldvia1 <- getSWMP ("kacsewq") # Seldovia deep -- early, no longer updated
 sldvia <- rbind (sldvia1, sldvia); rm (sldvia1)
-# sldvia$station <- "kacsdwq"
 sldvia$station <- "SeldoviaDeep"
 
 ## seldovia surface
-# sldviaS <- import_local (SMPfile, "kacsswq") # Seldovia shallow
 sldviaS <- getSWMP ("kacsswq") # Seldovia shallow
-# sldviaS$station <- "kacsswq"
 sldviaS$station <- "SeldoviaShallow"
 
 # homer as well or water temp and salinity?
-# homer <- import_local  (SMPfile, "kachdwq")      ## also see kacdlwq
 homer <- getSWMP ("kachdwq")
-# homer1 <- import_local  (SMPfile, "kachowq")      ## also see kacdlwq  ## kachowq not active
-homer1 <- getSWMP ("kachowq") ## legacy, no longer updated
+homer1 <- getSWMP ("kachowq") ## legacy, no longer updated  ## also see kacdlwq  ## kachowq not active
 homer <- rbind (homer1, homer); rm (homer1)
-# homer$station <- "kachdwq"
 homer$station <- "HomerDeep"
 
-## homerDL <- import_local (SMPfile, "kacdlwq") # Homer Dolphin -- deep/shallow??
-# homerDL <- getSWMP ("kacdlwq")                 # Homer Dolphin -- deep/shallow??
-# homerS <- import_local (SMPfile, "kachswq")  # Homer Dolphin shallow -- legacy
-# homerS1 <- import_local (SMPfile, "kach3wq") # Homer Dolphin surface 3
 homerS <- getSWMP ("kachswq") # Homer Dolphin shallow
 homerS1 <- getSWMP ("kach3wq") # Homer Dolphin surface 3
 homerS <- rbind (homerS, homerS1); rm (homerS1)
 homerS$station <- "HomerShallow"
 
-# homerDL$station <- "homerDL" ## homer deep
-# homer$station <- "HomerShallow"
 
+## rbind all to apply my own QAQC
 sldvia <- rbind (sldvia, sldviaS, homer, homerS); rm (homer, homerS)
 ## swS <- swmpr (sldvia, meta_in = "kacswq")
 ## monTemp <- aggreswmp (swW, "monthly", "Temp")
 
 
-
-
-
-# sldvia <- qaqc (sldvia, qaqc_keep = "0")  # scrutinize this further!?
+## QAQC in addition to what's in SWMP's qaqc
 sldvia$temp <- ifelse (sldvia$temp < -5, NA, sldvia$temp)  # -99 = NA code
 names (sldvia) <- tolower (names (sldvia))
 
-if (0){
+if (0){  ## instead of SWMP's qaqc function -- is this more reliable?
   sldvia$f_temp <- substr (sldvia$f_temp, 1, 4)
   sldvia$f_temp <- trimws (sldvia$f_temp)
   is.na (sldvia$temp)[!sldvia$f_tem %in% c("<0>", "<1>", "<4>")] <- TRUE
@@ -95,8 +80,7 @@ if (0){
   is.na (sldvia$chlfluor)[!sldvia$f_chlfluor %in% c("<0>", "<1>", "<4>")] <- TRUE
 }
 
-## Farenheit
-# sldvia$tempF <- sldvia$temp * 9/5 + 32
+## Fahrenheit -- do not compute here, but rather indicate in right-hand legend
 
 
 
@@ -109,10 +93,6 @@ is.na (sldvia$sal)[sldvia$sal < 14] <- TRUE # 2 single, disjoint values
 is.na (sldvia$chlfluor)[sldvia$chlfluor <= 0] <- TRUE
 
 sldvia$dateTime <- time_vec (sldvia$datetimestamp, station_code = "kacswq", tz_only = FALSE)
-# sldvia$month <- as.numeric (strftime(sldvia$dateTime, format='%m'))
-# sldvia$year <- as.numeric (strftime (sldvia$dateTime, format = '%Y')) # sldvia$dateTime$year + 1900
-# sldvia$day <- as.numeric (strftime (sldvia$dateTime, format = "%d"))
-# sldvia$jday <- as.numeric (strftime (sldvia$dateTime, format = "%j"))
 
 homerS <- sldvia [sldvia$station == "HomerShallow",]
 homer <- sldvia [sldvia$station == "HomerDeep",]
@@ -138,6 +118,12 @@ rm (moMean)
 save.image ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## pass this on to annual-salinity.R etc.
 ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")
 
+
+###
+## put above code into a script "annualAquireSWMP.R", seperating it from below plotting code?
+###
+# x <- subset (sldvia, datetimestamp > as.POSIXct("2020-01-01 00:00"))
+# plot (temp~datetimestamp, x)
 
 
 

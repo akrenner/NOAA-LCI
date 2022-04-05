@@ -374,7 +374,7 @@ iAxis <- function (mmL, side = 4, line = 3, lab = "", ...){
 
 
 ## load cached SWMP data and update it with the latest from CDMO
-getSWMP <- function (station){
+getSWMP <- function (station, QAQC = TRUE){
   ## load SWMP data from local zip file. Update to the most current data
   ## from CDMO and cache those updates for the next run.
   ## need to specify location of zip file from SWMP and cache folder below
@@ -398,7 +398,9 @@ getSWMP <- function (station){
     #      SMPfile <- zipFile
     #    }
     smp <- import_local(SMPfile, station) ## this is initially required!
-    ## smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1? -- default = 0
+    if (QAQC){
+      smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1? -- default = 0
+    }
     ## trust SWMP qaqc or apply own? XXX
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
@@ -406,10 +408,13 @@ getSWMP <- function (station){
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
+  # if (0){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
-    # smp2 <- qaqc (smp2)
+    if (QAQC){
+      smp2 <- qaqc (smp2)
+    }
     if (class (smp2)[1] == "swmpr"){
       ## remove bad lines
       if (any (is.na (smp2$datetimestamp))){
@@ -428,7 +433,6 @@ getSWMP <- function (station){
     }
   }
   ## fixGap() here??
-  ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
   save (smp, file = paste0 (cacheFolder, "/", station, ".RData"))
   return (smp)
 }

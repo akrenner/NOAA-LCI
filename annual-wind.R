@@ -1,51 +1,12 @@
 #!/usr/bin/env RScript
 # Martin Renner, NOAA-affiliate, 2020
 ## make climatology plot vs 2019 of high-wind events and average daily wind speed.
-## use Lands End wind data
+## use Lands End wind data from SWMP station
 
 
 rm (list = ls())
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-
-
-## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
-## SeldoviaTemp currently only other file using SWMP data
-# file name ---> could use Windows shortcut?
-
-# if (1){ ## start over with new data set?
-#
-#   if (.Platform$OS.type == "windows"){
-#     require ("R.utils")
-#     SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-#   }else{ # MacOS or Linux
-#     SMPfile <- "~/GISdata/LCI/SWMP/current"
-#   }
-#   require ("SWMPr")
-#   hmr <- import_local(SMPfile, "kachomet")
-#   save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
-# }else{
-#   rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
-#
-#   ## updated to the latest data
-#   require ("SWMPr")
-#   # hmr2 <- all_params_dtrng ("kachomet", c ('01/01/2013', '02/01/2013'))
-#
-#   fN <- difftime(Sys.time(), max (hmr$datetimestamp), units = "hours")
-#   hmr2 <- try (all_params ("kachomet", Max = ceiling (as.numeric(fN)*4)))  # XXX needs registered (static?) IP address. NCCOS VPN ok?
-#   if (class (hmr2)[1] == "swmpr"){
-#     ## order of field names does not match between hmr2 and hmr
-#     hmr3 <- hmr2 [,sapply (1:ncol (hmr), FUN = function (i){
-#       which (names (hmr)[i] == names (hmr2))
-#     })]
-#     hmr <- rbind (hmr, hmr3)
-#     rm (hmr2, hmr3, fN)
-#     hmr <- hmr [which (!duplicated(hmr$datetimestamp)),]
-#     save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
-#   }
-# }
-#
-
 
 
 ##########################################################
@@ -68,8 +29,12 @@ currentCol <- c ("blue", "lightblue", "black")
 
 ## get up-to-date SWMP data
 source ("annualPlotFct.R")
-hmr <- getSWMP ("kachomet")
+hmr <- getSWMP ("kachomet", QAQC = TRUE)
 
+
+x <- subset (as.data.frame(hmr), hmr$datetimestamp > as.POSIXct("2020-01-01 00:01"))
+x <- subset (x, atemp > -20)
+plot (atemp~datetimestamp, x)
 
 ## apply QAQC flaggs ##
 # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
@@ -130,6 +95,7 @@ rm (qaqcM)
 ## find missing values, gaps in TS
 # summary (as.numeric (diff (hmr$datetimestamp)))
 # which (as.numeric (diff (hmr$datetimestamp)) > 15)
+
 hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 
 
