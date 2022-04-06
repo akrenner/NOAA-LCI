@@ -374,13 +374,13 @@ iAxis <- function (mmL, side = 4, line = 3, lab = "", ...){
 
 
 ## load cached SWMP data and update it with the latest from CDMO
-getSWMP <- function (station){
+getSWMP <- function (station, QAQC = TRUE){
   ## load SWMP data from local zip file. Update to the most current data
   ## from CDMO and cache those updates for the next run.
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-  ## cacheFolder should be deleted, when zip file was updated
+
 
   require ("SWMPr")
 
@@ -388,17 +388,32 @@ getSWMP <- function (station){
   zipFile <- "~/GISdata/LCI/SWMP/current"
 
   dir.create(cacheFolder, showWarnings = FALSE)
+  #    if (.Platform$OS.type == "windows"){
+  require ("R.utils")
+  SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
+  #    }else{ # MacOS or Linux
+  #      SMPfile <- zipFile
+  #    }
+
+
+
+  ## need to delete cacheFolder if zip file is newer to avoid data gaps
+
+  ## cacheFolder should be deleted, when zip file was updated  -- automate that?
+  if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){
+    if (file.info (paste0 (cacheFolder, "/kachomet.RData"))$ctime <
+        file.info (SMPfile)$ctime){
+      unlink (cacheFolder, recursive = "TRUE")
+    }
+  }
+
   suppressWarnings (lT <- try (load (paste0 (cacheFolder, "/", station, ".RData"))
                                , silent=TRUE)) # yields smp
   if (class (lT)[1] == "try-error"){
-    #    if (.Platform$OS.type == "windows"){
-    require ("R.utils")
-    SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
-    #    }else{ # MacOS or Linux
-    #      SMPfile <- zipFile
-    #    }
     smp <- import_local(SMPfile, station) ## this is initially required!
-    smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+    if (QAQC){
+      smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+    }
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
   #  ## not sure whyere the bad line is coming from, but it has to go
@@ -407,7 +422,13 @@ getSWMP <- function (station){
   ## catch for stations that are inactive?
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
-    smp2 <- try (all_params (station, Max = ceiling (as.numeric(fN)*4)), silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok?
+    smp2 <- try (all_params (station
+                             , Max = ceiling (as.numeric(fN)*4*24))
+                 , silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok
+    if (QAQC){
+      smp2 <- qaqc (smp2)
+    }
+
     if (class (smp2)[1] == "swmpr"){
       ## remove bad lines
       if (any (is.na (smp2$datetimestamp))){

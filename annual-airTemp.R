@@ -11,7 +11,7 @@ currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
 currentCol <- c("red" , "magenta"
                 , "purple")
 SWMP <- TRUE
-SWMP <- FALSE
+# SWMP <- FALSE
 
 
 

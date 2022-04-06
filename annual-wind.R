@@ -4,7 +4,8 @@
 ## use Lands End wind data
 
 
-rm (list = ls())
+# rm (list = ls())  # not if called from a script
+
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 
@@ -74,7 +75,7 @@ hmr <- getSWMP ("kachomet")
 ## apply QAQC flaggs ##
 # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
 # is.na (hmr$)
-hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further?
+# hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further? -- do this in getSWMP()
 
 #######################
 
@@ -172,8 +173,10 @@ abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
 cYg <- aggregate (maxwspd~jday+year, data = hmr, FUN = function (x){any (x > stormT)})
 cYg <- subset (cYg, year == currentYear & maxwspd)
 sDate <- as.POSIXct (paste0 (currentYear, "-01-01")) + 3600*24 * cYg$jday
-for (i in 1:length (sDate)){
- mtext (format (sDate [i], "%d %b"), side = 4, at = i, las = 1, line = -0.0)
+if (length (sDate) > 0){
+  for (i in 1:length (sDate)){
+    mtext (format (sDate [i], "%d %b"), side = 4, at = i, las = 1, line = -0.0)
+  }
 }
 rm (cYg, sDate)
 #  box()
@@ -567,14 +570,17 @@ with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
 require ("png")
 hgt <- 0.7; wdh <- 15
 img <- readPNG ("pictograms/cloud.png")
-with (subset (tDay, p365galDay > 0), rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
-                                                  , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
-                                                  #                                                 , angle = p365wdir+ 90
-                                                  ## rotation would be desirable -- but rotates around bottom-left point -- would need compensation
-)
-)
-with (subset (tDay, p365galDay > 0), text (jday, p365ma + 1.8, labels = p365wCar, cex = 0.6))
-
+galeS <- subset (tDay, p365galDay > 0)
+if (nrow (galeS) > 0){
+  with (galeS, rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
+                                                    , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
+                                                    #                                                 , angle = p365wdir+ 90
+                                                    ## rotation would be desirable -- but rotates around bottom-left point -- would need compensation
+  )
+  )
+  with (galeS, text (jday, p365ma + 1.8, labels = p365wCar, cex = 0.6))
+}
+rm (galeS)
 ## legend
 bP <- cLegend ("bottomleft", qntl = qntl [1], inset = 0.02
                , currentYear = currentYear
@@ -713,6 +719,7 @@ dev.off()
 
 ## monthly temp and precip
 climD <- function (cDF){
+  ## let it fail or interpolate NAs?
   ymC <- aggregate (atemp~year+month, cDF, FUN = max, na.rm = TRUE)
   ymC$minT <- aggregate (atemp~year+month, cDF, FUN = min, na.rm = TRUE)$atemp
   rain <- aggregate (totprcp~year+month, cDF, FUN = sum, na.rm = TRUE)
@@ -722,7 +729,11 @@ climD <- function (cDF){
   monthC$minT <- aggregate (minT~month, ymC, FUN = mean, na.rm = TRUE)$minT
   monthC$absMin <- aggregate (atemp~month, cDF, FUN = min, na.rm = TRUE)$atemp
   monthT <- t (monthC [,2:ncol (monthC)])
-  colnames (monthT) <- month.abb
+  if (nrow (monthC) == 12){ ## interpolate NAs?
+    colnames (monthT) <- month.abb
+  }else{
+    colnames (monthT) <- month.abb [monthC$month] # match (monthC$month, 1:12)]
+  }
   monthT
 }
 
@@ -737,12 +748,17 @@ diagwl(climD (hmrC)
        , est = "Homer Spit"
        , per = paste (range (subset (hmrC, !is.na (totprcp))$year), collapse = "-")
 )
-diagwl (climD (subset (hmr, year == currentYear))
-               , est = "Homer Spit"
-               , per = currentYear)
+tD <- try ({  ## fails if, e.g. hmr$atemp contains NAs
+  diagwl (climD (subset (hmr, year == currentYear))
+          , est = "Homer Spit"
+          , per = currentYear)
+}, silent = TRUE)
+if (class (tD) == "try-error"){
+  cat ("\nClimate diagram is incomplete (due to missing data?)\n\n")
+  }
 dev.off()
 
 
 
-cat ("Finished windTrend.R\n")
+cat ("Finished annual-wind.R\n")
 # EOF

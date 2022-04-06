@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
-if (grep ("darwin", version$os) == 1){
+if (version$os != "mingw32"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }else{
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
@@ -35,7 +35,7 @@ source ("annual-waves.R")
 
 cat ("all done\n")
 print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+# print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because rm (list = ls())
 
 ## EOF
 
