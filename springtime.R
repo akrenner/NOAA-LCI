@@ -206,6 +206,9 @@ if (0){
 # fit <- function (x,a,b,c,d){a*sin(a*x+c)+d}
 
 
+
+
+
 if (0){
 plot (temp~jday, sldvia)
 curve (fit (x = sldvia$temp, a = co ["A"], b = co ["omega"], c = co ["phi"], d = co ["C"])
@@ -317,6 +320,12 @@ cliFit <- lapply (1:length (levels (cliFL$station)), FUN = function (j){
   fit <- nls (csum~logF (L,k,x0,b, jday), data = s, start = svf)
   fit
 })
+tempCliFit <- lapply (1:length (levels (cliFL$station)), FUN = function (j){
+  s <- subset (cliFL, station == levels (cliFL$station)[j])
+  fit <- nls (temp~logF (L,k,x0,b, jday), data = s, start = svf)
+  fit
+})
+
 
 
 ## for each station: climatology of spring bloom
@@ -379,8 +388,6 @@ for (j in 1:length (levels (cliFL$station))){
 dev.off()
 rm (svf, svt)
 
-rm (svf, svt)
-
 
 
 ## summary of how many valid measurements per year
@@ -408,8 +415,9 @@ j <- 2
 ## fix NAs in sL
 sLo <- sL
 # sL <- sLo
-sL <- aggregate (chlfluor~jday+year+station, sL, FUN = mean, na.rm = TRUE)
-
+sLa <- aggregate (chlfluor~jday+year+station, sL, FUN = mean, na.rm = TRUE)
+# sLa$temp <- aggregate (temp~jday+year+station, sL, FUN = mean, na.rm = TRUE)$temp  # N of NAs differ -- more complicated to merge
+sL <- sLa
 
 ## insert missing NAs -- but ONLY for partial year, not for completely missing years
 sL$jday <- as.num (sL$jday)
@@ -430,8 +438,12 @@ sLt$chlfluorNNa <- ifelse (is.na(sLt$chlfluor)
                            , sLt$chlfluor)   # XXXXXXX
 # sLt$climFluor <- cliFL$chlfluor [match (paste0 (as.character (sLt$station), sLt$jday)
 #                                         , paste0 (as.character (cliFL$station), cliFL$jday))]
+sLt$temp <- sL$temp [match (paste (sLt$station, sLt$jday, sLt$year)
+                           , paste (sL$station, sL$jday, sL$year))]
+
 sLt$station <- factor (sLt$station)
 sLt$year <- factor (sLt$year)
+
 sL <- sLt; rm (sLt)
 rm (lS, Ny, Ns)
 
@@ -445,28 +457,15 @@ yearFits <- lapply (1:length (levels (sL$station)), function (j){
   # dat$jday <- as.numeric (levels (dat$jday))[dat$jday]  # already numeric!
 
   svf <- as.list (coefficients(cliFit [[j]]))
-  # svf <- list (L = c(500, 1000, 10000), k = c (0.01, 0.02, 0.05)
-  #              , x0 = c(160, 180, 200, 250), b = c (-50, -20, -10, 0))
-  logF2 <- function (L,k,x0,b,x){
-    L <- svf$L
-    b <- svf$b
-    L/(1+exp (-k*(x-x0)))+b
-  }
 
   yFit <- lapply (1:length (levels (dat$year)), FUN = function (i){
     s <- subset (dat, year == levels (dat$year)[i])
-    if (sum (!is.na (s$chlfluor)) < 5){
-      ## cause a try-error to be caught below
+    if (sum (!is.na (s$chlfluor)) < 5){  ## cause a try-error to be caught below
       fit <- try (log ("a"), silent = TRUE)
-      ## fit <- as.numeric (rep (NA, 4))
-      ## names (fit) <- c("L","k","x0","b") # as.numeric (c (L=NA, k=NA,x0=NA,b=NA))
-      ##            fit <- rep (NA, 4)
     }else{
-#     s <- subset (s, !is.na (s$chlfluorNNa))  ## better to interpolate!! XXX
       s$csum <- cumsum (s$chlfluorNNa)  ## use imputed version -- no NAs in chlfluorNNa
       fit <- try (nls (csum~logF (L,k,x0,b,x=jday), data = s, start = svf)
                   , silent = TRUE)
-      #     fit <- try (nls (s$csum~SSlogis (s$jday, Asym, xmid, scal)))
       if (class (fit) == "try-error"){cat (paste0 ("nl fit failed, i=", i, " j="
                                                    , j, "\n", fit, "\n\n"))}
     }
@@ -475,6 +474,25 @@ yearFits <- lapply (1:length (levels (sL$station)), function (j){
   names (yFit) <- paste0 ("Y", levels (dat$year))
   yFit
 })
+## also fit yearly temperature data to compare t0s.
+yTempFit <- lapply (1:length (levels (sL$station)), function (j){
+  dat <- subset (sL, station == levels (sL$station)[j] & jday < 250)
+  svf <- as.list (coefficients(tempCliFit [[j]]))
+
+  yFit <- lapply (1:length (levels (dat$year)), FUN = function (i){
+    s <- subset (dat, year == levels (dat$year)[i])
+    if (sum (!is.na (s$temp)) < 5){ ## cause a try-error to be caught below
+      fit <- try (log ("a"), silent = TRUE)
+    }else{
+      fit <- try (nls (temp~logF (L,k,x0,b,x=jday), data = s, start = svf), silent = TRUE)
+    }
+    fit
+  })
+  names (yFit) <- paste0 ("Y", levels (dat$year))
+  yFit
+})
+
+
 
 yearCoef <- lapply (1:length (yearFits), function (j){
   fits <- yearFits [[j]]
@@ -608,11 +626,16 @@ aTemp <- aggregate (temp~station+year, sLo, FUN = mean, na.rm = TRUE, subset = m
 yearCoef$temp <- aTemp$temp [match (with (yearCoef, paste (station, year))
                                     , with (aTemp, paste (station, year)))]
 
-pdf ("~/tmp/LCI_noaa/media/spring/timingTemp.pdf")
-for (j in 1:length (levels (yearCoef$station))){
+tMdl <- lm (x0~temp * station, data = yearCoef)
+
+
+
+pdf ("~/tmp/LCI_noaa/media/spring/timingTemp.pdf", height = 4, width = 6)
+par (mfrow = c(1,3))
+for (j in 2:length (levels (yearCoef$station))){
 # j <- 3
     s <- subset (yearCoef, station == levels (yearCoef$station)[j])
-  plot (temp~x0, s, pch=19, xlab = "t0")
+  plot (temp~x0, s, pch=19, xlab = "t0", main = levels (yearCoef$station)[j])
   md <- try (lm (temp~x0, s), silent = TRUE)
   if (class (md) != "try-error"){
     nD <- list (x0 = seq (min (s$x0, na.rm = TRUE), max (s$x0, na.rm = TRUE), length.out = 100))
@@ -624,29 +647,39 @@ for (j in 1:length (levels (yearCoef$station))){
 }
 dev.off()
 summary (lm (x0~station + temp, data = yearCoef))
+summary (lm (x0~temp, data = yearCoef))
+
+require ("lme4")
+yearCoef2 <- subset (yearCoef, station != "HomerDeep")
+yearCoef2$station <- factor (yearCoef2$station)
+glMdl <- lmer (x0~temp + (temp | station), data = yearCoef2)
 
 
 
-## fluorescence and turbidity:
-plot (turb~as.num(jday), sLo)
 
-pdf ("~/tmp/LCI_noaa/media/spring/timeFluores-Turb.pdf", width=7, height=14)
-mC <- seq (1, 10, by = 2)
-par (mfcol = c(length (mC),2), mar = c(3,4,0.5,0.5))
-for (i in 1:length (mC)){
-  plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "HomerShallow")
-        , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
-  legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
-if (i == 1){legend ("top", bty = "n", legend = "Homer", cex = 2.5)}
+## -- just QAQC stuff -- ignore
+if (0){
+  ## fluorescence and turbidity:
+  plot (turb~as.num(jday), sLo)
+
+  pdf ("~/tmp/LCI_noaa/media/spring/timeFluores-Turb.pdf", width=7, height=14)
+  mC <- seq (1, 10, by = 2)
+  par (mfcol = c(length (mC),2), mar = c(3,4,0.5,0.5))
+  for (i in 1:length (mC)){
+    plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "HomerShallow")
+          , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
+    legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
+    if (i == 1){legend ("top", bty = "n", legend = "Homer", cex = 2.5)}
   }
-for (i in 1:length (mC)){
-  plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "SeldoviaShallow")
-        , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
-  legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
-  if (i == 1){legend ("top", bty = "n", legend = "Seldovia", cex = 2.5)}
+  for (i in 1:length (mC)){
+    plot (chlfluor~turb, sLo, subset = (month == mC [i])&(station == "SeldoviaShallow")
+          , xlab = "", xlim = c(0,50), ylim = c(0,150), ylab = "")
+    legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
+    if (i == 1){legend ("top", bty = "n", legend = "Seldovia", cex = 2.5)}
+  }
+  mtext ("chlorophyll", side = 2, outer = TRUE, line = -2)
+  mtext ("turbidity", side = 1, outer = TRUE, line = -2)
+  dev.off()
 }
-mtext ("chlorophyll", side = 2, outer = TRUE, line = -2)
-mtext ("turbidity", side = 1, outer = TRUE, line = -2)
-dev.off()
 
 # EOF
