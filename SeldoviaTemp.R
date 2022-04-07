@@ -76,7 +76,8 @@ sldvia <- rbind (sldvia, sldviaS, homer, homerS); rm (homer, homerS)
 
 
 
-sldvia <- qaqc (sldvia, qaqc_keep = "0")  # scrutinize this further!?
+# sldvia <- qaqc (sldvia, qaqc_keep = "0")  # scrutinize this further!?
+# do this in getSWMP!
 sldvia$temp <- ifelse (sldvia$temp < -5, NA, sldvia$temp)  # -99 = NA code
 names (sldvia) <- tolower (names (sldvia))
 

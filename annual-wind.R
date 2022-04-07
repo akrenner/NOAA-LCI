@@ -245,11 +245,11 @@ barplot (sTab [4:1,]
 #         , ylab = "N per year"
          , ylab = "High-wind days per year"
 )
-legend ("top", legend = row.names(sTab)[1:2], fill = gCols[1:2], bty = "n")
+legend ("topright", legend = row.names(sTab)[1:2], fill = gCols[1:2], bty = "n")
 abline (h = mean (colSums(sTab)), lwd = 2, lty = "dashed")
 abline (h = mean (as.data.frame (t (sTab))$storm), lwd = 3, lty = "dotted", col = "black") #, "darkgray")
 dev.off()
-
+rr
 rm (yS, yG, ys, gCols)
 
 

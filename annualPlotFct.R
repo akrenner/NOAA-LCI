@@ -44,6 +44,7 @@ plotSetup <- function(longMean, current, ylab = NULL, ...){
         , xlim = c(5,355)
         , xlab = ""
         , ylab = ylab
+        , ...
   )
   axis (2)
   axis (1, at = 15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
@@ -226,6 +227,12 @@ aPlot <- function (df, vName, MA = TRUE, ...){
 }
 
 
+saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
+  ## safer than aggregate
+  nA <- aggregate (...)
+  nA [match (refDF$jday, nA$jday),]
+}
+
 
 prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
                      , maO = 31
@@ -236,6 +243,7 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
     stop (paste ("Data frame must contain the variables jday, year, and", varName))
   }
   if (length (varName) > 1){stop ("so far can only process one variable at a time")}
+
 
   ## flexible for varName to be a vector!!  -- XXX extra feature
 
@@ -264,31 +272,41 @@ if (1){
     # dMeans$XXX <- XX$varName [match (...)
     ## match ().... when length (varName) > 1
 }
+
   dLTmean <- subset (dMeans, year < currentYear)
-    tDay <- aggregate (xVar~jday, dLTmean, FUN = mean, na.rm = TRUE)  # not sumFct here! it's a mean!
-    tDay$sd <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)$xVar
-    tDay$MA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)$MA
+  tDay <- aggregate (xVar~jday, dLTmean, FUN = mean, na.rm = TRUE)  # not sumFct here! it's a mean!
+
+  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE, refDF = tDay)$xVar
+  tDay$MA <- saggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE, refDF = tDay)$MA
+
+  # sdA <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)
+  # MAA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)
+  # tDay$sd <- sdA$sd [match (tDay$jday, sdA$jday)]
+  # tDay$MA <- MAA$sd [match (tDay$jday, MAA$jday)]
+  # rm (sdA, MAA) # 2nd version
+  # tDay$sd <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)$xVar
+  # tDay$MA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)$MA
 
   #  for (j in c (varName, MA)){
   for (i in 1:length (qntl)){
-    tDay$perL <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i])$xVar
-    tDay$perU <- aggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i])$xVar
+    tDay$perL <- saggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i], refDF = tDay)$xVar
+    tDay$perU <- saggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i], refDF = tDay)$xVar
     names (tDay)[which (names (tDay) == "perL")] <- paste0 ("perL", i)
     names (tDay)[which (names (tDay) == "perU")] <- paste0 ("perU", i)
-    tDay$maL <- aggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i])$MA
-    tDay$maU <- aggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i])$MA
+    tDay$maL <- saggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i], refDF = tDay)$MA
+    tDay$maU <- saggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i], refDF = tDay)$MA
     names (tDay)[which (names (tDay) == "maL")] <- paste0 ("maL", i)
     names (tDay)[which (names (tDay) == "maU")] <- paste0 ("maU", i)
   }
-  tDay$max <- aggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE)$xVar # dLTmean?? XX
-  tDay$min <- aggregate (xVar~jday, dLTmean, FUN = min, na.rm = TRUE)$xVar
-  tDay$maxMA <- aggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE)$MA
-  tDay$minMA <- aggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE)$MA
+  tDay$max <- saggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$xVar # dLTmean?? XX
+  tDay$min <- saggregate (xVar~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$xVar
+  tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$MA
+  tDay$minMA <- saggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$MA
 
 
   # is this critically needed?? -- N years of data per date
-  tDay$yearN <- aggregate ((!is.na (xVar))~jday, dMeans, FUN = sum
-                           , na.rm = TRUE)[1:nrow (tDay),2] # some scripts fail at 366
+  tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN = sum
+                           , na.rm = TRUE, refDF = tDay)[1:nrow (tDay),2] # some scripts fail at 366
   ## present/pretend/current year-1
   pY <- subset (dMeans, year == currentYear)
   tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]

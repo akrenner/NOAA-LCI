@@ -34,9 +34,13 @@ if (SWMP){                                   # use SWMP data or NOAA homer airpo
 tDay <- prepDF (dat = hmr, varName = "totprcp", maO = maO, qntl = qntl)
 
 
-
-
-
+## annual vs average precip
+cat ("\n##\n##\nCurrent year precipitation compared to long-term mean\n")
+anR <- aggregate (totprcp~year, subset (hmr, year <= currentYear)
+                  , sum, na.rm = TRUE)
+summary (subset (anR, year < currentYear)$totprcp)
+subset (anR, year == currentYear)
+cat ("\n##\n##")
 
 
 ## adjust units

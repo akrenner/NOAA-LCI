@@ -31,6 +31,7 @@ source ("annual-airTemp.R")
 source ("annual-snowpack.R")
 source ("annual-stratification.R")
 source ("annual-waves.R")
+# source ("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
 
 cat ("all done\n")

@@ -3,7 +3,8 @@
 ## calc difference in density between upper and lower TS
 
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
+rm (list = ls())
+load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9)
 pMA <- TRUE
@@ -34,8 +35,8 @@ sldviaS$swDens <- sigDens (sldviaS)
 homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] - homerS$swDens
 sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] - sldviaS$swDens
 
-homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] / homerS$swDens
-sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] / sldviaS$swDens
+# homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] / homerS$swDens
+# sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] / sldviaS$swDens
 
 
 hM <- prepDF (dat = homerS, varName = "strat", maO = maO, currentYear = currentYear, qntl = qntl)
@@ -54,7 +55,7 @@ hY <- 2014:2017
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stratificationYear.pdf")
 par (mfrow = c(2,1), mar = c(3,4,3,1))
 aPlot (sL, "strat", currentCol = currentCol, ylab = "water column stability", main = "Seldovia"
-       , ylim = c(1, 1.3)) # c(0,5))
+       , ylim = c(0, 4.3)) # c(0,5))
 # for (i in 1:length (hY)){
 #   sL <- prepDF (dat = sldviaS, varName = "strat", maO = maO, currentYear = hY [i], qntl = qntl)
 #   lines (pYMA_strat~jday, sL, col = i)
@@ -72,7 +73,7 @@ cLegend ("topleft", inset = 0.05
 axis (1, at = 366, labels = FALSE)
 
 aPlot (hM, "strat", currentCol = "blue", ylab = "water column stability", main = "Homer"
-       , ylim = c(1, 1.3)) #c(0,5))
+       , ylim = c(0, 4.3)) #c(0,5))
 # for (i in 1:length (hY)){
 #  hM <- prepDF (dat = homerS, varName = "strat", maO = maO, currentYear = hY [i], qntl = qntl)
 #  lines (pYMA_strat~jday, hM, col = i)
@@ -86,6 +87,85 @@ rm (hM, sL)
 # warm water is linked to reduced stratification in Seldovia (summer) because deep water becomes warmer (and less saline???)
 
 
+
+## also plot fluorescence and turbidity
+waterL <- list (homerS, homer, sldviaS, sldvia)
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-FluorescenceA.pdf")
+par (mfrow = c(2,2), mar = c(3,4,3,1))
+
+for (i in 1:length (waterL)){
+  hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
+                     , currentYear = currentYear, qntl = qntl))
+  if (class (hM) != "try-error"){
+  aPlot (hM, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]"
+         , main = c ("Homer shallow", "Homer deep", "Seldovia shallow"
+         , "Seldovia deep")[i]
+         # , ylim = c(1, 1.3)
+         )
+  cLegend ("topleft", inset = 0.05
+           , mRange = c (min (homerS$year), currentYear -1)
+           , currentYear = currentYear
+           , cYcol = currentCol # "blue"
+           , qntl = qntl [1]
+  )
+  axis (1, at = 366, labels = FALSE)
+  }
+}
+dev.off()
+rm (waterL, hM, i)
+
+
+
+hM <- prepDF (dat = homerS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
+sL <- prepDF (dat = sldviaS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
+
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf")
+par (mfrow = c(2,1), mar = c(3,4,3,1))
+aPlot (sL, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]", main = "Seldovia"
+       #, ylim = c(1, 1.3)
+       ) # c(0,5))
+cLegend ("topleft", inset = 0.05
+         , mRange = c (min (homerS$year), currentYear -1)
+         , currentYear = currentYear
+         , cYcol = currentCol # "blue"
+         , qntl = qntl [1]
+)
+axis (1, at = 366, labels = FALSE)
+# title (main = "Seldovia")
+
+aPlot (hM, "chlfluor", currentCol = "blue", ylab = "Chlorophyll", main = "Homer"
+       #, ylim = c(1, 1.3)
+       )
+# title (main = "Homer")
+dev.off()
+
+
+
+
+
+hM <- prepDF (dat = homerS, varName = "turb", maO = maO, currentYear = currentYear, qntl = qntl)
+sL <- prepDF (dat = sldviaS, varName = "turb", maO = maO, currentYear = currentYear, qntl = qntl)
+
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf")
+par (mfrow = c(2,1), mar = c(3,4,3,1))
+aPlot (sL, "turb", currentCol = currentCol, ylab = "Turbidity"
+       , main = "Seldovia"
+       #, ylim = c(1, 1.3)
+       )
+cLegend ("topleft", inset = 0.05
+         , mRange = c (min (homerS$year), currentYear -1)
+         , currentYear = currentYear
+         , cYcol = currentCol # "blue"
+         , qntl = qntl [1]
+)
+axis (1, at = 366, labels = FALSE)
+# title (main = "Seldovia")
+
+aPlot (hM, "turb", currentCol = "blue", ylab = "Turbidity", main = "Homer"
+       #, ylim = c(1, 1.3)
+       )
+# title (main = "Homer")
+dev.off()
 
 
 cat ("Finished stratificationSeason\n")
