@@ -29,7 +29,9 @@ set.seed (8)
 ## define new destinations
 nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
 instL <- c ("4141", "5028")  # do this from data?
+# XXX add new CTD to this list!!!
 ## clean slate -- do this by hand!
+
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
 x <- c (unlink (paste0 (nD, instL [1], "/"))
         , unlink (paste0 (nD, instL [2], "/")))
@@ -58,7 +60,7 @@ rL <- function (f, p = NULL){ # recursive listing of files
 
 ## move about HEX files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
-fL <- c(fL, rL ("ctd-data_2017-21/2_Edited\ .hex\ files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt"))
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
@@ -70,7 +72,8 @@ rm (rL)
 
 
 ## bad files out
-fL <- fL [-grep ("Troubleshooting", fL)]
+bF <- grep ("Troubleshooting", fL)
+if (length (bF) > 0){fL <- fL [-bF]}
 ## manually remove duplicates -- if any -- none found
 
 

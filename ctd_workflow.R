@@ -1,5 +1,7 @@
 ##
 
+rm (list = ls())
+
 print (Sys.time())
 # CTD processing
 if (length (grep ("Martin", getwd())) > 0){
