@@ -248,7 +248,6 @@ legend ("topright", legend = row.names(sTab)[1:2], fill = gCols[1:2], bty = "n")
 abline (h = mean (colSums(sTab)), lwd = 2, lty = "dashed")
 abline (h = mean (as.data.frame (t (sTab))$storm), lwd = 3, lty = "dotted", col = "black") #, "darkgray")
 dev.off()
-rr
 rm (yS, yG, ys, gCols)
 
 
@@ -502,7 +501,7 @@ if (1){ ## windrose insert
   ## lattice plot is the best-looking amongst the ggplot, base-plot and lattice options
   ## all attempts to place graphics at the appropriate position in base-plot
   ## or Hmisc::subplot or using par() failed -> tmp file
-  require ("openair")
+  require ("openair", warn.conflicts = FALSE, quietly = TRUE)
   hmrS <- hmr
   hmrS$date <- hmrS$datetimestamp
 
@@ -610,7 +609,7 @@ rm(hgt, wdh, bP, img)
 # }
 
 # openair:windRose -- lattice-plot; struggling with type for class other than times
-require ("openair")
+require ("openair", quietly = TRUE, warn.conflicts = FALSE)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
 # hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
@@ -739,22 +738,21 @@ climD <- function (cDF){
 # png ("~/tmp/LCI_noaa/media/climateDiag.png", width = 480, height = 960)
 # par (mfrow = c(2,1))
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
-hmrC <- subset (hmr, year < currentYear)
 ## alternative: wldiag in dgolicher/giscourse on github
 ## for same but with more customization, see library (iki.dataclim)
 require ("climatol")
-diagwl(climD (hmrC)
-       , est = "Homer Spit"
-       , per = paste (range (subset (hmrC, !is.na (totprcp))$year), collapse = "-")
+diagwl (climD (subset (hmr, year < currentYear))
+        , est = "Homer Spit"
+        , per = paste (range (subset (hmrC, !is.na (totprcp))$year), collapse = "-")
 )
-tD <- try ({  ## fails if, e.g. hmr$atemp contains NAs
+tD <- try ({  ## fails if, e.g. hmr$atemp contains NAs, e.g. September 2021
   diagwl (climD (subset (hmr, year == currentYear))
           , est = "Homer Spit"
           , per = currentYear)
-}, silent = TRUE)
+}, silent = FALSE)
 if (class (tD) == "try-error"){
   cat ("\nClimate diagram is incomplete (due to missing data?)\n\n")
-  }
+}
 dev.off()
 
 
