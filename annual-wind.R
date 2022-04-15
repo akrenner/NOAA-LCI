@@ -76,7 +76,6 @@ hmr <- getSWMP ("kachomet")
 # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
 # is.na (hmr$)
 # hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further? -- do this in getSWMP()
-
 #######################
 
 
