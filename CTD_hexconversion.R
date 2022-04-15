@@ -130,13 +130,26 @@ for (i in 1:length (conF)){
 }
 
 
-## replicate loopedit here in R.
+## replicate loop-edit here in R.
 ## run BinAvg again in SEABIRD and/or in R.
+## tLB [3]: aligned, tLB [4]: looped,
 fNf <- list.files(tLB [3], ".cnv"
                   , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
 require ("oce")
 for (i in 1:length (fNf)){
-  ctdF <- read.ctd(fNf [i])  ## address NA warning
+  ## read all text and change digit-digit to digit -digit
+  ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
+  # read.table()
+
+  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning
+  if (class (ctdF) == "try-error"){
+    cat ("trouble reading ", i, fNf [i], "--trying to fix\n")
+    cT <- readLines(fNf [i])
+    ## need to capture text and use it again
+    cT <- gsub ("([0-9])-([0-9])", "\\1 -\\2", cT)
+    read.ctd (cT); rm (cT)
+  }
+  # ctdF <- read.ctd(fNf [i])  ## address NA warning
   cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
                          # , parameters = list (minSoak = 1, maxSoak = 20)
                          )  ## min/maxSoak = dbar (approx m)
