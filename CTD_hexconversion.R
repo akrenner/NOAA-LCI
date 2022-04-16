@@ -141,15 +141,23 @@ for (i in 1:length (fNf)){
   ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
   # read.table()
 
-  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning
+  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning. Problematic: i == 1058
   if (class (ctdF) == "try-error"){
     cat ("trouble reading ", i, fNf [i], "--trying to fix\n")
     cT <- readLines(fNf [i])
-    ## need to capture text and use it again
-    cT <- gsub ("([0-9])-([0-9])", "\\1 -\\2", cT)
-    read.ctd (cT); rm (cT)
+    # cT <- readChar(fNf [i]) # needs nchars
+
+    ## need to capture text and use it again -- line 283
+    ctx <- cT [281:length (cT)]
+    ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)
+    cTf <- c (cT [1:280], ctx2)
+    tF <- tempfile()
+    write.table(cTf, file = tF, quote = FALSE, col.names = FALSE, row.names = FALSE)
+    tfin <- readLines (tF)
+    ctdF <- read.ctd (tF)
+    unlink (tF)
+    rm (cT, tF, ctx, ctx2, cTf)
   }
-  # ctdF <- read.ctd(fNf [i])  ## address NA warning
   cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
                          # , parameters = list (minSoak = 1, maxSoak = 20)
                          )  ## min/maxSoak = dbar (approx m)
