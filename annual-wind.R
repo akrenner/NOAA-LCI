@@ -4,64 +4,31 @@
 ## use Lands End wind data
 
 
-# rm (list = ls())  # not if called from a script
+if (exists ("metstation")){ rm (list = ls())}  # not if called from a script
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 
 
-## location of data -- best to curl it -- better to get this from SeldoviaTemp?? one place to spec
-## SeldoviaTemp currently only other file using SWMP data
-# file name ---> could use Windows shortcut?
-
-# if (1){ ## start over with new data set?
-#
-#   if (.Platform$OS.type == "windows"){
-#     require ("R.utils")
-#     SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-#   }else{ # MacOS or Linux
-#     SMPfile <- "~/GISdata/LCI/SWMP/current"
-#   }
-#   require ("SWMPr")
-#   hmr <- import_local(SMPfile, "kachomet")
-#   save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
-# }else{
-#   rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind1.RData") # hmr
-#
-#   ## updated to the latest data
-#   require ("SWMPr")
-#   # hmr2 <- all_params_dtrng ("kachomet", c ('01/01/2013', '02/01/2013'))
-#
-#   fN <- difftime(Sys.time(), max (hmr$datetimestamp), units = "hours")
-#   hmr2 <- try (all_params ("kachomet", Max = ceiling (as.numeric(fN)*4)))  # XXX needs registered (static?) IP address. NCCOS VPN ok?
-#   if (class (hmr2)[1] == "swmpr"){
-#     ## order of field names does not match between hmr2 and hmr
-#     hmr3 <- hmr2 [,sapply (1:ncol (hmr), FUN = function (i){
-#       which (names (hmr)[i] == names (hmr2))
-#     })]
-#     hmr <- rbind (hmr, hmr3)
-#     rm (hmr2, hmr3, fN)
-#     hmr <- hmr [which (!duplicated(hmr$datetimestamp)),]
-#     save (hmr, file = "~/tmp/LCI_noaa/cache/wind1.RData")
-#   }
-# }
-#
-
 
 
 ##########################################################
 ## parameters to agree upon
+metstation <- "kachomet"  # SWMP
+# metstation <- "FILA2"     # Flat Island  -- something with subsets
+# metstation <- "AUGA2"     # Augustine Island  --- subsets
+# metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
+
+# wStations <- c("kachomet", "FILA2", "AUGA2", "HMSA2")
+
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
-maO <- 30   # moving average window
+maO <- 31   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 48
 galeT <- 34
 scAdvT <- 21
 currentCol <- c ("blue", "lightblue", "black")
-# currentCol <- "blue"
-# currentCol <- "red"
-# currentCol <- c ("red", "magenta")
 ## leave code below as-is
 ##########################################################
 
@@ -69,13 +36,51 @@ currentCol <- c ("blue", "lightblue", "black")
 
 ## get up-to-date SWMP data
 source ("annualPlotFct.R")
-hmr <- getSWMP ("kachomet")
 
+if (!exists ("wStations")){wStations <- metstation}
+for (k in 1:length (wStations)){
+  metstation <- wStations [k]
+
+if (metstation == "kachomet"){
+  hmr <- getSWMP (metstation)
+}else{
+  hmr2 <- getNOAA (metstation) # fetch from NOAA
+  # hmr2 <- getNOAA ("HMSA2") # fetch from NOAA
+  hmr <- with (hmr2, data.frame (datetimestamp, atemp = air_temperature
+                                 , rh = rep (is.na (nrow (hmr2)))  # barometric pressure
+                                 , bp = rep (is.na (nrow (hmr2)))  # relative humidity
+                                 , wspd = wind_spd # * 3.6  # NOAA wspd in m/s -- true?? -- fix in fct
+                                 , maxwspd = gust  #* 3.6
+                                 , wdir = wind_dir
+                                 , sdwdir = rep (is.na (nrow (hmr2)))
+                                 , totpar = rep (is.na (nrow (hmr2)))
+                                 , totprcp = rep (is.na (nrow (hmr2)))
+                                 , totsorad = rep (is.na (nrow (hmr2)))
+                                   ))
+  rm (hmr2)
+}
 
 ## apply QAQC flaggs ##
 # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
 # is.na (hmr$)
 # hmr <- qaqc (hmr, qaqc_keep = "0")  # scrutinize this further? -- do this in getSWMP()
+
+
+## alternative: get wind (and other weather) from HMSA2, Homer Spit -- Mike says it's more
+## representative of wind in the bay than HMRA2, Homer, Research Reserve
+if (0){  # activate once it's working to get weather from alternative NOAA source: Augustine, Flat Island, etc.
+  source ("noaaWeather.R")
+  hmr <- noaa
+  require ("rnoaa")
+  hStn <- meteo_nearby_stations(data.frame (id = "Homer", latitude = 59.63, longitude = -151.51)
+                                , radius = 250)
+  write.csv (hStn, file = "~/tmp/LCI_noaa/cache/NoaaMetStations.csv", row.names = FALSE)
+
+  pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/NOAAWeatherStations.pdf", width = 11.5, height = 8)
+  plot (latitude~longitude, hStn$Homer, type = "n")
+  text (hStn$Homer$longitude, hStn$Homer$latitude, labels = hStn$Homer$name, cex = 0.5)
+  dev.off()
+}
 #######################
 
 
@@ -157,8 +162,9 @@ yGale <- aggregate  (maxwspd~year
                                          , FUN = function (x){any (x > stormT)}
                      )
                      , FUN = sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+yGale <- subset (yGale, (year <= currentYear) & (year > min (year))) # 2003 = partial in SWMP
 
+if (0){
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.pdf")
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.png", width = 1200, height = 1200, res = 300)
 
@@ -187,6 +193,7 @@ rm (cYg, sDate)
 # hist (yGale$maxwspd, xlab = "N storms", main = "")
 # abline (v = yGale$maxwspd [which (yGale$year == currentYear)])
 dev.off()
+}
 yS <- yGale
 
 yGale <- aggregate  (maxwspd~year
@@ -195,13 +202,15 @@ yGale <- aggregate  (maxwspd~year
                      )
                      , FUN = sum)
 yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
+if (0){
+  png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
 barplot(yGale$maxwspd, names.arg = yGale$year
         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
         , ylab = "Gales per year")
 abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
         , lty = "dashed", lwd = 2)
 dev.off()
+}
 yG <- yGale
 
 yGale <- aggregate  (maxwspd~year
@@ -210,18 +219,18 @@ yGale <- aggregate  (maxwspd~year
                      )
                      , FUN = sum)
 yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
-barplot(yGale$maxwspd, names.arg = yGale$year
-        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
-        , ylab = "SCAs per year")
-abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
-        , lty = "dashed", lwd = 2)
-dev.off()
-ys <- yGale
+# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+# barplot(yGale$maxwspd, names.arg = yGale$year
+#         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+#         , ylab = "SCAs per year")
+# abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+#         , lty = "dashed", lwd = 2)
+# dev.off()
+yS <- yGale
 rm (yGale)
 
 # exclude storms from gales
-ys$maxwspd <- ys$maxwspd- yG$maxwspd
+yS$maxwspd <- yS$maxwspd- yG$maxwspd
 yG$maxwspd <- yG$maxwspd - yS$maxwspd
 
 ## stacked bar chart
@@ -237,7 +246,8 @@ sTab [1:2, ncol (sTab)] <- 0
 # gCols <- c("lightgray", "darkgray")
 gCols <- c("lightgray", "darkgray", "lightblue", "blue")
 
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_WindStack.png", width = 1200, height = 1200, res = 300)
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_WindStack_", metstation, ".png")
+     , width = 1200, height = 1200, res = 300)
 par (mar = c (4,5,1,1))
 barplot (sTab [4:1,]
          , col = gCols [4:1]
@@ -248,41 +258,39 @@ legend ("topright", legend = row.names(sTab)[1:2], fill = gCols[1:2], bty = "n")
 abline (h = mean (colSums(sTab)), lwd = 2, lty = "dashed")
 abline (h = mean (as.data.frame (t (sTab))$storm), lwd = 3, lty = "dotted", col = "black") #, "darkgray")
 dev.off()
-rm (yS, yG, ys, gCols)
+rm (yS, yG, gCols)
 
 
 
-yGale <- aggregate  (maxwspd~year
-                     , data = aggregate (maxwspd~jday+year, data = hmr
-                                         , FUN = function (x){any (x > galeT)}
-                     )
-                     , FUN = sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
-barplot(yGale$maxwspd, names.arg = yGale$year
-        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
-        , ylab = "Gales per year")
-abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
-        , lty = "dashed", lwd = 2)
-dev.off()
-
-yGale <- aggregate  (maxwspd~year
-                     , data = aggregate (maxwspd~jday+year, data = hmr
-                                         , FUN = function (x){any (x > scAdvT)}
-                     )
-                     , FUN = sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
-barplot(yGale$maxwspd, names.arg = yGale$year
-        , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
-        , ylab = "SCAs per year")
-abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
-        , lty = "dashed", lwd = 2)
-dev.off()
-
-
-
-rm (yGale)
+# yGale <- aggregate  (maxwspd~year
+#                      , data = aggregate (maxwspd~jday+year, data = hmr
+#                                          , FUN = function (x){any (x > galeT)}
+#                      )
+#                      , FUN = sum)
+# yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN_", metstation, ".png")
+#      , width = 1200, height = 1200, res = 300)
+# barplot(yGale$maxwspd, names.arg = yGale$year
+#         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+#         , ylab = "Gales per year")
+# abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+#         , lty = "dashed", lwd = 2)
+# dev.off()
+#
+# yGale <- aggregate  (maxwspd~year
+#                      , data = aggregate (maxwspd~jday+year, data = hmr
+#                                          , FUN = function (x){any (x > scAdvT)}
+#                      )
+#                      , FUN = sum)
+# yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
+# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+# barplot(yGale$maxwspd, names.arg = yGale$year
+#         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
+#         , ylab = "SCAs per year")
+# abline (h = mean (subset (yGale, year < currentYear)$maxwspd)
+#         , lty = "dashed", lwd = 2)
+# dev.off()
+# rm (yGale)
 
 
 
@@ -462,11 +470,14 @@ dev.off()
 
 ## cleaned-up plot
 save.image("~/tmp/LCI_noaa/cache/wind2.RData")
-save (hmr, file = "~/tmp/LCI_noaa/cache/metDat.RData")
+if (metstation == "kachomet"){ # don't cache non-SWMP site because they don't have precipitation
+  save (hmr, file = "~/tmp/LCI_noaa/cache/metDat.RData")
+}
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
 x <- dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE); rm (x)
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind.pdf", width = 9, height = 6)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind_", metstation,".pdf")
+     , width = 9, height = 6)
 # png ("~/tmp/LCI_noaa/media/wind-MA.png"), width = 9*100, height = 7*100)
 
 
@@ -610,7 +621,8 @@ rm(hgt, wdh, bP, img)
 
 # openair:windRose -- lattice-plot; struggling with type for class other than times
 require ("openair", quietly = TRUE, warn.conflicts = FALSE)
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze.pdf", width = 9, height = 6)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze_", metstation, ".pdf")
+     , width = 9, height = 6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
 # hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
 for (i in 1:12){
@@ -652,7 +664,8 @@ hmrS <- subset (hmr, year < 2020)
 hmrS$date <- as.POSIXct(hmrS$datetimestamp)
 hmrS$yClass <- factor (ifelse (hmrS$year < currentYear, "average", currentYear))
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose.pdf", width = 9, height = 6)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose_", metstation, ".pdf")
+     , width = 9, height = 6)
 windRose(hmrS, ws = "wspd", wd = "wdir"
          # , type = "yClass"
          , type = c("season", "yClass")
@@ -737,25 +750,27 @@ climD <- function (cDF){
 
 # png ("~/tmp/LCI_noaa/media/climateDiag.png", width = 480, height = 960)
 # par (mfrow = c(2,1))
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
-## alternative: wldiag in dgolicher/giscourse on github
-## for same but with more customization, see library (iki.dataclim)
-require ("climatol")
-diagwl (climD (subset (hmr, year < currentYear))
-        , est = "Homer Spit"
-        , per = paste (range (subset (hmrC, !is.na (totprcp))$year), collapse = "-")
-)
-tD <- try ({  ## fails if, e.g. hmr$atemp contains NAs, e.g. September 2021
-  diagwl (climD (subset (hmr, year == currentYear))
+if (metstation == "kachomet"){
+  pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
+  ## alternative: wldiag in dgolicher/giscourse on github
+  ## for same but with more customization, see library (iki.dataclim)
+  require ("climatol")
+  diagwl (climD (subset (hmr, year < currentYear))
           , est = "Homer Spit"
-          , per = currentYear)
-}, silent = FALSE)
-if (class (tD) == "try-error"){
-  cat ("\nClimate diagram is incomplete (due to missing data?)\n\n")
+          # , per = paste (range (subset (hmr, !is.na (totprcp))$year), collapse = "-")  ## hmrC ?!?
+          , per = paste (range (subset (hmr, year < currentYear)$year, na.rm = TRUE), collapse = "-")
+  )
+  tD <- try ({  ## fails if, e.g. hmr$atemp contains NAs, e.g. September 2021
+    diagwl (climD (subset (hmr, year == currentYear))
+            , est = "Homer Spit"
+            , per = currentYear)
+  }, silent = FALSE)
+  if (class (tD) == "try-error"){
+    cat ("\nClimate diagram is incomplete (due to missing data?)\n\n")
+  }
+  dev.off()
 }
-dev.off()
 
-
-
+}
 cat ("Finished annual-wind.R\n")
 # EOF

@@ -49,96 +49,45 @@ if (0){
 ## fetch buoy data from NOAA server
 ## only load new data, fetch rest from local cache
 # to reset: unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-require ("rnoaa")
-nw <- try (load ("~/tmp/LCI_noaa/cache/noaawaves.RData"))
-# unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-if (class (nw) == "try-error"){
-  endD <- 2011
-}else{
-  endD <- max (as.numeric (substr (wDB$time, 1, 4)))
-}
-if (endD < as.numeric (format (Sys.Date(), "%Y"))){
-  wB <- lapply (endD:as.numeric (format (Sys.Date(), "%Y"))
-                , function (i){
-                  try (buoy (dataset = "stdmet", buoyid = 46108
-                             , year = i))
-                }
-  )
 
-  for (i in 1:length (wB)){
-    if (!exists ("wDB")){
-      wDB <- as.data.frame (wB [[i]]$data)
-    }else{
-      if (class (wB [[i]]) != "try-error"){
-        wDB <- rbind (wDB, as.data.frame (wB [[i]]$data))
-      }
-    }
-  }
-  rm (wB, i)
-}
-rm (nw, endD)
-
-## add most recent
-cD <- try (buoy (dataset="stdmet", buoyid = 46108, year = 9999))
-if (class (cD) == "buoy"){
-  wDB <- rbind (wDB, as.data.frame (cD$data))
-}
-rm (cD)
-
-save.image ("~/tmp/LCI_noaa/cache/noaawaves.RData") ## cache of buoy data
-# unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-
-## QAQC
-wDB <- wDB [!duplicated(wDB$time),]
-tm <- gsub ("T", "", wDB$time)
-tm <- gsub ("Z", "", tm)
-wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC")
-rm (tm)
-is.na (wDB$wave_height)[which (wDB$wave_height == 99)] <- TRUE
-is.na (wDB$dominant_wpd)[which (wDB$dominant_wpd == 99)] <- TRUE  # dominant wave period [s]
-is.na (wDB$average_wpd)[which (wDB$average_wpd == 99)] <- TRUE  # dominant wave period [s]
-# wDB <- subset (wDB, !duplicated(wDB$datetimestamp))
-
-# wDB$datetimestamp <- strptime (wDB$time
-#                                 #, format = "%Y-%m-%dT%H:%M%SZ"
-#                                 , tz = "UTC")
-# plot (wave_height~datetimestamp, wDB, type = "l")
+source ("annualPlotFct.R")
+wDB <- getNOAA (buoyID = 46108)
 
 
+## is all the Augustine Island part obsolete? replicated elsewhere? XXX
 ## Augustine Island wind -- as covariate to KBay wind?
 # Aug <- isd ("994700", wban = 99999, year = 2020)
-tl <- try (load ("~/tmp/LCI_noaa/cache/noaa-Augustine.RData"))
-if (class (tl) == "try-error"){
-  aB <- lapply (as.numeric (levels (factor (format (wDB$datetimestamp, "%Y"))))
-                , function (x){try (isd ("994700", wban = 99999, year = x))}
-  )
-  pF <- function (df){
-    with (as.data.frame (df), data.frame (date, time, date_flag, quality, wind_direction, wind_direction_quality
-                                          , wind_code, wind_speed, wind_speed_quality))
-  }
-  for (i in 1:length (aB)){
-    if (!exists ("aDB")){
-      aDB <- pF (aB [[i]])
-    }else{
-      if (class (aB [[i]])[1] != "try-error"){
-        aDB <- rbind (aDB, pF (aB [[i]]))
+if (0){
+  tl <- try (load ("~/tmp/LCI_noaa/cache/noaa-Augustine.RData"))
+  if (class (tl) == "try-error"){
+    aB <- lapply (as.numeric (levels (factor (format (wDB$datetimestamp, "%Y"))))
+                  , function (x){try (isd ("994700", wban = 99999, year = x))}
+    )
+    pF <- function (df){
+      with (as.data.frame (df), data.frame (date, time, date_flag, quality, wind_direction, wind_direction_quality
+                                            , wind_code, wind_speed, wind_speed_quality))
+    }
+    for (i in 1:length (aB)){
+      if (!exists ("aDB")){
+        aDB <- pF (aB [[i]])
+      }else{
+        if (class (aB [[i]])[1] != "try-error"){
+          aDB <- rbind (aDB, pF (aB [[i]]))
+        }
       }
     }
+    rm (aB, pF, i)
+    save (aDB, file = "~/tmp/LCI_noaa/cache/noaa-Augustine.RData")
   }
-  rm (aB, pF, i)
-  save (aDB, file = "~/tmp/LCI_noaa/cache/noaa-Augustine.RData")
+  rm (tl)
+  aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
+  aDB <- addTimehelpers(aDB)
 }
-rm (tl)
-source ("annualPlotFct.R")
-aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
-aDB <- addTimehelpers(aDB)
-
 
 require ("dplyr")
 hmr <-  meteo_pull_monitors ("USW00025507"
-                              , date_min = "1970-01-01"  # goes back to 1932-09-01
-                              , date_max = as.character (Sys.Date())) %>%
+                             , date_min = "1970-01-01"  # goes back to 1932-09-01
+                             , date_max = as.character (Sys.Date())) %>%
   dplyr::rename (datetimestamp = date, location = id
                  #, totprcp = prcp # wdfg not ideal equivalent
                  #, atemp = tavg

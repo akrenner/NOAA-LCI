@@ -253,13 +253,12 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
 
     ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
-if (1){
+if (1){ # align at center
   suppressMessages (require ("zoo"))
 #  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "center")
-  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
+#  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
   dMeans$MA <- rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
-                          , fill = NA, partial = FALSE, align = "center")
-  # or align = "left" ?
+                          , fill = FALSE, partial = FALSE, align = "center")
 }else{
     ## bug in SWMPr smoothing function: last day = up-tick?
     require ("SWMPr")
@@ -443,24 +442,26 @@ getSWMP <- function (station, QAQC = TRUE){
     smp2 <- try (all_params (station
                              , Max = ceiling (as.numeric(fN)*4*24))
                  , silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok
-    if (QAQC){
-      smp2 <- qaqc (smp2)
-    }
-
-    if (class (smp2)[1] == "swmpr"){
-      ## remove bad lines
-      if (any (is.na (smp2$datetimestamp))){
-        smp2 <- smp2 [!is.na (smp2$datetimestamp),]
+    if (class (smp2)[1] != "try-error"){
+      if (QAQC){
+        smp2 <- qaqc (smp2)
       }
-      ## order of field names does not match between hmr2 and hmr
-      ## re-assemble and remove duplicates
-      smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
-        which (names (smp)[i] == names (smp2))
-      })]
-      smp <- rbind (smp, smp3)
-      if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
 
-      rm (smp2, smp3, fN)
+      if (class (smp2)[1] == "swmpr"){
+        ## remove bad lines
+        if (any (is.na (smp2$datetimestamp))){
+          smp2 <- smp2 [!is.na (smp2$datetimestamp),]
+        }
+        ## order of field names does not match between hmr2 and hmr
+        ## re-assemble and remove duplicates
+        smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
+          which (names (smp)[i] == names (smp2))
+        })]
+        smp <- rbind (smp, smp3)
+        if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
+
+        rm (smp2, smp3, fN)
+      }
       smp <- smp [which (!duplicated(smp$datetimestamp)),]
     }
   }
@@ -520,6 +521,73 @@ cDir <- function (wd, nDir = 8){
   wd <- ifelse (wd < 0, 360 + wd, wd)
   cut (wd, breaks = rose_breaks, labels = rose_labs
        , right = FALSE, include.lowest = TRUE)
+}
+
+
+
+
+getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # default = kachemak bay wavebuoy
+  require ("rnoaa")
+  if (clearcache){
+    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
+  }
+  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")), silent = TRUE)
+  if (class (nw) == "try-error"){
+    if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
+  }else{
+    endD <- max (as.numeric (substr (wDB$time, 1, 4)))
+  }
+  if (endD < as.numeric (format (Sys.Date(), "%Y"))){ # only if not updated in a year
+    wB <- lapply (endD:as.numeric (format (Sys.Date(), "%Y"))
+                  , function (i){
+                    try (buoy (dataset = set, buoyid = buoyID
+                               , year = i))
+                  }
+    )
+
+    # lapply (1:length (wB), function (i){try (ncol (wB[[i]]$data))})
+    for (i in 1:length (wB)){
+      if (class (wB [[i]]) != "try-error"){
+        if (!exists ("wDB")){
+          wDB <- as.data.frame (wB[[i]]$data)
+          meta <- wB [[i]]$meta
+        }else{
+          ## not sure why this would be a problem -- bad cache? do it anyway
+          if ("datetimestamp" %in% names (wDB)){
+            wDB <- wDB [,-datetimestamp]
+          }
+          wDB <- rbind (wDB, as.data.frame (wB [[i]]$data))
+        }
+      }
+    }
+    rm (i)
+  }
+  rm (nw, endD)
+
+  ## add most recent
+  cD <- try (buoy (dataset=set, buoyid = buoyID, year = 9999))  ## 9999 = most up-to-date data
+  if (class (cD) == "buoy"){
+    wDB <- rbind (wDB, as.data.frame (cD$data))
+  }
+  rm (cD)
+  save (wDB, meta, file = paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
+
+  ## QAQC
+  wDB <- wDB [!duplicated(wDB$time),]
+  tm <- gsub ("T", "", wDB$time)
+  tm <- gsub ("Z", "", tm)
+  wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC") # move this up?
+  rm (tm)
+  for (i in 1:length (meta)){  ## meta is a tibble...
+    mN <- which (names (wDB) == names (meta [i]))
+    is.na (wDB [,mN])[which (wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
+  }
+  ## change windspeeds to km/h
+  if (meta$wind_spd$units == "meters/second"){wDB$wind_spd <- wDB$wind_spd * 3.6}
+  if (meta$gust$units == "meters/second"){wDB$gus <- wDB$gust * 3.6}
+  if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
+
+  return (wDB)
 }
 
 
