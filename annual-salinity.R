@@ -43,6 +43,40 @@ dev.off()
 
 
 
+## reverse of salinity = freshness
+homerS$fresh <- 1/homerS$sal
+sldviaS$fresh <- 1/sldviaS$sal
+homerS$fresh <- 32 - homerS$sal
+sldviaS$fresh <- 32 - sldviaS$sal
+
+tDayH <- prepDF (dat = homerS, varName = "fresh", qntl = qntl, maO = maO)
+tDayS <- prepDF (dat = sldviaS, varName = "fresh", qntl = qntl, maO = maO)
+# print (summary (tDayS)); stop ("no more")
+
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waterFreshness", maO, "-d.png"), width = 1800, height = 1800, res = 300)
+par (mfrow = c(2,1)
+     , mar = c(3,4,4,2)+0.1
+)
+
+aPlot (tDayS, "fresh", MA = pMA, currentCol = currentCol , ylim = c(0,7)
+       , ylab = "freshness")
+title (main = "Seldovia surface")
+# box()
+cLegend ("topleft", inset = 0.05, currentYear = currentYear
+         , mRange = c(min (homerS$year), currentYear -1)
+         , cYcol = currentCol, qntl = qntl [1])
+## add homer data
+aPlot (tDayH, "fresh", MA = pMA, currentCol = currentCol, ylim = c(0,7)
+       , ylab = "freshness")
+# aPlot (tDayH, "fresh", MA = pMA, currentCol = "lightblue", ylim = c(24.5, 31.8))
+title (main = "Homer surface")
+# box()
+dev.off()
+
+
+
+
+
 
 ## for completeness -- SST temperature
 currentCol <- c ("navyblue", "aquamarine", "lightblue")
