@@ -473,59 +473,6 @@ getSWMP <- function (station, QAQC = TRUE){
 
 
 
-nEvents <- function (dat, varName, thrht){
-  ## number of days where varName exeeds threshold thrht
-  ## compare current N days to long term mean and quantiles
-  ## use for wind (storms and gales) and surf and others
-  vN <- which (names (dat) == varName)
-  names (dat)[vN] <- "xvar"  # for convenience
-  eventL <- sapply (1:length (thrht)
-                    , function (i){
-                      agY <- aggregate (xvar~year
-                                        , data = aggregate (xvar~jday+year
-                                                            , data = dat
-                                                            , FUN = function (x){
-                                                              any (x > thrht [i])}
-                                        )
-                                        , FUN = sum)
-
-                      c (mean = mean (agY$xvar, na.rm = TRUE)
-                         , median = median(agY$xvar, na.rm = TRUE)
-                         , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
-                         , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
-                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)]) #the current and previous year
-                    })
-  colnames(eventL) <- paste0 ("T", thrht)
-  rownames(eventL)[5:6] <- paste0 ("Y", max (dat$year)-c(2,1))
-  as.data.frame (t (eventL))
-}
-
-
-cDir <- function (wd, nDir = 8){
-  ## classify direction into cardinal categories
-  ## following https://community.rstudio.com/t/convert-wind-direction-degrees-into-factors-in-a-data-frame/14636/4
-  if (!(nDir %in% c(4,8,16))){
-    error ("nDir has to be 4, 8, or 16")
-  }
-  if (nDir == 4){
-    rose_breaks <- c (0, 360/8, (1/8 + (1:3 / 4)) * 360, 360)
-    rose_labs <- c("N", "E", "S", "W", "N")
-  }else if (nDir == 8){
-    rose_breaks <- c (0, 360/16, (1/16 + (1:7 / 8)) * 360, 360)
-    rose_labs <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW", "N")
-  }else{
-    rose_breaks <- c(0, 360/32, (1/32 + (1:15 / 16)) * 360, 360)
-    rose_labs <- c("N", "NNE", "NE", "ENE","E", "ESE", "SE", "SSE",
-                   "S", "SSW", "SW", "WSW","W", "WNW", "NW", "NNW","N")
-  }
-  wd <- ifelse (wd < 0, 360 + wd, wd)
-  cut (wd, breaks = rose_breaks, labels = rose_labs
-       , right = FALSE, include.lowest = TRUE)
-}
-
-
-
-
 getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # default = kachemak bay wavebuoy
   require ("rnoaa")
   if (clearcache){
@@ -589,6 +536,60 @@ getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # def
 
   return (wDB)
 }
+
+
+
+nEvents <- function (dat, varName, thrht){
+  ## number of days where varName exeeds threshold thrht
+  ## compare current N days to long term mean and quantiles
+  ## use for wind (storms and gales) and surf and others
+  vN <- which (names (dat) == varName)
+  names (dat)[vN] <- "xvar"  # for convenience
+  eventL <- sapply (1:length (thrht)
+                    , function (i){
+                      agY <- aggregate (xvar~year
+                                        , data = aggregate (xvar~jday+year
+                                                            , data = dat
+                                                            , FUN = function (x){
+                                                              any (x > thrht [i])}
+                                        )
+                                        , FUN = sum)
+
+                      c (mean = mean (agY$xvar, na.rm = TRUE)
+                         , median = median(agY$xvar, na.rm = TRUE)
+                         , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
+                         , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
+                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)]) #the current and previous year
+                    })
+  colnames(eventL) <- paste0 ("T", thrht)
+  rownames(eventL)[5:6] <- paste0 ("Y", max (dat$year)-c(2,1))
+  as.data.frame (t (eventL))
+}
+
+
+cDir <- function (wd, nDir = 8){
+  ## classify direction into cardinal categories
+  ## following https://community.rstudio.com/t/convert-wind-direction-degrees-into-factors-in-a-data-frame/14636/4
+  if (!(nDir %in% c(4,8,16))){
+    error ("nDir has to be 4, 8, or 16")
+  }
+  if (nDir == 4){
+    rose_breaks <- c (0, 360/8, (1/8 + (1:3 / 4)) * 360, 360)
+    rose_labs <- c("N", "E", "S", "W", "N")
+  }else if (nDir == 8){
+    rose_breaks <- c (0, 360/16, (1/16 + (1:7 / 8)) * 360, 360)
+    rose_labs <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW", "N")
+  }else{
+    rose_breaks <- c(0, 360/32, (1/32 + (1:15 / 16)) * 360, 360)
+    rose_labs <- c("N", "NNE", "NE", "ENE","E", "ESE", "SE", "SSE",
+                   "S", "SSW", "SW", "WSW","W", "WNW", "NW", "NNW","N")
+  }
+  wd <- ifelse (wd < 0, 360 + wd, wd)
+  cut (wd, breaks = rose_breaks, labels = rose_labs
+       , right = FALSE, include.lowest = TRUE)
+}
+
+
 
 
 #EOF
