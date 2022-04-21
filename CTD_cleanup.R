@@ -106,6 +106,7 @@ stnFNex <- gsub ("alongbay_kb", "alongbay_s", stnFNex)
 # stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
 stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_portgraham_", stnFNex)
 stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_pogi_", stnFNex) ## check!
+stnFNex <- gsub ("-kbay_alongbay_inner-", "alongbay", stnFNex) ## check!
 
 ## bad transect! -- audit XXX
 stnFNex <- gsub ("_alongbay_chinapoot[_]*", "_subbay_chinapoot", stnFNex) ## check!
@@ -221,6 +222,13 @@ stN <- gsub ("say", "sadie", stN)
 stN <- gsub ("^along*", "", stN)
 stN <- gsub ("extra", "", stN)
 stN <- gsub ("south", "", stN)
+
+stN <- gsub ("portgraham", "PTGR", stN)
+stN <- gsub ("spgrm", "PTGR", stN)
+stN <- gsub ("sptgm", "PTGR", stN)
+
+stN <- gsub ("spogi", "POGI", stN)
+stN <- gsub ("pogi", "POGI", stN)
 ## stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
 stN <- gsub ("^0*", "", stN)
 for (i in 0:9){
@@ -498,6 +506,7 @@ summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))
 noLL <- which (is.na (physOc$latitude_DD))
 levels (factor (physOc$Match_Name[noLL]))
+## AlongBay_3.5 -- bad position? Aborted because of high waves. Not in Database, but is in notebooks
 ## remove unresolved positions -- still too many!
 physOc <- subset (physOc, !is.na (latitude_DD))
 physOc <- subset (physOc, !is.na (longitude_DD))
