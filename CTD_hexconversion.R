@@ -133,30 +133,31 @@ for (i in 1:length (conF)){
 ## replicate loop-edit here in R.
 ## run BinAvg again in SEABIRD and/or in R.
 ## tLB [3]: aligned, tLB [4]: looped,
+## slow -- any way to parallelize this?
 fNf <- list.files(tLB [3], ".cnv"
                   , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
 require ("oce")
-for (i in 1:length (fNf)){
+for (i in 2360:length (fNf)){
   ## read all text and change digit-digit to digit -digit
   ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
   # read.table()
 
-  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning. Problematic: i == 1058
+  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
   if (class (ctdF) == "try-error"){
     cat ("trouble reading ", i, fNf [i], "--trying to fix\n")
     cT <- readLines(fNf [i])
-    # cT <- readChar(fNf [i]) # needs nchars
-
-    ## need to capture text and use it again -- line 283
-    ctx <- cT [281:length (cT)]
-    ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)
-    cTf <- c (cT [1:280], ctx2)
+    ## gsub: capture text and use it again -- line 283 of i==1058
+    dS <- grep ("^\\*END", cT) + 1 # line where data starts
+    ctx <- cT [dS:length (cT)]
+    ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
+#   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
+    cTf <- c (cT [1:(dS-1)], ctx2)
     tF <- tempfile()
     write.table(cTf, file = tF, quote = FALSE, col.names = FALSE, row.names = FALSE)
     tfin <- readLines (tF)
     ctdF <- read.ctd (tF)
     unlink (tF)
-    rm (cT, tF, ctx, ctx2, cTf)
+    rm (cT, tF, ctx, ctx2, cTf, dS)
   }
   cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
                          # , parameters = list (minSoak = 1, maxSoak = 20)
@@ -177,25 +178,8 @@ for (i in 1:length (fNf)){
   # -- ctdDecimate seems to work but depth still a bit off
 }
 
-
-## alternative: run another SBEDataProcessing batch
-# unlink (tL, recursive = TRUE, force = TRUE)
-# for (i in 1:length (conF)){
-#   tL <- paste (tLB, i, sep = "/")
-#   tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
-#   if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
-#     psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
-#   }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve fluorescence/turbidity
-#     psa <- psaL [grep ("4141", psaL)]
-#   }else{
-#     psa <- psaL [grep ("5028", psaL)]
-#   }
-#   l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",             "/o", outF,    " /p", psa [grep ("BinAvg", psa)], " #m") # new
-# }
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)
-
-
 
 ## write out log what has already been processed (to speed up new data)
 # no record whether conversion was successful -- assume it was
