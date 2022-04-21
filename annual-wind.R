@@ -17,9 +17,12 @@ if (exists ("metstation")){ rm (list = ls())}  # not if called from a script
 metstation <- "kachomet"  # SWMP
 # metstation <- "FILA2"     # Flat Island  -- something with subsets
 # metstation <- "AUGA2"     # Augustine Island  --- subsets
+# metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
+# metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-# wStations <- c("kachomet", "FILA2", "AUGA2", "HMSA2")
+wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
+               , "AMAA2", "HMSA2")
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
@@ -37,10 +40,23 @@ currentCol <- c ("blue", "lightblue", "black")
 ## get up-to-date SWMP data
 source ("annualPlotFct.R")
 
+
+
+## cycle through all wStations
 if (!exists ("wStations")){wStations <- metstation}
 for (k in 1:length (wStations)){
   metstation <- wStations [k]
+  cat ("\n\n######\n", metstation, "started\n######\n\n")
+  try (rm (hmr))
 
+
+  stationL <- c ("Homer Spit", "Flat Island", "Augustine Island", "East Amatuli")[k]
+
+
+
+
+
+  ## get data from NOAA server or local cache
 if (metstation == "kachomet"){
   hmr <- getSWMP (metstation)
 }else{
@@ -49,8 +65,8 @@ if (metstation == "kachomet"){
   hmr <- with (hmr2, data.frame (datetimestamp, atemp = air_temperature
                                  , rh = rep (is.na (nrow (hmr2)))  # barometric pressure
                                  , bp = rep (is.na (nrow (hmr2)))  # relative humidity
-                                 , wspd = wind_spd # * 3.6  # NOAA wspd in m/s -- true?? -- fix in fct
-                                 , maxwspd = gust  #* 3.6
+                                 , wspd = wind_spd # m/s -- same as SWMP  # NOAA wspd in m/s
+                                 , maxwspd = gust
                                  , wdir = wind_dir
                                  , sdwdir = rep (is.na (nrow (hmr2)))
                                  , totpar = rep (is.na (nrow (hmr2)))
@@ -72,6 +88,7 @@ if (0){  # activate once it's working to get weather from alternative NOAA sourc
   source ("noaaWeather.R")
   hmr <- noaa
   require ("rnoaa")
+  ## list/map airport-like weather stations
   hStn <- meteo_nearby_stations(data.frame (id = "Homer", latitude = 59.63, longitude = -151.51)
                                 , radius = 250)
   write.csv (hStn, file = "~/tmp/LCI_noaa/cache/NoaaMetStations.csv", row.names = FALSE)
@@ -80,6 +97,10 @@ if (0){  # activate once it's working to get weather from alternative NOAA sourc
   plot (latitude~longitude, hStn$Homer, type = "n")
   text (hStn$Homer$longitude, hStn$Homer$latitude, labels = hStn$Homer$name, cex = 0.5)
   dev.off()
+
+  ## list/map buoy stations
+  bs <- buoy_stations()
+
 }
 #######################
 
@@ -90,7 +111,7 @@ if (0){  # activate once it's working to get weather from alternative NOAA sourc
 ## also consider: sd on a log-scale
 
 if (exists (vUnit)){ #} == "knots"){
-  hmr$wspd <- hmr$wspd * 1.94384
+  hmr$wspd <- hmr$wspd * 1.94384   ## 1 knot = 1.94384 m/s
   hmr$maxwspd <- hmr$maxwspd * 1.94384
   wCaption <- "wind speed [knots]"
 }else{
@@ -504,10 +525,12 @@ if (0){  ## farewell my good friend ##
 
 ## better to move to standard var names above
 par (mar = c(3,4,1.5,0.1))
-plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption)
+plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption, ylim = c(0,25)
+           , main = stationL)
 
 oP <- par()
-if (1){ ## windrose insert
+## windrose insert
+if (1){
   ## lattice plot will start a new page, no matter what -- use temp file
   ## lattice plot is the best-looking amongst the ggplot, base-plot and lattice options
   ## all attempts to place graphics at the appropriate position in base-plot
@@ -516,26 +539,36 @@ if (1){ ## windrose insert
   hmrS <- hmr
   hmrS$date <- hmrS$datetimestamp
 
-  iMonth <- 12 # picked as an interesting example for year X
-
-  hmrS <- subset (hmr, (year < 2020)&month %in% c(iMonth))
-  hmrS$date <- as.POSIXct(hmrS$datetimestamp)
-  hmrS$yClass <- factor (ifelse (hmrS$year < currentYear
-                                 , paste ("average", month.abb [iMonth])
-                                 , paste (month.abb [iMonth], currentYear)))
-  rm (iMonth) # arbitrarily pick a month to tell the story
-  windR <- function (){
-    wR <- windRose (hmrS, ws = "wspd", wd = "wdir"
+  windR <- function (df){
+    wR <- windRose (df, ws = "wspd", wd = "wdir"
                     , type = "yClass"
                     #, type = c("season") #, "yClass")
                     , auto.text = FALSE, paddle = FALSE, annotate = FALSE
-                    #, breaks = c (0, 10, 20, 30, 60)
+                    , breaks = c (0, 10, 20, 30, max (ceiling (df$wspd), na.rm = TRUE))
                     , key.footer = "knots"
-                    , grid.line = 10 #list (value = 10, lty = 5, col = "purple")
+                    , grid.line = 10  # list (value = 10, lty = 5, col = "purple")
                     #  , statistic = "prop.mean"
                     #, max.freq = 30
     )
-    print (wR); rm (wR)
+    print (wR)
+  }
+
+  if (0){ #   pick a particular month vs compare all year
+    iMonth <- 12 # picked as an interesting example for year X
+    hmrS <- subset (hmr, (year < current) & month %in% c(iMonth))   ## optionall show only a iMonth
+    hmrS$date <- as.POSIXct(hmrS$datetimestamp)
+    hmrS$yClass <- factor (ifelse (hmrS$year < currentYear
+                                   , paste ("average", month.abb [iMonth])
+                                   , paste (month.abb [iMonth], currentYear)))
+    rm (iMonth) # arbitrarily pick a month to tell the story
+  }else{  ## all year vs climatology
+    hmrS$date <- as.POSIXct(hmrS$datetimestamp)
+    hmrS$yClass <- factor (ifelse (hmrS$year < currentYear
+                           , paste0 (min (hmrS$year), "-", currentYear - 1)
+                           , currentYear))
+    hmrS <- subset (hmrS, year <= currentYear)   # exclude present year
+    # hmrS$wspd <- ceiling(hmrS$wspd)
+    # Unknown or uninitialised column: `subsets`.
   }
   #  par (fig = c(0.25,0.5,0.75,1))
 
@@ -544,15 +577,19 @@ if (1){ ## windrose insert
   ## PostScriptTrace (file, outfile, ....)   ## XXX do this eventually XXX
   # readPicture or grImport
   # see https://cran.r-project.org/web/packages/grImport/vignettes/import.pdf
-  png (paste0 (tF, "ltc.png"), width = 11*200,height = 6*200, res = 400)
+  png (paste0 (tF, "ltc.png"), width = 11*200, height = 6*200, res = 400)
   #  par (mar = c())
-  windR ()
+  windR (hmrS)
   dev.off()
   require ("png")
   img2 <- readPNG (paste0 (tF, "ltc.png"))
   unlink(tF, recursive = TRUE); rm (tF)
-  rasterImage (img2, xleft = 60, ybottom = 8.3
-               , xright = 340, ytop = 14.8, interpolate = FALSE)
+  ## calculate coordinates for raster-image, to avoid readjusting it each year
+  ## or keep fixed y-axis?
+  rasterImage (img2, xleft = 60, ybottom = 10.3
+               , xright = 340, ytop = 27, interpolate = FALSE)
+  # rasterImage (img2, xleft = 60, ybottom = 8.3
+  #              , xright = 340, ytop = 14.8, interpolate = FALSE)
   rm (img2)
   #rm (xGrez, pCo)
 }
@@ -577,16 +614,15 @@ with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
       text (jday, p365ma + 0.5, labels = p365wCar, srt = 0, cex = 0.8))
 # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels = p365wCar))
 require ("png")
-hgt <- 0.7; wdh <- 15
+hgt <- 1.1; wdh <- 15
 img <- readPNG ("pictograms/cloud.png")
 galeS <- subset (tDay, p365galDay > 0)
 if (nrow (galeS) > 0){
   with (galeS, rasterImage (img, xleft = jday-9, ybottom = p365ma + 1.5
-                                                    , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
-                                                    #                                                 , angle = p365wdir+ 90
-                                                    ## rotation would be desirable -- but rotates around bottom-left point -- would need compensation
-  )
-  )
+                            , xright = jday-9+wdh, ytop = p365ma + 1.5 + hgt
+                            # , angle = p365wdir+ 90
+                            ##  rotates around bottom-left point -- would need compensation
+  ))
   with (galeS, text (jday, p365ma + 1.8, labels = p365wCar, cex = 0.6))
 }
 rm (galeS)
@@ -597,9 +633,11 @@ bP <- cLegend ("bottomleft", qntl = qntl [1], inset = 0.02
                , cYcol = currentCol
                , title = paste (maO, "day moving average"))
 ## legend for gale clouds in other corner
-text (365, 5.3, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos = 2)
-rasterImage (img, xleft = 280, xright = 280+wdh, ybottom = 5.6, ytop = 5.6+hgt)
-text (365, 5.8, paste0 ("storm (>", stormT, " knots)"), pos = 2)
+yL <- 2.7
+text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos = 2)
+rasterImage (img, xleft = 280, xright = 280+wdh, ybottom = yL + 1.2, ytop = yL + 1.2+hgt)
+text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos = 2)
+
 # par (oP)
 par (crt = oP$crt # reset to original plotting geometry
      , fig = oP$fig, fin = oP$fin, lab = oP$lab, mai = oP$mai, mar = oP$mar, mfg = oP$mfg
@@ -607,8 +645,9 @@ par (crt = oP$crt # reset to original plotting geometry
      , usr = oP$usr, xaxp = oP$xaxp, xaxs = oP$xaxs, xaxt = oP$xaxt, yaxp = oP$yaxp
      , yaxs = oP$yaxs, ylbias = oP$ylbias)
 
+## show 1:1 diagonal
 dev.off()
-rm(hgt, wdh, bP, img)
+rm(hgt, wdh, bP, img, yL)
 
 
 ## start-over/add windrose
@@ -619,6 +658,7 @@ rm(hgt, wdh, bP, img)
 # install_github('davidcarslaw/openair')
 # }
 
+if (0){
 # openair:windRose -- lattice-plot; struggling with type for class other than times
 require ("openair", quietly = TRUE, warn.conflicts = FALSE)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze_", metstation, ".pdf")
@@ -642,21 +682,23 @@ windRose(hmrS, ws = "wspd", wd = "wdir"
 )
 }
 dev.off()
+}
+
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/winterStorms.pdf", width = 9, height = 6)
-# hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
-  hmrS <- subset (hmr, year < 2020)
-  hmrS <- subset (hmrS, month == 12)
-  hmrS$date <- as.POSIXct(hmrS$datetimestamp)
-  hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
-  windRose(hmrS, ws = "wspd", wd = "wdir"
-           , type = "yClass"
-           , auto.text = TRUE, paddle = FALSE, annotate = TRUE
-           , breaks = c (0, 5, 10, 15,20,30,60)
-           #         , breaks = c (0, 15,20,30, 40, 60)
-           , key.footer = "knots"
-           #, max.freq = 30
-  )
+hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
+hmrS <- subset (hmrS, year < 2020)
+# hmrS <- subset (hmrS, month == 12)
+hmrS$date <- as.POSIXct(hmrS$datetimestamp)
+hmrS$yClass <- factor (ifelse (hmrS$datetimestamp < as.POSIXct ("2019-03-01"), "mean", "2019/20"))
+windRose(hmrS, ws = "wspd", wd = "wdir"
+         , type = "yClass"
+         , auto.text = TRUE, paddle = FALSE, annotate = TRUE
+         , breaks = c (0, 5, 10, 15,20,30,60)
+         #         , breaks = c (0, 15,20,30, 40, 60)
+         , key.footer = "knots"
+         #, max.freq = 30
+)
 dev.off()
 
 

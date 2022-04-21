@@ -529,9 +529,7 @@ getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # def
     mN <- which (names (wDB) == names (meta [i]))
     is.na (wDB [,mN])[which (wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
   }
-  ## change windspeeds to km/h
-  if (meta$wind_spd$units == "meters/second"){wDB$wind_spd <- wDB$wind_spd * 3.6}
-  if (meta$gust$units == "meters/second"){wDB$gus <- wDB$gust * 3.6}
+  ## ensure windspeed is m/s
   if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
 
   return (wDB)
