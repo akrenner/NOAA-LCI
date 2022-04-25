@@ -36,6 +36,15 @@ for (sv in iX){
     if (levels (s$Transect)[tn] == "AlongBay"){
       s$Transect [(s$Transect == "4") & (s$Station == "3")] <- "AlongBay"
       s$Transect [(s$Transect == "9") & (s$Station == "6")] <- "AlongBay"
+
+      ## extended AlongBay Transect
+      # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
+      fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
+      nS <- -3:0
+      for (k in 1:length (fS)){
+        s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay"
+        s$Station [which (s$Match_Name == fS [k])] <- nS [k]
+      }
     }
     if (levels (s$Transect)[tn] == "4"){
       s$Transect [(s$Transect == "AlongBay") & (s$Station == "3")] <- "4"

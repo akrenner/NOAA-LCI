@@ -1,5 +1,7 @@
 ##
 
+rm (list = ls())
+
 print (Sys.time())
 # CTD processing
 if (length (grep ("Martin", getwd())) > 0){
@@ -27,11 +29,11 @@ Require ("LakeMetabolizer")
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
-source ("CTD_file_management.R") ## QCQA, match hex with con file
+source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 cat ("\n# END CTD_file_management.R #\n")
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 cat ("\n# END CTD_hexconversion.R #\n")
-source ("CTD_cnv-Import.R")
+source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
 cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
 cat ("\n# END CTD_cleanup.R #\n")

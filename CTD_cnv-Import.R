@@ -935,7 +935,7 @@ rm (i)
 
 
 cat ("\n\n#\n#\n#\n# ")
-print (difftime(Sys.time(), sTime))
+print (round (difftime(Sys.time(), sTime)))
 cat ("\n# ", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                             , usetz = FALSE)
      , " \n# \n# End of CTD_cnv-Import.R\n#\n#\n")
