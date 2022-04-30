@@ -85,12 +85,64 @@ dev.off()
 ## for the gardeners:
 ## what's the likelihood of frost? What's the last day of frost?
 rm (hmr)
+frostTH <- c (-5, -3, -2, 0, 2, 5)
+frostTH <- c (-5, -3, -2, 0)
+## tomatoes: stay above 50 F
+
+
 source ("noaaWeather.R")
 load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 suppressMessages (require ("zoo"))
+hmr$atemp <- hmr$mintemp # caring about frost, not average!?
+hmr$atemp <- with (hmr, rowMeans (cbind (mintemp, maxtemp)))
+## min of min and max? min? , atemp?
 hmr <- subset (hmr, !is.na (atemp))  ## records prior to 1990s are NA
-dFrost <- aggregate (atemp~jday+year, data = hmr, function (x){any (x < 0)})
+dFrostL <- lapply (frostTH, FUN = function (x){
+  dFrost <- aggregate (atemp~jday+year, data = hmr, function (y){any (y < x)})
+  cdFrost <- rbind (dFrost, with (dFrost, data.frame (atemp, jday = jday + 365, year)))
+  cdFrost <- cdFrost [order (cdFrost$year, cdFrost$jday),]
+  cdFrost$MA <- rollapply (cdFrost$atemp, width = 38, FUN = any, align = "left", fill = NA)
+  dFrost$atemp <- cdFrost$MA [match (with (dFrost, paste (year, jday)), with (cdFrost, paste (year,jday)))]
+  dFrost$fY <- factor (dFrost$year)
+    dFrost
+})
+yFrostL <- lapply (1:length (frostTH), function (x){aggregate (atemp~jday
+                                                               , data = dFrostL [[x]]
+                                                               , mean
+                                                               , subset = year < currentYear)})
 
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDaysM.pdf")
+plotSetup (yFrostL[[1]]$atemp, yFrostL[[1]]$atemp, ylim = c(0,1)
+           , ylab = paste0 ("likelihood of frost (", min(hmr$year)
+                            , "-", currentYear-1, ")"))
+require ("RColorBrewer")
+## cls <- GnBu, Spectral, RdYIGn
+cls <- brewer.pal (length (frostTH), "RdYlGn")
+for (i in length (frostTH):1){  ## reverse to plot cold THs last
+  lines (atemp~jday, yFrostL [[i]], col = cls [i])
+  points (I(atemp-1)~jday, subset (dFrostL[[i]], year == currentYear)
+         , col = cls [i], pch = 19)  # (atemp-1) to plot points low in graph
+}
+legend ("right", pch = 19, col = cls, legend = paste (frostTH
+                                                      ," °C")
+        , bty = "n"
+        , title = paste ("Periods in", currentYear, "with\ntemperatures below")
+)
+
+require ("jpeg")
+img2 <- readJPEG ("pictograms/akgrown.jfif")
+## calculate coordinates for raster-image, to avoid readjusting it each year
+## or keep fixed y-axis?
+(220-90)/365*1+0.2
+rasterImage (img2, xleft = 120, ybottom = 0.25
+             , xright = 225, ytop = 0.55, interpolate = FALSE)
+box()
+dev.off()
+
+
+
+## old, single-category version
+dFrost <- aggregate (atemp~jday+year, data = hmr, function (x){any (x < frostTH)})
 cdFrost <- rbind (dFrost,  ## circular Dec -> Jan
                   with (dFrost, data.frame (atemp, jday = jday + 365, year)))
 cdFrost <- cdFrost [order (cdFrost$year, cdFrost$jday),]
@@ -98,6 +150,7 @@ cdFrost$MA <- rollapply (cdFrost$atemp, width = 38, FUN = any, align = "left", f
 dFrost$atemp <- cdFrost$MA [match (with (dFrost, paste (year, jday)), with (cdFrost, paste (year,jday)))]
 rm (cdFrost)
 yFrost <- aggregate  (atemp~jday, data = dFrost, mean, subset = year < currentYear) # proportion of frost
+
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDays.pdf")
 plotSetup (yFrost$atemp, yFrost$atemp, ylab = paste0 ("likelihood of frost (", min(hmr$year)
@@ -120,13 +173,51 @@ rasterImage (img2, xleft = 120, ybottom = 0.2
 dev.off()
 # plot (atemp~jday, subset (hmr, year == 2021))
 
+
+
 ## plot progression of spring
 # aggregate (atemp~year, data = subset (hmr, jday < 183), function (x))
+
+yL <- 1:(length (levels (dFrostL[[1]]$fY))-1)
+springL <- sapply (yL, function (i){
+  sapply (1:length (frostTH), function (j){
+    y <- subset (dFrostL [[j]], fY == levels (fY)[i])
+    if (nrow (y) > 350){  ## some early years are incomplete
+      return (min (subset (y$jday, !y$atemp)))
+    }else{
+      return (NA)
+    }
+  })
+})
+colnames (springL) <- levels (dFrostL[[1]]$fY)[yL]
+springL <- ifelse (is.infinite (springL), NA, springL) # for years without summer (Inf)
+
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/Frost_yearsM.pdf")
+plot (as.numeric (colnames (springL)), spring, type = "n"
+      , ylim = range (as.numeric (springL), na.rm = TRUE)
+      , ylab = "first frost-free period"
+      , xlab = "year", axes = FALSE)
+for (i in 1:nrow (springL)){
+  lines (as.numeric (colnames (springL)), springL [i,]
+         , col = cls [i], type = "b")
+}
+axis (1)
+axis (2, at = 15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
+      , labels = month.abb, tick = FALSE) # center month-labels
+axis (2, at = c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
+                                     , "%j")), 366), labels = FALSE) # add 366 to mark end of Dec
+box()
+dev.off()
+
+
+
+
 dFrost$fY <- factor (dFrost$year)
 yL <- 1:(length (levels (dFrost$fY))-1)
+
 spring <- sapply (yL, function (i){
   y <- subset (dFrost, fY == levels (fY)[i])
-  min (subset (y$jday, !y$atemp))  # first frost-free day
+  min (subset (y$jday, !y$atemp))  # first frost-free day -- suppress warning?
 })
 names (spring) <- levels (dFrost$fY)[yL]
 
