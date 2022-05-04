@@ -175,7 +175,9 @@ yFrost <- aggregate  (atemp~jday, data = dFrost, mean, subset = year < currentYe
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDays.pdf")
 plotSetup (yFrost$atemp, yFrost$atemp, ylab = paste0 ("likelihood of frost (", min(hmr$year)
-                                                      , "-", currentYear-1, ")"))
+                                                      , "-", currentYear-1, ")")
+            #, xlim = c (5:185)  # -- expand plotSetup to show only 1/2 year
+           )
 lines (atemp~jday, yFrost)
 points (I(atemp-1)~jday, subset (dFrost, year == currentYear), col = "blue", pch =19)
 legend ("top", pch = 19, col = "blue", legend = paste ("periods with frost in", currentYear)

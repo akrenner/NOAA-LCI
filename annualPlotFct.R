@@ -36,7 +36,8 @@ meanCol <- bCol [4]
 # plot (1:12, pch = 19, cex = 3, col = brewer.pal (12, "Paired"))
 
 
-plotSetup <- function(longMean, current, ylab = NULL, ...){
+plotSetup <- function(longMean, current, ylab = NULL# , xlim = c(5,355)
+                      , ...){
   plot (1:366
         , seq (min (c(longMean, current), na.rm = TRUE)
                , max (c(longMean, current), na.rm = TRUE), length.out = 366)
@@ -68,8 +69,11 @@ annualPlot <- function (longMean, percL, percU, current  ## current may be a N x
   return()
 }
 
-addGraphs <- function (longMean, percL, percU, current  ## current may be a N x 2 matrix
-                       , jday , perc2L = NA, perc2U = NA, maxV = NA, minV = NA
+addGraphs <- function (longMean, percL, percU # means and upper/lower percentiles
+                       , current  ## current may be a N x 2 matrix
+                       , jday
+                       , perc2L = NA, perc2U = NA # 2ndd envelope, e.g. max/min
+                       , maxV = NA, minV = NA
                        , currentCol # = currentCol # "red"
                        , pastYear = TRUE, newYear = FALSE, plotRange = TRUE
 ){
@@ -557,10 +561,10 @@ nEvents <- function (dat, varName, thrht){
                          , median = median(agY$xvar, na.rm = TRUE)
                          , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
                          , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
-                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-1)]) #the current and previous year
+                         , agY$xvar [(nrow (agY)-2):(nrow (agY)-0)]) #the current and previous year
                     })
   colnames(eventL) <- paste0 ("T", thrht)
-  rownames(eventL)[5:6] <- paste0 ("Y", max (dat$year)-c(2,1))
+  rownames(eventL)[5:7] <- paste0 ("Y", max (dat$year)-c(2,1, 0))
   as.data.frame (t (eventL))
 }
 

@@ -22,7 +22,9 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
 wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-               , "AMAA2", "HMSA2")
+               , "AMAA2" #, "HMSA2"
+               )
+
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
@@ -172,10 +174,22 @@ hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 windSum <- nEvents (hmr, "maxwspd", thrht = c(scAdvT, galeT, stormT))
 windSum$mean <- round (windSum$mean, 1)
 row.names (windSum) <- c ("SCA", "gales", "storms")
-cat ("\n\n# number of gales and storms per year\n")
+cat ("\n\n# number of gales and storms per year, ", wStations [k],"\n")
 print (windSum)
-
 rm (windSum)
+
+## tabulate only winter storms
+hw <- hmr
+# hw$year <- ifelse (hw$month == 1 | hw$month == 2, hw$year-1, hw$year) # move Jan-Feb into prev year to keep season together
+hw$year <- ifelse (hw$month %in% c (1,2), hw$year-1, hw$year) # move Jan-Feb into prev year to keep season together
+hw <- subset (hw, month %in% c(1,2,12))
+windSum <- nEvents (hw, "maxwspd", thrht = c(scAdvT, galeT, stormT))
+windSum$mean <- round (windSum$mean, 1)
+row.names (windSum) <- c ("SCA", "gales", "storms")
+cat ("\n\n# number of WINTER gales and storms per year, ", wStations [k],"\n")
+print (windSum)
+rm (windSum, hw)
+
 
 
 yGale <- aggregate  (maxwspd~year
@@ -406,9 +420,9 @@ tDay$p365scaDay <- past365$sca [match (tDay$jday, past365$jday)]
 # currently running year
 c365 <- subset (dMeans, subset = year == currentYear + 1)
 tDay$c365 <- c365$wspd [match (tDay$jday, c365$jday)]
-tDay$c365ma <-c365$maW [match (tDay$jday, c365$jday)]
+tDay$c365ma <-c365$maW [match (tDay$jday, c365$jday)]  ## moving average for partial year
 pp365 <- subset (dMeans, subset = year == currentYear -1)
-tDay$pp365ma <- pp365$maW [match (tDay$jday, pp365$jday)]
+tDay$pp365ma <- pp365$maW [match (tDay$jday, pp365$jday)] ## gales and storms for partial year
 rm (past365, c365, pp365)
 
 ## weekly summary of annual data -- for wind uv only
@@ -478,6 +492,7 @@ lines (wspd~jday, tDay, col = "black", lwd = 2)
 lines (smoothWind~jday, tDay, col = "blue", lwd = 3)
 lines (smoothWindMA~jday, tDay, col = "green", lwd = 2)
 lines (p365ma~jday, tDay, col = "gray", lwd = 2, lty = "dashed")
+
 legend ("bottomleft", legend = c("daily-mean", "lt-spline", "lt-MA"
                                  , "2019", "2019-MA")
         , col = c("black", "blue", "green"
@@ -606,6 +621,9 @@ with (tDay, addGraphs (longMean = smoothWindMA, percL = lowPerMA, percU = uppPer
                        , jday = jday
                        , currentCol = currentCol
 ))
+# lines (c365ma~jday, tDay, col = "pink", lwd = 3) # partial year -- temporary
+## otherwise include in addGraphs with newYear = TRUE
+
 
 ## add gale pictogram into this graph (in margin or within?)
 # with (subset (tDay, p365galDay > 0),
