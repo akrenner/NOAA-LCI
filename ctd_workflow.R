@@ -38,6 +38,7 @@ cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
 cat ("\n# END CTD_cleanup.R #\n")
 
+source ("CTD_DataAvailabilty.R")
 
 
 source ("datasetup.R")
