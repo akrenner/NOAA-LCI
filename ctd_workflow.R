@@ -29,6 +29,7 @@ Require ("LakeMetabolizer")
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
+sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 cat ("\n# END CTD_file_management.R #\n")
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
@@ -38,7 +39,7 @@ cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
 cat ("\n# END CTD_cleanup.R #\n")
 
-source ("CTD_DataAvailabilty.R")
+source ("CTD_DataAvailability.R")
 
 
 source ("datasetup.R")
@@ -61,6 +62,6 @@ cat ("\n# END CTDwall.R #\n", Sys.time())
 
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
-
+sink() # end console logging
 print (Sys.time())
 #EOF
