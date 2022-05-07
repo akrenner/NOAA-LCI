@@ -55,9 +55,10 @@ if (0){
 }
 
 pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 22, width = 8.5)
-par (las = 1, mar = c(1,6,4,2))
+par (las = 1, mar = c(4,6,4,2))
 image (t (xT), axes = FALSE)
-axis (3, at = ((1:ncol (xT))-1)/(ncol (xT)-1), labels = colnames(xT)) # axis is 0:1
+axis (3, at = ((1:ncol (xT))-1)/(ncol (xT)-1), labels = colnames(xT), tick = FALSE) # axis is 0:1
+axis (1, at = ((1:ncol (xT))-1)/(ncol (xT)-1), labels = colnames(xT), tick = FALSE) # axis is 0:1
 xL <- paste (as.character (sapply (1:length(levels (dAv$year)), FUN = function (i){c (levels (dAv$year)[i], rep ("", 11))}))
              , rep (levels (dAv$month), length (levels (dAv$year)))
 )
