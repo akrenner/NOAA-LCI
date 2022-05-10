@@ -23,7 +23,8 @@ tDayS <- prepDF (dat = sldviaS, varName = "sal", qntl = qntl, maO = maO)
 
 ## plot
 # pdf (paste0 ("~/tmp/LCI_noaa/media/sa-salinity", maO, "-d.pdf"), width = 9, height = 9)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png"), width = 1800, height = 1800, res = 300)
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
+     , width = 1800, height = 1800, res = 300)
 par (mfrow = c(2,1)
      , mar = c(3,4,4,2)+0.1
 )

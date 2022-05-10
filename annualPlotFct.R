@@ -253,7 +253,7 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
 
   ## current/past year
   xVar <- dat [,which (names (dat) == varName)]
-  dMeans <- aggregate (xVar~jday+year, dat, FUN = sumFct) # daily means
+  dMeans <- aggregate (xVar~jday+year, dat, FUN = sumFct) # daily means -- needed for MA and CI
 
     ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
@@ -276,7 +276,7 @@ if (1){ # align at center
     ## match ().... when length (varName) > 1
 }
 
-  dLTmean <- subset (dMeans, year < currentYear)
+  dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
   tDay <- aggregate (xVar~jday, dLTmean, FUN = mean, na.rm = TRUE)  # not sumFct here! it's a mean!
 
   tDay$sd <- saggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE, refDF = tDay)$xVar
@@ -301,7 +301,7 @@ if (1){ # align at center
     names (tDay)[which (names (tDay) == "maL")] <- paste0 ("maL", i)
     names (tDay)[which (names (tDay) == "maU")] <- paste0 ("maU", i)
   }
-  tDay$max <- saggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$xVar # dLTmean?? XX
+  tDay$max <- saggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$xVar
   tDay$min <- saggregate (xVar~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$xVar
   tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$MA
   tDay$minMA <- saggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$MA
@@ -354,8 +354,8 @@ if (1){ # align at center
 
 addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
-  df$jday <- as.numeric (strftime (df$datetimestamp, "%j"))
-  df$year <- as.numeric (strftime (df$datetimestamp, "%Y"))
+  df$jday <- as.integer (strftime (df$datetimestamp, "%j"))
+  df$year <- as.integer (strftime (df$datetimestamp, "%Y"))
   suppressMessages (require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
