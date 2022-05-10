@@ -43,9 +43,7 @@ dev.off()
 
 
 
-## reverse of salinity = freshness
-homerS$fresh <- 1/homerS$sal
-sldviaS$fresh <- 1/sldviaS$sal
+## reverse of salinity = freshness   (shows freshwater better than 1/sldviaS$sal)
 homerS$fresh <- 32 - homerS$sal
 sldviaS$fresh <- 32 - sldviaS$sal
 

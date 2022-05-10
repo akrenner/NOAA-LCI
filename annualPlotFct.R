@@ -261,8 +261,8 @@ if (1){ # align at center
   suppressMessages (require ("zoo"))
 #  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "center")
 #  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
-  dMeans$MA <- rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
-                          , fill = FALSE, partial = FALSE, align = "center")
+  dMeans$MA <- zoo::rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
+                          , fill = NA, partial = FALSE, align = "center")
 }else{
     ## bug in SWMPr smoothing function: last day = up-tick?
     require ("SWMPr")
@@ -319,26 +319,29 @@ if (1){ # align at center
   ## all years
   yr <- sapply (levels (factor (dMeans$year)), function (x){
     pY <- subset (dMeans, year == x)
-    pY$MA [match (tDay$jday, pY$jday)]}
-  )
+    pY$MA [match (tDay$jday, pY$jday)]
+  })
   colnames(yr) <- paste0 ("y_", colnames(yr))
   tDay <- cbind (tDay, yr); rm (yr)
 
 
-  ## current year (incomplete)
-  cY <- subset (dMeans, year == currentYear+1)
+  ## ongoing year (incomplete)
+  # ogY <- subset (dMeans, year == (currentYear+1))
+  # tDay$og <- ogY$xVar [match (tDay$jday, ogY$jday)]
+  # tDay$ogYMA <- cY$MA [match (tDay$jday, ogY$jday)]
+  # rm (ogY)
+  cY <- subset (dMeans, year == (currentYear+1))
   tDay$cY <- cY$xVar [match (tDay$jday, cY$jday)]
   tDay$cYMA <- cY$MA [match (tDay$jday, cY$jday)]
   rm (cY)
-  ## add circular spline?
 
   ## previous year
-  pcY <- subset (dMeans, year == currentYear - 1)
+  pcY <- subset (dMeans, year == (currentYear-1))
   tDay$pcY <- pcY$xVar [match (tDay$jday, pcY$jday)]
   tDay$pcYMA <- pcY$MA [match (tDay$jday, pcY$jday)]
   rm (pcY)
 
-    ## fix names
+  ## fix names
 #  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
   names (tDay) <- gsub ("xVar", varName, names (tDay))
   names (tDay)[3:ncol (tDay)] <- paste0 (names (tDay)[3:ncol (tDay)], "_", varName)
