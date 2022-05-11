@@ -34,6 +34,8 @@ stormT <- 48
 galeT <- 34
 scAdvT <- 21
 currentCol <- c ("blue", "lightblue", "black")
+require ("RColorBrewer")
+currentCol <- c (brewer.pal (4, "Paired")[2:1], "black")
 ## leave code below as-is
 ##########################################################
 
@@ -49,7 +51,7 @@ if (!exists ("wStations")){wStations <- metstation}
 for (k in 1:length (wStations)){
   metstation <- wStations [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")
-  try (rm (hmr))
+  try (rm (hmr), silent = TRUE)
 
 
   stationL <- c ("Homer Spit", "Flat Island", "Augustine Island", "East Amatuli")[k]
@@ -280,6 +282,8 @@ sTab [1:2, ncol (sTab)] <- 0
 # gCols <- c("gray", "lightblue")
 # gCols <- c("lightgray", "darkgray")
 gCols <- c("lightgray", "darkgray", "lightblue", "blue")
+require ("RColorBrewer")
+gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
 png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
      , width=1200, height=1200, res=300)
@@ -622,7 +626,7 @@ with (tDay, addGraphs (longMean=smoothWindMA, percL=lowPerMA, percU=uppPerMA
                        , currentCol=currentCol
 ))
 # lines (c365ma~jday, tDay, col="pink", lwd=3) # partial year -- temporary
-## otherwise include in addGraphs with newYear=TRUE
+## otherwise include in addGraphs with ongoingYear=TRUE
 
 
 ## add gale pictogram into this graph (in margin or within?)
@@ -811,6 +815,7 @@ climD <- function (cDF){
 # png ("~/tmp/LCI_noaa/media/climateDiag.png", width=480, height=960)
 # par (mfrow=c(2,1))
 if (metstation == "kachomet"){
+  cat ("\nTry to make climate diagram [requires full year of precip data]\n")
   pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
   ## alternative: wldiag in dgolicher/giscourse on github
   ## for same but with more customization, see library (iki.dataclim)
@@ -826,7 +831,7 @@ if (metstation == "kachomet"){
             , per=currentYear)
   }, silent=FALSE)
   if (class (tD) == "try-error"){
-    cat ("\nClimate diagram is incomplete (due to missing data?)\n\n")
+    cat ("Climate diagram is incomplete (due to missing data?)\n\n")
   }
   dev.off()
 }

@@ -109,11 +109,11 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
   #   lines (current~jday, col=currentCol, lwd=4)
   # }else{
   if (pastYear){
-    lines (current [,1]~jday, col=currentCol [3], lwd=2) #, lty = "dashed") ## new: previous year
+    lines (current [,1]~jday, col=currentCol [1], lwd=2) #, lty = "dashed") ## new: previous year
   }
-  lines (current [,2]~jday, col=currentCol [1], lwd=4)
+  lines (current [,2]~jday, col=currentCol [2], lwd=4)
   if (ongoingYear){
-    lines (current [,3]~jday, col=currentCol [2], lwd=4)
+    lines (current [,3]~jday, col=currentCol [3], lwd=4)
   }
   axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
   return()
@@ -148,7 +148,7 @@ cLegendO <- function (..., mRange=NULL, currentYear=NULL  ## still used? remove?
           , pt.cex=2
           , pt.bg=c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
           #        , col=c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
-          , col=c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+          , col=c(meanCol, cYcol [c(1,2,3)], meanCol, sLcol, "black") #qantCol [1])
   )
 }
 
@@ -168,22 +168,22 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
   if (pastYear && ongoingYear){
     yT <- c (currentYear-1, currentYear, currentYear + 1)
     bg <- c (NA, NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+    lC <- c (meanCol, cYcol [c(1,2,3)], meanCol, sLcol, "black") #qantCol [1])
     lW <- c (3, 2, 4, 4)
   }else if (pastYear && !ongoingYear){  ## this is now the default: past, current, but not ongoing year
     yT <- c (currentYear -1, currentYear)
     bg <- c (NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (3, 1)], meanCol, sLcol, "black")
+    lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
     lW <- c (3, 2, 4)
   }else if (!pastYear && ongoingYear){ # current and new year
     yT <- c (currentYear, currentYear + 1)
     bg <- c (NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
+    lC <- c (meanCol, cYcol [c (2,3)], meanCol, sLcol, "black")
     lW <- c (3, 4, 4)
   }else{ # only current year
     yT <- currentYear
     bg <- c (NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (1)], meanCol, sLcol, "black")
+    lC <- c (meanCol, cYcol [c (2)], meanCol, sLcol, "black")
     lW <- c (3, 4, 4)
     lW <- c (4,4)
   }

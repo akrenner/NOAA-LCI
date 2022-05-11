@@ -7,7 +7,7 @@ qntl = c(0.9)
 maO <- 31 # moving average window
 pMA <- TRUE
 currentCol <- c ("darkblue", "blue")
-currentCol <- c ("darkblue", "hotpink", "lightblue")  ## temporary -- change the order to past, current, ongoing
+currentCol <- c ("lightblue", "darkblue", "hotpink")  ## temporary -- change the order to past, current, ongoing
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 setwd("~/myDocs/amyfiles/NOAA-LCI/")

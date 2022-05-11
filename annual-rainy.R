@@ -8,8 +8,8 @@ maO <- 30  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl = c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("blue", "lightblue", "black")
-currentCol <- "blue"
+currentCol <- c("lightblue", "blue", "black")
+# currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
 
@@ -155,7 +155,7 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 maO <- 31
 qntl <- 0.9
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c ("red", "pink", "orange")
+currentCol <- c ("pink", "red", "orange")
 
 source ("annualPlotFct.R") # important to call after defining currentCol!
 

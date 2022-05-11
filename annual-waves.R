@@ -155,6 +155,9 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 # currentCol <- c("darkblue", "blue", "lightblue")
 currentCol <- c("black", "blue", "lightblue")
 currentCol <- c("blue", "lightblue", "black")
+# require ("RColorBrewer")
+# currentCol <- c (brewer.pal (4, "Paired")[2:1], "black")
+
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # maO <- 3 # 30
