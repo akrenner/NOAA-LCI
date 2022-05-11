@@ -63,7 +63,6 @@ annualPlot <- function (longMean, percL, percU, current  ## current may be a N x
                         , pastYear=TRUE, ongoingYear=FALSE
                         , ...){
   plotSetup (longMean, current, ylab=ylab, ...)
-
   addGraphs (longMean, percL, percU, current, jday, perc2L=NA, perc2U=NA, maxV=NA, minV=NA
              , currentCol, pastYear=pastYear, ongoingYear=ongoingYear)
   # axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
@@ -79,6 +78,8 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
                        , currentCol # = currentCol # "red"
                        , pastYear=TRUE, ongoingYear=FALSE, plotRange=TRUE
 ){
+  if (length (currentCol) != 3){warning("currentCol should have three colors!\n\n")} # error or warning?
+
   if (0){  # abandone range
     # if (!all (is.na (maxV)) && !all (is.na (minV))){
     pCo <- data.frame (x=c(jday, rev (jday))
