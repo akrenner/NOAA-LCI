@@ -7,6 +7,7 @@ qntl = c(0.9)
 maO <- 31 # moving average window
 pMA <- TRUE
 currentCol <- c ("darkblue", "blue")
+currentCol <- c ("darkblue", "hotpink", "lightblue")  ## temporary -- change the order to past, current, ongoing
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -18,7 +19,7 @@ source ("annualPlotFct.R")
 
 
 # tDayHD <- prepDF ("sal", homerDL, maO = 31, qntl = qntl)
-tDayH <- prepDF (dat = homerS, varName = "sal", qntl = qntl, maO = maO)
+tDayH <- prepDF (dat = homerS, varName = "sal", qntl = qntl, maO = maO) # still has issue with cYMA_sal and cY_sal
 tDayS <- prepDF (dat = sldviaS, varName = "sal", qntl = qntl, maO = maO)
 
 ## plot
@@ -29,12 +30,15 @@ par (mfrow = c(2,1)
      , mar = c(3,4,4,2)+0.1
 )
 
-aPlot (tDayS, "sal", MA = pMA, currentCol = currentCol, ylim = c(24, 31.8), ylab = "salinity")
+aPlot (df=tDayS, vName="sal", MA = pMA, currentCol = currentCol, ylim = c(24, 31.8)
+       , ylab = "salinity")
 title (main = "Seldovia surface")
 # box()
 cLegend ("bottomleft", inset = 0.05, currentYear = currentYear
          , mRange = c(min (homerS$year), currentYear -1)
-         , cYcol = currentCol, qntl = qntl [1])
+         , cYcol = currentCol, qntl = qntl [1]
+         # , sYears = c(currentYear-1, currentYear)
+         )
 ## add homer data
 aPlot (tDayH, "sal", MA = pMA, currentCol = currentCol, ylim = c(24, 31.8), ylab = "salinity")
 # aPlot (tDayH, "sal", MA = pMA, currentCol = "lightblue", ylim = c(24.5, 31.8))

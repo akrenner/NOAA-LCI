@@ -85,8 +85,8 @@ par (mar = c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab = "daily precipitation [mm]"
        , currentCol = currentCol
        , MA = TRUE
-       , pastYear = FALSE, newYear = FALSE)
-if (SWMP){title (main = "Precipitation at Homer Spit")}
+       , pastYear=FALSE, ongoing=FALSE)
+if (SWMP){title (main="Precipitation at Homer Spit")}
 ## add inch scale
 iAxis (tDay$totprcp, lab = "daily precipitation [inch]")
 
@@ -109,7 +109,7 @@ bP <- cLegend (x = bP$rect$left + 55, y = bP$rect$top
                , title.adj = 0.5, currentYear = currentYear
                , mRange = c (min (hmr$year), currentYear-1)
                , cYcol = currentCol
-               , pastYear = FALSE, newYear = FALSE
+               , pastYear=FALSE, ongoingYear=FALSE
 )
 #  legend (x = bP$rect$left+2, y = bP$rect$top - 0.95, legend = "day with > 10 mm", pch = "*", col = "blue", bty = "n", pt.cex = cCex)
 legend (x = bP$rect$left+2, y = bP$rect$top-bP$rect$h + 0.3 # use -1.2 when plotting 2 years
@@ -155,7 +155,7 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 maO <- 31
 qntl <- 0.9
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c ("red", "pink")
+currentCol <- c ("red", "pink", "orange")
 
 source ("annualPlotFct.R") # important to call after defining currentCol!
 

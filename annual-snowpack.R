@@ -9,7 +9,7 @@ fetchNew <- TRUE  # get fresh data from server? takes longer
 # fetchNew <- FALSE  # get fresh data from server? takes longer
 maO <- 31
 qntl <- c (0.9, 0.8)
-currentCol <- c ("lightblue", "aquamarine")
+currentCol <- c ("lightblue", "aquamarine", "blue")
 
 
 # require ("snotelr")
@@ -129,7 +129,7 @@ for (sitePickNo in c(1003, 1062, 987)){
            , mRange = c (min (snowMc$year, na.rm = TRUE), currentYear -1)
            , currentYear = currentYear, cYcol = currentCol #"lightblue"
            , qntl = qntl [1]
-           , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
+           # , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
            , sLwd = c(2, 2)
            , sLty = c(2, 3)
            , sLcol = c("black", "darkblue")
@@ -232,7 +232,7 @@ cLegend ("topright"
          , mRange = c(min (snowMc$year), currentYear - 1)
          , currentYear = currentYear, cYcol = currentCol
          , qntl = qntl [1]
-         , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
+         # , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
          , sLwd = c(2, 2)
          , sLty = c(2, 3)
          , sLcol = c("black", "darkblue")

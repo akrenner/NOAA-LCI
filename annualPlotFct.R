@@ -8,10 +8,11 @@
 ## - smoother
 
 
-# pco <- as.numeric (format (Sys.Date(), "%Y"))
+# pco <- as.integer (format (Sys.Date(), "%Y"))
 
 
 ## standardize colors
+## is there a better way than doing it here?
 rangCol <- c("lightyellow", "yellow")
 rangCol <- c("gray", "darkgray")
 rangCol <- c("gray", "darkgray")
@@ -33,95 +34,96 @@ meanCol <- bCol [4]
 }
 
 
-# plot (1:12, pch = 19, cex = 3, col = brewer.pal (12, "Paired"))
+# plot (1:12, pch=19, cex=3, col=brewer.pal (12, "Paired"))
 
 
-plotSetup <- function(longMean, current, ylab = NULL# , xlim = c(5,355)
+plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
                       , ...){
   plot (1:366
-        , seq (min (c(longMean, current), na.rm = TRUE)
-               , max (c(longMean, current), na.rm = TRUE), length.out = 366)
-        , type = "n", axes = FALSE
-        , xlim = c(5,355)
+        , seq (min (c(longMean, current), na.rm=TRUE)
+               , max (c(longMean, current), na.rm=TRUE), length.out=366)
+        , type = "n", axes=FALSE
+        , xlim=c(5,355)
         , xlab = ""
-        , ylab = ylab
+        , ylab=ylab
         , ...
   )
   axis (2)
-  axis (1, at = 15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
-        , labels = month.abb, tick = FALSE) # center month-labels
-  axis (1, at = c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
-                                       , "%j")), 366), labels = FALSE) # add 366 to mark end of Dec
+  axis (1, at=15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
+        , labels=month.abb, tick=FALSE) # center month-labels
+  axis (1, at=c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
+                                       , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
 }
 
 
-annualPlot <- function (longMean, percL, percU, current  ## current may be a N x 2 matrix
-                        , jday , perc2L = NA, perc2U = NA, maxV = NA, minV = NA
+annualPlot <- function (longMean, percL, percU, current  ## current may be a N x 3 matrix: past, current, ongoing
+                        , jday , perc2L=NA, perc2U=NA, maxV=NA, minV=NA
                         , ylab = ""
                         , currentCol # = currentCol # "red"
-                        , pastYear = TRUE, newYear = FALSE
+                        , pastYear=TRUE, ongoingYear=FALSE
                         , ...){
-  plotSetup (longMean, current, ylab = ylab, ...)
+  plotSetup (longMean, current, ylab=ylab, ...)
 
-  addGraphs (longMean, percL, percU, current, jday, perc2L = NA, perc2U = NA, maxV = NA, minV = NA
-             , currentCol, pastYear = pastYear, newYear = newYear)
-  # axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
+  addGraphs (longMean, percL, percU, current, jday, perc2L=NA, perc2U=NA, maxV=NA, minV=NA
+             , currentCol, pastYear=pastYear, ongoingYear=ongoingYear)
+  # axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
   return()
 }
+
 
 addGraphs <- function (longMean, percL, percU # means and upper/lower percentiles
                        , current  ## current may be a N x 2 matrix
                        , jday
-                       , perc2L = NA, perc2U = NA # 2ndd envelope, e.g. max/min
-                       , maxV = NA, minV = NA
+                       , perc2L=NA, perc2U=NA # 2ndd envelope, e.g. max/min
+                       , maxV=NA, minV=NA
                        , currentCol # = currentCol # "red"
-                       , pastYear = TRUE, newYear = FALSE, plotRange = TRUE
+                       , pastYear=TRUE, ongoingYear=FALSE, plotRange=TRUE
 ){
   if (0){  # abandone range
     # if (!all (is.na (maxV)) && !all (is.na (minV))){
-    pCo <- data.frame (x = c(jday, rev (jday))
-                       , y = c (maxV, rev (minV)))
+    pCo <- data.frame (x=c(jday, rev (jday))
+                       , y=c (maxV, rev (minV)))
     # polygon (pCo, col = "lightyellow", border = "yellow")
-    polygon (pCo, col = rangCol [1], border = rangCol [2])
+    polygon (pCo, col=rangCol [1], border=rangCol [2])
   }
 
-  pCo <- data.frame (x = c (jday, rev (jday))
-                     , y = c(percL, rev (percU)))
+  pCo <- data.frame (x=c (jday, rev (jday))
+                     , y=c(percL, rev (percU)))
   pCo <- subset (pCo, !is.na (pCo$y))
   if (0){  # abandone 2nd quantile
-    polygon (pCo, col = qantCol [1], border = NA)
-    pCo <- data.frame (x = c (jday, rev (jday))
-                       , y = c(perc2L, rev (perc2U)))
+    polygon (pCo, col=qantCol [1], border=NA)
+    pCo <- data.frame (x=c (jday, rev (jday))
+                       , y=c(perc2L, rev (perc2U)))
     pCo <- subset (pCo, !is.na (y))
-    polygon (pCo, col = qantCol [2], border = NA)
+    polygon (pCo, col=qantCol [2], border=NA)
   }else{
     if (plotRange){
-      polygon (pCo, col = qantCol [1], border = NA)
+      polygon (pCo, col=qantCol [1], border=NA)
     }
   }
-  lines (longMean~jday, col = meanCol, lwd = 3)
+  lines (longMean~jday, col=meanCol, lwd=3)
 
   # if (length (currentCol) < 1){
   #   if (class (current) == "matrix"){current <- as.numeric (current [,1])}
-  #   lines (current~jday, col = currentCol, lwd = 4)
+  #   lines (current~jday, col=currentCol, lwd=4)
   # }else{
   if (pastYear){
-    lines (current [,3]~jday, col = currentCol [3], lwd = 2) #, lty = "dashed") ## new: previous year
+    lines (current [,1]~jday, col=currentCol [3], lwd=2) #, lty = "dashed") ## new: previous year
   }
-  lines (current [,1]~jday, col = currentCol [1], lwd = 4)
-  if (newYear){
-    lines (current [,2]~jday, col = currentCol [2], lwd = 4)
+  lines (current [,2]~jday, col=currentCol [1], lwd=4)
+  if (ongoingYear){
+    lines (current [,3]~jday, col=currentCol [2], lwd=4)
   }
-  axis (1, at = c(1, 366), labels = NA) # redraw in case polygon went over axis
+  axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
   return()
 }
 
 
-cLegendO <- function (..., mRange = NULL, currentYear = NULL
+cLegendO <- function (..., mRange=NULL, currentYear=NULL  ## still used? remove?
                      , cYcol # = currentCol
-                     , qntl = NULL
-                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL
-                     , pastYear = FALSE, newYear = TRUE
+                     , qntl=NULL
+                     , sYears=NULL, sLwd=NULL, sLty=NULL, sLcol=NULL
+                     , pastYear=FALSE, ongoingYear=TRUE
 ){ # sYears = ??
   ## combined legend for both box and line elements.
   ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
@@ -132,46 +134,47 @@ cLegendO <- function (..., mRange = NULL, currentYear = NULL
     currentYear <- c (currentYear - 1, currentYear, currentYear + 1)
   }
   legend (..., bty = "n"
-          , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
+          , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , currentYear
                        , sYears
                        , "10-90 percentile"
                        # , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
                        # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
           )
-           , lty = c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
-          , lwd = c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
-          , pch = c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
-          , pt.cex = 2
-          , pt.bg = c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
-          #        , col = c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
-          , col = c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
+           , lty=c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
+          , lwd=c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
+          , pch=c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
+          , pt.cex=2
+          , pt.bg=c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
+          #        , col=c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
+          , col=c(meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
   )
 }
 
 
-cLegend <- function (..., mRange = NULL, currentYear = NULL
+cLegend <- function (..., mRange=NULL, currentYear=NULL
                      , cYcol # = currentCol
-                     , qntl = NULL
-                     , sYears = NULL, sLwd = NULL, sLty = NULL, sLcol = NULL
-                     , pastYear = TRUE, newYear = FALSE
-){ # sYears = ??
+                     , qntl=NULL
+                     # , sYears=NULL
+                     , sLwd=NULL, sLty=NULL, sLcol=NULL
+                     , pastYear=TRUE, ongoingYear=FALSE
+){ # sYears=vector of years to plot
   ## combined legend for both box and line elements.
   ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
-  if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
-    stop ("extra line length not consistent")
-  }
-  if (pastYear && newYear){
+  # if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
+  #   stop ("extra line length not consistent")
+  # }
+  if (pastYear && ongoingYear){
     yT <- c (currentYear-1, currentYear, currentYear + 1)
     bg <- c (NA, NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c(3,1,2)], meanCol, sLcol, "black") #qantCol [1])
     lW <- c (3, 2, 4, 4)
-  }else if (pastYear && !newYear){
+  }else if (pastYear && !ongoingYear){  ## this is now the default: past, current, but not ongoing year
     yT <- c (currentYear -1, currentYear)
     bg <- c (NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c (3, 1)], meanCol, sLcol, "black")
     lW <- c (3, 2, 4)
-  }else if (!pastYear && newYear){ # current and new year
+  }else if (!pastYear && ongoingYear){ # current and new year
     yT <- c (currentYear, currentYear + 1)
     bg <- c (NA, NA, NA, qantCol [1])
     lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
@@ -184,22 +187,25 @@ cLegend <- function (..., mRange = NULL, currentYear = NULL
     lW <- c (4,4)
   }
   legend (..., bty = "n"
-          , legend = c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
+          , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , yT
                        , "10th-90th %ile" #percentile"
           )
-          , lty = c (rep (1, length (yT)+1), 0)
-          , lwd = c (lW, 0)
-          , pch = c (NA, rep (NA, length (yT)), 22)
-          , pt.cex = 2
-          , pt.bg = bg
-          , col = lC
+          , lty=c (rep (1, length (yT)+1), 0)
+          , lwd=c (lW, 0)
+          , pch=c (NA, rep (NA, length (yT)), 22)
+          , pt.cex=2
+          , pt.bg=bg
+          , col=lC
   )
 }
 
 
 
-aPlot <- function (df, vName, MA = TRUE, ...){
+aPlot <- function (df, vName, MA=TRUE
+                   , pastYear=TRUE
+                   , ongoingYear=FALSE  ## good convention = ? 1,2=c-1,c, not og
+                   , ...){
   # wrapper for annualPlot
   # assumes df was created using prepDF, resulting in standardized field names
   # -- using MA or raw??
@@ -207,27 +213,30 @@ aPlot <- function (df, vName, MA = TRUE, ...){
     longMean <- df [,which (names (df) == paste0 ("MA_", vName))]
     percL <- df [,which (names (df) == paste0 ("maL1_", vName))]
     percU <- df [,which (names (df) == paste0 ("maU1_", vName))]
+    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))] # pre-current
     current <-df [,which (names (df) == paste0 ("pYMA_", vName))]
-    cpo <- df [, which (names (df) == paste0 ("cYMA_", vName))]
-    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))]
+    ong <- df [, which (names (df) == paste0 ("ogYMA_", vName))]  # ongoing
     maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
     minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
     #allY <- df [,which (names (df) == paste0 ("y_")]
     allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
-  }else{
+  }else{ ## these need updates if ever used again!!
     longMean <- df [,which (names (df) == vName)]
     percL <- df [,which (names (df) == paste0 ("perL1_", vName))]
     percU <- df [,which (names (df) == paste0 ("perU1_", vName))]
-    current <-df [,which (names (df) == paste0 ("pY_", vName))]
-    cpo <- df [, which (names (df) == paste0 ("cY_", vName))]
     pcpo <- df [, which (names (df) == paste0 ("pcY_", vName))]
+    current <-df [,which (names (df) == paste0 ("pY_", vName))]
+    ong <- df [, which (names (df) == paste0 ("ogY_", vName))]
     maxV <- df [,which (names (df) == paste0 ("max_", vName))]
     minV <- df [,which (names (df) == paste0 ("min_", vName))]
-
   }
   annualPlot (longMean, percL, percU
-              , cbind (current, cpo, pcpo) #, current, cpo
-              , df$jday, maxV = maxV, minV = minV, ...)
+              , current=cbind (pcpo, current, ong) #, current, cpo
+              # , current=cbind (pcpo, current, cpo, pcpo) #, current, cpo
+              , df$jday, maxV=maxV, minV=minV
+              , pastYear=pastYear, ongoingYear=ongoingYear
+              # add yearPick instead of pastYear, ongoingYear ?
+              , ...)
 }
 
 
@@ -238,10 +247,10 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
 }
 
 
-prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
-                     , maO = 31
-                     , currentYear = as.numeric (format (Sys.Date(), "%Y"))-1
-                     , qntl = c(0.8, 0.9)
+prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
+                     , maO=31
+                     , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
+                     , qntl=c(0.8, 0.9)
 ){
   if (! all (c("jday", "year", varName) %in% names (dat))){
     stop (paste ("Data frame must contain the variables jday, year, and", varName))
@@ -253,68 +262,74 @@ prepDF <- function (dat, varName, sumFct = function (x){mean (x, na.rm = TRUE)}
 
   ## current/past year
   xVar <- dat [,which (names (dat) == varName)]
-  dMeans <- aggregate (xVar~jday+year, dat, FUN = sumFct) # daily means -- needed for MA and CI
+  dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
 
     ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
 if (1){ # align at center
   suppressMessages (require ("zoo"))
-#  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "center")
-#  dMeans$MA <- rollmean (dMeans$xVar, k = maO, fill = FALSE, align = "right")
-  dMeans$MA <- zoo::rollapply (dMeans$xVar, width = maO, FUN = mean, na.rm = TRUE
-                          , fill = NA, partial = FALSE, align = "center")
+#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
+#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
+  dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
+                          , fill=c(NA, "extend", NA)
+                          , partial=FALSE # maO/2
+                          , align = "center")
 }else{
-    ## bug in SWMPr smoothing function: last day = up-tick?
+    ## bug in SWMPr smoothing function: last day=up-tick?
     require ("SWMPr")
-    dMeans$MA <- unlist (smoother(dMeans$xVar, window = maO, sides = 2)) # sides = 2 for centered
+    dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
     # dMeans$MA <- maT (dMeans$xVar, maO)
 
     ## alternative to smoother?!  this uses moving-AVERAGE, rather than moving sumFct XXX
-    ## sides = 2 or sides = 1?
+    ## sides=2 or sides=1?
 
     # dMeans$XXX <- XX$varName [match (...)
     ## match ().... when length (varName) > 1
 }
 
   dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
-  tDay <- aggregate (xVar~jday, dLTmean, FUN = mean, na.rm = TRUE)  # not sumFct here! it's a mean!
-
-  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE, refDF = tDay)$xVar
-  tDay$MA <- saggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE, refDF = tDay)$MA
-
-  # sdA <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)
-  # MAA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)
-  # tDay$sd <- sdA$sd [match (tDay$jday, sdA$jday)]
-  # tDay$MA <- MAA$sd [match (tDay$jday, MAA$jday)]
-  # rm (sdA, MAA) # 2nd version
-  # tDay$sd <- aggregate (xVar~jday, dLTmean, FUN = sd, na.rm = TRUE)$xVar
-  # tDay$MA <- aggregate (MA~jday, dLTmean, FUN = mean, na.rm = TRUE)$MA
+  tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
+  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
+  tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   #  for (j in c (varName, MA)){
   for (i in 1:length (qntl)){
-    tDay$perL <- saggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i], refDF = tDay)$xVar
-    tDay$perU <- saggregate (xVar~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i], refDF = tDay)$xVar
+    tDay$perL <- saggregate (xVar~jday, dLTmean, FUN=quantile, probs=0.5-0.5*qntl [i], refDF=tDay)$xVar
+    tDay$perU <- saggregate (xVar~jday, dLTmean, FUN=quantile, probs=0.5+0.5*qntl [i], refDF=tDay)$xVar
     names (tDay)[which (names (tDay) == "perL")] <- paste0 ("perL", i)
     names (tDay)[which (names (tDay) == "perU")] <- paste0 ("perU", i)
-    tDay$maL <- saggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5-0.5*qntl [i], refDF = tDay)$MA
-    tDay$maU <- saggregate (MA~jday, dLTmean, FUN = quantile, probs = 0.5+0.5*qntl [i], refDF = tDay)$MA
+    tDay$maL <- saggregate (MA~jday, dLTmean, FUN=quantile, probs=0.5-0.5*qntl [i], refDF=tDay)$MA
+    tDay$maU <- saggregate (MA~jday, dLTmean, FUN=quantile, probs=0.5+0.5*qntl [i], refDF=tDay)$MA
     names (tDay)[which (names (tDay) == "maL")] <- paste0 ("maL", i)
     names (tDay)[which (names (tDay) == "maU")] <- paste0 ("maU", i)
   }
-  tDay$max <- saggregate (xVar~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$xVar
-  tDay$min <- saggregate (xVar~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$xVar
-  tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN = max, na.rm = TRUE, refDF = tDay)$MA
-  tDay$minMA <- saggregate (MA~jday, dLTmean, FUN = min, na.rm = TRUE, refDF = tDay)$MA
+  tDay$max <- saggregate (xVar~jday, dLTmean, FUN=max, na.rm=TRUE, refDF=tDay)$xVar
+  tDay$min <- saggregate (xVar~jday, dLTmean, FUN=min, na.rm=TRUE, refDF=tDay)$xVar
+  tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN=max, na.rm=TRUE, refDF=tDay)$MA
+  tDay$minMA <- saggregate (MA~jday, dLTmean, FUN=min, na.rm=TRUE, refDF=tDay)$MA
 
 
   # is this critically needed?? -- N years of data per date
-  tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN = sum
-                           , na.rm = TRUE, refDF = tDay)[1:nrow (tDay),2] # some scripts fail at 366
+  tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN=sum
+                           , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
+
+  ## previous year
+  pcY <- subset (dMeans, year == (currentYear-1))
+  tDay$pcY <- pcY$xVar [match (tDay$jday, pcY$jday)]
+  tDay$pcYMA <- pcY$MA [match (tDay$jday, pcY$jday)]
+  rm (pcY)
+
   ## present/pretend/current year-1
   pY <- subset (dMeans, year == currentYear)
   tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]
   tDay$pYMA <- pY$MA [match (tDay$jday, pY$jday)]
   rm (pY)
+
+  ## ongoing year (incomplete)
+  ogY <- subset (dMeans, year == (currentYear+1))
+  tDay$ogY <- ogY$xVar [match (tDay$jday, ogY$jday)]
+  tDay$ogYMA <- ogY$MA [match (tDay$jday, ogY$jday)]
+  rm (ogY)
 
   ## all years
   yr <- sapply (levels (factor (dMeans$year)), function (x){
@@ -323,23 +338,6 @@ if (1){ # align at center
   })
   colnames(yr) <- paste0 ("y_", colnames(yr))
   tDay <- cbind (tDay, yr); rm (yr)
-
-
-  ## ongoing year (incomplete)
-  # ogY <- subset (dMeans, year == (currentYear+1))
-  # tDay$og <- ogY$xVar [match (tDay$jday, ogY$jday)]
-  # tDay$ogYMA <- cY$MA [match (tDay$jday, ogY$jday)]
-  # rm (ogY)
-  cY <- subset (dMeans, year == (currentYear+1))
-  tDay$cY <- cY$xVar [match (tDay$jday, cY$jday)]
-  tDay$cYMA <- cY$MA [match (tDay$jday, cY$jday)]
-  rm (cY)
-
-  ## previous year
-  pcY <- subset (dMeans, year == (currentYear-1))
-  tDay$pcY <- pcY$xVar [match (tDay$jday, pcY$jday)]
-  tDay$pcYMA <- pcY$MA [match (tDay$jday, pcY$jday)]
-  rm (pcY)
 
   ## fix names
 #  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
@@ -362,43 +360,43 @@ addTimehelpers <- function (df){
   return (df)
 }
 
-fixGap <- function (df, intvl = 15*60){ # interval of TS in seconds
+fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
   ## fix time gaps in standard SWMP data file with NAs
   ## fix min sampling interval (60 s * 15) = standard throughout SWMP?
   # print (min (df$datetimestamp)); print (max (df$datetimestamp))
   # print (summary (df))
-  tR <- seq (min (df$datetimestamp, na.rm = TRUE)
-             , max (df$datetimestamp, na.rm = TRUE)
-             , by = 15*60)
-  nD <- data.frame (datetimestamp = tR
+  tR <- seq (min (df$datetimestamp, na.rm=TRUE)
+             , max (df$datetimestamp, na.rm=TRUE)
+             , by=15*60)
+  nD <- data.frame (datetimestamp=tR
                     , df [match (tR, df$datetimestamp), 2:ncol (df)])
   return (addTimehelpers (nD))
   }
 
 
 ## add Fahrenheit scale to temperature plot
-fAxis <- function (cGrad, side = 4, line = 3, mT = "Fahrenheit", ...){
+fAxis <- function (cGrad, side=4, line=3, mT = "Fahrenheit", ...){
   slope <- 9/5
   offset <- 32
   alt.ax <- pretty (slope * cGrad + offset)
   alt.at <- (alt.ax - offset) / slope
-  axis (side = side, at = alt.at, labels = alt.ax, srt = 90)
-  mtext (mT, side = side, line = line, ...)
+  axis (side=side, at=alt.at, labels=alt.ax, srt=90)
+  mtext (mT, side=side, line=line, ...)
 }
 
 ## add scale in inches
-iAxis <- function (mmL, side = 4, line = 3, lab = "", ...){
+iAxis <- function (mmL, side=4, line=3, lab = "", ...){
   mmperinch <- 25.4
   alt.ax <- pretty (mmL / mmperinch)
   alt.at <- alt.ax * mmperinch
-  axis (side = side, at = alt.at, labels = alt.ax, srt = 90)
-  mtext (lab, side = side, line = line, ...)
+  axis (side=side, at=alt.at, labels=alt.ax, srt=90)
+  mtext (lab, side=side, line=line, ...)
 }
 
 
 
 ## load cached SWMP data and update it with the latest from CDMO
-getSWMP <- function (station, QAQC = TRUE){
+getSWMP <- function (station, QAQC=TRUE){
   ## load SWMP data from local zip file. Update to the most current data
   ## from CDMO and cache those updates for the next run.
   ## need to specify location of zip file from SWMP and cache folder below
@@ -411,7 +409,7 @@ getSWMP <- function (station, QAQC = TRUE){
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   zipFile <- "~/GISdata/LCI/SWMP/current"
 
-  dir.create(cacheFolder, showWarnings = FALSE)
+  dir.create(cacheFolder, showWarnings=FALSE)
   #    if (.Platform$OS.type == "windows"){
   require ("R.utils")
   SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
@@ -447,8 +445,8 @@ getSWMP <- function (station, QAQC = TRUE){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station
-                             , Max = ceiling (as.numeric(fN)*4*24))
-                 , silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok
+                             , Max=ceiling (as.numeric(fN)*4*24))
+                 , silent=FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok
     if (class (smp2)[1] != "try-error"){
       if (QAQC){
         smp2 <- qaqc (smp2)
@@ -461,7 +459,7 @@ getSWMP <- function (station, QAQC = TRUE){
         }
         ## order of field names does not match between hmr2 and hmr
         ## re-assemble and remove duplicates
-        smp3 <- smp2 [,sapply (1:ncol (smp), FUN = function (i){
+        smp3 <- smp2 [,sapply (1:ncol (smp), FUN=function (i){
           which (names (smp)[i] == names (smp2))
         })]
         smp <- rbind (smp, smp3)
@@ -474,28 +472,28 @@ getSWMP <- function (station, QAQC = TRUE){
   }
   ## fixGap() here??
   ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
-  save (smp, file = paste0 (cacheFolder, "/", station, ".RData"))
+  save (smp, file=paste0 (cacheFolder, "/", station, ".RData"))
   return (smp)
 }
 
 
 
-getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # default = kachemak bay wavebuoy
+getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
   require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
   }
-  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")), silent = TRUE)
+  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
     if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
   }else{
-    endD <- max (as.numeric (substr (wDB$time, 1, 4)))
+    endD <- max (as.integer (substr (wDB$time, 1, 4)))
   }
-  if (endD < as.numeric (format (Sys.Date(), "%Y"))){ # only if not updated in a year
-    wB <- lapply (endD:as.numeric (format (Sys.Date(), "%Y"))
+  if (endD < as.integer (format (Sys.Date(), "%Y"))){ # only if not updated in a year
+    wB <- lapply (endD:as.integer (format (Sys.Date(), "%Y"))
                   , function (i){
-                    try (buoy (dataset = set, buoyid = buoyID
-                               , year = i))
+                    try (buoy (dataset=set, buoyid=buoyID
+                               , year=i))
                   }
     )
 
@@ -519,12 +517,12 @@ getNOAA <- function (buoyID = 46108, set = "stdmet", clearcache = FALSE){  # def
   rm (nw, endD)
 
   ## add most recent
-  cD <- try (buoy (dataset=set, buoyid = buoyID, year = 9999))  ## 9999 = most up-to-date data
+  cD <- try (buoy (dataset=set, buoyid=buoyID, year=9999))  ## 9999=most up-to-date data
   if (class (cD) == "buoy"){
     wDB <- rbind (wDB, as.data.frame (cD$data))
   }
   rm (cD)
-  save (wDB, meta, file = paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
+  save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
 
   ## QAQC
   wDB <- wDB [!duplicated(wDB$time),]
@@ -553,17 +551,17 @@ nEvents <- function (dat, varName, thrht){
   eventL <- sapply (1:length (thrht)
                     , function (i){
                       agY <- aggregate (xvar~year
-                                        , data = aggregate (xvar~jday+year
-                                                            , data = dat
-                                                            , FUN = function (x){
+                                        , data=aggregate (xvar~jday+year
+                                                            , data=dat
+                                                            , FUN=function (x){
                                                               any (x > thrht [i])}
                                         )
-                                        , FUN = sum)
+                                        , FUN=sum)
 
-                      c (mean = mean (agY$xvar, na.rm = TRUE)
-                         , median = median(agY$xvar, na.rm = TRUE)
-                         , lowerQ = quantile (agY$xvar, 0.1, na.rm = TRUE)
-                         , upperQ = quantile (agY$xvar, 0.9, na.rm = TRUE)
+                      c (mean=mean (agY$xvar, na.rm=TRUE)
+                         , median=median(agY$xvar, na.rm=TRUE)
+                         , lowerQ=quantile (agY$xvar, 0.1, na.rm=TRUE)
+                         , upperQ=quantile (agY$xvar, 0.9, na.rm=TRUE)
                          , agY$xvar [(nrow (agY)-2):(nrow (agY)-0)]) #the current and previous year
                     })
   colnames(eventL) <- paste0 ("T", thrht)
@@ -572,7 +570,7 @@ nEvents <- function (dat, varName, thrht){
 }
 
 
-cDir <- function (wd, nDir = 8){
+cDir <- function (wd, nDir=8){
   ## classify direction into cardinal categories
   ## following https://community.rstudio.com/t/convert-wind-direction-degrees-into-factors-in-a-data-frame/14636/4
   if (!(nDir %in% c(4,8,16))){
@@ -590,8 +588,8 @@ cDir <- function (wd, nDir = 8){
                    "S", "SSW", "SW", "WSW","W", "WNW", "NW", "NNW","N")
   }
   wd <- ifelse (wd < 0, 360 + wd, wd)
-  cut (wd, breaks = rose_breaks, labels = rose_labs
-       , right = FALSE, include.lowest = TRUE)
+  cut (wd, breaks=rose_breaks, labels=rose_labs
+       , right=FALSE, include.lowest=TRUE)
 }
 
 

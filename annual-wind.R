@@ -21,9 +21,9 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-               , "AMAA2" #, "HMSA2"
-               )
+# wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
+#                , "AMAA2" #, "HMSA2"
+#                )
 
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present

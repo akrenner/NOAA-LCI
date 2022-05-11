@@ -74,7 +74,7 @@ cLegend ("bottom", inset = 0.05
          , cYcol = currentCol
          , title = paste (maO, "day moving average")
          , qntl = qntl
-         , pastYear = TRUE, newYear = FALSE
+         , pastYear=TRUE, ongoingYear=FALSE
 )
 dev.off()
 

@@ -183,7 +183,7 @@ aPlot (tDayW, "wave_height", ylab = "wave height [m]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear=FALSE, ongoingYear=TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -193,7 +193,7 @@ cLegend ("top"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear=FALSE, ongoingYear=TRUE
 )
 
 wFt <- tDayW$wave_height / 0.3048
@@ -223,7 +223,7 @@ aPlot (tDayP, "dominant_wpd", ylab = "dominant wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear = FALSE, ongoingYear = TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -233,14 +233,14 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear = FALSE, ongoingYear = TRUE
 )
 tDayP <- prepDF (dat = tDay, varName = "average_wpd") #, maO = 1)
 aPlot (tDayP, "average_wpd", ylab = "average wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear = FALSE, ongoingYear = TRUE
 )
 box()
 cLegend ("bottomleft"
@@ -248,7 +248,7 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear = FALSE, ongoingYear = TRUE
 )
 dev.off()
 rm (tDayP)
@@ -503,8 +503,8 @@ rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4]) # covers up pl
 # on special request, only lines, no percentile polygon
 box()
 lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
-lines (cYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
 lines (pYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
+lines (ogYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
 # lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
 lL <- legend ("top", bty = "n", legend = "")
 # legend ("top", title = paste0 (maO, "day moving average")
@@ -526,7 +526,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
 #                               sTday$pcYMA_surfs)
 #            , jday = sTday$jday, maxV = NA, minV = NA
 #            , currentCol = currentCol # = currentCol # "red"
-#            , pastYear = FALSE, newYear = TRUE
+#            , pastYear = FALSE, ongoingYear = TRUE
 # )
 # cLegend ("top"
 #          , qntl = qntl, title = paste (maO, "day moving average")
@@ -534,7 +534,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
 #          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
 #          , cYcol = currentCol
 #          , text.col = "blue"
-#          , pastYear = FALSE, newYear = TRUE
+#          , pastYear = FALSE, ongoingYear = TRUE
 # )
 dev.off()
 
