@@ -200,8 +200,8 @@ yGale <- aggregate  (maxwspd~year
 yGale <- subset (yGale, (year <= currentYear) & (year > min (year))) # 2003 = partial in SWMP
 
 if (0){
-# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.pdf")
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_stormsN.png", width = 1200, height = 1200, res = 300)
+# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stormsN.pdf")
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stormsN.png", width = 1200, height = 1200, res = 300)
 
 par (mar = c (4, 5, 1, 5))
 barplot(yGale$maxwspd, names.arg = yGale$year
@@ -238,7 +238,7 @@ yGale <- aggregate  (maxwspd~year
                      , FUN = sum)
 yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
 if (0){
-  png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN.png", width = 1200, height = 1200, res = 300)
+  png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-galesN.png", width = 1200, height = 1200, res = 300)
 barplot(yGale$maxwspd, names.arg = yGale$year
         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
         , ylab = "Gales per year")
@@ -254,7 +254,7 @@ yGale <- aggregate  (maxwspd~year
                      )
                      , FUN = sum)
 yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-SCA_N.png", width = 1200, height = 1200, res = 300)
 # barplot(yGale$maxwspd, names.arg = yGale$year
 #         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
 #         , ylab = "SCAs per year")
@@ -281,7 +281,7 @@ sTab [1:2, ncol (sTab)] <- 0
 # gCols <- c("lightgray", "darkgray")
 gCols <- c("lightgray", "darkgray", "lightblue", "blue")
 
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_WindStack_", metstation, ".png")
+png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
      , width = 1200, height = 1200, res = 300)
 par (mar = c (4,5,1,1))
 barplot (sTab [4:1,]
@@ -303,7 +303,7 @@ rm (yS, yG, gCols)
 #                      )
 #                      , FUN = sum)
 # yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_galesN_", metstation, ".png")
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-galesN_", metstation, ".png")
 #      , width = 1200, height = 1200, res = 300)
 # barplot(yGale$maxwspd, names.arg = yGale$year
 #         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
@@ -318,7 +318,7 @@ rm (yS, yG, gCols)
 #                      )
 #                      , FUN = sum)
 # yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003 = partial in SWMP
-# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa_SCA_N.png", width = 1200, height = 1200, res = 300)
+# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-SCA_N.png", width = 1200, height = 1200, res = 300)
 # barplot(yGale$maxwspd, names.arg = yGale$year
 #         , col = c (rep ("gray", nrow (yGale)-1), "lightblue")
 #         , ylab = "SCAs per year")
