@@ -49,8 +49,11 @@ plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
         , ...
   )
   axis (2)
-  axis (1, at=15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
-        , labels=month.abb, tick=FALSE) # center month-labels
+  # axis (1, at=15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
+  #       , labels=month.abb, tick=FALSE) # center month-labels
+  ## label only every second month
+  axis (1, at=as.numeric (format (as.POSIXct (paste0 ("2019-", 1:6*2-1, "-15")), "%j"))
+        , labels=month.abb[1:6*2-1], tick=FALSE) # center month-labels
   axis (1, at=c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
                                        , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
 }

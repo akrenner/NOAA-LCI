@@ -21,9 +21,9 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-# wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-#                , "AMAA2" #, "HMSA2"
-#                )
+wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
+               , "AMAA2" #, "HMSA2"
+               )
 
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
@@ -40,6 +40,8 @@ currentCol <- c (brewer.pal (4, "Paired")[2:1], "black")
 ##########################################################
 
 
+windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
+# rm (scAdvT, galeT, stormT)
 
 ## get up-to-date SWMP data
 source ("annualPlotFct.R")
@@ -49,6 +51,7 @@ source ("annualPlotFct.R")
 ## cycle through all wStations
 if (!exists ("wStations")){wStations <- metstation}
 for (k in 1:length (wStations)){
+  ## k <- 1
   metstation <- wStations [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")
   try (rm (hmr), silent = TRUE)
@@ -104,7 +107,6 @@ if (0){  # activate once it's working to get weather from alternative NOAA sourc
 
   ## list/map buoy stations
   bs <- buoy_stations()
-
 }
 #######################
 
@@ -123,10 +125,8 @@ if (exists (vUnit)){ #} == "knots"){
 }
 
 agFct <- function (x, thd=stormT){ ## gale days per maO
-  #  ifelse (sum (x > 30, na.rm=TRUE) > 1*4, 1*maO, 0) # gale=2 h at 20 knots -- my definition, guided by histogram
-  #XXX@   ifelse (sum (x > 30, na.rm=TRUE) > 1*4, 1, 0) # gale=2 h at 20 knots -- my definition, guided by histogram
   x1 <- sum(x>=thd, na.rm=TRUE)
-  ifelse (x1 > 1*4, 1, 0) # at least 1 h above threshold
+  ifelse (x1 > 1*4, 1, 0) # at least 1 h above threshold  ##?? needs review/revision!!
 }  # 2 h at 20 knots looks good
 
 meanNA <- function (x){mean (x, na.rm=TRUE)}
@@ -173,7 +173,7 @@ hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 
 ## table of number of gales/storms -- mean vs current year
 ## count number of days with max wind above threshold
-windSum <- nEvents (hmr, "maxwspd", thrht=c(scAdvT, galeT, stormT))
+windSum <- nEvents (hmr, "maxwspd", thrht=windT)
 windSum$mean <- round (windSum$mean, 1)
 row.names (windSum) <- c ("SCA", "gales", "storms")
 cat ("\n\n# number of gales and storms per year, ", wStations [k],"\n")
@@ -185,7 +185,7 @@ hw <- hmr
 # hw$year <- ifelse (hw$month == 1 | hw$month == 2, hw$year-1, hw$year) # move Jan-Feb into prev year to keep season together
 hw$year <- ifelse (hw$month %in% c (1,2), hw$year-1, hw$year) # move Jan-Feb into prev year to keep season together
 hw <- subset (hw, month %in% c(1,2,12))
-windSum <- nEvents (hw, "maxwspd", thrht=c(scAdvT, galeT, stormT))
+windSum <- nEvents (hw, "maxwspd", thrht=windT)
 windSum$mean <- round (windSum$mean, 1)
 row.names (windSum) <- c ("SCA", "gales", "storms")
 cat ("\n\n# number of WINTER gales and storms per year, ", wStations [k],"\n")
@@ -193,143 +193,42 @@ print (windSum)
 rm (windSum, hw)
 
 
-
-yGale <- aggregate  (maxwspd~year
-                     , data=aggregate (maxwspd~jday+year, data=hmr
-                                         , FUN=function (x){any (x > stormT)}
-                     )
-                     , FUN=sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > min (year))) # 2003=partial in SWMP
-
-if (0){
-# pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stormsN.pdf")
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-stormsN.png", width=1200, height=1200, res=300)
-
-par (mar=c (4, 5, 1, 5))
-barplot(yGale$maxwspd, names.arg=yGale$year
-        , col=c (rep ("gray", nrow (yGale)-1), "lightblue")
-        , ylab="Storms per year")
-abline (h=mean (subset (yGale, year < currentYear)$maxwspd)
-        , lty="dashed", lwd=2)
-
-cYg <- aggregate (maxwspd~jday+year, data=hmr, FUN=function (x){any (x > stormT)})
-cYg <- subset (cYg, year == currentYear & maxwspd)
-sDate <- as.POSIXct (paste0 (currentYear, "-01-01")) + 3600*24 * cYg$jday
-if (length (sDate) > 0){
-  for (i in 1:length (sDate)){
-    mtext (format (sDate [i], "%d %b"), side=4, at=i, las=1, line=-0.0)
-  }
-}
-rm (cYg, sDate)
-#  box()
-
-# plot (maxwspd~year, yGale, type="l", ylab="Number of storms")
-# abline (h=mean (yGale$maxwspd), lty="dashed")
-# points (maxwspd~year, yGale, subset=year == currentYear, col="red", pch=16)
-#
-# hist (yGale$maxwspd, xlab="N storms", main="")
-# abline (v=yGale$maxwspd [which (yGale$year == currentYear)])
-dev.off()
-}
-yS <- yGale
-
-yGale <- aggregate  (maxwspd~year
-                     , data=aggregate (maxwspd~jday+year, data=hmr
-                                         , FUN=function (x){any (x > galeT)}
-                     )
-                     , FUN=sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003=partial in SWMP
-if (0){
-  png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-galesN.png", width=1200, height=1200, res=300)
-barplot(yGale$maxwspd, names.arg=yGale$year
-        , col=c (rep ("gray", nrow (yGale)-1), "lightblue")
-        , ylab="Gales per year")
-abline (h=mean (subset (yGale, year < currentYear)$maxwspd)
-        , lty="dashed", lwd=2)
-dev.off()
-}
-yG <- yGale
-
-yGale <- aggregate  (maxwspd~year
-                     , data=aggregate (maxwspd~jday+year, data=hmr
-                                         , FUN=function (x){any (x > scAdvT)}
-                     )
-                     , FUN=sum)
-yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003=partial in SWMP
-# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-SCA_N.png", width=1200, height=1200, res=300)
-# barplot(yGale$maxwspd, names.arg=yGale$year
-#         , col=c (rep ("gray", nrow (yGale)-1), "lightblue")
-#         , ylab="SCAs per year")
-# abline (h=mean (subset (yGale, year < currentYear)$maxwspd)
-#         , lty="dashed", lwd=2)
-# dev.off()
-yS <- yGale
-rm (yGale)
-
-# exclude storms from gales
-yS$maxwspd <- yS$maxwspd- yG$maxwspd
-yG$maxwspd <- yG$maxwspd - yS$maxwspd
-
-## stacked bar chart
-sTab <- rbind (gale=yG$maxwspd, storm=yS$maxwspd)
-colnames (sTab) <- yG$year
-## different color for current year
-sTab <- rbind (sTab, galeC=ifelse (1:ncol (sTab) == ncol (sTab), sTab [1,], 0))
-sTab <- rbind (sTab, stormC=ifelse (1:ncol (sTab) == ncol (sTab), sTab [2,], 0))
+## storms -- barchart
+yGale <- sapply (windT, function (y){
+  aggregate (maxwspd~year, data = aggregate (maxwspd~jday+year, data = hmr
+                                             , subset = year <= currentYear # skip incomplete ongoing
+                                             , FUN = function (x){any (x > y)})
+             , FUN=sum)$maxwspd
+})
+row.names (yGale) <- aggregate (maxwspd~year, data = hmr
+                                , subset = year <= currentYear
+                                , FUN = mean)$year
+cGale <- as.data.frame (yGale)
+cGale$SCA <- cGale$SCA - rowSums (cGale[,2:3]) # SCA only -- to allow stacking
+cGale$gale <- cGale$gale - cGale$storm # gales without storms -- to allow stacking
+## pull-out current year to give different col in stacked barchart
+sTab <- t (cGale)
+sTab <- rbind (sTab
+               , galeC = c (rep (0, ncol (sTab)-1), sTab [2,ncol (sTab)])
+               , stormC = c (rep (0, ncol (sTab)-1), sTab [3,ncol (sTab)])
+)
 sTab [1:2, ncol (sTab)] <- 0
 
-# gCols <- c("lightblue", "blue")
-# gCols <- c("gray", "lightblue")
-# gCols <- c("lightgray", "darkgray")
-gCols <- c("lightgray", "darkgray", "lightblue", "blue")
 require ("RColorBrewer")
 gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
 png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
      , width=1200, height=1200, res=300)
 par (mar=c (4,5,1,1))
-barplot (sTab [4:1,]
+barplot (sTab [5:2,]  ## excluding SCA, storms to bottom
          , col=gCols [4:1]
-#         , ylab="N per year"
          , ylab="High-wind days per year"
 )
-legend ("topright", legend=row.names(sTab)[1:2], fill=gCols[1:2], bty="n")
+legend ("topright", legend=row.names(sTab)[1:2], fill=gCols[2:3], bty="n")
 abline (h=mean (colSums(sTab)), lwd=2, lty="dashed")
 abline (h=mean (as.data.frame (t (sTab))$storm), lwd=3, lty="dotted", col="black") #, "darkgray")
 dev.off()
-rm (yS, yG, gCols)
-
-
-
-# yGale <- aggregate  (maxwspd~year
-#                      , data=aggregate (maxwspd~jday+year, data=hmr
-#                                          , FUN=function (x){any (x > galeT)}
-#                      )
-#                      , FUN=sum)
-# yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003=partial in SWMP
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-galesN_", metstation, ".png")
-#      , width=1200, height=1200, res=300)
-# barplot(yGale$maxwspd, names.arg=yGale$year
-#         , col=c (rep ("gray", nrow (yGale)-1), "lightblue")
-#         , ylab="Gales per year")
-# abline (h=mean (subset (yGale, year < currentYear)$maxwspd)
-#         , lty="dashed", lwd=2)
-# dev.off()
-#
-# yGale <- aggregate  (maxwspd~year
-#                      , data=aggregate (maxwspd~jday+year, data=hmr
-#                                          , FUN=function (x){any (x > scAdvT)}
-#                      )
-#                      , FUN=sum)
-# yGale <- subset (yGale, (year <= currentYear) & (year > 2003)) # 2003=partial in SWMP
-# png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-SCA_N.png", width=1200, height=1200, res=300)
-# barplot(yGale$maxwspd, names.arg=yGale$year
-#         , col=c (rep ("gray", nrow (yGale)-1), "lightblue")
-#         , ylab="SCAs per year")
-# abline (h=mean (subset (yGale, year < currentYear)$maxwspd)
-#         , lty="dashed", lwd=2)
-# dev.off()
-# rm (yGale)
+rm (cGale, yGale, gCols, sTab)
 
 
 
@@ -421,13 +320,14 @@ tDay$p365galDay <- past365$gale [match (tDay$jday, past365$jday)]
 tDay$p365wdir <- past365$wdir [match (tDay$jday, past365$jday)]
 tDay$p365scaDay <- past365$sca [match (tDay$jday, past365$jday)]
 
-# currently running year
-c365 <- subset (dMeans, subset=year == currentYear + 1)
-tDay$c365 <- c365$wspd [match (tDay$jday, c365$jday)]
-tDay$c365ma <-c365$maW [match (tDay$jday, c365$jday)]  ## moving average for partial year
+# ongoing year
+og365 <- subset (dMeans, subset=year == currentYear + 1)
+tDay$og365 <- og365$wspd [match (tDay$jday, og365$jday)]
+tDay$og365ma <-og365$maW [match (tDay$jday, og365$jday)]  ## moving average for partial year
+# past year: current-1
 pp365 <- subset (dMeans, subset=year == currentYear -1)
 tDay$pp365ma <- pp365$maW [match (tDay$jday, pp365$jday)] ## gales and storms for partial year
-rm (past365, c365, pp365)
+rm (past365, og365, pp365)
 
 ## weekly summary of annual data -- for wind uv only
 # tWeek <- aggregate (wspd~week, hmr, meanNA)
@@ -453,25 +353,17 @@ if (all (is.na (tDay$p365wdir))){
 
 
 ### trouble-shooting
-save.image ("~/tmp/LCI_noaa/cache/WindTrouble.RData")
+# save.image ("~/tmp/LCI_noaa/cache/WindTrouble.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/WindTrouble.RData")
 
-
-if (0){ ## circular spline of climatology, long-term mean.
-tD1 <- tDay
-tD1$jday <- tD1$jday - 365
-tD2 <- tDay
-tD2$jday <- tD2$jday + 365
-ctday <- rbind (tD1, tDay, tD2)
-rm (tD1, tD2)
-
-require (mgcv)
-gM <- gam (wspd~s(jday), data=ctday)
-tDay$smoothWind <- as.numeric (predict (gM, newdata=tDay))
-rm (ctday, gM)
-}
-
 tDay <- subset (tDay, jday < 366) # 366 is not stable because not many samples
+## cleaned-up plot
+if (metstation == "kachomet"){ # don't cache non-SWMP site because they don't have precipitation
+  save (hmr, file="~/tmp/LCI_noaa/cache/metDat.RData")
+}
+# save.image("~/tmp/LCI_noaa/cache/wind2.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
+
 
 
 
@@ -480,40 +372,6 @@ tDay <- subset (tDay, jday < 366) # 366 is not stable because not many samples
 ################
 ## make PLOTS ##
 ################
-
-
-if (0){
-  pdf ("~/tmp/LCI_noaa/media/wind-test.pdf", width=9, height=6)
-plot (p365~jday, tDay, type="n",
-      xlab="", ylab=wCaption, axes=FALSE)
-axis (2); box()
-axis (1
-      , at=as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
-      , labels=paste0 ("1-", month.abb)
-)
-lines (p365~jday, tDay, col=currentCol [1], lwd=2)
-lines (wspd~jday, tDay, col="black", lwd=2)
-lines (smoothWind~jday, tDay, col="blue", lwd=3)
-lines (smoothWindMA~jday, tDay, col="green", lwd=2)
-lines (p365ma~jday, tDay, col="gray", lwd=2, lty="dashed")
-
-legend ("bottomleft", legend=c("daily-mean", "lt-spline", "lt-MA"
-                                 , "2019", "2019-MA")
-        , col=c("black", "blue", "green"
-                  , "red", "gray")
-        , lty=c (rep ("solid", 4), "dashed")
-        , lwd=3, bty="n")
-dev.off()
-}
-
-
-
-## cleaned-up plot
-save.image("~/tmp/LCI_noaa/cache/wind2.RData")
-if (metstation == "kachomet"){ # don't cache non-SWMP site because they don't have precipitation
-  save (hmr, file="~/tmp/LCI_noaa/cache/metDat.RData")
-}
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
 x <- dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE); rm (x)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind_", metstation,".pdf")
@@ -558,7 +416,7 @@ if (1){
   hmrS <- hmr
   hmrS$date <- hmrS$datetimestamp
 
-  windR <- function (df){
+  windR <- function (df){  ## noisy. sink () does not suppress console output or warnings
     wR <- windRose (df, ws="wspd", wd="wdir"
                     , type="yClass"
                     #, type=c("season") #, "yClass")
@@ -621,11 +479,11 @@ par (crt=oP$crt # reset to original plotting geometry
      , yaxs=oP$yaxs, ylbias=oP$ylbias)
 ## plot lines AFTER windrose to be able to wrap tigher around white corners of inserted plot
 with (tDay, addGraphs (longMean=smoothWindMA, percL=lowPerMA, percU=uppPerMA
-                       , current=cbind (p365ma, c365ma, pp365ma)
+                       , current=cbind (pp365ma, p365ma, og365ma)
                        , jday=jday
                        , currentCol=currentCol
 ))
-# lines (c365ma~jday, tDay, col="pink", lwd=3) # partial year -- temporary
+# lines (og365ma~jday, tDay, col="pink", lwd=3) # partial year -- temporary
 ## otherwise include in addGraphs with ongoingYear=TRUE
 
 
