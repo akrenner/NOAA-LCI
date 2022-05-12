@@ -193,7 +193,7 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
   legend (..., bty = "n"
           , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
                        , yT
-                       , "10th-90th %ile" #percentile"
+                     , "10th-90th percentile" #"10th-90th %ile"
           )
           , lty=c (rep (1, length (yT)+1), 0)
           , lwd=c (lW, 0)
