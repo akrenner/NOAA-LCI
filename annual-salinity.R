@@ -33,7 +33,7 @@ par (mfrow=c(2,1)
 aPlot (df=tDayS, vName="sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8)
        , ylab="salinity")
 title (main="Seldovia surface")
-# box()
+box()
 cLegend ("bottomleft", inset=0.05, currentYear=currentYear
          , mRange=c(min (homerS$year), currentYear -1)
          , cYcol=currentCol, qntl=qntl [1]
@@ -43,7 +43,7 @@ cLegend ("bottomleft", inset=0.05, currentYear=currentYear
 aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity")
 # aPlot (tDayH, "sal", MA=pMA, currentCol="lightblue", ylim=c(24.5, 31.8))
 title (main="Homer surface")
-# box()
+box()
 dev.off()
 
 
@@ -87,7 +87,7 @@ if (0){   ## reverse of salinity=freshness   (shows freshwater better than 1/sld
 
 
 ## for completeness -- SST temperature
-currentCol <- c ("navyblue", "aquamarine", "lightblue")
+currentCol <- c ("aquamarine", "navyblue", "lightblue")
 # currentCol <- c ("red", "pink", "orange")
 
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")

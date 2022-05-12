@@ -97,7 +97,17 @@ iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 
 ## mark high rain days
 cCex <- 2
-text (tDay$jday, ifelse (tDay$pY_totprcp > 10, tDay$pYMA_totprcp + 0.2, NA), labels="*", col="blue", cex=cCex)
+text (tDay$jday, ifelse (tDay$pY_totprcp > 10
+                         #, tDay$pYMA_totprcp + 0.2
+                         , 0
+                         , NA)
+      , labels="*", col=currentCol [2], cex=cCex)
+if (pastYear){
+  text (tDay$jday, ifelse (tDay$pcY_totprcp > 10
+                           , 0.2
+                           , NA)
+        , labels="*", col=currentCol [1], cex=cCex)
+}
 # require ("png")
 # img <- readPNG ("pictograms/rain-cloud.png")
 # hgt <- 0.5; wdh <- 15
@@ -115,13 +125,15 @@ bP <- cLegend (x=bP$rect$left + 55, y=bP$rect$top
                , mRange=c (min (hmr$year), currentYear-1)
                , cYcol=currentCol
                , pastYear=pastYear, ongoingYear=ongoingY)
-#  legend (x=bP$rect$left+2, y=bP$rect$top - 0.95, legend="day with > 10 mm", pch="*", col="blue", bty="n", pt.cex=cCex)
-legend (x=bP$rect$left+2, y=bP$rect$top-bP$rect$h + 0.3 # use -1.2 when plotting 2 years
-        , legend="day with > 10 mm", pch="*", col="blue", bty="n", pt.cex=cCex)  # add transparent line to fix alignment
+legend (x=bP$rect$left+4, y=bP$rect$top-bP$rect$h + 0.3  # +11: align text. +4 looks better
+        , legend="day with > 10 mm", pch="*", col="blue"
+        , bty="n", pt.cex=cCex)  # add transparent line to fix alignment
 
 ## totals
 xAl <- bP$rect$left - 50; yAl <- bP$rect$top + 0.3
-text (xAl, yAl, paste0 (round (sum (tDay$pY_totprcp, na.rm=TRUE)), " mm"), col="blue", pos=4)
+xAl <- bP$rect$left + 50; yAl <- bP$rect$top + 0.3
+text (xAl, yAl, paste0 (round (sum (tDay$pY_totprcp, na.rm=TRUE)), " mm")
+      , col=currentCol [2], pos=4)
 text (xAl + 35, yAl
       , paste0 (round (sum (tDay$totprcp, na.rm=TRUE)), " mm", " ["
                 , round (as.numeric (ARq [1])), " : "
@@ -132,7 +144,7 @@ text (xAl + 35, yAl
 box()
 dev.off()
 
-rm (bP, xAl, yAl)
+rm (bP, xAl, yAl, cCex)
 
 
 ## table of average N vs current year N high-rain days
