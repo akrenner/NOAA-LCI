@@ -244,16 +244,10 @@ aPlot <- function (df, vName, MA=TRUE
 }
 
 
-saggregate <- function (..., refDF, matchV="jday"){
-  ## account for missing factors in data compared to refDF
+saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
   nA <- aggregate (...)
-  # nA [match (refDF$jday, nA$jday),]
-  if (length (matchV) == 1){
-    nA [match (refDF [,which (names (refDF)==matchV)], nA [,which (names (nA)==matchV)])]
-  }else{
-    stop ("Multiple matches are not yet implemented in saggregate")
-  }
+  nA [match (refDF$jday, nA$jday),]
 }
 
 
@@ -364,7 +358,6 @@ addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
   df$jday <- as.integer (strftime (df$datetimestamp, "%j"))
   df$year <- as.integer (strftime (df$datetimestamp, "%Y"))
-  df$yearJd <- as.character (strftime (df$datetimestamp, "%Y-%j"))
   suppressMessages (require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
