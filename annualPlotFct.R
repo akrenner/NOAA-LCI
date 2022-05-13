@@ -123,81 +123,34 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
 }
 
 
-cLegendO <- function (..., mRange=NULL, currentYear=NULL  ## still used? remove?
+
+cLegend <- function (..., mRange=NULL, currentYear=NULL
                      , cYcol # = currentCol
                      , qntl=NULL
-                     , sYears=NULL, sLwd=NULL, sLty=NULL, sLcol=NULL
-                     , pastYear=FALSE, ongoingYear=TRUE
-){ # sYears = ??
+                     , sYears=NULL, sLwd=NULL, sLty=NULL, sLcol=NULL # extra lines and text to include. Used in annual-snowpack.R
+                     , pastYear=TRUE, ongoingYear=FALSE
+){
   ## combined legend for both box and line elements.
   ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
   if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
     stop ("extra line length not consistent")
   }
-  if (length (cYcol) > 1){
-    currentYear <- c (currentYear - 1, currentYear, currentYear + 1)
-  }
+  ySel <- which (c(pastYear, TRUE, ongoingYear))
+  yT <- c (c(currentYear-1, currentYear, currentYear+1)[ySel], sYears)
+  bg <- c (rep (NA, length (yT)+1), qantCol [1])
+  lC <- c (meanCol, cYcol [ySel], sLcol, "black") # black=border of range
+  lW <- c (3, c(2,4,4)[ySel], sLwd, 1, 0) # last 4 or NA?
+  lT <- c (1, c (1,1,1)[ySel], sLty, 0)
+  pC <- c (NA, rep (NA, length (yT)), 22)
+  rm (ySel)
   legend (..., bty = "n"
           , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
-                       , currentYear
-                       , sYears
-                       , "10-90 percentile"
-                       # , paste0 (qntl * 100, "%-ile of mean") ## skip range or 2nd quantile
-                       # , paste0 (qntl * 100, "% of variability") ## skip range or 2nd quantile
-          )
-           , lty=c(1, 1, rep (1, length (currentYear)-1), sLty, 0)
-          , lwd=c (3, 2, rep (4, length (currentYear)-1), sLwd, 0)
-          , pch=c(NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), 22)
-          , pt.cex=2
-          , pt.bg=c (NA, rep (NA, length (currentYear)), rep (NA, length (sYears)), qantCol [1])
-          #        , col=c(meanCol, cYcol, meanCol) # l, "black") #qantCol [1])
-          , col=c(meanCol, cYcol [c(1,2,3)], meanCol, sLcol, "black") #qantCol [1])
-  )
-}
-
-
-cLegend <- function (..., mRange=NULL, currentYear=NULL
-                     , cYcol # = currentCol
-                     , qntl=NULL
-                     # , sYears=NULL
-                     , sLwd=NULL, sLty=NULL, sLcol=NULL
-                     , pastYear=TRUE, ongoingYear=FALSE
-){ # sYears=vector of years to plot
-  ## combined legend for both box and line elements.
-  ## see: http://tolstoy.newcastle.edu.au/R/e2/help/07/05/16777.html
-  # if (!all (length (sYears) == length (sLwd), length (sYears) == length (sLty), length (sYears) == length (sLcol))){
-  #   stop ("extra line length not consistent")
-  # }
-  if (pastYear && ongoingYear){
-    yT <- c (currentYear-1, currentYear, currentYear + 1)
-    bg <- c (NA, NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c(1,2,3)], meanCol, sLcol, "black") #qantCol [1])
-    lW <- c (3, 2, 4, 4)
-  }else if (pastYear && !ongoingYear){  ## this is now the default: past, current, but not ongoing year
-    yT <- c (currentYear -1, currentYear)
-    bg <- c (NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (1,2)], meanCol, sLcol, "black")
-    lW <- c (3, 2, 4)
-  }else if (!pastYear && ongoingYear){ # current and new year
-    yT <- c (currentYear, currentYear + 1)
-    bg <- c (NA, NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (2,3)], meanCol, sLcol, "black")
-    lW <- c (3, 4, 4)
-  }else{ # only current year
-    yT <- currentYear
-    bg <- c (NA, NA, qantCol [1])
-    lC <- c (meanCol, cYcol [c (2)], meanCol, sLcol, "black")
-    lW <- c (3, 4, 4)
-    lW <- c (4,4)
-  }
-  legend (..., bty = "n"
-          , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
-                       , yT
+                     , yT
                      , "10th-90th percentile" #"10th-90th %ile"
           )
-          , lty=c (rep (1, length (yT)+1), 0)
-          , lwd=c (lW, 0)
-          , pch=c (NA, rep (NA, length (yT)), 22)
+          , lty=lT
+          , lwd=lW
+          , pch=pC
           , pt.cex=2
           , pt.bg=bg
           , col=lC
