@@ -12,7 +12,7 @@ currentCol <- c("red" , "magenta"
                 , "purple")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal (6, "Paired")[c(4,5,6)]
+currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
 SWMP <- TRUE
 # SWMP <- FALSE
 

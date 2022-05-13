@@ -154,9 +154,8 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 ## order: current, present, previous
 # currentCol <- c("darkblue", "blue", "lightblue")
 currentCol <- c("black", "blue", "lightblue")
-currentCol <- c("blue", "lightblue", "black")
-# require ("RColorBrewer")
-# currentCol <- c (brewer.pal (4, "Paired")[2:1], "black")
+require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
 
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
@@ -302,7 +301,6 @@ wDB <- addTimehelpers(wDB)
 save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 
-8
 
 
 ################
@@ -506,9 +504,9 @@ rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4]) # covers up pl
 # on special request, only lines, no percentile polygon
 box()
 lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
-lines (pYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
-lines (ogYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
-# lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
+# lines (pcYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 3)
+lines (pYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
+lines (ogYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 4)
 lL <- legend ("top", bty = "n", legend = "")
 # legend ("top", title = paste0 (maO, "day moving average")
 legend (lL$rect$left - 72, lL$rect$top - 0.1
@@ -518,7 +516,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
         , legend = c(paste0 ("mean [", min (as.numeric (format (wDB$datetimestamp, "%Y")))
                              , "-", currentYear-1, "]"), currentYear, currentYear + 1)
         , lwd = c (3,4)
-        , col = c ("black", currentCol [1], currentCol [2])
+        , col = c ("black", currentCol [2], currentCol [3])
 )
 
 # addGraphs (longMean = sTday$MA_surfs

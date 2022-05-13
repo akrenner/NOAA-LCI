@@ -87,7 +87,7 @@ if (0){   ## reverse of salinity=freshness   (shows freshwater better than 1/sld
 
 
 ## for completeness -- SST temperature
-currentCol <- c ("aquamarine", "navyblue", "lightblue")
+currentCol <- c ("lightblue", "navyblue", "aquamarine")
 # currentCol <- c ("red", "pink", "orange")
 
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")

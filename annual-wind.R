@@ -47,6 +47,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 
 ## get up-to-date SWMP data
 source ("annualPlotFct.R")
+require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
 
 
 
@@ -235,7 +236,8 @@ barplot (sTab [5:2,]  ## excluding SCA, storms to bottom
 )
 abline (h=mean (as.data.frame (t (sTab))$gale), lwd=3, lty="dashed") # gray would be invisible
 abline (h=mean (as.data.frame (t (sTab))$storm), lwd=3, lty="dotted", col="black")
-legend ("topright", legend=row.names(sTab)[1:2], fill=gCols[1:2], bty="n")
+legend ("topright", legend=c ("gale", "storm") # row.names(sTab)[1:2]
+        , fill=gCols[1:2], bty="n")
 dev.off()
 rm (cGale, yGale, gCols, sTab)
 ## end of wind summary
@@ -428,12 +430,12 @@ if (0){
   ## lattice plot is the best-looking amongst the ggplot, base-plot and lattice options
   ## all attempts to place graphics at the appropriate position in base-plot
   ## or Hmisc::subplot or using par() failed -> tmp file
-  require ("openair", warn.conflicts=FALSE, quietly=TRUE)
   hmrS <- hmr
   hmrS <- subset (hmr, year == currentYear)
   hmrS$date <- hmrS$datetimestamp
 
   windR <- function (df){  ## noisy. sink () does not suppress console output or warnings
+    require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
     wR <- windRose (df, ws="wspd", wd="wdir"
                     #, type="yClass"
                     , type=c("season") #, "yClass")
@@ -564,7 +566,6 @@ rm(hgt, wdh, bP, img, yL)
 
 if (0){
 # openair:windRose -- lattice-plot; struggling with type for class other than times
-require ("openair", quietly=TRUE, warn.conflicts=FALSE)
 pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/dayBreeze_", metstation, ".pdf")
      , width=9, height=6)
 # hmrS <- subset (hmr, (month %in% c(1,2,3,12))) # Vincent!
