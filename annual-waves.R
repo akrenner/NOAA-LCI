@@ -619,7 +619,7 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2020-11-13 13:20"
 , "2021-04-30 04:30"   # big loud waves at dawn (high tide). pretty tight, short wave period
 , "2021-08-28 16:00"   # check time (around high tide). 5 Surfers catching waves.
-, "2021-09=24 16:40"
+, "2021-09-24 16:40"
 , "2021-09-30 11:00"  # HT
 , "2021-10-01 13:00"  # HT
 , "2021-10-02 13:00"  # HT
