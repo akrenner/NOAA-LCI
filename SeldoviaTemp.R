@@ -88,6 +88,7 @@ if (0){  ## instead of SWMP's qaqc function -- is this more reliable?
 # data.frame (sldvia$datetimestamp, sldvia$sal)[which (sldvia$sal < 14),]
 is.na (sldvia$sal)[sldvia$sal > 33.5] <- TRUE # cluster in first year -- error?
 is.na (sldvia$sal)[sldvia$sal < 14] <- TRUE # 2 single, disjoint values
+# is.na (sldvia$sal)[sldvia$sal < 24] <- TRUE # XXX too fresh?
 
 ## impossible negative fluorescence values (should be gone already!)
 is.na (sldvia$chlfluor)[sldvia$chlfluor <= 0] <- TRUE

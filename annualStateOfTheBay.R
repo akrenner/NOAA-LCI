@@ -26,16 +26,16 @@ source ("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
 source ("annual-rainy.R")
 source ("annual-salinity.R")
-source ("annual-airTemp.R")
+source ("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
 
 source ("annual-snowpack.R")
 source ("annual-stratification.R")
 source ("annual-waves.R")
+# source ("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
 
 cat ("all done\n")
 print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+# print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because rm (list = ls())
 
 ## EOF
-
