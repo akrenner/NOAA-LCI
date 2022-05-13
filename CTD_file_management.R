@@ -87,10 +87,9 @@ rm (rL)
 
 
 ## bad files out
-bF <- grep ("Troubleshooting", fL)
-if (length (bF) > 0){
+if (length (grep ("Troubleshooting", fL)) > 0){
   cat ("removing ", length (bF), " bad files\n")
-  fL <- fL [-bF]
+  fL <- fL [-grep ("Troubleshooting", fL)]
 }
 
 
