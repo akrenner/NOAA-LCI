@@ -1,7 +1,10 @@
 ## SNOTEL snow data
 
-rm (list = ls())
+## bugs: review max and min snow years! should be based on overall peak.
+## max and min currently may be reversed?
 
+
+# rm (list = ls())
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 fetchNew <- TRUE  # get fresh data from server? takes longer
 # fetchNew <- FALSE  # get fresh data from server? takes longer
