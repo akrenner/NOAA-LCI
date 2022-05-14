@@ -359,20 +359,20 @@ getSWMP <- function (station, QAQC=TRUE){
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-
-
   require ("SWMPr")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
-  zipFile <- "~/GISdata/LCI/SWMP/current"
+  zipFile <- "~/GISdata/LCI/SWMP/current"      # "current" needs to be shortcut or symbolic link
+  # pointing to the most recent zip file. "current" has no extension.
 
   dir.create(cacheFolder, showWarnings=FALSE)
-  #    if (.Platform$OS.type == "windows"){
-  require ("R.utils")
-  SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
-  #    }else{ # MacOS or Linux
-  #      SMPfile <- zipFile
-  #    }
+  # if (version$os == "mingw32"){
+  #   # if (.Platform$OS.type == "windows"){
+    require ("R.utils")
+    SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
+  # }else{ # MacOS or Linux
+  #   SMPfile <- zipFile
+  # }
 
 
 
@@ -399,6 +399,7 @@ getSWMP <- function (station, QAQC=TRUE){
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
+  # if (0){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station
@@ -550,6 +551,39 @@ cDir <- function (wd, nDir=8){
 }
 
 
+
+
+## combine several PNGs into one PDF
+merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
+  ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
+  #### Package Install ####
+  gridExists <- require ("grid")
+  if ( !gridExists ) {
+    install.packages ("grid")
+    library ("grid")
+  }
+  pngPackageExists <- require ("png")
+  if ( !pngPackageExists ) {
+    install.packages ("png")
+    library ("png")
+  }
+  #########################
+
+  pdf(pdfFile) ## could/should load aspect ratio of PNGs?
+  par (mar = rep (0.2, 4))
+  n <- length(pngFiles)
+  for(i in 1:n) {
+    pngFile <- pngFiles[i]
+    pngRaster <- readPNG(pngFile)
+    grid.raster(pngRaster, width=unit(0.8, "npc"), height= unit(0.8, "npc"))
+#    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
+    if (i < n) plot.new()
+  }
+  dev.off()
+  if (deletePngFiles) {
+    unlink(pngFiles)
+  }
+}
 
 
 #EOF

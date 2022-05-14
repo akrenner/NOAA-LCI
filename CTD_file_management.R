@@ -14,11 +14,25 @@
 ## finding best con-file: always use con-file in the past or whatever is closest?
 
 
+cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
+
+
 
 # rm (list = ls())
 
+if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
+
+
 # TESTrun <- TRUE
 # TESTrun <- FALSE
+
+
+## make this independent from ctd_workflow.R
+if (!exists ("hexFileD")){
+  rm (list = ls())
+  hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
+}
+
 
 # unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
 unlink ("~/GISdata/LCI/CTD-processing/allCTD/edited_hex", recursive = TRUE)
@@ -28,8 +42,11 @@ set.seed (8)
 
 ## define new destinations
 nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
+instL <- c ("4141", "5028", "8138")  # do this from data?
 instL <- c ("4141", "5028")  # do this from data?
+# XXX add new CTD to this list!!!
 ## clean slate -- do this by hand!
+
 # x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
 x <- c (unlink (paste0 (nD, instL [1], "/"))
         , unlink (paste0 (nD, instL [2], "/")))
@@ -37,7 +54,7 @@ x <- c (unlink (paste0 (nD, instL [1], "/"))
 for (i in 1:length (instL)){
  dir.create (paste0 (nD, instL [i]), recursive = TRUE)
 }
-rm (x)
+rm (x, instL)
 ## mkdir?
 
 
@@ -58,7 +75,7 @@ rL <- function (f, p = NULL){ # recursive listing of files
 
 ## move about HEX files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
-fL <- c(fL, rL ("ctd-data_2017-21/2_Edited\ .hex\ files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt"))
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
@@ -70,11 +87,14 @@ rm (rL)
 
 
 ## bad files out
-fL <- fL [-grep ("Troubleshooting", fL)]
+bF <- grep ("Troubleshooting", fL)
+if (length (bF) > 0){
+  cat ("removing ", length (bF), " bad files\n")
+  fL <- fL [-bF]
+}
+
+
 ## manually remove duplicates -- if any -- none found
-
-
-
 ## check duplicates by name or sha256
 fDB <- data.frame (file = fL
                    , fN = gsub ("^.*/", "", fL)
@@ -359,23 +379,16 @@ fDB$instN <- character (nrow (fDB))
 
 
 ## filename-dates
-x <- substr (fDB$shortFN, 1, 11)  ## extract dates
+x <- substr (fDB$shortFN, 1, 10)  ## extract dates
 x <- gsub ("_+", "-", x)          ## fix up messes
 x <- gsub ("-+", "-", x)
-x <- gsub ("-$", "", x)
-xT <- try (as.POSIXct (x, format = "%Y-%M-%d")) # catch in case this doesn't work
-if (class (xT)[1] != "try-error"){
-  fDB$fnDate <- xT
-}else{
-  for (i in 1:length (x)){ # find problems in file-names -- iterative
-    xT <- try (as.POSIXct (x[i]))
-    if (class (xT)[1] == "try-error"){
-      stop ("malformed date in ", i, " ", x [i])
-    }
-  }
+# x <- gsub ("-$", "", x)
+fDB$fnDate <- as.POSIXct(x)
+if (any (is.na (fDB$fnDate))){
+  cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  stop ("are bad file names")
 }
-## clean-up
-rm (x, i, xT)
+rm (x)
 
 
 ## gather metadata dates
@@ -416,7 +429,7 @@ for (i in 1:nrow (fDB)){
   fDB$instN [i] <- hX
 }
 rm (hF, hD, hX, i)
-# save.image ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
+save.image ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHexConv2.RData")
 
 
@@ -464,12 +477,14 @@ rm (fixBoth, fixFN, fixMeta, delFile)
 ##   -- need this to make sure conf-file folders are right
 #####
 
-fDB$tErr <- as.numeric (difftime(fDB$fnDate, fDB$metDate, units = "days"))
 
+fDB$tErr <- as.numeric (difftime(fDB$fnDate, fDB$metDate, units = "days"))
 summary (fDB$tErr)
-if (any (fDB$tErr > 1)){
-  print (subset (fDB [,2:ncol (fDB)], abs (tErr) > 1))
-#  stop ("fix date discrepancies between metadata and file names")
+if (any (abs (fDB$tErr) > 1)){
+  x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
+  print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
+
+  #  stop ("fix date discrepancies between metadata and file names")
   warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
@@ -543,12 +558,23 @@ for (i in 1:nrow (cFDB)){
 }
 
 
+
+## flag and fix bad file dates!
+### END OF EDITS
+# data.frame (fDB, x = x)[is.na (fDB$fnDate), c (which (names (fDB) %in% c ("fnDate", "shortFN")), ncol (fDB)+1)]
+## gotta fix x from above -- file name date extraction -- bad filenames, good dates
+
+
+
+
 ## copy hex files
 ## assign appropriate con file to each HEX file
 fDB$procDir <- character (nrow (fDB))
 fDB$calDist <- numeric (nrow (fDB)) # days since calibration
 for (i in 1:nrow (fDB)){
-  dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
+  ## assume file name date to be more reliable than metadata throughout!
+#  dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
+  dT <- as.numeric (difftime(fDB$fnDate [i], cFDB$date, units = "days"))
   dT <- ifelse (cFDB$inst == fDB$instN [i], dT, dT + 1e9) # penalize wrong inst
   dT <- ifelse (dT < 0, dT*-1+365*20, dT)  # penalize records in the future (SEABIRD fails) -- 20 records
   fDB$calDist [i] <- min (dT)
@@ -568,6 +594,13 @@ if (any (!cpCk)){
 rm (cpCk)
 unlink (nD, recursive = TRUE, force = TRUE)
 
+### missing feature: !!! XXX
+
+## remove config-directories with no hex files
+## -- this is currently not automated, but has to be done manually
+## i.e. config files are staged in a separate folder until data has been collected.
+
+
 
 
 ## make small dataset for testing
@@ -575,6 +608,10 @@ x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir
              , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
 xmlC <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", ".xmlcon"
                     , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+## remove 8138 and 2021 callibration until they've been used!
+# xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
+xmlC <- xmlC [-grep ("2021", xmlC)]
+
 file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", xmlC)
            , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", xmlC))
 rm (xmlC)

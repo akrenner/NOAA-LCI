@@ -2,7 +2,11 @@
 ## throughout the year
 ## calc difference in density between upper and lower TS
 
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+if (.Platform$OS.type == "unix"){
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}else{
+  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+}
 rm (list=ls())
 load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 maO <- 31  # 7 days certainly not working, 14 days not enough either

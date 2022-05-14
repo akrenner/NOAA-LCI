@@ -31,7 +31,6 @@
 
 
 ## missing stations into master list
-## PTGR, PTPOGI....
 ## ask for updates on notebooks
 ## 2020 along-bay station names: review and adjust
 ## bottom-depth from master/notes: add
@@ -104,8 +103,10 @@ stnFNex <- gsub ("alongbay_kb", "alongbay_s", stnFNex)
 # stnFNex <- gsub ("ptgraham", "portgraham", stnFNex)
 # stnFNex <- gsub ("ptgrm", "portgraham", stnFNex)
 # stnFNex <- gsub ("ptgr", "portgraham", stnFNex)
-stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_portgraham_", stnFNex)
-stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_pogi_", stnFNex) ## check!
+
+stnFNex <- gsub ("alongbay_p(or|r)*t[a-z]*_", "alongbay_PTGR", stnFNex)
+stnFNex <- gsub ("alongbay_[a-z,\\.]*pogi[a-z]*_", "alongbay_POGI", stnFNex) ## check!
+stnFNex <- gsub ("-kbay_alongbay_inner-", "alongbay", stnFNex) ## check!
 
 ## bad transect! -- audit XXX
 stnFNex <- gsub ("_alongbay_chinapoot[_]*", "_subbay_chinapoot", stnFNex) ## check!
@@ -182,15 +183,15 @@ levels (factor (physOc$File.Name [bS]))
 rm (bS)
 
 if (0){
-stN <- sapply (1:length (stnSp), function (i){
-  grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
-})
-tnN <- sapply (1:length (stnSp), function (i){
-   grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
-        , stnSp[[i]], value = TRUE)[1]
-})
+  stN <- sapply (1:length (stnSp), function (i){
+    grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
+  })
+  tnN <- sapply (1:length (stnSp), function (i){
+    grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
+          , stnSp[[i]], value = TRUE)[1]
+  })
 
-# for (i in 1:length (tnN)){
+  # for (i in 1:length (tnN)){
 #   if (length (tnN [[i]]) != 1){stop (i)}
 # }
 # stnSp [[i]]
@@ -202,8 +203,10 @@ length (stN)
 levels (factor (tnN))
 tnN [grep ("^t[a-z]*\\d", tnN)] <- gsub ("^t[a-z]*", "", tnN [grep ("^t[a-z]*\\d", tnN)])
 tnN <- gsub ("9[a-z]+[0-9]*", "9", tnN) # watch carefully
+tnN <- gsub ("^0", "", tnN) # trim leading zero
 tnN [grep ("(sub|stevekibler)", tnN)] <- "subbay"
 tnN [grep ("^(along|kbay|ab)", tnN)] <- "AlongBay"  ## "AlongBay" for now, as in physOc$Match
+tnN [grep ("kachemakbay", tnN)] <- "AlongBay"
 is.na (tnN)[tnN == ""] <- TRUE
 levels (factor (tnN))
 summary (tnN == physOc$Transect)
@@ -221,6 +224,13 @@ stN <- gsub ("say", "sadie", stN)
 stN <- gsub ("^along*", "", stN)
 stN <- gsub ("extra", "", stN)
 stN <- gsub ("south", "", stN)
+
+stN <- gsub ("portgraham", "PTGR", stN)
+stN <- gsub ("spgrm", "PTGR", stN)
+stN <- gsub ("sptgm", "PTGR", stN)
+
+stN <- gsub ("spogi", "POGI", stN)
+stN <- gsub ("pogi", "POGI", stN)
 ## stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
 stN <- gsub ("^0*", "", stN)
 for (i in 0:9){
@@ -249,6 +259,10 @@ levels (factor (physOc$Match_Name))
 rm (newMatch, stN, tnN)
 
 
+physOc$Match_Name <- gsub ("_spgrm|_sptgm", "_PTGR", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_spogi|_sptgm", "_POGI", physOc$Match_Name)
+physOc$Match_Name <- gsub ("tutkabay_intensive", "subbay_tutkabayIntensive", physOc$Match_Name)
+physOc$Match_Name <- gsub ("sadiecove_intensive", "subbay_sadiecoveIntensive", physOc$Match_Name)
 
 if (0){
 # summary (stn)
@@ -287,7 +301,8 @@ physOc$Match_Name <- gsub ("\\s", "", physOc$Match_Name)
 physOc$Match_Name <- gsub ("(Bear|ChinaPoot|Halibut|Jakolof|Kasitsna|Peterson|Sadie|Seldovia|Tutka)([ABC])$", "\\1_\\2", physOc$Match_Name) # "TutkaA" or " B"
 physOc$Match_Name <- gsub ("^Tutka0", "Tutka_", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^Tutka1", "Tutka_1", physOc$Match_Name)
-physOc$Match_Name <- gsub ("PogiPoint|Pt\\.Pogi|Pt\\.KBlandPogi", "Pogibshi", physOc$Match_Name)
+physOc$Match_Name <- gsub ("PogiPoint|Pt\\.Pogi|Pt\\.KBlandPogi|pogi|spogi", "POGI", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_graham|_spgrm|_portgraham", "_PTGR", physOc$Match_Name)
 physOc$Match_Name <- gsub ("extra$", "", physOc$Match_Name)
 
 ## fixing a few individual stations
@@ -364,11 +379,11 @@ Require ("oce")
 # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. <- O2
 # rm (O2)
 # }
-physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
-physOc$Spice <- with (physOc, swSpice (Salinity_PSU
-                                       , Temperature_ITS90_DegC
-                                       , Pressure..Strain.Gauge..db.
-))
+# physOc$O2perc <- with (physOc, Oxygen_SBE.43..mg.l. / Oxygen.Saturation.Garcia.Gordon.mg.l.)
+# physOc$Spice <- with (physOc, swSpice (Salinity_PSU
+#                                        , Temperature_ITS90_DegC
+#                                        , Pressure..Strain.Gauge..db.
+# ))
 summary (physOc)
 
 
@@ -447,7 +462,7 @@ rm (gC)
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
-is.na (physOc$attenuation[which (physOc$attenuation <= 0)]) <- TRUE
+is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
 # is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
 
 
@@ -498,6 +513,7 @@ summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))
 noLL <- which (is.na (physOc$latitude_DD))
 levels (factor (physOc$Match_Name[noLL]))
+## AlongBay_3.5 -- bad position? Aborted because of high waves. Not in Database, but is in notebooks
 ## remove unresolved positions -- still too many!
 physOc <- subset (physOc, !is.na (latitude_DD))
 physOc <- subset (physOc, !is.na (longitude_DD))
@@ -544,20 +560,53 @@ setwd (outD) ## zip blows up otherwise
 yr <- factor (format (physOc$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (physOc, yr == levels (yr)[i])
-  tF <- paste0 (levels (yr)[i], "_Aggregatedfiles.csv")
+  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
+  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time, File.Name
+                                  , Latitude_DD = latitude_DD
+                                  , Longitude_DD = longitude_DD
+                                  , CTD.serial
+                                  , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
+                                  , Temperature_ITS90_DegC, Salinity_PSU
+                                  , Density_sigma.theta.kg.m.3
+                                  , Oxygen_umol.kg = Oxygen_umol_kg
+                                  , Oxygen.Saturation_perc=Oxygen_sat.perc.
+                                  # need SBE O2 concentration umol.kg in here
+                                  , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                  , PAR.Irradiance
+                                  , Fluorescence_mg_m3
+                                  , Turbidity = turbidity
+                                  , Beam_attenuation = beamAttenuation
+                                  , Beam_transmission = beamTransmission
+  ))
+  ctdA <- ctdB; rm (ctdB)
+  if ("Spice" %in% names (ctdA)){
+## [,1:(ncol (ctdA)-1)] # remove Spice
+   ctdA <- ctdA [,-which (names (ctdA) == "Spice")]
+  }
+  # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
+  # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
+  tF <- paste0 ("CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
   write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
-  # zip::zip (zipfile = paste0 ("CTDaggregate", levels (yr)[i], ".zip")
-  #      , files = tF, include_directories = FALSE)
 }
 
-unlink ("processedCTD_annual.zip", force = TRUE)
-zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
-zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
-          , include_directories = FALSE)
-# unlink (zFiles, force = TRUE)
-rm (zFiles)
+
+if (0){
+  ## zip-up files -- about 100 MB
+  unlink ("processedCTD_annual.zip", force = TRUE)
+  zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
+  zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
+            , include_directories = FALSE)
+  ## zip individuals files
+  unlink (gsub (".csv", ".zip", zFiles [i]))
+  for (i in 1:length (zFiles)){
+    zip::zip (gsub (".csv", ".zip", zFiles [i]), files = zFiles [i]
+              , include_directories = FALSE, mode = "cherry-pick")
+  }
+  unlink (zFiles, force = TRUE)
+  rm (zFiles)
+}
 setwd (wD); rm (wD)
-rm (showBad, oldMatch, ctdA, yr)
+rm (showBad, oldMatch, ctdA, yr, i, j)
 ls()
 
 

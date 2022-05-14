@@ -7,29 +7,30 @@ rm (list = ls())
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
 ## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
-## FIX CONTOURS! -- make sure to have most recent data!
 
 ## PAR: flag night; mark 1% light level contour
 ## fix distancescale to full transect
 ## Kris: check on surface PAR and salinity measurements
-## by season/month and year. Asterix if there are 2 per slot
 
 ## 2021-08-03 -- issues
 # x multiple transects per season/month are merged -> pick first
 # x fix color scale across all graphs (across Transects as well?)
 
-# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.
+# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.  --  or plotter
 
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 # only AlongBay and 9 are monthly -- 4?
 
-rm (list = ls())
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 require ("oce")
-x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
+load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+# x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 source ("CTDsectionFcts.R")
 
+
+
+mnthly <- c ("9", "AlongBay", "4")
 
 
 ## tests
@@ -61,7 +62,7 @@ for (ov in iX){
     ## ov <- 1; tn <- 2
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
 
-    ## double-use stations:
+    ## doubly-used stations:
     # 4-3 = AlongBay-3
     # 9-6 = AlongBay-6
     if (levels (poAll$Transect)[tn] == "AlongBay"){
@@ -95,12 +96,12 @@ for (ov in iX){
     #      , height = 8.5*200, width = 11*200, res = 300)
 
 
-    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+    if (levels (poAll$Transect)[tn] %in% mnthly){
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
     }else{
       pH <- 8.5; pW <- 14
     }
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
+    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
                  , " T-", levels (poAll$Transect)[tn]
                  # , "_", levels (physOcY$year)[k]
                  , ".pdf")
@@ -108,7 +109,7 @@ for (ov in iX){
 
 
     ### force sampling regime -- plot empty for missing survey
-    if (levels (poAll$Transect)[tn] %in% c("9", "AlongBay")){
+    if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       physOcY$smplIntvl <- physOcY$month
     #  layout (matrix (1:(12*5), 12, byrow = TRUE)) # across, then down
@@ -122,7 +123,9 @@ for (ov in iX){
     }
 
 
-    if (test){iZ <- 1:3}else{iZ <- 1:length (levels (physOcY$year))}# by year
+    # if (test){iZ <- 1:3}else{
+      iZ <- 1:length (levels (physOcY$year))
+      # }# by year
     # iZ <- 1:length (levels (physOcY$year)) # by year
     for (k in iZ){
 #     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
@@ -188,29 +191,41 @@ for (ov in iX){
             xC$surveys <- factor (surveyW); rm (surveyW, h)
             # physOc$transDate <- factor (physOc$transDate)
 
-          nSurv <- length (levels (xC$surveys))
-          if (nSurv > 1){
-            nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
-            xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
-            # xC$Station <-
-            rm (nR)
-          }
+            nSurv <- length (levels (xC$surveys))
+            if (nSurv > 1){
+              ## use the survey with the most stations
+              if (1){
+                nS <- sapply (levels (xC$surveys), FUN = function (x){
+                  length (levels (factor (subset (xC$Station, xC$surveys == x))))
+                })
+                xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
+                rm (nS)
+              }else{
 
-          if (xC$Transect [1] %in% c("4", "9")){
-            xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
-          }else{
-            xC <- xC [order (xC$longitude_DD, decreasing = FALSE),]
-          }
+                ## use only the first survey
+                nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
+                xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
+                # xC$Station <-
+                rm (nR)
+              }
+            }
+
+          # if (xC$Transect [1] %in% c("4", "9")){
+          #   xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
+          # }else{
+          #   xC <- xC [order (xC$longitude_DD, decreasing = FALSE),]
+          # }
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
           xCo <- sectionize (xC)
+          if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
+            xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+          }else{
+            xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
+          }
 
 
-
-          # T 3 4 6 7 9 Along
-          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance per transect
-          pSec (xCo, N = oVars [ov]
-                #, zCol = oColF (ov)
+          pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , xlim = xRange []  # range of the Transect
@@ -224,6 +239,10 @@ for (ov in iX){
             title (main = paste (levels (physOc$transDate)[i]))
           }
           rm (nSurv)
+          # T 3 4 6 7 9 Along
+          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance (N stations) per transect -- could/should calc TD above
+          TD <- c (12, 10, 12, 12, 10, 12) # fixed distance (N stations) per transect -- could/should calc TD above
+#         addBorder (xCo, TD[ov]-1)
 
           if (!exists ("xMap")){xMap <- xCo; xMc <- xC}  # keep longest section for map
           if (length (levels (factor (xMc$Station))) < length (levels (factor (xC$Station)))){
@@ -259,7 +278,7 @@ for (ov in iX){
 
 physOc <- poAll
 
-rm (i, k, tn, oVars, ov, poAll, pSec, physOcY)
+rm (i, k, tn, oVars, oVarsF, ov, poAll, pSec, physOcY)
 
 
 

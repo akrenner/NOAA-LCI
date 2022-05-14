@@ -1,15 +1,13 @@
 #!/usr/bin/env RScript
 # Martin Renner, NOAA-affiliate, 2020
 ## make climatology plot vs 2019 of high-wind events and average daily wind speed.
-## use Lands End wind data
+## use Lands End wind data from SWMP station
 
 
 if (exists ("metstation")){ rm (list=ls())}  # not if called from a script
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-
-
 
 
 ##########################################################
@@ -169,6 +167,7 @@ rm (qaqcM)
 ## find missing values, gaps in TS
 # summary (as.numeric (diff (hmr$datetimestamp)))
 # which (as.numeric (diff (hmr$datetimestamp)) > 15)
+
 hmr <- fixGap (hmr)  # this will also add helper variables year, jday, etc.
 
 

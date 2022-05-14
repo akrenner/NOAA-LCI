@@ -10,7 +10,11 @@ currentCol <- c ("darkblue", "blue")
 currentCol <- c ("lightblue", "darkblue", "hotpink")  ## temporary -- change the order to past, current, ongoing
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
-setwd("~/myDocs/amyfiles/NOAA-LCI/")
+if (.Platform$OS.type == "unix"){
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}else{
+  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+}
 source ("annualPlotFct.R")
 
 
