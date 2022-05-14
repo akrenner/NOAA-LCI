@@ -49,96 +49,45 @@ if (0){
 ## fetch buoy data from NOAA server
 ## only load new data, fetch rest from local cache
 # to reset: unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-require ("rnoaa")
-nw <- try (load ("~/tmp/LCI_noaa/cache/noaawaves.RData"))
-# unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-if (class (nw) == "try-error"){
-  endD <- 2011
-}else{
-  endD <- max (as.numeric (substr (wDB$time, 1, 4)))
-}
-if (endD < as.numeric (format (Sys.Date(), "%Y"))){
-  wB <- lapply (endD:as.numeric (format (Sys.Date(), "%Y"))
-                , function (i){
-                  try (buoy (dataset = "stdmet", buoyid = 46108
-                             , year = i))
-                }
-  )
 
-  for (i in 1:length (wB)){
-    if (!exists ("wDB")){
-      wDB <- as.data.frame (wB [[i]]$data)
-    }else{
-      if (class (wB [[i]]) != "try-error"){
-        wDB <- rbind (wDB, as.data.frame (wB [[i]]$data))
-      }
-    }
-  }
-  rm (wB, i)
-}
-rm (nw, endD)
-
-## add most recent
-cD <- try (buoy (dataset="stdmet", buoyid = 46108, year = 9999))
-if (class (cD) == "buoy"){
-  wDB <- rbind (wDB, as.data.frame (cD$data))
-}
-rm (cD)
-
-save.image ("~/tmp/LCI_noaa/cache/noaawaves.RData") ## cache of buoy data
-# unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/noaawaves.RData")
-
-## QAQC
-wDB <- wDB [!duplicated(wDB$time),]
-tm <- gsub ("T", "", wDB$time)
-tm <- gsub ("Z", "", tm)
-wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC")
-rm (tm)
-is.na (wDB$wave_height)[which (wDB$wave_height == 99)] <- TRUE
-is.na (wDB$dominant_wpd)[which (wDB$dominant_wpd == 99)] <- TRUE  # dominant wave period [s]
-is.na (wDB$average_wpd)[which (wDB$average_wpd == 99)] <- TRUE  # dominant wave period [s]
-# wDB <- subset (wDB, !duplicated(wDB$datetimestamp))
-
-# wDB$datetimestamp <- strptime (wDB$time
-#                                 #, format = "%Y-%m-%dT%H:%M%SZ"
-#                                 , tz = "UTC")
-# plot (wave_height~datetimestamp, wDB, type = "l")
+source ("annualPlotFct.R")
+wDB <- getNOAA (buoyID = 46108)
 
 
+## is all the Augustine Island part obsolete? replicated elsewhere? XXX
 ## Augustine Island wind -- as covariate to KBay wind?
 # Aug <- isd ("994700", wban = 99999, year = 2020)
-tl <- try (load ("~/tmp/LCI_noaa/cache/noaa-Augustine.RData"))
-if (class (tl) == "try-error"){
-  aB <- lapply (as.numeric (levels (factor (format (wDB$datetimestamp, "%Y"))))
-                , function (x){try (isd ("994700", wban = 99999, year = x))}
-  )
-  pF <- function (df){
-    with (as.data.frame (df), data.frame (date, time, date_flag, quality, wind_direction, wind_direction_quality
-                                          , wind_code, wind_speed, wind_speed_quality))
-  }
-  for (i in 1:length (aB)){
-    if (!exists ("aDB")){
-      aDB <- pF (aB [[i]])
-    }else{
-      if (class (aB [[i]])[1] != "try-error"){
-        aDB <- rbind (aDB, pF (aB [[i]]))
+if (0){
+  tl <- try (load ("~/tmp/LCI_noaa/cache/noaa-Augustine.RData"))
+  if (class (tl) == "try-error"){
+    aB <- lapply (as.numeric (levels (factor (format (wDB$datetimestamp, "%Y"))))
+                  , function (x){try (isd ("994700", wban = 99999, year = x))}
+    )
+    pF <- function (df){
+      with (as.data.frame (df), data.frame (date, time, date_flag, quality, wind_direction, wind_direction_quality
+                                            , wind_code, wind_speed, wind_speed_quality))
+    }
+    for (i in 1:length (aB)){
+      if (!exists ("aDB")){
+        aDB <- pF (aB [[i]])
+      }else{
+        if (class (aB [[i]])[1] != "try-error"){
+          aDB <- rbind (aDB, pF (aB [[i]]))
+        }
       }
     }
+    rm (aB, pF, i)
+    save (aDB, file = "~/tmp/LCI_noaa/cache/noaa-Augustine.RData")
   }
-  rm (aB, pF, i)
-  save (aDB, file = "~/tmp/LCI_noaa/cache/noaa-Augustine.RData")
+  rm (tl)
+  aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
+  aDB <- addTimehelpers(aDB)
 }
-rm (tl)
-source ("annualPlotFct.R")
-aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
-aDB <- addTimehelpers(aDB)
-
 
 require ("dplyr")
 hmr <-  meteo_pull_monitors ("USW00025507"
-                              , date_min = "1970-01-01"  # goes back to 1932-09-01
-                              , date_max = as.character (Sys.Date())) %>%
+                             , date_min = "1970-01-01"  # goes back to 1932-09-01
+                             , date_max = as.character (Sys.Date())) %>%
   dplyr::rename (datetimestamp = date, location = id
                  #, totprcp = prcp # wdfg not ideal equivalent
                  #, atemp = tavg
@@ -205,7 +154,9 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 ## order: current, present, previous
 # currentCol <- c("darkblue", "blue", "lightblue")
 currentCol <- c("black", "blue", "lightblue")
-currentCol <- c("blue", "lightblue", "black")
+require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
+
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # maO <- 3 # 30
@@ -234,7 +185,7 @@ aPlot (tDayW, "wave_height", ylab = "wave height [m]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear=FALSE, ongoingYear=TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -244,7 +195,7 @@ cLegend ("top"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear=FALSE, ongoingYear=TRUE
 )
 
 wFt <- tDayW$wave_height / 0.3048
@@ -274,7 +225,7 @@ aPlot (tDayP, "dominant_wpd", ylab = "dominant wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear = FALSE, ongoingYear = TRUE
 )
 box()
 # lines (tDay$jday, tDay [,which (names (tDay) == paste0 ("y_", currentYear - 1, "_wave_height"))]
@@ -284,14 +235,14 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear = FALSE, ongoingYear = TRUE
 )
 tDayP <- prepDF (dat = tDay, varName = "average_wpd") #, maO = 1)
 aPlot (tDayP, "average_wpd", ylab = "average wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
        #       , ylim = c (0,1.2)
-       , pastYear = FALSE, newYear = TRUE
+       , pastYear = FALSE, ongoingYear = TRUE
 )
 box()
 cLegend ("bottomleft"
@@ -299,7 +250,7 @@ cLegend ("bottomleft"
          , title.adj = 0.5, currentYear = currentYear
          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
          , cYcol = currentCol
-         , pastYear = FALSE, newYear = TRUE
+         , pastYear = FALSE, ongoingYear = TRUE
 )
 dev.off()
 rm (tDayP)
@@ -350,7 +301,6 @@ wDB <- addTimehelpers(wDB)
 save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
 
-8
 
 
 ################
@@ -554,9 +504,9 @@ rasterImage (img, lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4]) # covers up pl
 # on special request, only lines, no percentile polygon
 box()
 lines (MA_surfs~jday, data = sTday, col = "black", lwd = 3)
-lines (cYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
-lines (pYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 4)
-# lines (pYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 3)
+# lines (pcYMA_surfs~jday, data = sTday, col = currentCol [1], lwd = 3)
+lines (pYMA_surfs~jday, data = sTday, col = currentCol [2], lwd = 4)
+lines (ogYMA_surfs~jday, data = sTday, col = currentCol [3], lwd = 4)
 lL <- legend ("top", bty = "n", legend = "")
 # legend ("top", title = paste0 (maO, "day moving average")
 legend (lL$rect$left - 72, lL$rect$top - 0.1
@@ -566,7 +516,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
         , legend = c(paste0 ("mean [", min (as.numeric (format (wDB$datetimestamp, "%Y")))
                              , "-", currentYear-1, "]"), currentYear, currentYear + 1)
         , lwd = c (3,4)
-        , col = c ("black", currentCol [1], currentCol [2])
+        , col = c ("black", currentCol [2], currentCol [3])
 )
 
 # addGraphs (longMean = sTday$MA_surfs
@@ -577,7 +527,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
 #                               sTday$pcYMA_surfs)
 #            , jday = sTday$jday, maxV = NA, minV = NA
 #            , currentCol = currentCol # = currentCol # "red"
-#            , pastYear = FALSE, newYear = TRUE
+#            , pastYear = FALSE, ongoingYear = TRUE
 # )
 # cLegend ("top"
 #          , qntl = qntl, title = paste (maO, "day moving average")
@@ -585,7 +535,7 @@ legend (lL$rect$left - 72, lL$rect$top - 0.1
 #          , mRange = c (min (as.numeric (format (wDB$datetimestamp, "%Y"))), currentYear-1)
 #          , cYcol = currentCol
 #          , text.col = "blue"
-#          , pastYear = FALSE, newYear = TRUE
+#          , pastYear = FALSE, ongoingYear = TRUE
 # )
 dev.off()
 
@@ -668,8 +618,8 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2018-10-28 18:32"
 , "2020-11-13 13:20"
 , "2021-04-30 04:30"   # big loud waves at dawn (high tide). pretty tight, short wave period
-# that day in August 21...
-, "2021-09=24 16:40"
+, "2021-08-28 16:00"   # check time (around high tide). 5 Surfers catching waves.
+, "2021-09-24 16:40"
 , "2021-09-30 11:00"  # HT
 , "2021-10-01 13:00"  # HT
 , "2021-10-02 13:00"  # HT

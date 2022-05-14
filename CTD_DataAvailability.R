@@ -2,7 +2,8 @@
 
 ## recreate data availability matrix, as done by Jim
 ## show which transects have been sampled in which years/dates
-
+## missing feature: consider making plot in two columns (or panels, one for each year?)
+## current version: advantage that it can extend for many years to come
 
 # rm (list = ls())
 load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
@@ -39,20 +40,6 @@ xT <- xTs; rm (xTs)
 xT <- ifelse (xT == 0, NA, xT)  # not sampled = white
 xT <- xT [nrow (xT):1,]   # top = first samples
 
-if (0){
-  dAv2 <- xtabs(~year+month+Transect, phy)
-  dAv2 <- xtabs(~month+Transect+year, phy)
-  dAv2 <- xtabs(~year+month+Transect, phy)
-
-  dAv <- aggregate (Station~Transect+month+year, data = phy
-                    , function (x){length(levels (factor (x)))}
-  )
-  dAv2 <- aggregate (Transect~month+year, data = dAv
-                     , function (x){length (x)})
-  dAv2 <- xtabs(~year+month+Transect, phy)
-  dAv2 <- xtabs(~month+Transect+year, phy)
-  dAv2 <- xtabs(~year+month+Transect, phy)
-}
 
 pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 22, width = 8.5)
 par (las = 1, mar = c(4,6,4,2))

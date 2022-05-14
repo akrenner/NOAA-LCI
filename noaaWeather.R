@@ -53,25 +53,57 @@ if (0){
 
 Require ("dplyr")
 source ("annualPlotFct.R")
+## meteo_pull_monitors appears to be incomplete. Start with data from manual download.
+hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport2959063.csv") %>%
+  dplyr::rename_with (tolower) %>%
+  dplyr::rename (datetimestamp = date, location = station
+                 ) %>%
+  select (!ends_with ("_attributes"))
 
 hmrL <-  meteo_pull_monitors ("USW00025507"
-                              , date_min = "1970-01-01"  # goes back to 1932-09-01
+                              # , date_min = "2022-04-18"  # goes back to 1932-09-01
+                              , date_min = "1933-01-01"  # goes back to 1932-09-01
                               , date_max = as.character (Sys.Date())) %>%
-  dplyr::rename (datetimestamp = date, location = id
-                 #, totprcp = prcp # wdfg not ideal equivalent
-                 #, atemp = tavg
-                 , wspd = awnd, maxwspd = wsfg, wdir = wdfg) %>%
-  addTimehelpers ()
+  dplyr::rename (datetimestamp = date, location = id # wdfg and awnd now missing
+                 )
+## merge hmr1 and hmrL
+# hmr <- rbind (with (hmr1, data.frame (datetimestamp = as.POSIXct(datetimestamp)
+#                                        , location, tavg, tmax, tmin
+#                                        , prcp, wdf5, wsf5, wsf2, wdf2))
+#                , with (hmrL, data.frame (datetimestamp = as.POSIXct(datetimestamp)
+#                                          , location, tavg, tmax, tmin
+#                        , prcp, wdf5, wsf5, wsf2, wdf2))) %>%
+hmr <- rbind (hmrL) %>%
+  addTimehelpers()
+
+rm (hmr1, hmrL)
 
 ## adjust units to mm/day and degrees C
-hmrL$totprcp <- hmrL$prcp * 0.1 # / 31  ##??
-hmrL$atemp <- hmrL$tavg * 0.1
-# hmrL$maxwspd <-
-# hmrL$wdfg
+hmr$totprcp <- hmr$prcp * 0.1 # PRCP = Precipitation (tenths of mm)
+hmr$atemp <- hmr$tavg * 0.1
+hmr$mintemp <- hmr$tmin  * 0.1
+hmr$maxtemp <- hmr$tmax  * 0.1
+hmr$maxwspd <- hmr$wsf2 * 0.1
+hmr$wspd <- hmr$wsf5 * 0.1
+hmr$wdfg <- hmr$wdf5
 
-hmr <- as.data.frame (hmrL)
+hmr <- as.data.frame (hmr)
+hmr$medtemp <- rowMeans(cbind (hmr$maxtemp, hmr$mintemp))
+if (0){
+  x <- subset (hmr, !is.na (atemp))
+  summary (factor (x$year))
+  summary (hmr$maxtemp)
+  summary (hmr$mintemp)
+  summary (hmr$atemp)
+  summary (hmr$medtemp)
+  plot (medtemp~atemp, hmr)
+}
+## QAQC
+is.na (hmr$atemp)[which (hmr$atemp > hmr$maxtemp)] <- TRUE
+is.na (hmr$atemp)[which (hmr$atemp < hmr$mintemp)] <- TRUE
+
+
 save (hmr, file = "~/tmp/LCI_noaa/cache/HomerAirport.RData")
-rm (hmrL)
 
 if (0){
   tDay <- prepDF (hmr, "totprcp", maO = 7, qntl = 0.9) ## even with lots of data, maO = 7 is too short

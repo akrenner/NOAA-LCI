@@ -2,15 +2,23 @@
 
 rm (list = ls())
 
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-source ("annualPlotFct.R")
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+if (.Platform$OS.type == "unix"){
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}else{
+  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+}
 fetchNew <- TRUE  # get fresh data from server? takes longer
 # fetchNew <- FALSE  # get fresh data from server? takes longer
 maO <- 31
-qntl <- c (0.9, 0.8)
-currentCol <- c ("lightblue", "aquamarine")
+qntl <- c (0.9) #, 0.8)
+ongoingYear=TRUE
+pastYear=FALSE
+require("RColorBrewer")
+currentCol <- brewer.pal(3, "Blues")
 
+
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+source ("annualPlotFct.R")
 
 # require ("snotelr")
 # require ("plotly")
@@ -110,6 +118,7 @@ for (sitePickNo in c(1003, 1062, 987)){
   aPlot (df, "snow_water_equivalent", MA = FALSE, currentCol = currentCol #"lightblue"
          , ylab = "snow-water equivalent [mm]"
          , ylim = c (0, max (snowMc$snow_water_equivalent, na.rm = TRUE))
+         , ongoingYear=ongoingYear, pastYear=pastYear
   )
 
   ## add min and max years
@@ -129,10 +138,11 @@ for (sitePickNo in c(1003, 1062, 987)){
            , mRange = c (min (snowMc$year, na.rm = TRUE), currentYear -1)
            , currentYear = currentYear, cYcol = currentCol #"lightblue"
            , qntl = qntl [1]
-           , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
+            , sYears = c (paste ("max year:", minY), paste ("min year:", maxY))
            , sLwd = c(2, 2)
            , sLty = c(2, 3)
            , sLcol = c("black", "darkblue")
+           , ongoingYear=ongoingYear, pastYear=pastYear
   )
 
   title (main = capwords (siteN))
@@ -216,6 +226,7 @@ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-snowPackPCA.pdf"), width = 9
 aPlot (df, "snow_water_equivalent", MA = FALSE, currentCol = currentCol
        , ylab = "PCA1 of snow-water equivalent [mm]"
        , ylim = c(-1, max (snowMc$snow_water_equivalent))
+       , ongoingYear=ongoingYear, pastYear=pastYear
 )
 ## add min and max years
 # phy <- snotel_phenology(snowMc)
@@ -236,6 +247,7 @@ cLegend ("topright"
          , sLwd = c(2, 2)
          , sLty = c(2, 3)
          , sLcol = c("black", "darkblue")
+         , ongoingYear=ongoingYear, pastYear=pastYear
 )
 title (main = "Imputed PCA of 3 Kachemak Bay sites")
 dev.off()
