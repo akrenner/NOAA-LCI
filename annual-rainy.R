@@ -83,9 +83,9 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-# pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png")
-     , width=1800, height=1200, res=300)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png")
+#      , width=1800, height=1200, res=300)
 par (mar=c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab="daily precipitation [mm]"
        , currentCol=currentCol
@@ -104,7 +104,7 @@ text (tDay$jday, ifelse (tDay$pY_totprcp > 10
       , labels="*", col=currentCol [2], cex=cCex)
 if (pastYear){
   text (tDay$jday, ifelse (tDay$pcY_totprcp > 10
-                           , 0.2
+                           , 0.18
                            , NA)
         , labels="*", col=currentCol [1], cex=cCex)
 }
@@ -125,8 +125,9 @@ bP <- cLegend (x=bP$rect$left + 55, y=bP$rect$top
                , mRange=c (min (hmr$year), currentYear-1)
                , cYcol=currentCol
                , pastYear=pastYear, ongoingYear=ongoingY)
-legend (x=bP$rect$left+4, y=bP$rect$top-bP$rect$h + 0.3  # +11: align text. +4 looks better
-        , legend="day with > 10 mm", pch="*", col="blue"
+legend (x=bP$rect$left+3 # png: 4, pdf: 3
+        , y=bP$rect$top-bP$rect$h + 0.20  # +11: align text. +3 looks better (png), 0.20 (pdf)
+        , legend="day with > 10 mm", pch="*", col=currentCol [2]
         , bty="n", pt.cex=cCex)  # add transparent line to fix alignment
 
 ## totals

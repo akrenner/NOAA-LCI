@@ -149,6 +149,7 @@ if (1){ ## mean daily wave height -- for when do we have data
 
 save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/annual_waves2.RData")
+source ("annualPlotFct.R")
 
 
 ## order: current, present, previous
@@ -163,7 +164,6 @@ currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 maO <- 30
 qntl = 0.9
 
-source ("annualPlotFct.R")
 
 # tDay <- fixGap (tDay)
 tDay <- addTimehelpers (wDB)
@@ -213,7 +213,7 @@ rm (wFt, alt.ax, alt.at)
 # rm (x)
 # legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
 dev.off()
-rm (tDayW)
+rm (tDayW, wFt)
 
 
 

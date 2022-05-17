@@ -1,5 +1,6 @@
 ## current year salinity for state of bay report -- modeled on rainy.R
 ## also plot water temperature, shallow and deep
+## merge with annual-stratification.R
 
 rm (list=ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 maO <- 31  # 7 days certainly not working, 14 days not enough either
@@ -27,9 +28,9 @@ tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO) # still has issu
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
 
 ## plot
-# pdf (paste0 ("~/tmp/LCI_noaa/media/sa-salinity", maO, "-d.pdf"), width=9, height=9)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
-     , width=1800, height=2400, res=300)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.pdf"), width=9, height=9)
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
+#      , width=1800, height=2400, res=300)
 par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )
