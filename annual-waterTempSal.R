@@ -17,6 +17,13 @@ currentCol <- c ("lightblue", "blue", "magenta")
 
 
 source ("annualPlotFct.R")
+
+
+
+####################
+## Stratification ##
+####################
+
 # density sigma theta kg/m3
 sigDens <- function (df, pressure=0, lon=-151.5, lat=59.6){
   ## assuming standard SWMP df, calculate seawater density
@@ -30,7 +37,6 @@ sigDens <- function (df, pressure=0, lon=-151.5, lat=59.6){
   return (sigThe)
 }
 
-
 homer$swDens <- sigDens (homer, pressure=swPressure (15, latitude=59)) # what depth?
 homerS$swDens <- sigDens (homerS)
 sldvia$swDens <- sigDens (sldvia, pressure=swPressure (15, latitude=59))
@@ -38,7 +44,6 @@ sldviaS$swDens <- sigDens (sldviaS)
 
 homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] - homerS$swDens
 sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] - sldviaS$swDens
-
 # homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] / homerS$swDens
 # sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] / sldviaS$swDens
 
@@ -46,11 +51,6 @@ sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimesta
 hM <- prepDF (dat=homerS, varName="strat", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="strat", maO=maO, currentYear=currentYear, qntl=qntl)
 
-# ## anomaly
-# homerS$stratAnom <- homerS$strat - hM$MA_strat [match (homerS$jday, hM$jday)]
-# plot (homerS$stratAnom, type="l")
-# sldviaS$stratAnom <- sldviaS$strat - sL$MA_strat [match (sldviaS$jday, sL$jday)]
-# plot (sldviaS$stratAnom, type="l")
 
 
 hY <- 2014:2017
@@ -89,6 +89,7 @@ rm (hM, sL, hY)
 # warm air is linked to warm water?
 # warm air is linked to glacial melting and increased stratification
 # warm water is linked to reduced stratification in Seldovia (summer) because deep water becomes warmer (and less saline???)
+
 
 
 ##################
@@ -182,32 +183,9 @@ axis (1, at=366, labels=FALSE)
 aPlot (hM, "turb", currentCol=currentCol, ylab="Turbidity", main="Homer"
        #, ylim=c(1, 1.3)
        )
-# title (main="Homer")
 dev.off()
 
 
-cat ("Finished stratificationSeason\n")
-# EOF## current year salinity for state of bay report -- modeled on rainy.R
-## also plot water temperature, shallow and deep
-## merge with annual-stratification.R
-
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
-maO <- 31  # 7 days certainly not working, 14 days not enough either
-qntl=c(0.9)
-maO <- 31 # moving average window
-pMA <- TRUE
-
-if (.Platform$OS.type == "unix"){
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-}else{
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-}
-source ("annualPlotFct.R")
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-
-
-
-## QCQA -- already done?
 
 
 ##############
@@ -283,5 +261,5 @@ for (j in 1: length (instSite)){
 rm (instSite, tDay)
 
 
-cat ("Finished salinityAnnual.R\n")
+cat ("Finished annual-waterTempSal.R\n")
 # EOF
