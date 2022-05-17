@@ -59,6 +59,44 @@ plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
 }
 
 
+aPlot <- function (df, vName, MA=TRUE
+                   , pastYear=TRUE
+                   , ongoingYear=FALSE  ## good convention = ? 1,2=c-1,c, not og
+                   , ...){
+  # wrapper for annualPlot
+  # assumes df was created using prepDF, resulting in standardized field names
+  # -- using MA or raw??
+  if (MA){
+    longMean <- df [,which (names (df) == paste0 ("MA_", vName))]
+    percL <- df [,which (names (df) == paste0 ("maL1_", vName))]
+    percU <- df [,which (names (df) == paste0 ("maU1_", vName))]
+    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))] # pre-current
+    current <-df [,which (names (df) == paste0 ("pYMA_", vName))]
+    ong <- df [, which (names (df) == paste0 ("ogYMA_", vName))]  # ongoing
+    maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
+    minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
+    #allY <- df [,which (names (df) == paste0 ("y_")]
+    allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
+  }else{ ## these need updates if ever used again!!
+    longMean <- df [,which (names (df) == vName)]
+    percL <- df [,which (names (df) == paste0 ("perL1_", vName))]
+    percU <- df [,which (names (df) == paste0 ("perU1_", vName))]
+    pcpo <- df [, which (names (df) == paste0 ("pcY_", vName))]
+    current <-df [,which (names (df) == paste0 ("pY_", vName))]
+    ong <- df [, which (names (df) == paste0 ("ogY_", vName))]
+    maxV <- df [,which (names (df) == paste0 ("max_", vName))]
+    minV <- df [,which (names (df) == paste0 ("min_", vName))]
+  }
+  annualPlot (longMean, percL, percU
+              , current=cbind (pcpo, current, ong) #, current, cpo
+              # , current=cbind (pcpo, current, cpo, pcpo) #, current, cpo
+              , df$jday, maxV=maxV, minV=minV
+              , pastYear=pastYear, ongoingYear=ongoingYear
+              # add yearPick instead of pastYear, ongoingYear ?
+              , ...)
+}
+
+
 annualPlot <- function (longMean, percL, percU, current  ## current may be a N x 3 matrix: past, current, ongoing
                         , jday , perc2L=NA, perc2U=NA, maxV=NA, minV=NA
                         , ylab = ""
@@ -123,7 +161,6 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
 }
 
 
-
 cLegend <- function (..., mRange=NULL, currentYear=NULL
                      , cYcol # = currentCol
                      , qntl=NULL
@@ -159,42 +196,6 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 
 
 
-aPlot <- function (df, vName, MA=TRUE
-                   , pastYear=TRUE
-                   , ongoingYear=FALSE  ## good convention = ? 1,2=c-1,c, not og
-                   , ...){
-  # wrapper for annualPlot
-  # assumes df was created using prepDF, resulting in standardized field names
-  # -- using MA or raw??
-  if (MA){
-    longMean <- df [,which (names (df) == paste0 ("MA_", vName))]
-    percL <- df [,which (names (df) == paste0 ("maL1_", vName))]
-    percU <- df [,which (names (df) == paste0 ("maU1_", vName))]
-    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))] # pre-current
-    current <-df [,which (names (df) == paste0 ("pYMA_", vName))]
-    ong <- df [, which (names (df) == paste0 ("ogYMA_", vName))]  # ongoing
-    maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
-    minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
-    #allY <- df [,which (names (df) == paste0 ("y_")]
-    allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
-  }else{ ## these need updates if ever used again!!
-    longMean <- df [,which (names (df) == vName)]
-    percL <- df [,which (names (df) == paste0 ("perL1_", vName))]
-    percU <- df [,which (names (df) == paste0 ("perU1_", vName))]
-    pcpo <- df [, which (names (df) == paste0 ("pcY_", vName))]
-    current <-df [,which (names (df) == paste0 ("pY_", vName))]
-    ong <- df [, which (names (df) == paste0 ("ogY_", vName))]
-    maxV <- df [,which (names (df) == paste0 ("max_", vName))]
-    minV <- df [,which (names (df) == paste0 ("min_", vName))]
-  }
-  annualPlot (longMean, percL, percU
-              , current=cbind (pcpo, current, ong) #, current, cpo
-              # , current=cbind (pcpo, current, cpo, pcpo) #, current, cpo
-              , df$jday, maxV=maxV, minV=minV
-              , pastYear=pastYear, ongoingYear=ongoingYear
-              # add yearPick instead of pastYear, ongoingYear ?
-              , ...)
-}
 
 
 saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
@@ -332,7 +333,9 @@ fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
 
 
 ## add Fahrenheit scale to temperature plot
-fAxis <- function (cGrad, side=4, line=3, mT = "Fahrenheit", ...){
+fAxis <- function (cGrad, side=4, line=3
+                   , mT = expression('Temperature '~'['*degree~'F'*']')
+                   , ...){
   slope <- 9/5
   offset <- 32
   alt.ax <- pretty (slope * cGrad + offset)
