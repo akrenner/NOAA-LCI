@@ -7,9 +7,6 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl=c(0.9)
 maO <- 31 # moving average window
 pMA <- TRUE
-currentCol <- c ("darkblue", "blue")
-currentCol <- c ("lightblue", "darkblue", "hotpink")  ## temporary -- change the order to past, current, ongoing
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 if (.Platform$OS.type == "unix"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
@@ -17,14 +14,19 @@ if (.Platform$OS.type == "unix"){
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 source ("annualPlotFct.R")
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 
 
 ## QCQA -- already done?
 
 
-# tDayHD <- prepDF ("sal", homerDL, maO=31, qntl=qntl)
-tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO) # still has issue with cYMA_sal and cY_sal
+##############
+## salinity ##
+##############
+currentCol <- c ("lightblue", "darkblue", "hotpink")
+
+tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO)
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
 
 ## plot
@@ -35,18 +37,16 @@ par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )
 
-aPlot (df=tDayS, vName="sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8)
+aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=c(24, 31.8)
        , ylab="salinity")
 title (main="Seldovia surface")
 box()
 cLegend ("bottomleft", inset=0.05, currentYear=currentYear
          , mRange=c(min (homerS$year), currentYear -1)
          , cYcol=currentCol, qntl=qntl [1]
-         # , sYears=c(currentYear-1, currentYear)
          )
 ## add homer data
 aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity")
-# aPlot (tDayH, "sal", MA=pMA, currentCol="lightblue", ylim=c(24.5, 31.8))
 title (main="Homer surface")
 box()
 dev.off()
@@ -54,46 +54,15 @@ dev.off()
 
 
 
-if (0){   ## reverse of salinity=freshness   (shows freshwater better than 1/sldviaS$sal)
-  homerS$fresh <- 32 - homerS$sal
-  sldviaS$fresh <- 32 - sldviaS$sal
-
-  tDayH <- prepDF (dat=homerS, varName="fresh", qntl=qntl, maO=maO)
-  tDayS <- prepDF (dat=sldviaS, varName="fresh", qntl=qntl, maO=maO)
-  # print (summary (tDayS)); stop ("no more")
-
-  png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waterFreshness", maO, "-d.png")
-       , width=1800, height=2400, res=300) # taller? rainy: height=1200
-  par (mfrow=c(2,1)
-       # , mar=c(3,4,4,2)+0.1
-       , mar=c (3,4,2,4)+0.1 # values from rainy
-  )
-
-
-
-  aPlot (tDayS, "fresh", MA=pMA, currentCol=currentCol , ylim=c(0,7)
-         , ylab="freshness")
-  title (main="Seldovia surface")
-  # box()
-  cLegend ("topleft", inset=0.05, currentYear=currentYear
-           , mRange=c(min (homerS$year), currentYear -1)
-           , cYcol=currentCol, qntl=qntl [1])
-  ## add homer data
-  aPlot (tDayH, "fresh", MA=pMA, currentCol=currentCol, ylim=c(0,7)
-         , ylab="freshness")
-  # aPlot (tDayH, "fresh", MA=pMA, currentCol="lightblue", ylim=c(24.5, 31.8))
-  title (main="Homer surface")
-  # box()
-  dev.off()
-}
 
 
 
 
+#############################
+## Sea Surface Temperature ##
+#############################
 
-## for completeness -- SST temperature
-currentCol <- c ("lightblue", "navyblue", "aquamarine")
-# currentCol <- c ("red", "pink", "orange")
+currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
 
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
 for (j in 1: length (instSite)){
@@ -110,18 +79,15 @@ for (j in 1: length (instSite)){
          , ylab=expression('Temperature'~'['*degree~'C'*']')
   )
   title (main=c("Seldovia SST", "Seldovia Harbor bottom water temperature", "Homer SST", "Homer bottom water temperature")[j])
-
-  fAxis(c (0, 15), mT=expression('Temperature '~'['*degree~'F'*']')) # could do better XXX
+  fAxis(c (0, 15)) # from annualPlotFct.R
   bx <- legend ("bottom", inset=0.1, bty="n", legend= "")
   cLegend ("topleft", inset=0.01
-  #         cLegend ("topleft", inset=0.01
                     , currentYear=currentYear
            , mRange=c (min (list (sldviaS, sldvia, homerS, homer)[[j]]$year), currentYear -1)
            , cYcol=currentCol
            , title=paste (maO, "day moving average")
            , qntl=qntl
   )
-
   box()
   dev.off()
 }

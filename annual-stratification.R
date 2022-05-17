@@ -84,20 +84,23 @@ aPlot (hM, "strat", currentCol=currentCol, ylab="water column stability", main="
 # }
 dev.off()
 
-rm (hM, sL)
+rm (hM, sL, hY)
 ## hypothesis:
 # warm air is linked to warm water?
 # warm air is linked to glacial melting and increased stratification
 # warm water is linked to reduced stratification in Seldovia (summer) because deep water becomes warmer (and less saline???)
 
 
+##################
+## fluorescence ##
+##################
 
-## also plot fluorescence and turbidity
 currentCol <- c ("lightgreen", "green", "brown")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Greens")
-# currentCol <- c("red", "green", "brown")
-currentCol [2] <- "#5ca904" # leaf green
+currentCol [2] <- "#55e619" # 25% desaturated Chlorophyll green (#4AFF00 too harsh)
+
+
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-FluorescenceA.pdf")
@@ -131,12 +134,11 @@ sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear,
 summary (sL)
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf", height=4, width=6)
-par (#mfrow=c(2,1),
-     mar=c(3,4,3,1))
+par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
        , pastYear=FALSE, ongoingYear=FALSE
-       ) # c(0,5))
+       )
 cLegend ("topleft", inset=0.05
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
@@ -144,9 +146,7 @@ cLegend ("topleft", inset=0.05
          , qntl=qntl [1]
          , pastYear=FALSE, ongoingYear=FALSE
 )
-# axis (1, at=366, labels=FALSE)
-
-## Homer not quite to be trusted?
+## Homer not to be trusted? Or just not enough data!
 # aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll", main="Homer"
 #        #, ylim=c(1, 1.3)
 #        )
@@ -155,13 +155,14 @@ dev.off()
 
 
 
+###############
+## Turbidity ##
+###############
 
 hM <- prepDF (dat=homerS, varName="turb", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="turb", maO=maO, currentYear=currentYear, qntl=qntl)
 
-currentCol <- c ("brown", "maroon", "yellow")
 require ("RColorBrewer")
-currentCol <- brewer.pal (11, "BrBG")[c(4,2,7)]
 currentCol <- rev (brewer.pal (3, "Oranges"))
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf", width=6, height=8)
@@ -173,11 +174,10 @@ aPlot (sL, "turb", currentCol=currentCol, ylab="Turbidity"
 cLegend ("topleft", inset=0.05
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
-         , cYcol=currentCol # "blue"
+         , cYcol=currentCol
          , qntl=qntl [1]
 )
 axis (1, at=366, labels=FALSE)
-# title (main="Seldovia")
 
 aPlot (hM, "turb", currentCol=currentCol, ylab="Turbidity", main="Homer"
        #, ylim=c(1, 1.3)
