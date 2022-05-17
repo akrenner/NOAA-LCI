@@ -30,7 +30,7 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 48 # threshold for max wind speed to count as storm
 galeT <- 34  # max wind speed for gale
-scAdvT <- 21 # max wind speed for small craft advisory
+scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
 require ("RColorBrewer")
 currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
