@@ -97,7 +97,7 @@ currentCol <- c ("lightgreen", "green", "brown")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Greens")
 # currentCol <- c("red", "green", "brown")
-
+currentCol [2] <- "#5ca904" # leaf green
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-FluorescenceA.pdf")
@@ -130,7 +130,7 @@ hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, 
 sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
 summary (sL)
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf", height=4, width=6)
 par (#mfrow=c(2,1),
      mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
@@ -164,7 +164,7 @@ require ("RColorBrewer")
 currentCol <- brewer.pal (11, "BrBG")[c(4,2,7)]
 currentCol <- rev (brewer.pal (3, "Oranges"))
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf", width=6, height=8)
 par (mfrow=c(2,1), mar=c(3,4,3,1))
 aPlot (sL, "turb", currentCol=currentCol, ylab="Turbidity"
        , main="Seldovia"
