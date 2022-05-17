@@ -104,7 +104,7 @@ currentCol [2] <- "#55e619" # 25% desaturated Chlorophyll green (#4AFF00 too har
 
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-FluorescenceA.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow=c(2,2), mar=c(3,4,3,1))
 
 for (i in 1:length (waterL)){
@@ -132,7 +132,7 @@ rm (waterL, hM, i)
 
 hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
-summary (sL)
+# summary (sL)
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf", height=4, width=6)
 par (mar=c(3,4,3,1))
@@ -151,6 +151,14 @@ cLegend ("topleft", inset=0.05
 # aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll", main="Homer"
 #        #, ylim=c(1, 1.3)
 #        )
+
+## plot all years to show variability
+# plot (chlfluor~jday, data=sL, type="n"
+#       , ylim=range (sL [,20:ncol (sL)], na.rm=TRUE)
+#       )
+# for (i in 20:ncol (sL)){
+#   lines (sL[,i]~sL$jday, col = i)
+# }
 dev.off()
 
 
