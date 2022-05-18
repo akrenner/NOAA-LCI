@@ -81,7 +81,7 @@ fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
 fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
-fL <- c(fL, rL ("ctd-data_2017-21/1_Unedited .hex files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/"))
 # print (length (fL))
 rm (rL)
 
