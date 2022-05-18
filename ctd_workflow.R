@@ -15,6 +15,7 @@ if (length (grep ("Martin", getwd())) > 0){
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 
+sink (file = "~/tmp/LCI_noaa/cache/ctdprocessinglog.txt", split = TRUE) # show output and write to file
 
 ## load missing packages
 if (!require("pacman")) install.packages("pacman"
@@ -33,7 +34,6 @@ Require ("LakeMetabolizer")
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
-sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 cat ("\n# END CTD_file_management.R #\n")
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
@@ -68,5 +68,6 @@ cat ("\n# END CTDwall.R #\n", Sys.time())
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
 sink() # end console logging
+cat ("open log file to examine output")
 print (Sys.time())
 #EOF
