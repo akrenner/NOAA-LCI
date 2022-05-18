@@ -61,12 +61,13 @@ dir.create(outF, recursive=TRUE)
 ## create several temp dir that can be used from outside:
 # tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
 tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
-               , c("1-converted", "2-filtered", "3-aligned", "4-looped", "5-binned", "4r-looped", "5r-binned"))
+               , c("1-converted", "2-filtered", "3-aligned", "4-looped"
+                   , "5-binned", "4r-looped", "5r-binned"))
 unlink (tLB, recursive=TRUE, force=TRUE)
 # names (tLB) <- paste0 ("t", 1:5)                      ## still needed?
 # tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 inD <- dirname (conF)
-outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy
+outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy to get full path
 
 
 
@@ -148,7 +149,8 @@ for (i in 1:length (conF)){
 ## run BinAvg again in SEABIRD and/or in R.
 ## tLB [3]: aligned, tLB [4]: looped,
 ## slow -- any way to parallelize this?
-if (0){
+
+if (0){  ## this didn't use to fail (early 2022)? skip for now, not sure what's wrong.
 fNf <- list.files(tLB [3], ".cnv"
                   , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 require ("oce")
