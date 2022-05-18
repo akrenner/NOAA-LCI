@@ -5,12 +5,29 @@
 ## missing feature: consider making plot in two columns (or panels, one for each year?)
 ## current version: advantage that it can extend for many years to come
 
-# rm (list = ls())
+
+## to conform to single-page: plot in two columns
+rm (list = ls())
+
+
+##############
+nColumns <- 2  # how many columns to plot. May need to adjust cex.axis
+##############
+
+
 load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
 
 ## add time variables
-phy <- physOc
+phy <- physOc; rm (physOc)
 phy$year <- factor (format (phy$isoTime, "%Y"))
+## should ensure that length (levels (phy$year)) is even so that two columns are scalled equally
+
+exY <- length (levels (phy$year))%%nColumns
+if (exY !=0){  # balance length of columns
+  levels (phy$year) <- c (levels (phy$year), max (as.numeric (levels (phy$year)))+exY)
+}
+rm (exY)
+
 phy$month <- factor (format (phy$isoTime, "%m"))
 phy$Transect <- factor (ifelse (phy$Transect == "AlongBay", "AB", paste0 ("T", phy$Transect)))
 phy$Station <- factor (phy$Station)
@@ -32,7 +49,6 @@ xT <- xtabs(Station~sTime+Transect, dAv)
 
 ## data prep for image-plot
 xTs <- sapply (1:ncol (xT), function (i){  # express transect as proportion sampled
-  # scale (xT [,i], center = FALSE)
   xT [,i] / max (xT [,i], na.rm = TRUE)
 })
 dimnames(xTs) <- dimnames(xT)
@@ -41,15 +57,64 @@ xT <- ifelse (xT == 0, NA, xT)  # not sampled = white
 xT <- xT [nrow (xT):1,]   # top = first samples
 
 
-pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 22, width = 8.5)
-par (las = 1, mar = c(4,6,4,2))
-image (t (xT), axes = FALSE)
-axis (3, at = ((1:ncol (xT))-1)/(ncol (xT)-1), labels = colnames(xT), tick = FALSE) # axis is 0:1
-axis (1, at = ((1:ncol (xT))-1)/(ncol (xT)-1), labels = colnames(xT), tick = FALSE) # axis is 0:1
-xL <- paste (as.character (sapply (1:length(levels (dAv$year)), FUN = function (i){c (levels (dAv$year)[i], rep ("", 11))}))
-             , rep (levels (dAv$month), length (levels (dAv$year)))
-)
-# axis (2, at = ((1:nrow (xT))-1)/(nrow (xT)-1), labels = row.names(xT), tick = FALSE, cex = 0.8)
-axis (2, at = ((1:nrow (xT))-1)/(nrow (xT)-1), labels = rev (xL), tick = FALSE, cex = 0.8)
-box()
+
+
+yL <- function (mx){
+  ## construct lables for y-axis from rownames of matrix of from YYYY-MM
+  yr <- factor (substr (row.names(mx), 1, 4))
+  mt <- factor (1:12, ordered = TRUE)
+  paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
+    c(levels (yr)[i], rep ("", 11))}))
+         , rep (levels (mt), length (levels (yr))))
+}
+
+xAxis <- function (side=3, ...){
+  axis (side=side, at = ((1:ncol (xT))-1)/(ncol (xT)-1)
+        , labels = colnames(xT), tick = FALSE, ...) # axis is 0:1
+}
+
+yAxis <- function (lab, mx, ...){
+  axis (2, at = ((1:nrow (mx))-1)/(nrow (mx)-1)
+        , labels = rev (lab)
+        , tick = FALSE, cex.axis = 0.7 # any bigger and labels will skip
+        , ...)
+  # for (i in lab){axis (2, i)}  ## trick to force overlapping labels?
+}
+
+
+
+## two columns
+## split matrix into two:
+xYears <- as.factor (substr (row.names (xT), 1, 4))
+cO <- ceiling (length (levels (xYears)) / nColumns) # should be guaranteed to be even anyway (see levels above)
+xT1 <- xT [xYears %in% levels (xYears)[1:cO],]
+xT2 <- xT [xYears %in% levels (xYears)[(cO+1):length (levels (xYears))],]
+
+
+## generalize to nColumn
+## split xT into list of length nColumn
+
+if (nrow (xT) %% nColumns != 0){stop ("length of columns of xT is messed up")}
+xTL <- lapply (1:nColumns, function (i){
+  nR <- nrow (xT)/nColumns
+  xT [(1+(i-1) * nR) : (i*nR),]
+})
+
+
+
+
+
+pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 11, width = 8.5)
+par (mfrow = c(1,nColumns))
+par (las = 1, mar = c(4,5,5,1))
+for (i in length (xTL):1){
+  image (t (xTL [[i]]), axes = FALSE)
+  xAxis (side=3); xAxis (side=1)
+  xL <- yL (xTL [[i]])
+  yAxis (xL, xTL [[i]])
+  box()
+}
+mtext ("Available CTD samples, Kachemak Bay and lower Cook Inlet", side = 3, outer = TRUE, line = -2)
 dev.off()
+
+## EOF
