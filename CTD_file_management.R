@@ -34,7 +34,7 @@ if (!exists ("hexFileD")){
 }
 
 
-# unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
+# unlink ("~/GISdata/LCI/CTD-processing/allCTD/", recursive = TRUE)  ## careful!! -- overkill
 unlink ("~/GISdata/LCI/CTD-processing/allCTD/edited_hex", recursive = TRUE)
 unlink ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", recursive = TRUE)
 set.seed (8)
@@ -87,10 +87,12 @@ rm (rL)
 
 
 ## bad files out
-if (length (grep ("Troubleshooting", fL)) > 0){
+bF <- grep ("Troubleshooting", fL)
+if (length (bF) > 0){
   cat ("removing ", length (bF), " bad files\n")
-  fL <- fL [-grep ("Troubleshooting", fL)]
+  fL <- fL [-bF]
 }
+rm (bF)
 
 
 ## manually remove duplicates -- if any -- none found
@@ -142,6 +144,7 @@ for (i in 1:nrow (fDB)){
              , overwrite = FALSE, copy.date = TRUE)
 }
 rm (hF)
+cat ("\n\nfactor (fDB$copy\n")
 print (summary (factor (fDB$copy)))
 
 ## rename any .txt files to .hex
@@ -154,7 +157,7 @@ if (any (!cpCk)){print (summary (cpCk))} # all should be TRUE
 rm (cpCk)
 unlink (iN)
 
-
+cat ("\n length of hex files in nD and nrow (fDB)\n")
 print (length (list.files (nD, pattern = ".hex", recursive = TRUE, ignore.case = TRUE)))
 print (nrow(fDB))
 
@@ -351,6 +354,11 @@ fixMeta ("2015_02-12", "2015_02-12")
 
 fixMeta ("2016_02-16_T7", "2016-02-16")
 #}
+
+## confirmed bad metadata by checking field notes (file name and field notes agree)
+fixMeta ("2017_04-18", "2017-04-18") # meta was 2017-12-14
+fixMeta ("2017-05-22", "2018-05-22") # meta was 2018-01-17
+
 
 
 ## end of file manipulations

@@ -187,6 +187,7 @@ readCNV <- function (i){
   Require (oce)
   ctdF <- try (read.ctd (fNf [i]
                          # , columns = "define name of dV/dT"
+                         , deploymentType = "profile"
                          ))
   if (class (ctdF) == "try-error"){
   } #else{

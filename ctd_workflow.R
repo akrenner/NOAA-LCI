@@ -15,7 +15,8 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 
-sink (file = "~/tmp/LCI_noaa/cache/ctdprocessinglog.txt", split = TRUE) # show output and write to file
+# sink (file = "~/tmp/LCI_noaa/cache/ctdprocessinglog.txt", split = TRUE) # show output and write to file
+sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
 
 ## load missing packages
 if (!require("pacman")) install.packages("pacman"

@@ -150,7 +150,7 @@ for (i in 1:length (conF)){
 ## tLB [3]: aligned, tLB [4]: looped,
 ## slow -- any way to parallelize this?
 
-if (0){  ## this didn't use to fail (early 2022)? skip for now, not sure what's wrong.
+if (1){  ## fails in oce 1.7-3 due to changes in oce
 fNf <- list.files(tLB [3], ".cnv"
                   , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 require ("oce")
