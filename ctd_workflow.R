@@ -5,10 +5,14 @@ rm (list = ls())
 print (Sys.time())
 # CTD processing
 if (length (grep ("Martin", getwd())) > 0){
-   setwd("~/myDocs/amyfiles/NOAA-LCI/")
+  if (version$os != "mingw32"){
+    setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+  }else{
+    setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+  }
 }else{
-   # setwd("~/GISdata/LCI/CTDprocessing/")
-   setwd("~/myDocs/R-scripts/NOAA-LCI")
+  # setwd("~/GISdata/LCI/CTDprocessing/")
+  setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 
 
@@ -39,6 +43,7 @@ cat ("\n# END CTD_cnv-Import.R #\n")
 source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
 cat ("\n# END CTD_cleanup.R #\n")
 
+## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 
 
