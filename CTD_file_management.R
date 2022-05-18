@@ -623,4 +623,5 @@ file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", fDB2)
            , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", fDB2))
 
 
+cat ("\n# END CTD_file_management.R #\n")
 ## EOF

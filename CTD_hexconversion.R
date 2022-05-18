@@ -201,6 +201,6 @@ rm (conF, psa, outF, inD, tL, l1, l2, l3)
 
 print (Sys.time())
 print (difftime(Sys.time(), sTime))
-cat ("end of CTD_hexconversion.R\n\n")
+cat ("\n# END CTD_hexconversion.R #\n")
 setwd (cWD)
 ## EOF

@@ -612,5 +612,6 @@ ls()
 
 save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 
-cat ("\n\n\n##\n## finished CTD_cleanup.R\n##\n\n")
+cat ("\n# END CTD_cleanup.R #\n")
+
 ## EOF
