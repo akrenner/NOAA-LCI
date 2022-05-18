@@ -4,7 +4,7 @@ rm (list = ls())
 
 print (Sys.time())
 # CTD processing
-if (length (grep ("Martin", getwd())) > 0){
+if (length (grep ("martin", tolower (getwd()))) > 0){
   if (version$os != "mingw32"){
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
   }else{
