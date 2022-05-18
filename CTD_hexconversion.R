@@ -28,11 +28,11 @@
 
 
 
-rm (list = ls())
+rm (list=ls())
 cWD <- getwd()
 setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
 ## manually delete pre-existing outF?
-unlink ("~/GISdata/LCI/CTD-processing/allCTD/CNV", recursive = TRUE)  ## careful!
+unlink ("~/GISdata/LCI/CTD-processing/allCTD/CNV", recursive=TRUE)  ## careful!
 sTime <- Sys.time()
 print (sTime)
 
@@ -43,11 +43,11 @@ print (sTime)
 #################################
 
 #################################
-conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = "con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
 # conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 
 ## path to psa files
-psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
+psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive=TRUE, full.names=TRUE)
 
 ## where to put results
 outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
@@ -57,12 +57,12 @@ outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
 
 ## create directories and temp directories
 require (tools)
-dir.create(outF, recursive = TRUE)
+dir.create(outF, recursive=TRUE)
 ## create several temp dir that can be used from outside:
 # tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
 tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
                , c("1-converted", "2-filtered", "3-aligned", "4-looped", "5-binned", "4r-looped", "5r-binned"))
-unlink (tLB, recursive = TRUE, force = TRUE)
+unlink (tLB, recursive=TRUE, force=TRUE)
 # names (tLB) <- paste0 ("t", 1:5)                      ## still needed?
 # tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 inD <- dirname (conF)
@@ -72,12 +72,12 @@ outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy
 
 # ## trouble shooting -- one file at a time
 if (0){
-  # conF <- gsub ("//", "\\", conF, fixed = TRUE)
+  # conF <- gsub ("//", "\\", conF, fixed=TRUE)
   # file.path(conF, fsep = "\\")
   i <- 3
   j <- 99
   # for (i in 1:length (conF)){
-  #   for (k in 1:length (tL)){dir.create (tL [k], recursive = TRUE)}
+  #   for (k in 1:length (tL)){dir.create (tL [k], recursive=TRUE)}
   #   hexFiles <- list.files(dirname (conF [i]), ".hex$")
   #   for (j in 1:length (hexFiles)){
   #     l1 <- paste0 ("DatCnv /i", inD [i], "/", hexFiles [j], " /c", conF [i], " /o", tLD[1]
@@ -85,7 +85,7 @@ if (0){
   #     write (l1, file = "CTDbatch.txt")
   #     system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"))
   #   }
-  #   unlink (tL, recursive = TRUE, force = TRUE)
+  #   unlink (tL, recursive=TRUE, force=TRUE)
   # }
   #
   # rm (i, j, k)
@@ -97,13 +97,13 @@ if (0){
 ## great if this could run in parallel -- probably not on Windows?
 for (i in 1:length (conF)){
   ## for (i in 2){ # XXX
-  #sapply (1:length (tL), FUN = function (j){dir.create (tL [j], recursive = TRUE)})
+  #sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
   tL <- paste (tLB, i, sep = "/")
   tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 
-  for (j in 1:length (tL)){dir.create (tL [j], recursive = TRUE)}
+  for (j in 1:length (tL)){dir.create (tL [j], recursive=TRUE)}
 
   ##
   ## need to add code here for new CTD !!
@@ -137,9 +137,9 @@ for (i in 1:length (conF)){
   # write (paste (l1, l2, sep = "\n"))## XXX TEST
 
   # efforts to suppress console output failed: invisible(), capture.output()...
-  x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
+  x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait=TRUE, intern=TRUE)
   ## cleanup
-  # unlink (tL, recursive = TRUE, force = TRUE)  ## need this or next batch will get files from wrong CTD
+  # unlink (tL, recursive=TRUE, force=TRUE)  ## need this or next batch will get files from wrong CTD
   unlink ("~/CTDbatch.txt")
 }
 
@@ -148,49 +148,52 @@ for (i in 1:length (conF)){
 ## run BinAvg again in SEABIRD and/or in R.
 ## tLB [3]: aligned, tLB [4]: looped,
 ## slow -- any way to parallelize this?
+if (0){
 fNf <- list.files(tLB [3], ".cnv"
-                  , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
+                  , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 require ("oce")
 for (i in 1:length (fNf)){
   ## read all text and change digit-digit to digit -digit
   ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
   # read.table()
 
-  ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
+  ctdF <- try (read.ctd(fNf [i]), silent=TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
   if (class (ctdF) == "try-error"){
-    cat ("trouble reading ", i, fNf [i], "--trying to fix\n")
+    cat ("\n##\ntrouble reading ", i, fNf [i], "--trying to fix\n##\n\n")
     cT <- readLines(fNf [i])
     ## gsub: capture text and use it again -- line 283 of i==1058
     dS <- grep ("^\\*END", cT) + 1 # line where data starts
+    #  cT [(dS-3):(dS+5)]
     ctx <- cT [dS:length (cT)]
     ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
 #   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
     cTf <- c (cT [1:(dS-1)], ctx2)
     tF <- tempfile()
-    write.table(cTf, file = tF, quote = FALSE, col.names = FALSE, row.names = FALSE)
-    tfin <- readLines (tF)
+    write.table(cTf, file=tF, quote=FALSE, col.names=FALSE, row.names=FALSE)
+    # tfin <- readLines (tF)
     ctdF <- read.ctd (tF)
+    # read.ctd.sbe(tF) fails to read date:
     unlink (tF)
     rm (cT, tF, ctx, ctx2, cTf, dS)
   }
   cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
-                         # , parameters = list (minSoak = 1, maxSoak = 20)
-                         )  ## min/maxSoak = dbar (approx m)
-                , silent = TRUE)
+                         # , parameters=list (minSoak=1, maxSoak=20)
+                         )  ## min/maxSoak=dbar (approx m)
+                , silent=TRUE)
   if (class (cTrim) == "try-error"){
     ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-    # could/should specify min soak times, soak depth -- min soak time = 40s
+    # could/should specify min soak times, soak depth -- min soak time=40s
     #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
   }else{
     ctdF <- cTrim
   }
-  write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
+  write.ctd (ctdF, file=gsub ("3-aligned", "4r-looped", fNf [i]))
   ## tried, but largely failed so far with
   ## vprr bin_cast / bin_calculate
   ## and/or oce::ctdDecimate
   # -- ctdDecimate seems to work but depth still a bit off
 }
-
+}
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)
 
