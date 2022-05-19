@@ -126,18 +126,21 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
+  if (packageVersion("oce") <= "1.7.3"){  # change <= to < after next oce release
+    stop ("Need package:oce version 1.7.4 or later")
+  }
   require ("oce")
-
-  ## sort by lat/lon instead => see CTDsections.R
-  ## sort only once!
 
   stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
   #  stn <- factor (sprintf ("%03.0f", as.integer (xC$Station)), ordered = TRUE)  ## does this order them??
-  if (xC$Transect [1] %in% as.character (c(4,6,9))){stn <- factor (stn, levels = rev (levels (stn))
-                                                                   , ordered = TRUE)}
+  if (xC$Transect [1] %in% as.character (c(4,6,9))){
+    stn <- factor (stn, levels = rev (levels (stn))
+                   , ordered = TRUE)}
   xC$Match_Name <- factor (xC$Match_Name)
   xCo <- makeSection (xC, stn)
   xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = TRUE) # should understand this step more fully! XXX
+
+  ## sort by lat/lon instead -- or StationID (would need to re-assign)
   ## sort in here, rather than separately
   xCo <- sectionize (xC)
   if (xC$Transect [1] == "AlongBay"){ # extended AlongBay wraps around Pogy Ptp
