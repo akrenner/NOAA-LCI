@@ -2,8 +2,9 @@
 
 ## recreate data availability matrix, as done by Jim
 ## show which transects have been sampled in which years/dates
-## missing feature: consider making plot in two columns (or panels, one for each year?)
 ## current version: advantage that it can extend for many years to come
+
+## bug: adjust cex.axis for x-axis if nColumns > 3, or force overlap
 
 
 ## to conform to single-page: plot in two columns
@@ -11,8 +12,12 @@ rm (list = ls())
 
 
 ##############
-nColumns <- 2  # how many columns to plot. May need to adjust cex.axis
+nColumns <- 2  # (1:4 make sense)
 ##############
+
+las <- 1
+if (nColumns == 1){CA <-0.4}else if (nColumns == 2){CA <- 0.7}else {CA <- 1}
+if (nColumns > 3){Cx <- 1; las = 2}else{Cx <- 1}
 
 
 load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
@@ -24,7 +29,8 @@ phy$year <- factor (format (phy$isoTime, "%Y"))
 
 exY <- length (levels (phy$year))%%nColumns
 if (exY !=0){  # balance length of columns
-  levels (phy$year) <- c (levels (phy$year), max (as.numeric (levels (phy$year)))+exY)
+  levels (phy$year) <- seq (min (as.numeric (levels (phy$year)))
+                            , max (as.numeric (levels (phy$year)))+(nColumns-exY))
 }
 rm (exY)
 
@@ -58,40 +64,36 @@ xT <- xT [nrow (xT):1,]   # top = first samples
 
 
 
-
+## keep lables at normal size?
 yL <- function (mx){
   ## construct lables for y-axis from rownames of matrix of from YYYY-MM
   yr <- factor (substr (row.names(mx), 1, 4))
   mt <- factor (1:12, ordered = TRUE)
-  paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
+  lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
     c(levels (yr)[i], rep ("", 11))}))
-         , rep (levels (mt), length (levels (yr))))
+    , rep (levels (mt), length (levels (yr))))
+  # lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
+  #   c("", levels (yr)[i], rep ("", 10))}))
+  #   , rep (levels (mt), length (levels (yr))))
+  lbl
 }
 
 xAxis <- function (side=3, ...){
   axis (side=side, at = ((1:ncol (xT))-1)/(ncol (xT)-1)
-        , labels = colnames(xT), tick = FALSE, ...) # axis is 0:1
+        , labels = colnames(xT), tick = FALSE, cex.axis = Cx, ...) # axis is 0:1
 }
 
 yAxis <- function (lab, mx, ...){
   axis (2, at = ((1:nrow (mx))-1)/(nrow (mx)-1)
         , labels = rev (lab)
-        , tick = FALSE, cex.axis = 0.7 # any bigger and labels will skip
+        , tick = FALSE, cex.axis = CA # any bigger and labels will skip
         , ...)
   # for (i in lab){axis (2, i)}  ## trick to force overlapping labels?
 }
 
 
 
-## two columns
-## split matrix into two:
-xYears <- as.factor (substr (row.names (xT), 1, 4))
-cO <- ceiling (length (levels (xYears)) / nColumns) # should be guaranteed to be even anyway (see levels above)
-xT1 <- xT [xYears %in% levels (xYears)[1:cO],]
-xT2 <- xT [xYears %in% levels (xYears)[(cO+1):length (levels (xYears))],]
-
-
-## generalize to nColumn
+## split into nColumn
 ## split xT into list of length nColumn
 
 if (nrow (xT) %% nColumns != 0){stop ("length of columns of xT is messed up")}
@@ -103,10 +105,9 @@ xTL <- lapply (1:nColumns, function (i){
 
 
 
-
 pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 11, width = 8.5)
 par (mfrow = c(1,nColumns))
-par (las = 1, mar = c(4,5,5,1))
+par (las = las, mar = c(4,5,5,1))
 for (i in length (xTL):1){
   image (t (xTL [[i]]), axes = FALSE)
   xAxis (side=3); xAxis (side=1)
@@ -115,6 +116,34 @@ for (i in length (xTL):1){
   box()
 }
 mtext ("Available CTD samples, Kachemak Bay and lower Cook Inlet", side = 3, outer = TRUE, line = -2)
+# dev.off()
+rm (xL, xTL, las, i, Cx, yL)
+
+
+
+## alternative, focus on month
+# for each transect:
+# month over years
+# pdf ("~/tmp/LCI_noaa/media/CTDsections/dataAvail2.pdf", height = 11, width = 8.5)
+
+nT <- length (levels (dAv$Transect))
+# par (mfrow = c(nT,nColumns))
+par (mfrow = c(nT/2,2), las = 1) #, mar = c())
+for (i in 1:nT){
+  dat <- subset (dAv, Transect == levels (dAv$Transect)[i])
+  xT <- xtabs(Station~year+month, dat)
+  if (rowSums(xT)[nrow (xT)] == 0){xT <- xT [-nrow (xT),]}
+  is.na (xT)[xT == 0] <- TRUE
+  xT <- xT / max (xT, na.rm = TRUE)
+#  image (t (xT)[nrow (xT:1),], axes=FALSE)  # watch out to rotate xT correctly
+  image (t (xT [nrow (xT):1,]), axes=FALSE)  # watch out to rotate xT correctly
+  title (main = levels (dAv$Transect)[i], line = 2.5)
+  yAxis (row.names(xT), xT)
+  axis (3, at = ((1:12)-1)/(12-1), labels = 1:12 #month.abb
+        , tick = FALSE)
+  box()
+}
 dev.off()
+
 
 ## EOF
