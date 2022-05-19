@@ -217,12 +217,8 @@ for (ov in iX){
           # }
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
-          xCo <- sectionize (xC)
-          if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
-            xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
-          }else{
-            xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
-          }
+
+            xCo <- sectionize (xC)
 
 
           pSec (xCo, N = oVarsF [ov]
