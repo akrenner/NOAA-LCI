@@ -522,12 +522,14 @@ galeS <- subset (tDay, p365galDay > 0)  ## should be storms!
 hgt <- 1.1; wdh <- 15
 img <- readPNG ("pictograms/cloud.png")
 if (nrow (galeS) > 0){
-  with (galeS, rasterImage (img, xleft=jday-9, ybottom=p365ma + 1.5
-                            , xright=jday-9+wdh, ytop=p365ma + 1.5 + hgt
+  ## jitter to avoid overlapping clouds
+  jit <- c(-1,-0.3 , 0.5)
+  with (galeS, rasterImage (img, xleft=jday-9, ybottom=p365ma + 1.5 + jit
+                            , xright=jday-9+wdh, ytop=p365ma + 1.5 + hgt + jit
                             # , angle=p365wdir+ 90
                             ##  rotates around bottom-left point -- would need compensation
   ))
-  with (galeS, text (jday, p365ma + 2.0, labels=p365wCar, cex=0.6))
+  with (galeS, text (jday, p365ma + 2.0 + jit, labels=p365wCar, cex=0.6))
 }
 rm (galeS)
 ## legend
@@ -539,8 +541,11 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , pastYear=pastYear, ongoingYear=FALSE,
                )
 ## legend for gale clouds in other corner
-yL <- 2.7
-text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
+yL <- 0.7
+text (273, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=4)
+rasterImage (img, xleft=260, xright=260+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
+# yL <- 2.7
+# text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
 ## no gales in 2021 -- drop this part this year
 # rasterImage (img, xleft=280, xright=280+wdh, ybottom=yL + 1.2, ytop=yL + 1.2+hgt)
 # text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos=2)
