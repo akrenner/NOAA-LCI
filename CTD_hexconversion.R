@@ -170,13 +170,8 @@ for (i in 1:length (fNf)){
     ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
 #   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
     cTf <- c (cT [1:(dS-1)], ctx2)
-    tF <- tempfile()
-    write.table(cTf, file=tF, quote=FALSE, col.names=FALSE, row.names=FALSE)
-    # tfin <- readLines (tF)
-    ctdF <- read.ctd (tF)
-    # read.ctd.sbe(tF) fails to read date:
-    unlink (tF)
-    rm (cT, tF, ctx, ctx2, cTf, dS)
+    ctdF <- read.ctd (textConnection (cTf))
+    rm (cT,ctx, ctx2, cTf, dS)
   }
   cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
                          # , parameters=list (minSoak=1, maxSoak=20)
