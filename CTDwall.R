@@ -3,6 +3,9 @@
 
 rm (list = ls())
 
+## check whether problems persist with most recent oce version
+## make sure that if title is plotted, next plot moves on to the next field!
+
 
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
