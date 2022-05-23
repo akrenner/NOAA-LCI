@@ -17,6 +17,13 @@ currentCol <- c ("lightblue", "blue", "magenta")
 
 
 source ("annualPlotFct.R")
+
+
+
+####################
+## Stratification ##
+####################
+
 # density sigma theta kg/m3
 sigDens <- function (df, pressure=0, lon=-151.5, lat=59.6){
   ## assuming standard SWMP df, calculate seawater density
@@ -30,7 +37,6 @@ sigDens <- function (df, pressure=0, lon=-151.5, lat=59.6){
   return (sigThe)
 }
 
-
 homer$swDens <- sigDens (homer, pressure=swPressure (15, latitude=59)) # what depth?
 homerS$swDens <- sigDens (homerS)
 sldvia$swDens <- sigDens (sldvia, pressure=swPressure (15, latitude=59))
@@ -38,7 +44,6 @@ sldviaS$swDens <- sigDens (sldviaS)
 
 homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] - homerS$swDens
 sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] - sldviaS$swDens
-
 # homerS$strat <- homer$swDens [match (homerS$datetimestamp, homer$datetimestamp)] / homerS$swDens
 # sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimestamp)] / sldviaS$swDens
 
@@ -46,11 +51,6 @@ sldviaS$strat <- sldvia$swDens [match (sldviaS$datetimestamp, sldvia$datetimesta
 hM <- prepDF (dat=homerS, varName="strat", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="strat", maO=maO, currentYear=currentYear, qntl=qntl)
 
-# ## anomaly
-# homerS$stratAnom <- homerS$strat - hM$MA_strat [match (homerS$jday, hM$jday)]
-# plot (homerS$stratAnom, type="l")
-# sldviaS$stratAnom <- sldviaS$strat - sL$MA_strat [match (sldviaS$jday, sL$jday)]
-# plot (sldviaS$stratAnom, type="l")
 
 
 hY <- 2014:2017
@@ -84,7 +84,7 @@ aPlot (hM, "strat", currentCol=currentCol, ylab="water column stability", main="
 # }
 dev.off()
 
-rm (hM, sL)
+rm (hM, sL, hY)
 ## hypothesis:
 # warm air is linked to warm water?
 # warm air is linked to glacial melting and increased stratification
@@ -92,15 +92,19 @@ rm (hM, sL)
 
 
 
-## also plot fluorescence and turbidity
+##################
+## fluorescence ##
+##################
+
 currentCol <- c ("lightgreen", "green", "brown")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Greens")
-# currentCol <- c("red", "green", "brown")
+currentCol [2] <- "#55e619" # 25% desaturated Chlorophyll green (#4AFF00 too harsh)
+
 
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-FluorescenceA.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow=c(2,2), mar=c(3,4,3,1))
 
 for (i in 1:length (waterL)){
@@ -128,15 +132,14 @@ rm (waterL, hM, i)
 
 hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
-summary (sL)
+# summary (sL)
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf")
-par (#mfrow=c(2,1),
-     mar=c(3,4,3,1))
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf", height=4, width=6)
+par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
        , pastYear=FALSE, ongoingYear=FALSE
-       ) # c(0,5))
+       )
 cLegend ("topleft", inset=0.05
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
@@ -144,27 +147,34 @@ cLegend ("topleft", inset=0.05
          , qntl=qntl [1]
          , pastYear=FALSE, ongoingYear=FALSE
 )
-# axis (1, at=366, labels=FALSE)
-
-## Homer not quite to be trusted?
+## Homer not to be trusted? Or just not enough data!
 # aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll", main="Homer"
 #        #, ylim=c(1, 1.3)
 #        )
+
+## plot all years to show variability
+# plot (chlfluor~jday, data=sL, type="n"
+#       , ylim=range (sL [,20:ncol (sL)], na.rm=TRUE)
+#       )
+# for (i in 20:ncol (sL)){
+#   lines (sL[,i]~sL$jday, col = i)
+# }
 dev.off()
 
 
 
 
+###############
+## Turbidity ##
+###############
 
 hM <- prepDF (dat=homerS, varName="turb", maO=maO, currentYear=currentYear, qntl=qntl)
 sL <- prepDF (dat=sldviaS, varName="turb", maO=maO, currentYear=currentYear, qntl=qntl)
 
-currentCol <- c ("brown", "maroon", "yellow")
 require ("RColorBrewer")
-currentCol <- brewer.pal (11, "BrBG")[c(4,2,7)]
 currentCol <- rev (brewer.pal (3, "Oranges"))
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf")
+pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Turbidity.pdf", width=6, height=8)
 par (mfrow=c(2,1), mar=c(3,4,3,1))
 aPlot (sL, "turb", currentCol=currentCol, ylab="Turbidity"
        , main="Seldovia"
@@ -173,18 +183,91 @@ aPlot (sL, "turb", currentCol=currentCol, ylab="Turbidity"
 cLegend ("topleft", inset=0.05
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
-         , cYcol=currentCol # "blue"
+         , cYcol=currentCol
          , qntl=qntl [1]
 )
 axis (1, at=366, labels=FALSE)
-# title (main="Seldovia")
 
 aPlot (hM, "turb", currentCol=currentCol, ylab="Turbidity", main="Homer"
        #, ylim=c(1, 1.3)
        )
-# title (main="Homer")
 dev.off()
 
 
-cat ("Finished stratificationSeason\n")
+
+
+##############
+## salinity ##
+##############
+currentCol <- c ("lightblue", "darkblue", "hotpink")
+
+tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO)
+tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
+
+## plot
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.pdf"), width=9, height=9)
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
+#      , width=1800, height=2400, res=300)
+par (mfrow=c(2,1)
+     , mar=c(3,4,4,2)+0.1
+)
+
+aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=c(24, 31.8)
+       , ylab="salinity")
+title (main="Seldovia surface")
+box()
+cLegend ("bottomleft", inset=0.05, currentYear=currentYear
+         , mRange=c(min (homerS$year), currentYear -1)
+         , cYcol=currentCol, qntl=qntl [1]
+         )
+## add homer data
+aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity")
+title (main="Homer surface")
+box()
+dev.off()
+
+
+
+
+
+
+
+
+#############################
+## Sea Surface Temperature ##
+#############################
+
+currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
+
+instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
+for (j in 1: length (instSite)){
+  tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]
+                  , qntl=qntl, maO=maO)
+  # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
+  #                                                           "Temp-Deep-Homer")[j]
+  #              , ".pdf"), width=9, height=6)
+  png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
+                                                            "Temp-Deep-Homer")[j]
+               , ".png"), width=1800, height=1200, res=300)
+  par (mar=c(3,4,2,4))
+  aPlot (tDay, "temp", currentCol=currentCol
+         , ylab=expression('Temperature'~'['*degree~'C'*']')
+  )
+  title (main=c("Seldovia SST", "Seldovia Harbor bottom water temperature", "Homer SST", "Homer bottom water temperature")[j])
+  fAxis(c (0, 15)) # from annualPlotFct.R
+  bx <- legend ("bottom", inset=0.1, bty="n", legend= "")
+  cLegend ("topleft", inset=0.01
+                    , currentYear=currentYear
+           , mRange=c (min (list (sldviaS, sldvia, homerS, homer)[[j]]$year), currentYear -1)
+           , cYcol=currentCol
+           , title=paste (maO, "day moving average")
+           , qntl=qntl
+  )
+  box()
+  dev.off()
+}
+rm (instSite, tDay)
+
+
+cat ("Finished annual-waterTempSal.R\n")
 # EOF

@@ -25,11 +25,10 @@ source ("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
 source ("annual-rainy.R")
-source ("annual-salinity.R")
+source ("annual-waterTempSal.R")
 source ("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
 
 source ("annual-snowpack.R")
-source ("annual-stratification.R")
 source ("annual-waves.R")
 # source ("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
