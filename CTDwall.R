@@ -26,6 +26,7 @@ rm (list = ls())
 # only AlongBay and 9 are monthly -- 4?
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
+if (exists ("sectionSort")){detach ("package:oce")}  ## reload new version of oce
 require ("oce")
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 # x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
@@ -56,7 +57,6 @@ test <- FALSE
 
 
 ## loop over variable, then transects and then seasons
-
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
@@ -78,6 +78,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     if (levels (poAll$Transect)[tn] == "9"){
       poAll$Transect [(poAll$Transect == "AlongBay") & (poAll$Station == "6")] <- "9"
     }
+
+
+    ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
 #    physOcY <- with (physOcY, physOcY [order (),])
 
@@ -92,13 +95,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     physOcY$season <- seasonize (physOcY$month)
 
 
-    # png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVars [ov]
-    #              , " T-", levels (poAll$Transect)[tn]
-    #              # , "_", levels (physOcY$year)[k]
-    #              , "%02d.png")
-    #      , height = 8.5*200, width = 11*200, res = 300)
-
-
+    ## set-up page size for large poster-PDF
     if (levels (poAll$Transect)[tn] %in% mnthly){
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       ph <- 44; pw <- 88     # go big on FWS plotter
@@ -107,12 +104,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     }
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
                  , " T-", levels (poAll$Transect)[tn]
-                 # , "_", levels (physOcY$year)[k]
                  , ".pdf")
          , height = pH, width = pW)
 
 
-    ### force sampling regime -- plot empty for missing survey
+    ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       physOcY$smplIntvl <- physOcY$month
@@ -127,12 +123,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     }
 
 
-    # if (test){iZ <- 1:3}else{
-      iZ <- 1:length (levels (physOcY$year))
-      # }# by year
-    # iZ <- 1:length (levels (physOcY$year)) # by year
-    for (k in iZ){  # cycling through years
-#     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
+    ## is this needed??
+    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
       ## for testing:
       # k <- 8
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
@@ -140,22 +132,18 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       ## replace transDate from above!
       ## also making surveyW redundant
-      physOc$transDate <- with (physOc, paste0 ("T-", Transect, " ", year, "-", smplIntvl))
       physOc$transDate <- with (physOc, factor (transDate
                                                 , levels = paste0 ("T-", Transect [1]
                                                                    , " ", year [1], "-"
                                                                    , levels (smplIntvl))))
 
-
       ## define and plot sections
-      cat ("   ",  formatC (k, width = 3), "/", max (iZ), " Sections/year:", length (levels (physOc$transDate)), "-- ")
+      cat ("   ",  formatC (k, width = 3), "/", length (levels (physOcY$year))
+           , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
-      if (test){iA <- 4}else{iA <-  1:length (levels (physOc$transDate))} # survey #
-      iA <-  1:length (levels (physOc$transDate))  ## change this to months/seasons? XXX
+      if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))} # survey #
       for (i in iA){
-      # for (i in 1:length (levels (physOc$transDate))){
-          # for testing:
-        # i <- 5
+        # for testing: # i <- 5
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 2){
@@ -171,7 +159,12 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           rm (inFuture)
         }else{
 
-          ## check whether there is more than one survey per survey-interval
+
+
+          if (1){  ## plot all casts in survey window or pick out longes survey within X days?
+            xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
+          }else{
+            ## check whether there is more than one survey per survey-interval
 
             ## allow x-day window to make up a composite transectF
             ## better to apply to allPo?
@@ -212,19 +205,16 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 rm (nR)
               }
             }
+          }
 
-          # if (xC$Transect [1] %in% c("4", "9")){
-          #   xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
-          # }else{
-          #   xC <- xC [order (xC$longitude_DD, decreasing = FALSE),]
-          # }
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
-          xCo <- sectionize (xC)
+          xCot <- sectionize (xC)
           ## determine whether transect is incomplete, and if so, pad with blanks
-          xCo <- extendSection (xCo, transect = data.frame (stationId=stn$Match_Name
-                                                 , latitude=stn$Lat_decDegree
-                                                 , longitude=stn$Lon_decDegree))
+          xCo <- extendSection (section=xCot, transect = data.frame (stationID=stn$Match_Name
+                                                                     , latitude=stn$Lat_decDegree
+                                                                     , longitude=stn$Lon_decDegree))
+          rm (xCot)
 
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
@@ -235,11 +225,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
 
 
-
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
-                # , xlim = xRange []  # range of the Transect
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOc$bathy))
                 # , xlim = c(0, TD [tn])
@@ -250,12 +238,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             title (main = paste (levels (physOc$transDate)[i]))
           }
           rm (nSurv)
-          # T 3 4 6 7 9 Along
-          TD <- c (36, 16, 35, 38, 4, 50) # fixed distance (N stations) per transect -- could/should calc TD above
-          TD <- c (12, 10, 12, 12, 10, 12) # fixed distance (N stations) per transect -- could/should calc TD above
-#         addBorder (xCo, TD[ov]-1)
+          ## addBorder (xCo, TD[ov]-1)
 
-          if (!exists ("xMap")){xMap <- xCo; xMc <- xC}  # keep longest section for map
+          # keep longest section for map
+          if (!exists ("xMap")){xMap <- xCo; xMc <- xC}
           if (length (levels (factor (xMc$Station))) < length (levels (factor (xC$Station)))){
             xMap <- xCo; xMc <- xC
           }
@@ -263,24 +249,27 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       }
       cat ("\n")
     }
-    plot (xMap
-          , which = 99
-          , coastline = "coastlineWorldFine"
-          , showStations = TRUE
-          , gird = TRUE
-          , map.xlim = c(-154, -151)
-          , map.ylim = c(57.5, 60.1)
-          , clatitude = 59.4
-          , clongitude = -152
-          , span = 250
-    )
-    plot (xMap
-          , which = 99
-          , coastline = "coastlineWorldFine"
-          , showStations = TRUE
-          , gird = TRUE
-    )
-    rm (xCo, xMap, xMc)
+    if (exists ("xMap")){
+      plot (xMap
+            , which = 99
+            , coastline = "coastlineWorldFine"
+            , showStations = TRUE
+            , gird = TRUE
+            , map.xlim = c(-154, -151)
+            , map.ylim = c(57.5, 60.1)
+            , clatitude = 59.4
+            , clongitude = -152
+            , span = 250
+      )
+      plot (xMap
+            , which = 99
+            , coastline = "coastlineWorldFine"
+            , showStations = TRUE
+            , gird = TRUE
+      )
+      rm (xMap)
+    }
+    rm (xCo, xMc)
     dev.off()
     cat ("\n")
   }
