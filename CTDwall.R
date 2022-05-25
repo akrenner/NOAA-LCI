@@ -82,45 +82,39 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
-#    physOcY <- with (physOcY, physOcY [order (),])
-
     physOcY$year <- factor  (physOcY$year)
     physOcY$month <- factor (format (physOcY$DateISO, "%m"))
-    physOcY$season <- cut (as.numeric (as.character (physOcY$month))
-                                   , c(0,2,4,8,10, 13)
-                           , labels = c ("winter", "spring", "summer", "fall", "winter")
-                           )
     physOcY$season <- seasonize (physOcY$month)
 
 
     ## set-up page size for large poster-PDF
-    if (levels (poAll$Transect)[tn] %in% mnthly){
-      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-      ph <- 44; pw <- 88     # go big on FWS plotter
-    }else{
-      pH <- 8.5; pW <- 14    # legal size
-    }
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-                 , " T-", levels (poAll$Transect)[tn]
-                 , ".pdf")
-         , height = pH, width = pW)
-
-
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
+      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+      pH <- 44; pW <- 88     # go big on FWS plotter
+
       require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
-      layout (matrix (1:(12*nY), nY, byrow = TRUE)) # across, then down
+      layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
       rm (nY)
+
     }else{
-      # quarterly
+      ## quarterly
+      pH <- 8.5; pW <- 14    # legal size
       sampleTimes <- levels (physOcY$season)
       physOcY$smplIntvl <- physOcY$season
-      layout (matrix (1:16, 4, byrow = TRUE)) # across, then down
+      layoutM <- matrix (1:16, 4, byrow = TRUE)
     }
+
+
+    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
+                 , " T-", levels (poAll$Transect)[tn]
+                 , ".pdf")
+         , height = pH, width = pW)
+    layout (layoutM); rm (layoutM)
 
 
     ## is this needed??
