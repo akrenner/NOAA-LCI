@@ -59,7 +59,7 @@ test <- FALSE
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
+  if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 2
@@ -85,8 +85,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 #    physOcY <- with (physOcY, physOcY [order (),])
 
     physOcY$year <- factor  (physOcY$year)
-    # physOcY$transDate <- factor (with (physOcY, paste0 ("T-", Transect, " ", DateISO)))
-    physOcY$transDate <- with (physOcY, paste0 ("T-", Transect, " ", DateISO))
     physOcY$month <- factor (format (physOcY$DateISO, "%m"))
     physOcY$season <- cut (as.numeric (as.character (physOcY$month))
                                    , c(0,2,4,8,10, 13)
@@ -111,12 +109,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
+      require ("stringr")
+      sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
       layout (matrix (1:(12*nY), nY, byrow = TRUE)) # across, then down
       rm (nY)
     }else{
       # quarterly
+      sampleTimes <- levels (physOcY$season)
       physOcY$smplIntvl <- physOcY$season
       layout (matrix (1:16, 4, byrow = TRUE)) # across, then down
     }
@@ -131,14 +132,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       ## replace transDate from above!
       ## also making surveyW redundant
-      physOc$transDate <- with (physOc, factor (transDate
-                                                , levels = paste0 ("T-", Transect [1]
-                                                                   , " ", year [1], "-"
-                                                                   , levels (smplIntvl))))
+      physOc$transDate <- with (physOc , factor (paste0 ("T-", Transect, " ", year, "-", smplIntvl)
+                                                 , levels = paste0 ("T-", Transect [1], " ", year [1], "-"
+                                                                   , sampleTimes)))
 
       ## define and plot sections
       cat ("   ",  formatC (k, width = 3), "/", length (levels (physOcY$year))
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
+
+
 
       if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
       for (i in iA){              # cycle through individual surveys
@@ -154,15 +156,17 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
             plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                  , main = paste (levels (physOc$transDate)[i], "-- no data"))
+                  , main = paste0 (levels (physOc$transDate)[i], "-- N stations: "
+                                   , length (levels (factor (xC$Match_Name))))
+                  )
           }
           rm (inFuture)
         }else{
 
 
-
           if (1){  ## plot all casts in survey window or pick out longes survey within X days?
-            xC <- xC  ## use all data for month/quarter, irrespective of how far apart
+            nSurv <- 1
+            xC <- xC    ## use all data for month/quarter, irrespective of how far apart
           }else{
             ## check whether there is more than one survey per survey-interval
 
@@ -210,12 +214,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
-          xCot <- sectionize (xC)
+          xCo <- sectionize (xC)
           ## determine whether transect is incomplete, and if so, pad with blanks
-          xCo <- extendSection (section=xCot, transect = data.frame (stationID=stn$Match_Name
-                                                                     , latitude=stn$Lat_decDegree
-                                                                     , longitude=stn$Lon_decDegree))
-          rm (xCot)
+          # xCo <- extendSection (section=xCot, transect = data.frame (stationID=stn$Match_Name
+          #                                                            , latitude=stn$Lat_decDegree
+          #                                                            , longitude=stn$Lon_decDegree))
 
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
