@@ -214,6 +214,59 @@ isNightsection <- function (ctdsection){
 }
 
 
+
+
+
+## consider having these functions in oce
+
+cloneCTD <- function (ctd, latitude, longitude
+                      , stationID=NULL, startTime=NULL)
+{
+  data (ctd)
+  for (i in 1:length (ctd@data)){
+    is.na (ctd@data[[i]]) <- TRUE
+  }
+  ctd@metadata$latitude <- latitude
+  ctd@metadata$longitude <- longitude
+
+  if (length (stationID)>0){
+    ctd@metadata$station <- stationID
+  }else {ctd@metadata$station <- NA}
+  if (length (startTime)>0){
+    ctd@metadata$startTime <- startTime
+  }
+  ## zero-out other metadata
+  ctd@metadata$header <- ""
+  ctd@processingLog$time <- ""
+  ctd@processingLog$value <- ""
+  return (ctd)
+}
+
+
+extendSection <- function (section, transect, ...)
+{
+  if (all (names (transect) != c ("latitude", "longitude", "stationID")))
+  {stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
+  }
+  ## match by stationID or geographic proximity? The later would need a threshold.
+  ## determine whether section represents a complete transect
+  ## will have to sectionSort at the end!!
+  for (i in 1:length (transect$stationID))
+  {if (any (section@metadata$stationId == transect$stationId [i]))
+  {
+    ## add a dummy-station
+    section <- sectionAddCtd (section, cloneCTD(section [[1]]
+                                                , latitude=transect$latitude [i]
+                                                , longitude=transect$longitude [i]
+                                                , sectionId=transect$sectionId [i])
+    )
+  }
+  }
+  # section <- sectionSort (section, ...)
+  return (section)
+}
+
+
 # ## execute for each run rather than pull from .RData (which gets messed up)
 # require ("cmocean")
 # oCol3 <- list (

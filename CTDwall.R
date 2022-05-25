@@ -58,9 +58,9 @@ test <- FALSE
 ## loop over variable, then transects and then seasons
 
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-for (ov in iX){
+for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   if (test){iY <- 5}else{iY <-   1:length (levels (poAll$Transect))}# by transect
-  for (tn in iY){  ## XXX testing XXX
+  for (tn in iY){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 2
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
@@ -101,8 +101,9 @@ for (ov in iX){
 
     if (levels (poAll$Transect)[tn] %in% mnthly){
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+      ph <- 44; pw <- 88     # go big on FWS plotter
     }else{
-      pH <- 8.5; pW <- 14
+      pH <- 8.5; pW <- 14    # legal size
     }
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
                  , " T-", levels (poAll$Transect)[tn]
@@ -130,7 +131,7 @@ for (ov in iX){
       iZ <- 1:length (levels (physOcY$year))
       # }# by year
     # iZ <- 1:length (levels (physOcY$year)) # by year
-    for (k in iZ){
+    for (k in iZ){  # cycling through years
 #     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
       ## for testing:
       # k <- 8
@@ -150,11 +151,11 @@ for (ov in iX){
       cat ("   ",  formatC (k, width = 3), "/", max (iZ), " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
       if (test){iA <- 4}else{iA <-  1:length (levels (physOc$transDate))} # survey #
-      iA <-  1:length (levels (physOc$transDate))
+      iA <-  1:length (levels (physOc$transDate))  ## change this to months/seasons? XXX
       for (i in iA){
       # for (i in 1:length (levels (physOc$transDate))){
           # for testing:
-        # i <- 4
+        # i <- 5
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 2){
@@ -204,7 +205,6 @@ for (ov in iX){
                 xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
                 rm (nS)
               }else{
-
                 ## use only the first survey
                 nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
                 xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
@@ -221,11 +221,19 @@ for (ov in iX){
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
           xCo <- sectionize (xC)
+          ## determine whether transect is incomplete, and if so, pad with blanks
+          xCo <- extendSection (xCo, transect = data.frame (stationId=stn$Match_Name
+                                                 , latitude=stn$Lat_decDegree
+                                                 , longitude=stn$Lon_decDegree))
+
+          ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
             xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
           }else{
             xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
           }
+
+
 
 
           pSec (xCo, N = oVarsF [ov]
