@@ -30,7 +30,7 @@ vUnit <- "knots" # or comment out to default to m/s
 qntl <- 0.9 # % quantile
 stormT <- 48 # threshold for max wind speed to count as storm
 galeT <- 34  # max wind speed for gale
-scAdvT <- 21 # max wind speed for small craft advisory
+scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
 require ("RColorBrewer")
 currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
@@ -186,7 +186,7 @@ windSum <- nEvents (hmr, "maxwspd", thrht=windT)
 windSum$mean <- round (windSum$mean, 1)
 row.names (windSum) <- c ("SCA", "gales", "storms")
 cat ("\n\n# number of gales and storms per year, ", wStations [k],"\n")
-print (windSum)
+print (windSum [,1:(ncol (windSum)-1)]) # cut-out ongoing year
 rm (windSum)
 
 ## tabulate only winter storms
@@ -400,13 +400,15 @@ if (0){  ## farewell my good friend ##
           , widths=rep (3,3), heights=c(0.5,0.5,3))
   # par (fig=c(), new=TRUE) # see https://www.statmethods.net/advgraphs/layout.html
   ## wind vectors
+  ## still would need some cleanup before use
   sF=0.7
   lW=1.0
   xGrenz <- c(5,360)
   par (mar=c(0,4,0,0.1))
   plot (1:nrow (tDay), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
         , axes=FALSE, xlab="", ylab="long-term", xlim=xGrenz)
-  with  (tDay, segments(x0=jday, y0=0, x1=jday - uw*sF, y1=0 - vw*sF, col="blue", lwd=lW))
+  with  (tDay, segments(x0=jday, y0=0, x1=jday - uw*sF, y1=0 - vw*sF, col="blue"
+                        , lwd=lW))
   plot (1:nrow (tDay), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
         , axes=FALSE, xlab="", ylab=currentYear, xlim=xGrenz)
   with (tDay, segments(x0=jday, y0=0, x1=jday - p365uw*sF, y1=0 - p365vw*sF
@@ -491,7 +493,7 @@ if (0){
 
 # par (oP)# reset to original plotting geometry
 par (crt=oP$crt # reset to original plotting geometry
-     , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar, mfg=oP$mfg
+     , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar #, mfg=oP$mfg
      , mgp=oP$mgp, omd=oP$omd, pin=oP$pin, plt=oP$plt, ps=oP$ps, pty=oP$pty
      , usr=oP$usr, xaxp=oP$xaxp, xaxs=oP$xaxs, xaxt=oP$xaxt, yaxp=oP$yaxp
      , yaxs=oP$yaxs, ylbias=oP$ylbias)
@@ -525,7 +527,7 @@ if (nrow (galeS) > 0){
                             # , angle=p365wdir+ 90
                             ##  rotates around bottom-left point -- would need compensation
   ))
-  with (galeS, text (jday, p365ma + 1.9, labels=p365wCar, cex=0.6))
+  with (galeS, text (jday, p365ma + 2.0, labels=p365wCar, cex=0.6))
 }
 rm (galeS)
 ## legend
@@ -545,7 +547,7 @@ text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
 
 # par (oP)
 par (crt=oP$crt # reset to original plotting geometry
-     , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar, mfg=oP$mfg
+     , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar #, mfg=oP$mfg
      , mgp=oP$mgp, omd=oP$omd, pin=oP$pin, plt=oP$plt, ps=oP$ps, pty=oP$pty
      , usr=oP$usr, xaxp=oP$xaxp, xaxs=oP$xaxs, xaxt=oP$xaxt, yaxp=oP$yaxp
      , yaxs=oP$yaxs, ylbias=oP$ylbias)
@@ -747,10 +749,10 @@ if (metstation == "kachomet"){
     wCaption <- "wind speed [m/s]"
   }
   fi <- addTimehelpers (fi)
-  hmrS <- rbind (cbind (station="Flat Island", fi)
-               , cbind (station="Homer Spit", hmr))
+  hmrS <- rbind (cbind (station=paste0 ("Flat Island - ", currentYear), fi)
+               , cbind (station=paste0 ("Homer Spit - ", currentYear), hmr))
   rm (hmr2)
-   hmrS <- subset (hmrS, year == currentYear)
+  hmrS <- subset (hmrS, year == currentYear)  ## make sure this stays (see label)
   hmrS$date <- as.POSIXct(hmrS$datetimestamp)
   hmrS$station <- as.factor (hmrS$station)
 
@@ -758,7 +760,7 @@ if (metstation == "kachomet"){
 
   ## compare wind Flat Island with Homer Spit -- windroses
   pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose_Locations2.pdf")
-       , width=9, height=6)
+       , width=6, height=4)
   windRose(hmrS, ws="wspd", wd="wdir"
            # , type="yClass"
             , type="station"

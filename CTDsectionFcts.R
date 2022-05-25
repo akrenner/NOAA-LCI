@@ -214,6 +214,64 @@ isNightsection <- function (ctdsection){
 }
 
 
+
+
+
+## consider having these functions in oce
+
+cloneCTD <- function (ctd, latitude, longitude
+                      , stationID=NULL, startTime=NULL)
+{
+  data (ctd)
+  for (i in 1:length (ctd@data)){
+    is.na (ctd@data[[i]]) <- TRUE
+  }
+  ctd@metadata$latitude <- latitude
+  ctd@metadata$longitude <- longitude
+
+  if (length (stationID)>0){
+    ctd@metadata$station <- stationID
+  }else {ctd@metadata$station <- NA}
+  if (length (startTime)>0){
+    ctd@metadata$startTime <- startTime
+  }
+  ## zero-out other metadata
+  ctd@metadata$header <- ""
+  ctd@processingLog$time <- ""
+  ctd@processingLog$value <- ""
+  return (ctd)
+}
+
+
+sectionPad <- function (section, transect, ...)
+{
+  ## missing feature: bottom-depth of missing cast XXX
+
+  if (!all (names (transect) == c ("stationID", "latitude", "longitude")))
+  {stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
+  }
+  ## match by stationID or geographic proximity? The later would need a threshold.
+  ## determine whether section represents a complete transect
+  ## will have to sectionSort at the end!!
+  for (i in 1:length (levels (factor (transect$stationID))))
+  {if (!transect$stationID [i]  %in% section@metadata$stationID)
+  {
+    ## add a dummy-station
+    section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
+                                                , latitude=transect$latitude [i]
+                                                , longitude=transect$longitude [i]
+                                                , stationID=transect$stationID [i]
+                                                # , depth
+                                                )
+    )
+  }
+  }
+  # section <- sectionSort (section, ...)
+  ## warnings: make sure sectionSort is called next!
+  return (section)
+}
+
+
 # ## execute for each run rather than pull from .RData (which gets messed up)
 # require ("cmocean")
 # oCol3 <- list (
