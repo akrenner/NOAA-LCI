@@ -210,7 +210,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
           xCo <- sectionize (xC)
           ## determine whether transect is incomplete, and if so, pad with blanks -- not yet working
-          # xCo <- extendSection (section=xCo, transect = data.frame (stationID=stn$Match_Name
+          # xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stn$Match_Name
           #                                                            , latitude=stn$Lat_decDegree
           #                                                            , longitude=stn$Lon_decDegree))
 

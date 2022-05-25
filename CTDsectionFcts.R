@@ -243,7 +243,7 @@ cloneCTD <- function (ctd, latitude, longitude
 }
 
 
-extendSection <- function (section, transect, ...)
+sectionPad <- function (section, transect, ...)
 {
   ## missing feature: bottom-depth of missing cast XXX
 
