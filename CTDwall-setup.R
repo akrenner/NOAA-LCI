@@ -65,7 +65,6 @@ require ("marmap")
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
-# if (.Platform$OS.type == "unix"){   ## no longer necessary!
 if (0){
   ##  bR <- resample (bR, nGrid)
   bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf") ## not working in RStudio -- need to use decompressed after all?
@@ -202,7 +201,7 @@ for (h in 2:length (levels (surveyW))){
     surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h-1]
   }
 }
-poAll$survey <- factor (surveyW)  ## need to reset factor levels
+poAll$survey <- factor (surveyW)  ## need to reset factor levels after combining days
 rm (surveyW, h)
 
 # ## new, slow version -- but reliable?
@@ -252,7 +251,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ## move these into CTDsectionFcts.R -- or not?
 
 # require ('vizier')
-require ("cmocean")
+require ("cmocean")  ## for color ramps
 
 
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
