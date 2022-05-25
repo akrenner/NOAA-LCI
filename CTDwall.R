@@ -144,8 +144,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
         if (length (levels (factor (xC$Match_Name))) < 2){
           ## blank plot for missing data -- unless in the future
           ## use empty slots for map rather than starting on blank page if level would be in future
-          cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
 
+          #cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
           inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
             i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
@@ -158,7 +158,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
         }else{
 
 
-          if (1){  ## plot all casts in survey window or pick out longes survey within X days?
+          if (0){  ## plot all casts in survey window or pick out longes survey within X days?
             nSurv <- 1
             xC <- xC    ## use all data for month/quarter, irrespective of how far apart
           }else{
@@ -209,8 +209,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
           xCo <- sectionize (xC)
-          ## determine whether transect is incomplete, and if so, pad with blanks
-          # xCo <- extendSection (section=xCot, transect = data.frame (stationID=stn$Match_Name
+          ## determine whether transect is incomplete, and if so, pad with blanks -- not yet working
+          # xCo <- extendSection (section=xCo, transect = data.frame (stationID=stn$Match_Name
           #                                                            , latitude=stn$Lat_decDegree
           #                                                            , longitude=stn$Lon_decDegree))
 
