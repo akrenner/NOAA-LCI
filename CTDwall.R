@@ -112,8 +112,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       physOcY$smplIntvl <- physOcY$month
-    #  layout (matrix (1:(12*5), 12, byrow = TRUE)) # across, then down
-      nY <- as.numeric (format (Sys.time(), "%Y")) - 2012 + 1
+      nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
       layout (matrix (1:(12*nY), nY, byrow = TRUE)) # across, then down
       rm (nY)
     }else{
@@ -141,14 +140,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       cat ("   ",  formatC (k, width = 3), "/", length (levels (physOcY$year))
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
-      if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))} # survey #
-      for (i in iA){
+      if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
+      for (i in iA){              # cycle through individual surveys
         # for testing: # i <- 5
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 2){
           ## blank plot for missing data -- unless in the future
           ## use empty slots for map rather than starting on blank page if level would be in future
+          cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
 
           inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
             i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
@@ -162,7 +162,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
 
           if (1){  ## plot all casts in survey window or pick out longes survey within X days?
-            xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
+            xC <- xC  ## use all data for month/quarter, irrespective of how far apart
           }else{
             ## check whether there is more than one survey per survey-interval
 
@@ -207,6 +207,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             }
           }
 
+
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
           xCot <- sectionize (xC)
@@ -230,7 +231,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOc$bathy))
-                # , xlim = c(0, TD [tn])
           )
           if (nSurv > 1){
             title (main = paste (levels (physOc$transDate)[i], "* -", nSurv), col.main = "red")
