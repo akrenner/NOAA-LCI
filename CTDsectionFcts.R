@@ -228,10 +228,10 @@ isNightsection <- function (ctdsection){
 
 cloneCTD <- function (ctd, latitude, longitude
                       , stationID=NULL, startTime=NULL
-#                     , bottomDepth
+                      , bottom=NULL
                       )
 {
-  data (ctd)
+  # data (ctd)
   for (i in 1:length (ctd@data)){
     is.na (ctd@data[[i]]) <- TRUE
   }
@@ -243,6 +243,9 @@ cloneCTD <- function (ctd, latitude, longitude
   }else {ctd@metadata$station <- NA}
   if (length (startTime)>0){
     ctd@metadata$startTime <- startTime
+  }
+  if (length (bottom)>0){
+      ctd@metadata$waterDepth <- bottom
   }
   ## zero-out other metadata
   ctd@metadata$header <- ""
@@ -256,7 +259,7 @@ sectionPad <- function (section, transect, ...)
 {
   ## missing feature: bottom-depth of missing cast XXX
 
-  if (!all (names (transect) == c ("stationID", "latitude", "longitude")))
+  if (!all (c ("stationID", "latitude", "longitude")  %in% names (transect)))
   {stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
   }
   ## match by stationID or geographic proximity? The later would need a threshold.

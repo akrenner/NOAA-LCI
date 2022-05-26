@@ -202,7 +202,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 ## use only the first survey
                 nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
                 xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
-                # xC$Station <-
                 rm (nR)
               }
             }
@@ -217,8 +216,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
           ## example to try: T3 2017-summer (5 stations only)
           xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
-                                                                     , latitude=stnT$Lat_decDegree
-                                                                     , longitude=stnT$Lon_decDegree))
+                                                                 , latitude=stnT$Lat_decDegree
+                                                                 , longitude=stnT$Lon_decDegree
+                                                                 , bottom=stnT$Depth_m))
 
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
