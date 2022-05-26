@@ -52,33 +52,38 @@ if (0){
 
 
 test <- TRUE
-test <- FALSE
+# test <- FALSE
 
 
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect
+  if (test){iY <- 4}else{iY <- 1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  # tn: transect
     ## for testing
-    ## ov <- 1; tn <- 2
+    ## ov <- 1; tn <- 4
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
     # 4-3 = AlongBay-3
     # 9-6 = AlongBay-6
+    ## should make this a function?
     if (levels (poAll$Transect)[tn] == "AlongBay"){
-      poAll$Transect [(poAll$Transect == "4") & (poAll$Station == "3")] <- "AlongBay"
-      poAll$Transect [(poAll$Transect == "9") & (poAll$Station == "6")] <- "AlongBay"
+      swMN <- c ("4_3", "9_6", "6_2", "7_22")
+      poAll$Transect [poAll$Match_Name %in% swMN] <- "AlongBay"
+      stn$Line [stn$Match_Name %in% swMN] <- "AlongBay"
     }
     if (levels (poAll$Transect)[tn] == "4"){
-      poAll$Transect [(poAll$Transect == "AlongBay") & (poAll$Station == "3")] <- "4"
+      swMN <- c("4_3")
+      poAll$Transect [poAll$Match_Name %in% swMN] <- "4"
+      stn$Line [stn$Match_Name %in% swMN] <- "4"
     }
     if (levels (poAll$Transect)[tn] == "9"){
-      poAll$Transect [(poAll$Transect == "AlongBay") & (poAll$Station == "6")] <- "9"
+      swMN <- c("9_6")
+      poAll$Transect [poAll$Match_Name %in% swMN] <- "9"
+      stn$Line [stn$Match_Name %in% swMN] <- "9"
     }
-
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
@@ -120,7 +125,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     ## is this needed??
     for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
       ## for testing:
-      # k <- 8
+      # k <- 7 # pick 2018
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
@@ -138,7 +143,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
       for (i in iA){              # cycle through individual surveys
-        # for testing: # i <- 5
+        # i <- 3  # for testing
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 2){
@@ -158,7 +163,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
         }else{
 
 
-          if (0){  ## plot all casts in survey window or pick out longes survey within X days?
+          if (0){  ## plot all casts in survey window (watch RAM!)
+            ## or pick out long survey within X days?
             nSurv <- 1
             xC <- xC    ## use all data for month/quarter, irrespective of how far apart
           }else{
@@ -180,16 +186,13 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                            , surveyW [h-1], surveyW)
                                  , surveyW)
             }
-            # ## faster version?  -- not worth the trouble
-            # for (h in which (!duplicated (physOc$transDate))[-1]){
-            # }
             xC$surveys <- factor (surveyW); rm (surveyW, h)
             # physOc$transDate <- factor (physOc$transDate)
 
             nSurv <- length (levels (xC$surveys))
             if (nSurv > 1){
-              ## use the survey with the most stations
               if (1){
+                ## use the survey with the most stations
                 nS <- sapply (levels (xC$surveys), FUN = function (x){
                   length (levels (factor (subset (xC$Station, xC$surveys == x))))
                 })
@@ -211,9 +214,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
           xCo <- sectionize (xC)
           ## determine whether transect is incomplete, and if so, pad with blanks -- not yet working
-          # xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stn$Match_Name
-          #                                                            , latitude=stn$Lat_decDegree
-          #                                                            , longitude=stn$Lon_decDegree))
+          stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
+          xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
+                                                                     , latitude=stnT$Lat_decDegree
+                                                                     , longitude=stnT$Lon_decDegree))
 
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
