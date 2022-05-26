@@ -52,7 +52,7 @@ if (0){
 
 
 test <- TRUE
-# test <- FALSE
+test <- FALSE
 
 
 
@@ -215,7 +215,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           xCo <- sectionize (xC)
           ## determine whether transect is incomplete, and if so, pad with blanks -- not yet working
           stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
-          xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
+          xCoXXX <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
                                                                      , latitude=stnT$Lat_decDegree
                                                                      , longitude=stnT$Lon_decDegree))
 

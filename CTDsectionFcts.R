@@ -266,10 +266,11 @@ sectionPad <- function (section, transect, ...)
   {if (!transect$stationID [i]  %in% section@metadata$stationID)
   {
     ## add a dummy-station
+    Ti <- match (section@metadata$station [i], transect$stationID)
     section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
-                                                , latitude=transect$latitude [i]
-                                                , longitude=transect$longitude [i]
-                                                , stationID=transect$stationID [i]
+                                                , latitude=transect$latitude [Ti]
+                                                , longitude=transect$longitude [Ti]
+                                                , stationID=transect$stationID [Ti]
                                                 # , depth
                                                 )
     )
