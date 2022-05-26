@@ -263,8 +263,9 @@ sectionPad <- function (section, transect, ...)
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   for (i in 1:length (levels (factor (transect$stationID))))
-  {if (!transect$stationID [i]  %in% section@metadata$stationID)
+  {if (!transect$stationID [i]  %in% section@metadata$station)
   {
+    cat ("Station", transect$stationID [i], "is missing -- making dummy")
     ## add a dummy-station
     Ti <- match (section@metadata$station [i], transect$stationID)
     section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
