@@ -126,23 +126,18 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
-  if (packageVersion("oce") <= "1.7.3"){  # change <= to < after next oce release
+  if (packageVersion("oce") <= "1.7.2"){  # change 1.7.2 to 1.7.3 after next release
     stop ("Need package:oce version 1.7.4 or later")
   }
   require ("oce")
 
-  stn <- factor (sprintf ("%02s", xC$Station), ordered = TRUE)  ## does this order them??
-  #  stn <- factor (sprintf ("%03.0f", as.integer (xC$Station)), ordered = TRUE)  ## does this order them??
-  if (xC$Transect [1] %in% as.character (c(4,6,9))){
-    stn <- factor (stn, levels = rev (levels (stn))
-                   , ordered = TRUE)}
+  stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
   xCo <- makeSection (xC, stn)
   xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = TRUE) # should understand this step more fully! XXX
 
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
   ## sort in here, rather than separately
-  xCo <- sectionize (xC)
   if (xC$Transect [1] == "AlongBay"){ # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
   }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
@@ -232,7 +227,9 @@ isNightsection <- function (ctdsection){
 ## consider having these functions in oce
 
 cloneCTD <- function (ctd, latitude, longitude
-                      , stationID=NULL, startTime=NULL)
+                      , stationID=NULL, startTime=NULL
+#                     , bottomDepth
+                      )
 {
   data (ctd)
   for (i in 1:length (ctd@data)){
