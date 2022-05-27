@@ -22,7 +22,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
 
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, transect = NULL, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
   ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
@@ -35,7 +35,6 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, transect = NULL, 
                   # , ztype = "contour"
                   , ztype = "image"
                   , zcol = zCol
-                  , transect = transect
                   , ...
   )
   , silent = TRUE)
@@ -226,7 +225,8 @@ isNightsection <- function (ctdsection){
 
 ## consider having these functions in oce
 
-cloneCTD <- function (ctd, latitude, longitude
+cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
+                      , longitude=ctd@metadata$longitude
                       , stationID=NULL, startTime=NULL
                       , bottom=NULL
                       )
@@ -266,16 +266,15 @@ sectionPad <- function (section, transect, ...)
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   for (i in 1:length (levels (factor (transect$stationID))))
-  {if (!transect$stationID [i]  %in% section@metadata$station)
+  {if (!transect$stationID [i]  %in% levels (section@metadata$station))
   {
-    cat ("Station", transect$stationID [i], "is missing -- making dummy")
-    ## add a dummy-station
-    Ti <- match (section@metadata$station [i], transect$stationID)
+    cat ("No ", transect$stationID [i], "\n")
+    ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
     section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
-                                                , latitude=transect$latitude [Ti]
-                                                , longitude=transect$longitude [Ti]
-                                                , stationID=transect$stationID [Ti]
-                                                # , depth
+                                                , latitude=transect$latitude [i]
+                                                , longitude=transect$longitude [i]
+                                                , stationID=transect$stationID [i]
+                                                , bottom=transect$bottom [i]
                                                 )
     )
   }
