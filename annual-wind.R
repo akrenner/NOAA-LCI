@@ -539,12 +539,13 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , pastYear=pastYear, ongoingYear=FALSE,
                )
 ## legend for gale clouds in other corner
-yL <- 2.7
-text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
-## no gales in 2021 -- drop this part this year
-# rasterImage (img, xleft=280, xright=280+wdh, ybottom=yL + 1.2, ytop=yL + 1.2+hgt)
-# text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos=2)
-
+if (0){
+  yL <- 2.7
+  text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
+  ## no gales in 2021 -- drop this part this year
+  # rasterImage (img, xleft=280, xright=280+wdh, ybottom=yL + 1.2, ytop=yL + 1.2+hgt)
+  # text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos=2)
+}
 # par (oP)
 par (crt=oP$crt # reset to original plotting geometry
      , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar #, mfg=oP$mfg
