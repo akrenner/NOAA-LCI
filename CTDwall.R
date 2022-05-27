@@ -59,10 +59,10 @@ test <- FALSE
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  if (test){iY <- 4}else{iY <- 1:length (levels (poAll$Transect))}# by transect
+  if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  # tn: transect
     ## for testing
-    ## ov <- 1; tn <- 4
+    ## ov <- 1; tn <- 1
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
@@ -123,7 +123,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
 
     ## is this needed??
-    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
+#    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
+#for (k in 2){
+if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
+    for (k in iO){
       ## for testing:
       # k <- 7 # pick 2018
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
@@ -211,22 +214,58 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## arrange ctd data into sections
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
-          xCo <- sectionize (xC)
-          ## determine whether transect is incomplete, and if so, pad with blanks -- not yet working
-          stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
-          ## example to try: T3 2017-summer (5 stations only)
-          xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
-                                                                 , latitude=stnT$Lat_decDegree
-                                                                 , longitude=stnT$Lon_decDegree
-                                                                 , bottom=stnT$Depth_m))
+          save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
+          # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData")
+          source ("CTDsectionFcts.R")
+          # section=xCo
+          # transect = data.frame (stationID=stnT$Match_Name, latitude=stnT$Lat_decDegree
+          #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
 
+          xCo <- sectionize (xC)
+
+          ## plot.section does not handle NAs at leading end well. Bathymetry = messed up, error given.
+          ## plot.section with NA at the tail end: no error, but bathymetry messed up. Station not drawn, x-limit shortened.
+
+          if (0){
+            ## Ideas:
+            #' Fix current approach: get plot.section to accept NA's at the begining and end
+            #' Extend plot.section to accept xlim -- dead end
+            #' Extend plot.section to accept transect (together with a bathymetry?) as a standard.
+            #'
+            #' Some section with NAs thrown in -- at start/middle/end
+            #'
+            #'No NAs
+            x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
+                                   , xCo@data$station [[3]], xCo@data$station [[4]]
+                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
+            #' NAs at the start -- returning Inf/-Inf -- no plot
+            x <- as.section (list (cloneCTD (xCo@data$station [[1]]), xCo@data$station [[2]]
+                                   , xCo@data$station [[3]], xCo@data$station [[4]]
+                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
+            #' NAs in the middle -- Inf/-Inf -- no plot
+            x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
+                                   , cloneCTD(xCo@data$station [[3]]), xCo@data$station [[4]]
+                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
+            #' NAs at the end -- plot with bathymetry jumbled
+            x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
+                                   , xCo@data$station [[3]], xCo@data$station [[4]]
+                                   , xCo@data$station [[5]], cloneCTD (xCo@data$station [[6]])))
+            plot (x, which=1)
+
+            ## determine whether transect is incomplete, and if so, pad with blanks
+            ## example to try: T3 2017-summer (5 stations only)
+            stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
+            xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
+                                                                   , latitude=stnT$Lat_decDegree
+                                                                   , longitude=stnT$Lon_decDegree
+                                                                   , bottom=stnT$Depth_m))
+          }
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
             xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
           }else{
             xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
           }
-
 
 
           pSec (xCo, N = oVarsF [ov]
