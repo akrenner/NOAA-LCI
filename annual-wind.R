@@ -512,8 +512,8 @@ with (tDay, addGraphs (longMean=smoothWindMA, percL=lowPerMA, percU=uppPerMA
 # with (subset (tDay, p365galDay > 0),
 #       text (jday, rep (c (5.9, 7.1), length.out=length (jday)), labels=p365wCar))
 if (0){ # plot SCA days?
-with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
-      text (jday, p365ma + 0.5, labels=p365wCar, srt=0, cex=0.8))
+  with (subset (tDay, (p365scaDay > 0)&(!p365galDay >0)),
+        text (jday, p365ma + 0.5, labels=p365wCar, srt=0, cex=0.8))
 }
 # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels=p365wCar))
 require ("png")
@@ -523,7 +523,7 @@ hgt <- 1.1; wdh <- 15
 img <- readPNG ("pictograms/cloud.png")
 if (nrow (galeS) > 0){
   ## jitter to avoid overlapping clouds
-  jit <- c(-1,-0.3 , 0.5)
+  jit <- c(-0.5, -1.1, 0.3)
   with (galeS, rasterImage (img, xleft=jday-9, ybottom=p365ma + 1.5 + jit
                             , xright=jday-9+wdh, ytop=p365ma + 1.5 + hgt + jit
                             # , angle=p365wdir+ 90
@@ -541,15 +541,17 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , pastYear=pastYear, ongoingYear=FALSE,
                )
 ## legend for gale clouds in other corner
-yL <- 0.7
-text (273, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=4)
-rasterImage (img, xleft=260, xright=260+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-# yL <- 2.7
-# text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
-## no gales in 2021 -- drop this part this year
-# rasterImage (img, xleft=280, xright=280+wdh, ybottom=yL + 1.2, ytop=yL + 1.2+hgt)
-# text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos=2)
-
+if (0){
+  ## gales
+  yL <- 0.7
+  rasterImage (img, xleft=260, xright=260+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
+  text (273, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=4)
+  # yL <- 2.7
+  # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
+  ## no storms in 2021 -- drop this part this year
+  # rasterImage (img, xleft=280, xright=280+wdh, ybottom=yL + 1.2, ytop=yL + 1.2+hgt)
+  # text (365, yL + 1.8, paste0 ("storm (>", stormT, " knots)"), pos=2)
+}
 # par (oP)
 par (crt=oP$crt # reset to original plotting geometry
      , fig=oP$fig, fin=oP$fin, lab=oP$lab, mai=oP$mai, mar=oP$mar #, mfg=oP$mfg
