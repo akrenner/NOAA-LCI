@@ -225,7 +225,6 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
           ## plot.section does not handle NAs at leading end well. Bathymetry = messed up, error given.
           ## plot.section with NA at the tail end: no error, but bathymetry messed up. Station not drawn, x-limit shortened.
 
-          if (0){
             ## Ideas:
             #' Fix current approach: get plot.section to accept NA's at the begining and end
             #' Extend plot.section to accept xlim -- dead end
@@ -234,8 +233,9 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             #' Some section with NAs thrown in -- at start/middle/end
             #'
             #'
-            #
-             if (0){
+          #
+          if (0){
+            ## testing
             # No NAs
             x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
                                    , xCo@data$station [[3]], xCo@data$station [[4]]
@@ -256,8 +256,10 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
 
             ## determine whether transect is incomplete, and if so, pad with blanks
             ## example to try: T3 2017-summer (5 stations only)
+          }
+
+          if (1){  # pad incomplete transects
             stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
-             }
             ## sectionPad to plot incomplete sections
             xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
                                                                    , latitude=stnT$Lat_decDegree
