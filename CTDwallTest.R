@@ -6,6 +6,38 @@ rm (list = ls())
 ## check whether problems persist with most recent oce version
 ## make sure that if title is plotted, next plot moves on to the next field!
 
+require ("oce")
+source ("CTDsectionFcts.R")
+data ("section")
+xCo <- section
+
+#' NAs at the start -- returning Inf/-Inf -- no plot
+x1 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
+                        , xCo@data$station [[3]], xCo@data$station [[2]]
+                        , xCo@data$station [[1]]))
+xNA <- as.section (list (cloneCTD (xCo@data$station [[5]]), xCo@data$station [[4]]
+                       , xCo@data$station [[3]], xCo@data$station [[2]]
+                       , xCo@data$station [[1]]))
+
+par (mfrow=c(1,1))
+plot (xNA, which="map")  # should show 5 data points -- good
+
+par (mfrow=c(1,2))
+plot (xNA, which=1)
+plot (x1, which=1)
+
+
+unlist (lapply (1:5, FUN=function (i){
+  xNA@data$station[[i]]@metadata$waterDepth
+}))
+
+## ignore all the stuff below!
+
+
+
+
+
+
 
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
