@@ -18,13 +18,17 @@ x1 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
 xNA <- as.section (list (cloneCTD (xCo@data$station [[5]]), xCo@data$station [[4]]
                        , xCo@data$station [[3]], xCo@data$station [[2]]
                        , xCo@data$station [[1]]))
+xNA2 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
+                         , xCo@data$station [[3]], xCo@data$station [[2]]
+                         , cloneCTD (xCo@data$station [[1]])))
 
 par (mfrow=c(1,1))
 plot (xNA, which="map")  # should show 5 data points -- good
 
 par (mfrow=c(1,2))
 plot (xNA, which=1)
-plot (x1, which=1)
+plot (xNA2, which=1)
+# plot (x1, which=1)
 
 
 unlist (lapply (1:5, FUN=function (i){
