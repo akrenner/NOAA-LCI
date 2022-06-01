@@ -233,7 +233,10 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             #'
             #' Some section with NAs thrown in -- at start/middle/end
             #'
-            #'No NAs
+            #'
+            #
+             if (0){
+            # No NAs
             x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
                                    , xCo@data$station [[3]], xCo@data$station [[4]]
                                    , xCo@data$station [[5]], xCo@data$station [[6]]))
@@ -254,6 +257,8 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             ## determine whether transect is incomplete, and if so, pad with blanks
             ## example to try: T3 2017-summer (5 stations only)
             stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
+             }
+            ## sectionPad to plot incomplete sections
             xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
                                                                    , latitude=stnT$Lat_decDegree
                                                                    , longitude=stnT$Lon_decDegree
