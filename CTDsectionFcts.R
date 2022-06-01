@@ -151,6 +151,7 @@ makeSection <- function (xC, stn){
   require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
+
   as.section (lapply (1:length (levels (stn))
                       , FUN = function (x){
                         sCTD <- subset (xC, stn == levels (stn)[x])
@@ -228,12 +229,14 @@ isNightsection <- function (ctdsection){
 cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
                       , longitude=ctd@metadata$longitude
                       , stationID=NULL, startTime=NULL
-                      , bottom=NULL
-                      )
-{
+                      , bottom=NULL){
   # data (ctd)
+  ## NA-out all data, other than depth and pressure
   for (i in 1:length (ctd@data)){
-    is.na (ctd@data[[i]]) <- TRUE
+    #if (!names (ctd@data)[i] %in% c ("pressure", "depth")
+    if (names (ctd@data)[i] != "pressure"){
+      is.na (ctd@data[[i]]) <- TRUE
+    }
   }
   ctd@metadata$latitude <- latitude
   ctd@metadata$longitude <- longitude
@@ -245,7 +248,7 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
     ctd@metadata$startTime <- startTime
   }
   if (length (bottom)>0){
-      ctd@metadata$waterDepth <- bottom
+    ctd@metadata$waterDepth <- bottom
   }
   ## zero-out other metadata
   ctd@metadata$header <- ""
@@ -255,29 +258,27 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 }
 
 
-sectionPad <- function (section, transect, ...)
-{
+sectionPad <- function (section, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
 
-  if (!all (c ("stationID", "latitude", "longitude")  %in% names (transect)))
-  {stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
+  if (!all (c ("stationID", "latitude", "longitude")  %in% names (transect))){
+    stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
   }
   ## match by stationID or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  for (i in 1:length (levels (factor (transect$stationID))))
-  {if (!transect$stationID [i]  %in% levels (section@metadata$station))
-  {
-    cat ("No ", transect$stationID [i], "\n")
-    ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
-    section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
-                                                , latitude=transect$latitude [i]
-                                                , longitude=transect$longitude [i]
-                                                , stationID=transect$stationID [i]
-                                                , bottom=transect$bottom [i]
-                                                )
-    )
-  }
+  for (i in 1:length (levels (factor (transect$stationID)))){
+    if (!transect$stationID [i]  %in% levels (section@metadata$station)){
+      cat ("No ", transect$stationID [i], "\n")
+      ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
+      section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
+                                                  , latitude=transect$latitude [i]
+                                                  , longitude=transect$longitude [i]
+                                                  , stationID=transect$stationID [i]
+                                                  , bottom=transect$bottom [i]
+      )
+      )
+    }
   }
   # section <- sectionSort (section, ...)
   ## warnings: make sure sectionSort is called next!

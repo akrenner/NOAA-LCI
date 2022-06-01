@@ -215,8 +215,7 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
           ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
-          # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData")
-          source ("CTDsectionFcts.R")
+          # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
           # section=xCo
           # transect = data.frame (stationID=stnT$Match_Name, latitude=stnT$Lat_decDegree
           #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
