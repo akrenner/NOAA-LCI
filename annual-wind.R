@@ -541,11 +541,12 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , pastYear=pastYear, ongoingYear=FALSE,
                )
 ## legend for gale clouds in other corner
-if (0){
+if (1){
   ## gales
-  yL <- 0.7
-  rasterImage (img, xleft=260, xright=260+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-  text (273, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=4)
+  yL <- 0.7; xL <- 250
+  rasterImage (img, xleft=xL, xright=xL+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
+  text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (>", galeT, " knots)")
+        , pos=4, adj=c(0,1))
   # yL <- 2.7
   # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
   ## no storms in 2021 -- drop this part this year
@@ -561,7 +562,7 @@ par (crt=oP$crt # reset to original plotting geometry
 
 ## show 1:1 diagonal
 dev.off()
-rm(hgt, wdh, bP, img, yL)
+rm(hgt, wdh, bP, img, yL, xL)
 
 
 ## start-over/add windrose
