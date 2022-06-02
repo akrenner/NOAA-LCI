@@ -159,14 +159,17 @@ makeSection <- function (xC, stn){
                                       as.ctd (salinity = Salinity_PSU
                                               , temperature = Temperature_ITS90_DegC
                                               , pressure = Pressure..Strain.Gauge..db.
-                                              , longitude = longitude_DD
-                                              , latitude = latitude_DD
+                                             # , longitude = longitude_DD
+                                             # , latitude = latitude_DD
                                               , station = Match_Name
                                               #, sectionId = transDate
                                               , time = isoTime
                                       ))
                         # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
                         ocOb@metadata$waterDepth <- sCTD$bathy [1]
+                        ocOb@metadata$longitude <- sCTD$longitude_DD [1]
+                        ocOb@metadata$latitude <- sCTD$latitude_DD [1]
+
                         ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
                         ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
