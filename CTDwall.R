@@ -21,9 +21,13 @@ rm (list = ls())
 
 # - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.  --  or plotter
 
+#' partial transects: some bathymetries are mangled -- ensure every cast has a
+#' waterdepth, either local or from masterlist.
+
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 # only AlongBay and 9 are monthly -- 4?
+
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 if (exists ("sectionSort")){detach ("package:oce")}  ## reload new version of oce
@@ -217,7 +221,7 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
           # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
           # section=xCo
-          # transect = data.frame (stationID=stnT$Match_Name, latitude=stnT$Lat_decDegree
+          # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
           #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
 
           xCo <- sectionize (xC)
@@ -261,7 +265,7 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
           if (1){  # pad incomplete transects
             stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
             ## sectionPad to plot incomplete sections
-            xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
+            xCo <- sectionPad (section=xCo, transect = data.frame (stationId=stnT$Match_Name
                                                                    , latitude=stnT$Lat_decDegree
                                                                    , longitude=stnT$Lon_decDegree
                                                                    , bottom=stnT$Depth_m))

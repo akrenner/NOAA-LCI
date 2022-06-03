@@ -125,7 +125,7 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
-  if (packageVersion("oce") <= "1.7.2"){  # change 1.7.2 to 1.7.3 after next release
+  if (packageVersion("oce") <= "1.7.3"){
     stop ("Need package:oce version 1.7.4 or later")
   }
   require ("oce")
@@ -159,16 +159,16 @@ makeSection <- function (xC, stn){
                                       as.ctd (salinity = Salinity_PSU
                                               , temperature = Temperature_ITS90_DegC
                                               , pressure = Pressure..Strain.Gauge..db.
-                                             # , longitude = longitude_DD
-                                             # , latitude = latitude_DD
-                                              , station = Match_Name
-                                              #, sectionId = transDate
                                               , time = isoTime
                                       ))
-                        # ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]
-                        ocOb@metadata$waterDepth <- sCTD$bathy [1]
+                        if (is.na (sCTD$bathy [1])){
+                          ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]  ## always use Bottom.Depth?
+                        }else{
+                          ocOb@metadata$waterDepth <- sCTD$bathy [1]
+                        }
                         ocOb@metadata$longitude <- sCTD$longitude_DD [1]
                         ocOb@metadata$latitude <- sCTD$latitude_DD [1]
+                        ocOb@metadata$stationId <- sCTD$Match_Name [1]
 
                         ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
@@ -231,7 +231,7 @@ isNightsection <- function (ctdsection){
 
 cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
                       , longitude=ctd@metadata$longitude
-                      , stationID=NULL, startTime=NULL
+                      , stationId=NULL, startTime=NULL
                       , bottom=NULL){
   # data (ctd)
   ## NA-out all data, other than depth and pressure
@@ -244,9 +244,9 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
   ctd@metadata$latitude <- latitude
   ctd@metadata$longitude <- longitude
 
-  if (length (stationID)>0){
-    ctd@metadata$station <- stationID
-  }else {ctd@metadata$station <- NA}
+  if (length (stationId)>0){
+    ctd@metadata$stationId <- stationId
+  }else {ctd@metadata$stationId <- NA}
   if (length (startTime)>0){
     ctd@metadata$startTime <- startTime
   }
@@ -264,20 +264,21 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 sectionPad <- function (section, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
 
-  if (!all (c ("stationID", "latitude", "longitude")  %in% names (transect))){
-    stop ("transect needs to have fields 'latitude', 'longitude', and 'stationID'")
+  if (!all (c ("stationId", "latitude", "longitude")  %in% names (transect))){
+    stop ("transect needs to have fields 'latitude', 'longitude', and 'stationId'")
   }
-  ## match by stationID or geographic proximity? The later would need a threshold.
+  ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  for (i in 1:length (levels (factor (transect$stationID)))){
-    if (!transect$stationID [i]  %in% levels (section@metadata$station)){
-      cat ("No ", transect$stationID [i], "\n")
+  for (i in 1:length (transect$stationId)){
+#   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
+    if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+        cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
       section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
                                                   , latitude=transect$latitude [i]
                                                   , longitude=transect$longitude [i]
-                                                  , stationID=transect$stationID [i]
+                                                  , stationId=transect$stationId [i]
                                                   , bottom=transect$bottom [i]
       )
       )

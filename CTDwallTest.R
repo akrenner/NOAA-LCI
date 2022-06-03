@@ -7,6 +7,7 @@ rm (list = ls())
 ## make sure that if title is plotted, next plot moves on to the next field!
 
 require ("oce")
+setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 source ("CTDsectionFcts.R")
 data ("section")
 xCo <- section
@@ -15,6 +16,7 @@ xCo <- section
 x1 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
                         , xCo@data$station [[3]], xCo@data$station [[2]]
                         , xCo@data$station [[1]]))
+
 xNA <- as.section (list (cloneCTD (xCo@data$station [[5]]), xCo@data$station [[4]]
                        , xCo@data$station [[3]], xCo@data$station [[2]]
                        , xCo@data$station [[1]]))
@@ -22,25 +24,45 @@ xNA2 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
                          , xCo@data$station [[3]], xCo@data$station [[2]]
                          , cloneCTD (xCo@data$station [[1]])))
 
+
+
+x1 <- as.section (list (xCo@data$station [[3]], xCo@data$station [[4]]
+                        , xCo@data$station [[5]], xCo@data$station [[2]]
+                        , xCo@data$station [[1]]))
+
+xNA <- as.section (list (cloneCTD (xCo@data$station [[3]]), xCo@data$station [[4]]
+                        , xCo@data$station [[5]], xCo@data$station [[2]]
+                        , cloneCTD (xCo@data$station [[1]])))
+
+xNA2 <- as.section (list (xCo@data$station [[3]], xCo@data$station [[4]]
+                         , cloneCTD (xCo@data$station [[5]]), xCo@data$station [[2]]
+                         , xCo@data$station [[1]]))
+xNA2 <- as.section (list (xCo@data$station [[3]], cloneCTD (xCo@data$station [[4]])
+                          , xCo@data$station [[5]], xCo@data$station [[2]]
+                          , xCo@data$station [[1]]))
+
+
 par (mfrow=c(1,1))
 plot (xNA, which="map")  # should show 5 data points -- good
 
 par (mfrow=c(1,2))
+# plot (x1, which=1)
 plot (xNA, which=1)
 plot (xNA2, which=1)
-# plot (x1, which=1)
 
 
 unlist (lapply (1:5, FUN=function (i){
   xNA@data$station[[i]]@metadata$waterDepth
 }))
 
-## ignore all the stuff below!
+## ignore all the stuff below!?
 
 
 
 
 
+
+## test bathymetry for T3-2014-spring
 
 
 ## problemss:
@@ -164,8 +186,9 @@ if (test){iX <- 1}else{iX <- 1:length (oVars)}
 # if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
 #     for (k in iO){
       ## for testing:
-      k <- 7 # pick 2018
-      physOc <- subset (physOcY, year == levels (physOcY$year)[k])
+    k <- 7 # pick 2018
+    k <- 6 # pick 2017
+    physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
       ## replace transDate from above!
@@ -252,11 +275,26 @@ if (test){iX <- 1}else{iX <- 1:length (oVars)}
 
           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
           # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
-          # section=xCo
-          # transect = data.frame (stationID=stnT$Match_Name, latitude=stnT$Lat_decDegree
-          #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
+
 
           xCo <- sectionize (xC)
+
+
+          plot (xCo, which=1)
+
+
+
+          ## inspect geographic coordinates
+          lat <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+            xCo@data$station[[i]]@metadata$longitude
+          }))
+          lon <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+            xCo@data$station[[i]]@metadata$latitude
+          }))
+          dep <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$waterDepth
+            }))
+print (cbind (lat, lon, dep))
 
           ## plot.section does not handle NAs at leading end well. Bathymetry = messed up, error given.
           ## plot.section with NA at the tail end: no error, but bathymetry messed up. Station not drawn, x-limit shortened.
@@ -304,11 +342,20 @@ if (test){iX <- 1}else{iX <- 1:length (oVars)}
             ## determine whether transect is incomplete, and if so, pad with blanks
             ## example to try: T3 2017-summer (5 stations only)
             stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
-            xCo <- sectionPad (section=xCo, transect = data.frame (stationID=stnT$Match_Name
+            xCo <- sectionPad (section=xCo, transect=data.frame (stationId=stnT$Match_Name
                                                                    , latitude=stnT$Lat_decDegree
                                                                    , longitude=stnT$Lon_decDegree
                                                                    , bottom=stnT$Depth_m))
+
 #          }
+             data.frame (stationId =  unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$stationId}))
+            , depth = unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$waterDepth}))
+            )
+
+
+
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
             xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
