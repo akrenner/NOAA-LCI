@@ -161,7 +161,8 @@ makeSection <- function (xC, stn){
                                               , pressure = Pressure..Strain.Gauge..db.
                                               , time = isoTime
                                       ))
-                        if (is.na (sCTD$bathy [1])){
+                        # if (is.na (sCTD$bathy [1])){
+                        if (1){
                           ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]  ## always use Bottom.Depth?
                         }else{
                           ocOb@metadata$waterDepth <- sCTD$bathy [1]
@@ -177,7 +178,7 @@ makeSection <- function (xC, stn){
                         ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                         ocOb <- oceSetData (ocOb, "logPAR", sCTD$logPAR)
                         ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
-#                        ocOb <- oceSetData (ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
+                        #                        ocOb <- oceSetData (ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
                         ocOb <- oceSetData (ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
                         # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                         # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
@@ -271,8 +272,13 @@ sectionPad <- function (section, transect, ...){
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   for (i in 1:length (transect$stationId)){
+## only insert dummy first and last stations. skip all others to avoid overdoing things
+#  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
 #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
-    if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+    stationIDs <- sapply (1:length (section@data$station), FUN = function (k){
+      section@data$station[[k]]@metadata$stationID})  ## oce example files use "station", not "stationId"
+#    if (!transect$stationId [i]  %in% stationIDs){
+   if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
         cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
       section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
