@@ -162,8 +162,9 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
             plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                  , main = paste0 (levels (physOc$transDate)[i], "-- N stations: "
-                                   , length (levels (factor (xC$Match_Name))))
+                  , main = paste0 (levels (physOc$transDate)[i], "--"
+                                   , length (levels (factor (xC$Match_Name)))
+                                   , " stations")
                   )
           }
           rm (inFuture)
