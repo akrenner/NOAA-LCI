@@ -158,11 +158,20 @@ poAll$Oxygen_umol_kg <-  ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umo
 # poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
 poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg)
 ## recalc other O2 values here?
-poAll$logPAR <- log (poAll$PAR.Irradiance)
 poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < 20, NA, poAll$Salinity_PSU)
-# poAll$logFluorescence <- log (poAll$Fluorescence_mg_m3)
-poAll$logTurbidity <- log (poAll$turbidity)
 
+## log transformations
+slog <- function (x){
+  x <- suppressWarnings (log (x))
+  x <- ifelse (is.infinite(x), NA, x)
+  x
+}
+
+
+poAll$logPAR <- slog (poAll$PAR.Irradiance)
+# poAll$logFluorescence <- slog (poAll$Fluorescence_mg_m3)
+poAll$logTurbidity <- slog (poAll$turbidity)
+rm (slog)
 
 
 ## add bathymetry to CTD metadata

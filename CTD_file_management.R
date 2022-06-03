@@ -34,7 +34,7 @@ if (!exists ("hexFileD")){
 }
 
 
-# unlink ("~/GISdata/LCI/CTD-startover/allCTD/", recursive = TRUE)  ## careful!! -- overkill
+# unlink ("~/GISdata/LCI/CTD-processing/allCTD/", recursive = TRUE)  ## careful!! -- overkill
 unlink ("~/GISdata/LCI/CTD-processing/allCTD/edited_hex", recursive = TRUE)
 unlink ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", recursive = TRUE)
 set.seed (8)
@@ -81,7 +81,7 @@ fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
 fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
-fL <- c(fL, rL ("ctd-data_2017-21/1_Unedited .hex files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/"))
 # print (length (fL))
 rm (rL)
 
@@ -92,6 +92,7 @@ if (length (bF) > 0){
   cat ("removing ", length (bF), " bad files\n")
   fL <- fL [-bF]
 }
+rm (bF)
 
 
 ## manually remove duplicates -- if any -- none found
@@ -143,6 +144,7 @@ for (i in 1:nrow (fDB)){
              , overwrite = FALSE, copy.date = TRUE)
 }
 rm (hF)
+cat ("\n\nfactor (fDB$copy\n")
 print (summary (factor (fDB$copy)))
 
 ## rename any .txt files to .hex
@@ -155,7 +157,7 @@ if (any (!cpCk)){print (summary (cpCk))} # all should be TRUE
 rm (cpCk)
 unlink (iN)
 
-
+cat ("\n length of hex files in nD and nrow (fDB)\n")
 print (length (list.files (nD, pattern = ".hex", recursive = TRUE, ignore.case = TRUE)))
 print (nrow(fDB))
 
@@ -352,6 +354,11 @@ fixMeta ("2015_02-12", "2015_02-12")
 
 fixMeta ("2016_02-16_T7", "2016-02-16")
 #}
+
+## confirmed bad metadata by checking field notes (file name and field notes agree)
+fixMeta ("2017_04-18", "2017-04-18") # meta was 2017-12-14
+fixMeta ("2017-05-22", "2018-05-22") # meta was 2018-01-17
+
 
 
 ## end of file manipulations
@@ -624,4 +631,5 @@ file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", fDB2)
            , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", fDB2))
 
 
+cat ("\n# END CTD_file_management.R #\n")
 ## EOF

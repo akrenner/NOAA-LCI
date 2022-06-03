@@ -961,4 +961,7 @@ save.image ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 cat ("\n\n#\n#\n#", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                           , usetz = FALSE)
 , " \n# \n# End of dataSetup.R\n#\n#\n")
+
+cat ("\n# END datasetup.R #\n")
+
 ## EOF

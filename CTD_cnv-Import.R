@@ -187,6 +187,7 @@ readCNV <- function (i){
   Require (oce)
   ctdF <- try (read.ctd (fNf [i]
                          # , columns = "define name of dV/dT"
+                         , deploymentType = "profile"
                          ))
   if (class (ctdF) == "try-error"){
   } #else{
@@ -955,5 +956,7 @@ if (0){
   plot (attenuation~PAR.Irradiance, physOc)
   dev.off()
 }
+
+cat ("\n# END CTD_cnv-Import.R #\n")
 
 ## EOF

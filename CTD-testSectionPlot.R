@@ -27,7 +27,7 @@ oVars <- c ("temperature"
             , "PAR"
             #, "logPAR"
             #, "logFluorescence"
-            , "O2perc"
+            #, "O2perc"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -57,11 +57,13 @@ oCol2 <- function (i, N = NULL){
 }
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
-                        , "turbidity"
+                         , "turbidity"
                         # , "logTurbidity"
                         , "Fluorescence_mg_m3" #, "PAR.Irradiance"
                         , "logPAR"
-                        , "O2perc")
+                       # , "O2perc"
+                       # , "Oxygen_ymol_kg"
+                       )
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
@@ -69,91 +71,61 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC", "Salinity_PSU" #, "Density_sig
 ###########################################################################
 
 
-
-source ("CTDsectionFcts.R")  # get pSec to plot sections
-
-
-
-
-## tests
-
-## pick out section to plot
-## as in CTDsections.R
-# if (test){iX <- 8}else{iX <- 1:length (levels (poAll$survey))}
-# for (sv in iX){
-sv <- 7
-  s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
-  s$Transect <- factor (s$Transect)
-  # if (test){iY <- 1}else{iY <-  1:length (levels (s$Transect))}# by transect
-  # for (tn in iY){  ## XXX testing XXX
-    tn <- 1
-    if (levels (s$Transect)[tn] == "AlongBay"){
-      s$Transect [(s$Transect == "4") & (s$Station == "3")] <- "AlongBay"
-      s$Transect [(s$Transect == "9") & (s$Station == "6")] <- "AlongBay"
-    }
-    if (levels (s$Transect)[tn] == "4"){
-      s$Transect [(s$Transect == "AlongBay") & (s$Station == "3")] <- "4"
-    }
-    if (levels (s$Transect)[tn] == "9"){
-      s$Transect [(s$Transect == "AlongBay") & (s$Station == "6")] <- "9"
-    }
-
-
-    phT <- subset (s, Transect == levels (s$Transect)[tn])
-    phT$transDate <- with (phT, paste0 ("T-", Transect, " ", DateISO))
-    xC <- phT
-    if (xC$Transect [1] %in% c("4", "9")){
-      xC <- xC [order (xC$latitude_DD, decreasing = TRUE),]
-    }else{
-      xC <- xC [order (xC$longitude_DD, decreasing = FALSE),]
-    }
-
-
 ## CTDwall equivalent
+poAll$survey <- poAll$DateISO
 # summary (factor (subset (poAll, year == 2018)$survey))
 # # xC <- subset (poAll, survey == "2018-07-26")
-# xC <- subset (poAll, survey == "2018-08-23")
+ xC <- subset (poAll, survey == "2018-08-23")
 # #  summary (factor (xC$Transect))
 # xC <- subset (poAll, (Transect == "9"))
 # #  summary (xC$Transect)
-# # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
+# xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
 
-
-    xCo <- sectionize (xC)
-
-# xCg <- sectionGrid(xCo, p=standardDepths(3), method = "boxcar", trim = TRUE)
+source ("CTDsectionFcts.R")
+xCo <- sectionize (xC)
 
 #  plot (xCo)
 
 
-    ov <- 1
-    if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
-      zR <- oRange [ov,]
-    }else{
-      cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU, turbidity, Fluorescence_mg_m3, logPAR, O2perc))
-      cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
-      zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
-    }
-
-    pSec (xCo
-          # , N = ov
-          , N = oVars [ov]
-            , zcol = oCol [[ov]]
-   #       , zcol = oCol2 (ov, 10)
-          # , zlim = oRange [ov,]
-          , zlim = zR
-          #               , xlim = xRange []  # range of the Transect
-          # , custcont = pretty (oRange [ov,], 10)
-          # , axes = FALSE  ## not worth the hassle of messing with it
-    )
+ov <- 1
+if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
+  zR <- oRange [ov,]
+}else{
+  cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
+                               , turbidity, Fluorescence_mg_m3, logPAR
+                               # , O2perc
+  ))
+  cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
+  zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
+}
 
 
+## testing plot.section
+plot (xCo, which = 1)
+
+
+
+
+
+
+
+
+pSec (xCo
+      # , N = ov
+      , N = oVars [ov]
+      , zcol = oCol [[ov]]
+      #       , zcol = oCol2 (ov, 10)
+      # , zlim = oRange [ov,]
+      , zlim = zR
+      #               , xlim = xRange []  # range of the Transect
+      # , custcont = pretty (oRange [ov,], 10)
+      # , axes = FALSE  ## not worth the hassle of messing with it
+)
 
 
 
     pSec (xCo, "temperature", zcol = oCol2 (1,10))
 
-pSec2 (xCo, "temperature", zcol = oCol2 (1,10), custcont = 5)
 
 # pSec2 (xCo, 1, zcol = oCol [[1]]) # error
 pSec (xCo, 1, col = oCol [[1]])

@@ -6,6 +6,64 @@ rm (list = ls())
 ## check whether problems persist with most recent oce version
 ## make sure that if title is plotted, next plot moves on to the next field!
 
+require ("oce")
+setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+source ("CTDsectionFcts.R")
+data ("section")
+xCo <- section
+
+#' NAs at the start -- returning Inf/-Inf -- no plot
+x1 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
+                        , xCo@data$station [[3]], xCo@data$station [[2]]
+                        , xCo@data$station [[1]]))
+
+xNA <- as.section (list (cloneCTD (xCo@data$station [[5]]), xCo@data$station [[4]]
+                       , xCo@data$station [[3]], xCo@data$station [[2]]
+                       , xCo@data$station [[1]]))
+xNA2 <- as.section (list (xCo@data$station [[5]], xCo@data$station [[4]]
+                         , xCo@data$station [[3]], xCo@data$station [[2]]
+                         , cloneCTD (xCo@data$station [[1]])))
+
+
+
+x1 <- as.section (list (xCo@data$station [[3]], xCo@data$station [[4]]
+                        , xCo@data$station [[5]], xCo@data$station [[2]]
+                        , xCo@data$station [[1]]))
+
+xNA <- as.section (list (cloneCTD (xCo@data$station [[3]]), xCo@data$station [[4]]
+                        , xCo@data$station [[5]], xCo@data$station [[2]]
+                        , cloneCTD (xCo@data$station [[1]])))
+
+xNA2 <- as.section (list (xCo@data$station [[3]], xCo@data$station [[4]]
+                         , cloneCTD (xCo@data$station [[5]]), xCo@data$station [[2]]
+                         , xCo@data$station [[1]]))
+xNA2 <- as.section (list (xCo@data$station [[3]], cloneCTD (xCo@data$station [[4]])
+                          , xCo@data$station [[5]], xCo@data$station [[2]]
+                          , xCo@data$station [[1]]))
+
+
+par (mfrow=c(1,1))
+plot (xNA, which="map")  # should show 5 data points -- good
+
+par (mfrow=c(1,2))
+# plot (x1, which=1)
+plot (xNA, which=1)
+plot (xNA2, which=1)
+
+
+unlist (lapply (1:5, FUN=function (i){
+  xNA@data$station[[i]]@metadata$waterDepth
+}))
+
+## ignore all the stuff below!?
+
+
+
+
+
+
+## test bathymetry for T3-2014-spring
+
 
 ## problemss:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
@@ -21,13 +79,9 @@ rm (list = ls())
 
 # - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.  --  or plotter
 
-#' partial transects: some bathymetries are mangled -- ensure every cast has a
-#' waterdepth, either local or from masterlist.
-
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 # only AlongBay and 9 are monthly -- 4?
-
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 if (exists ("sectionSort")){detach ("package:oce")}  ## reload new version of oce
@@ -62,11 +116,11 @@ test <- FALSE
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect
-  for (tn in iY){  # tn: transect
+# for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
+#   if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect
+#   for (tn in iY){  # tn: transect
     ## for testing
-    ## ov <- 1; tn <- 1
+    ov <- 1; tn <- 1
     cat (oVars [ov], " Transect #", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
@@ -119,21 +173,22 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     }
 
 
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-                 , " T-", levels (poAll$Transect)[tn]
-                 , ".pdf")
-         , height = pH, width = pW)
-    layout (layoutM); rm (layoutM)
+    # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
+    #              , " T-", levels (poAll$Transect)[tn]
+    #              , ".pdf")
+    #      , height = pH, width = pW)
+    # layout (layoutM); rm (layoutM)
 
 
     ## is this needed??
 #    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
 #for (k in 2){
-if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
-    for (k in iO){
+# if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
+#     for (k in iO){
       ## for testing:
-      # k <- 7 # pick 2018
-      physOc <- subset (physOcY, year == levels (physOcY$year)[k])
+    k <- 7 # pick 2018
+    k <- 6 # pick 2017
+    physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
       ## replace transDate from above!
@@ -148,34 +203,33 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
 
 
 
-      if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
-      for (i in iA){              # cycle through individual surveys
-        # i <- 3  # for testing
+      # if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
+      # for (i in iA){              # cycle through individual surveys
+        i <- 3  # for testing
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
-        if (length (levels (factor (xC$Match_Name))) < 2){
-          ## blank plot for missing data -- unless in the future
-          ## use empty slots for map rather than starting on blank page if level would be in future
+        # if (length (levels (factor (xC$Match_Name))) < 2){
+        #   ## blank plot for missing data -- unless in the future
+        #   ## use empty slots for map rather than starting on blank page if level would be in future
+        #
+        #   #cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
+        #   inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
+        #     i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
+        #   if (!inFuture){
+        #     plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
+        #           , main = paste0 (levels (physOc$transDate)[i], "-- N stations: "
+        #                            , length (levels (factor (xC$Match_Name))))
+        #           )
+        #   }
+        #   rm (inFuture)
+        # }else{
 
-          #cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
-          inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
-            i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
-          if (!inFuture){
-            plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                  , main = paste0 (levels (physOc$transDate)[i], "--"
-                                   , length (levels (factor (xC$Match_Name)))
-                                   , " stations")
-                  )
-          }
-          rm (inFuture)
-        }else{
 
-
-          if (0){  ## plot all casts in survey window (watch RAM!)
-            ## or pick out long survey within X days?
-            nSurv <- 1
-            xC <- xC    ## use all data for month/quarter, irrespective of how far apart
-          }else{
+          # if (0){  ## plot all casts in survey window (watch RAM!)
+          #   ## or pick out long survey within X days?
+          #   nSurv <- 1
+          #   xC <- xC    ## use all data for month/quarter, irrespective of how far apart
+          # }else{
             ## check whether there is more than one survey per survey-interval
 
             ## allow x-day window to make up a composite transectF
@@ -213,7 +267,7 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
                 rm (nR)
               }
             }
-          }
+          # }
 
 
           ## arrange ctd data into sections
@@ -221,15 +275,31 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
 
           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
           # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
-          # section=xCo
-          # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
-          #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
+
 
           xCo <- sectionize (xC)
+
+
+          plot (xCo, which=1)
+
+
+
+          ## inspect geographic coordinates
+          lat <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+            xCo@data$station[[i]]@metadata$longitude
+          }))
+          lon <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+            xCo@data$station[[i]]@metadata$latitude
+          }))
+          dep <- unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$waterDepth
+            }))
+print (cbind (lat, lon, dep))
 
           ## plot.section does not handle NAs at leading end well. Bathymetry = messed up, error given.
           ## plot.section with NA at the tail end: no error, but bathymetry messed up. Station not drawn, x-limit shortened.
 
+#          if (0){
             ## Ideas:
             #' Fix current approach: get plot.section to accept NA's at the begining and end
             #' Extend plot.section to accept xlim -- dead end
@@ -237,40 +307,55 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             #'
             #' Some section with NAs thrown in -- at start/middle/end
             #'
-            #'
-          #
-          if (0){
-            ## testing
-            # No NAs
+            #'No NAs
+            #' NAs at the end -- plot with bathymetry jumbled
+            x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
+                                   , xCo@data$station [[3]]# , xCo@data$station [[4]]
+                                   , xCo@data$station [[4]], cloneCTD (xCo@data$station [[5]])))
+            plot (x, which="map") # should show 5 points!
+
+            par (mfrow=c(1,2))
+            plot (x, which=1)
+            plot (xCo, which=1)
+
+
+
+
             x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
                                    , xCo@data$station [[3]], xCo@data$station [[4]]
-                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
+                                   , xCo@data$station [[5]]#, xCo@data$station [[6]]
+                                   ))
             #' NAs at the start -- returning Inf/-Inf -- no plot
             x <- as.section (list (cloneCTD (xCo@data$station [[1]]), xCo@data$station [[2]]
                                    , xCo@data$station [[3]], xCo@data$station [[4]]
-                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
+                                   , xCo@data$station [[5]]#, xCo@data$station [[6]]
+                                   ))
+            plot (x, which=1)
+
+
             #' NAs in the middle -- Inf/-Inf -- no plot
             x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
                                    , cloneCTD(xCo@data$station [[3]]), xCo@data$station [[4]]
-                                   , xCo@data$station [[5]], xCo@data$station [[6]]))
-            #' NAs at the end -- plot with bathymetry jumbled
-            x <- as.section (list (xCo@data$station [[1]], xCo@data$station [[2]]
-                                   , xCo@data$station [[3]], xCo@data$station [[4]]
-                                   , xCo@data$station [[5]], cloneCTD (xCo@data$station [[6]])))
-            plot (x, which=1)
+                                   , xCo@data$station [[5]]#, xCo@data$station [[6]]
+                                   ))
 
             ## determine whether transect is incomplete, and if so, pad with blanks
             ## example to try: T3 2017-summer (5 stations only)
-          }
-
-          if (1){  # pad incomplete transects
             stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])  # or better from all actual stations?
-            ## sectionPad to plot incomplete sections
-            xCo <- sectionPad (section=xCo, transect = data.frame (stationId=stnT$Match_Name
+            xCo <- sectionPad (section=xCo, transect=data.frame (stationId=stnT$Match_Name
                                                                    , latitude=stnT$Lat_decDegree
                                                                    , longitude=stnT$Lon_decDegree
                                                                    , bottom=stnT$Depth_m))
-          }
+
+#          }
+             data.frame (stationId =  unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$stationId}))
+            , depth = unlist (lapply (1:length (xCo@data$station), FUN=function (i){
+              xCo@data$station[[i]]@metadata$waterDepth}))
+            )
+
+
+
           ## sectionSort
           if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
             xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
@@ -299,9 +384,9 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
             xMap <- xCo; xMc <- xC
           }
         }
-      }
-      cat ("\n")
-    }
+    #   }
+    #   cat ("\n")
+    # }
     if (exists ("xMap")){
       plot (xMap
             , which = 99
@@ -325,8 +410,8 @@ if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
     rm (xCo, xMc)
     dev.off()
     cat ("\n")
-  }
-}
+#   }
+# }
 
 
 physOc <- poAll

@@ -91,15 +91,7 @@ for (sv in iX){
       # layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
       #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
-
       xCo <- sectionize (xC)
-      if (xC$Transect [1] %in% c("4", "9")){
-        ## requires new version of oce
-        xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
-      }else{
-        xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
-      }
-
 
 
       for (ov in 1:length (oVars)){
@@ -140,9 +132,10 @@ for (sv in iX){
       #     if (is.night(xCo@data [[1]][[1]]))
       #       box (lwd = 4, col = "navy")
       #   }
-     }
-      mtext (paste0 ("T", levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
-             , side = 3, outer = TRUE, line = -0.9, cex = 0.7)
+      }
+      if (s$Transect[tn] == "AlongBay"){mt <- ""}else{mt <- "T"}
+      mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
+             , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm (mt)
       plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
             , which = 99
             , coastline = "coastlineWorldFine"
