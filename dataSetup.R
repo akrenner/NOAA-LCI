@@ -780,6 +780,9 @@ coastSP <- as (coastSF, "Spatial")
 Require ("raster")
 Require ("rgeos")
 coast <- raster::intersect(coastSP, bP)
+# Require ("sf")
+# Require ("terra") # replacement for raster
+# coast <- terra::intersect(coastSP, bP)
 # plot (coastC)
 unlink (tD, TRUE); rm (tD)
 rm (b, bP, coastSP, coastSF)
@@ -898,7 +901,7 @@ stnT <- subset (stn, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
 stnT <- subset (stn, stn$Plankton)
 
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
-lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos
+## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
 
 findBirds <- function (x){
     stnBuf <- over (NPPSD2, lBuff [x,])$Match_Name
