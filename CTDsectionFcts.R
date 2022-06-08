@@ -22,12 +22,13 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
 
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
+                  , showBottom=TRUE, ...){
   ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   s <- try (plot (xsec, which = N
-                  # , showBottom = FALSE, showBottom = "lines" #FALSE
+                  , showBottom = showBottom
                   , axes = TRUE
                   , stationTicks = TRUE
                   , showStations = TRUE
@@ -228,8 +229,21 @@ isNightsection <- function (ctdsection){
 
 
 
-## consider having these functions in oce
-
+#' Clone CTD-cast, resulting in a new cast, but with all measurement fields left empty.
+#' Need this to create dummy casts for incomplete transects.
+#'
+#' [cloneCTD]
+#'
+#' @param ctd a [ctd-class] object
+#'
+#' @param depth
+#' @param stationID
+#' @param latitude
+#' @param longitude
+#'
+#' @return A [ctd] object
+#'
+#' @author Martin Renner
 cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
                       , longitude=ctd@metadata$longitude
                       , stationId=NULL, startTime=NULL
@@ -262,6 +276,26 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 }
 
 
+#' Extend incomplete transect to the full length by adding dummy casts where
+#' stations were missed.
+#'
+#' [sectionPad]
+#'
+#' This function is needed when sections are run on pre-defined transect
+#' and some sections are incomplete, e.g. due to weather. Adding dummy
+#' casts to where stations were missed should allow plotting the full length
+#' of the transect (rather than rescaling to an incomplete one).
+#'
+#' @param section a [section-class] object
+#'
+#' @param transect a [data-frame] object with the fields latitude, longitude
+#' , stationId. stationId needs to match the stationId in section.
+#' @param parameters to be passed on to sectionSort() to specify how the resultant
+#' expanded section should be sorted.
+#'
+#' @return A [section-class] object with the same extend as `transect`.
+#'
+#' @author Martin Renner
 sectionPad <- function (section, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
 
@@ -277,7 +311,7 @@ sectionPad <- function (section, transect, ...){
 #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
     stationIDs <- sapply (1:length (section@data$station), FUN = function (k){
       section@data$station[[k]]@metadata$stationID})  ## oce example files use "station", not "stationId"
-#    if (!transect$stationId [i]  %in% stationIDs){
+#    if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
    if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
         cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
