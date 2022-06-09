@@ -60,7 +60,7 @@ test <- FALSE
 
 
 useSF <- FALSE
-
+# useSF <- TRUE
 
 ## add high-res bottom/bathymetry profile
 ## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
@@ -72,9 +72,10 @@ bathy <- getNOAA.bathy (min (poAll$longitude_DD)-bfer, max (poAll$longitude_DD)+
 rm (bfer)
 if (useSF){
   require ("sf") ## or stars / terra ??
-  # require ("terra")
   require ("stars") ## or better to use terra?
   bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  # require ("terra")
+  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
 require ("raster")
 ## need to supply absolute path because raster object is just a pointer.
@@ -131,12 +132,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       sect <- st_as_sf(sect, coords = c("loni", "lati"))
       st_crs(sect) <- 4326  ## WGS84 definition
       sectP <- st_transform(sect, st_crs (bathyZ))
+      # bottomZ <- aggregate (bathyZ, sectP, function(x){x[1]}) ## this step fails in stars -- terra?
+      bottomZ <- aggregate (bathyZ, sectP, mean, na.rm = TRUE) ## stars -- hangs
+      # bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1  ## terra
     }else{
     coordinates (sect) <- ~loni+lati
     proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
     sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
-}
     bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1
+    }
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
     bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
