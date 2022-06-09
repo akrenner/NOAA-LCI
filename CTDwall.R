@@ -59,6 +59,7 @@ test <- TRUE
 test <- FALSE
 
 
+useSF <- FALSE
 
 
 ## add high-res bottom/bathymetry profile
@@ -68,21 +69,22 @@ bfer <- 0.5
 bathy <- getNOAA.bathy (min (poAll$longitude_DD)-bfer, max (poAll$longitude_DD)+bfer
                     , min (poAll$latitude_DD)-bfer, max (poAll$latitude_DD)+bfer
                     , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")
-## require ("raster")
-require ("sf") ## or stars / terra ??
-require ("stars") ## or better to use terra?
+rm (bfer)
+if (useSF){
+  require ("sf") ## or stars / terra ??
+  # require ("terra")
+  require ("stars") ## or better to use terra?
+  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+}else{
+require ("raster")
 ## need to supply absolute path because raster object is just a pointer.
 ## still needs uncompressed raster file accessible.
 if (.Platform$OS.type == "windows"){
-  bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-#  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+   bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
   bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-#  bathyZ <- read_stars ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
-
-rm (bfer)
-
+}
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
@@ -125,9 +127,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
     ## extract from bathyZ. then fill-in the missing values from get.depth
     ## need to geo-ref points and raster first?
+    if (useSF){
+      sect <- st_as_sf(sect, coords = c("loni", "lati"))
+      st_crs(sect) <- 4326  ## WGS84 definition
+      sectP <- st_transform(sect, st_crs (bathyZ))
+    }else{
     coordinates (sect) <- ~loni+lati
     proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
     sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
+}
     bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
