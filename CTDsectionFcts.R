@@ -313,7 +313,7 @@ sectionPad <- function (section, transect, ...){
       section@data$station[[k]]@metadata$stationID})  ## oce example files use "station", not "stationId"
 #    if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
    if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
-        cat ("No station", transect$stationId [i], "\n")
+#       cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
       section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
                                                   , latitude=transect$latitude [i]
