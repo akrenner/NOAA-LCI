@@ -118,9 +118,9 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
 
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
   ## sort in here, rather than separately
-  if (xC$Transect [1] == "AlongBay"){ # extended AlongBay wraps around Pogy Ptp
+  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
+  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
     xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
   }else{
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
