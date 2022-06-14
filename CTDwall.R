@@ -41,8 +41,7 @@ source ("CTDsectionFcts.R")
 mnthly <- c ("9", "AlongBay", "4")
 
 
-## tests
-if (1){
+if (0){## tests
   levels (factor (subset (poAll, year == 2012)$DateISO))
   xC <- subset (poAll, (Transect == "9")&(DateISO == "2019-09-16") )
  # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
@@ -59,7 +58,7 @@ test <- TRUE
 test <- FALSE
 
 
-useSF <- FALSE
+useSF <- FALSE  ## use package sf and terra/stars instead of raster
 # useSF <- TRUE
 
 ## add high-res bottom/bathymetry profile
@@ -89,11 +88,12 @@ if (.Platform$OS.type == "windows"){
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
+if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  if (test){iY <- 6}else{iY <- 1:length (levels (poAll$Transect))}# by transect
   for (tn in iY){  # tn: transect
     ## for testing
-    ## ov <- 1; tn <- 6
+    ## ov <- 1; tn <- 6 ## AlongBay
+    ## ov <- 1; tn <- 5 ## T9
     cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
@@ -188,10 +188,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     ## is this needed??
     #    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
     #for (k in 2){
-    if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
+    if (test){iO <- 1}else{iO <- 1:length (levels (physOcY$year))}
     for (k in iO){
       ## for testing:
       # k <- 7 # pick 2018
+      # k <- 1 # pick 2012
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
@@ -206,8 +207,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
-
-      if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
+      iA <-  1:length (levels (physOc$transDate))
+      # if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
       for (i in iA){              # cycle through individual surveys
         # i <- 3  # for testing
         cat (i, " ")
@@ -272,6 +273,19 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 rm (nR)
               }
             }
+
+            ## if two sections on one day, pick just one
+            if (xC$transDate [1] == "T-9 2012-05"){
+              xC <- subset (xC, isoTime < as.POSIXct("2012-05-31 15:00")) # afternoon section is shorter
+            }
+            ## more general solution
+            ## trigger: time-range of one CTD-cast within section is > 30 min
+            # cst <- factor (xC$Match_Name)
+            # lapply (1:length (levels (cst)), function (k){
+            #   tSec <- subset (xC, cst == levels (cst)[k])
+            #   difftime (min (tSec$isoTime), max (tSec$isoTime), units = "sec")
+            # })
+
           }
 
 
@@ -407,18 +421,7 @@ if (0){
       xC@metadata$time <- xCp$isoTime
 
       sG <- sectionGrid (xC, p = 'levitus')
-
-      if (0){
-        plot (xC                        # subscript out of bound
-              , which = "temperature" # = 1, salinity 2, density 3
-              , xtype = "time"
-              , ytype = "depth"
-              ## need to define proper z-matrix! -- initiates correct plot may need sectionGrid, as above?
-              # , coastline = "best"
-        )
-      }
     }
-    #   plot (xC, xtype = "time")
   }
   dev.off()
 }
