@@ -4,24 +4,6 @@
 ## emulate/evolve from ODV
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
-  ## old version without contours -- keep for now, but eventually replace with pSec
-  s <- try (plot (xsec, which = N
-                  , zcol = zCol
-                  , stationTicks = TRUE
-                  , showStations = TRUE  # or roll your own -- how?
-                  , ztype = "image"
-                  # , grid = TRUE
-                  , ...
-  ), silent = TRUE)
-  if (class (s) == "try-error"){
-    plot (1:10, type = "n", new = FALSE)
-    text (5,5, paste0 (N, " all values NA"))
-  }
-}
-
-
-
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , showBottom=TRUE, ...){
   ## as above, but add contours. Replace pSec once this is working
@@ -39,8 +21,6 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , ...
   )
   , silent = TRUE)
-
-
   if (class (s) != "try-error"){
     s <- xsec
     nstation <- length(s[['station']])
