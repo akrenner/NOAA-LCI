@@ -208,7 +208,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
 
       iA <-  1:length (levels (physOc$transDate))
-      # if (test){iA <- 3}else{iA <-  1:length (levels (physOc$transDate))}
+      if (test){iA <- 1:5}else{iA <-  1:length (levels (physOc$transDate))}
       for (i in iA){              # cycle through individual surveys
         # i <- 3  # for testing
         cat (i, " ")
@@ -229,8 +229,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           }
           rm (inFuture)
         }else{
-
-
           if (0){  ## combine all casts in survey window (watch RAM!)
             ## or pick out long survey within X days?
             nSurv <- 1
@@ -274,18 +272,30 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
               }
             }
 
-            ## if two sections on one day, pick just one
-            if (xC$transDate [1] == "T-9 2012-05"){
-              xC <- subset (xC, isoTime < as.POSIXct("2012-05-31 15:00")) # afternoon section is shorter
+            ## any duplicated stations? -- if so, keep only the longest cast
+            xC$Match_Name <- factor (xC$Match_Name)
+            if (any (sapply (1:length (levels (xC$Match_Name)), function (m){
+              sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
+              tR <- difftime (max (sec$isoTime), min (sec$isoTime), units = "min")
+              tR > 20
+            }))){
+              # there are duplicate CTD casts -- pick the longer one
+              for (m in 1:length (levels (xC$Match_Name))){
+                sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
+                sec$isoTime <- factor (sec$isoTime)
+                castSize <- sapply (1:length (levels (sec$isoTime)), function (m){
+                  nrow (subset (sec, sec$isoTime==levels (sec$isoTime)[m]))
+                })
+                tNew <- subset (sec, isoTime == levels (isoTime)[which.max(castSize)])
+                if (m == 1){
+                  secN <- tNew
+                }else{
+                  secN <- rbind (secN, tNew)
+                }
+              }
+              xC <- secN
+              rm (secN, tNew, sec, m)
             }
-            ## more general solution
-            ## trigger: time-range of one CTD-cast within section is > 30 min
-            # cst <- factor (xC$Match_Name)
-            # lapply (1:length (levels (cst)), function (k){
-            #   tSec <- subset (xC, cst == levels (cst)[k])
-            #   difftime (min (tSec$isoTime), max (tSec$isoTime), units = "sec")
-            # })
-
           }
 
 
@@ -302,13 +312,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## construct, pad, and sort section
           ##
           xCo <- sectionize (xC)
-          if (1){  # pad incomplete transects
-            ## sectionPad to plot incomplete sections
-            xCo <- sectionPad (section=xCo, transect = data.frame (stationId=stnT$Match_Name
-                                                                   , latitude=stnT$Lat_decDegree
-                                                                   , longitude=stnT$Lon_decDegree
-                                                                   , bottom=stnT$Depth_m))
-          }
+          ## sectionPad to plot incomplete sections
+          xCo <- sectionPad (section=xCo, transect = data.frame (stationId=stnT$Match_Name
+                                                                 , latitude=stnT$Lat_decDegree
+                                                                 , longitude=stnT$Lon_decDegree
+                                                                 , bottom=stnT$Depth_m))
           ## sectionSort
           if (xC$Transect [1] == "AlongBay"){
             xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
@@ -320,9 +328,13 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
             bottom <- bottom [order (bottom$lon),]
           }
-#          bottom$dist <- with (bottom, rev (geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE))) # [km]
           bottom$dist <- with (bottom, geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)) # [km]
 
+          ## test, QAQC
+          # sapply (1:length (xCo@data$station), function (k){
+          #   xCo@data$station[[k]]@data$temperature
+          # })
+          # plot (subset (xC, Match_Name == "9_10")$Temperature_ITS90_DegC)
 
           ##
           ## plot the section/transect
@@ -340,10 +352,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           #   # bottom <- bottom [nrow(bottom):1,]
           #   bottom <- rev (bottom)
           # }
-            tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
-          # with (bottom, polygon(c(dist, max(dist), min(dist))
-          #                       , c(-depthHR, 10000, 10000)
-          #                       , col=tgray))
+          tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
