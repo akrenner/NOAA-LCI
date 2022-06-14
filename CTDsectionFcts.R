@@ -9,6 +9,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
   ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
+  ## XXX missing feature XXX : color scale by quantiles XXX
   s <- try (plot (xsec, which = N
                   , showBottom = showBottom
                   , axes = TRUE
@@ -110,12 +111,9 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
     stop ("Need package:oce version 1.7.4 or later")
   }
   require ("oce")
-
   stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
   xCo <- makeSection (xC, stn)
-  xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = TRUE) # should understand this step more fully! XXX
-
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
   ## sort in here, rather than separately
   if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
@@ -125,6 +123,8 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   }else{
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }
+   xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = FALSE) # should understand this step more fully! XXX
+#  xCo <- sectionSmooth(xCo, method="barnes", pregrid=TRUE, trim=TRUE)  ## makes a mess -- not using it right; provide xr and yr
   xCo
 }
 
@@ -286,14 +286,14 @@ sectionPad <- function (section, transect, ...){
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   for (i in 1:length (transect$stationId)){
-## only insert dummy first and last stations. skip all others to avoid overdoing things
-#  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
-#   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
+    ## only insert dummy first and last stations. skip all others to avoid overdoing things
+    #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
+    #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
     stationIDs <- sapply (1:length (section@data$station), FUN = function (k){
-      section@data$station[[k]]@metadata$stationID})  ## oce example files use "station", not "stationId"
-#    if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
-   if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
-#       cat ("No station", transect$stationId [i], "\n")
+      section@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
+    # if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
+    if (!as.character (transect$stationId [i])  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+      #       cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
       section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
                                                   , latitude=transect$latitude [i]
