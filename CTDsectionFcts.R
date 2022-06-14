@@ -278,6 +278,7 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 #' @author Martin Renner
 sectionPad <- function (section, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
+  ## pad only first and last!! XXX
 
   if (!all (c ("stationId", "latitude", "longitude")  %in% names (transect))){
     stop ("transect needs to have fields 'latitude', 'longitude', and 'stationId'")
@@ -285,7 +286,7 @@ sectionPad <- function (section, transect, ...){
   ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  for (i in 1:length (transect$stationId)){
+  for (i in c (1,length (transect$stationId))){
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
