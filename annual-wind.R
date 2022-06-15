@@ -227,12 +227,14 @@ sTab [1:(nrow (sTab)-2), ncol (sTab)] <- 0
 require ("RColorBrewer")
 gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
-     , width=1200, height=1200, res=300)
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
+#      , width=1200, height=1200, res=300)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".pdf")
+     , width=4, height=4)
 par (mar=c (4,5,1,1))
 # barplot (sTab [which (row.names(sTab)%in% c("galeS", "storm", "stormC", "galeC")),]  ## excluding SCA, storms to bottom
 barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
-                  , col=gCols [4:1]
+                  , col=gCols# [4:1]
          , ylab="High-wind days per year"
 )
 is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE  # to have means unbiased
