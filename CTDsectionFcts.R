@@ -104,6 +104,18 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
   }
 }
 
+KBsectionSort <- function (xCo){
+  ## sort section -- Kasitsna-Bay-Lab specific
+  ## sort in here, rather than separately
+  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
+    xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
+  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
+    xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+  }else{
+    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
+  }
+
+}
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
@@ -115,14 +127,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   xC$Match_Name <- factor (xC$Match_Name)
   xCo <- makeSection (xC, stn)
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
-  ## sort in here, rather than separately
-  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
-    xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
-    xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
-  }else{
-    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
-  }
+  xCo <- KBsectionSort (xCo)
    xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = FALSE) # should understand this step more fully! XXX
 #  xCo <- sectionSmooth(xCo, method="barnes", pregrid=TRUE, trim=TRUE)  ## makes a mess -- not using it right; provide xr and yr
   xCo
@@ -276,9 +281,9 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 #' @return A [section-class] object with the same extend as `transect`.
 #'
 #' @author Martin Renner
-sectionPad <- function (section, transect, ...){
+sectionPad <- function (sect, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
-  ## pad only first and last!! XXX
+  ## pad only first and last?
 
   if (!all (c ("stationId", "latitude", "longitude")  %in% names (transect))){
     stop ("transect needs to have fields 'latitude', 'longitude', and 'stationId'")
@@ -286,17 +291,18 @@ sectionPad <- function (section, transect, ...){
   ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  for (i in c (1,length (transect$stationId))){
+  # for (i in 1:length (transect$stationId)){
+  for (i in c(1,length (transect$stationId))){
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
-    stationIDs <- sapply (1:length (section@data$station), FUN = function (k){
-      section@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
+    stationIDs <- sapply (1:length (sect@data$station), FUN = function (k){
+      sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
     # if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
-    if (!as.character (transect$stationId [i])  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+    if (!as.character (transect$stationId [i])  %in% levels (sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
       #       cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
-      section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
+      sect <- sectionAddCtd (sect, cloneCTD(sect@data$station [[1]]
                                                   , latitude=transect$latitude [i]
                                                   , longitude=transect$longitude [i]
                                                   , stationId=transect$stationId [i]
@@ -307,7 +313,8 @@ sectionPad <- function (section, transect, ...){
   }
   # section <- sectionSort (section, ...)
   ## warnings: make sure sectionSort is called next!
-  return (section)
+  sect <- KBsectionSort (sect)
+  return (sect)
 }
 
 

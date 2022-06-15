@@ -55,7 +55,7 @@ if (0){## tests
 
 
 test <- TRUE
-test <- FALSE
+# test <- FALSE
 
 
 useSF <- FALSE  ## use package sf and terra/stars instead of raster
@@ -189,6 +189,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     #    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
     #for (k in 2){
     if (test){iO <- 1}else{iO <- 1:length (levels (physOcY$year))}
+    iO <- 1:length (levels (physOcY$year))
     for (k in iO){
       ## for testing:
       # k <- 7 # pick 2018
@@ -209,6 +210,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       iA <-  1:length (levels (physOc$transDate))
       if (test){iA <- 1:5}else{iA <-  1:length (levels (physOc$transDate))}
+      iA <-  1:length (levels (physOc$transDate))
       for (i in iA){              # cycle through individual surveys
         # i <- 3  # for testing
         cat (i, " ")
@@ -313,19 +315,16 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ##
           xCo <- sectionize (xC)
           ## sectionPad to plot incomplete sections
-          xCo <- sectionPad (section=xCo, transect = data.frame (stationId=stnT$Match_Name
+          xCo <- sectionPad (sect=xCo, transect = data.frame (stationId=stnT$Match_Name
                                                                  , latitude=stnT$Lat_decDegree
                                                                  , longitude=stnT$Lon_decDegree
                                                                  , bottom=stnT$Depth_m))
           ## sectionSort
           if (xC$Transect [1] == "AlongBay"){
-            xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
             bottom <- bottom [order (bottom$lat, decreasing = FALSE),]
           }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
-            xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
             bottom <- bottom [order (bottom$lat, decreasing = TRUE),]
           }else{
-            xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
             bottom <- bottom [order (bottom$lon),]
           }
           bottom$dist <- with (bottom, geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)) # [km]
