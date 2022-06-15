@@ -139,7 +139,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     coordinates (sect) <- ~loni+lati
     proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
     sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
-    bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1
+    bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
@@ -204,6 +204,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                                                    , sampleTimes)))
 
       ## define and plot sections
+      ## turn this into a function to use in section plots as well
       cat ("   ",  formatC (k, width = 3), "/", length (levels (physOcY$year))
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
@@ -274,6 +275,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
               }
             }
 
+            # remove duplicate stations
             ## any duplicated stations? -- if so, keep only the longest cast
             xC$Match_Name <- factor (xC$Match_Name)
             if (any (sapply (1:length (levels (xC$Match_Name)), function (m){
@@ -286,7 +288,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
                 sec$isoTime <- factor (sec$isoTime)
                 castSize <- sapply (1:length (levels (sec$isoTime)), function (m){
-                  nrow (subset (sec, sec$isoTime==levels (sec$isoTime)[m]))
+                  #nrow (subset (sec, sec$isoTime==levels (sec$isoTime)[m]))
+                  sum (!is.na (subset (sec, sec$isoTime==levels (sec$isoTime)[m])$Temperature_ITS90_DegC))
                 })
                 tNew <- subset (sec, isoTime == levels (isoTime)[which.max(castSize)])
                 if (m == 1){
@@ -296,7 +299,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 }
               }
               xC <- secN
-              rm (secN, tNew, sec, m)
+              rm (secN, tNew, sec, m, castSize)
             }
           }
 
