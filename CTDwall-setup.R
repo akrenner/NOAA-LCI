@@ -266,8 +266,7 @@ require ("cmocean")  ## for color ramps
 
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
-   oceColorsTurbo #
-  # cmocean ("thermal")
+   oceColorsTurbo  # cmocean ("thermal")
   , cmocean ("haline")
   , cmocean ("dense")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
@@ -308,6 +307,8 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                        , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.05,0.95), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
+## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
+
 oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go
 # oRange [5,] <- c(0,100)      # fix PAR range
 ## what's better to use here, umol/kg or mg/l?

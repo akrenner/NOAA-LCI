@@ -120,10 +120,7 @@ for (sv in iX){
                 #    , zCol = oColF (ov)
                 #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                 , zlim = zR
-                # , xlim = xRange []  # range of the Transect
-                # , custcont = pretty (oRange [ov,], 10)
-                # , axes = FALSE  ## not worth the hassle of messing with it
-                #, transect = transectTemplate ## show at best resolution, rather than partial transect
+                , zbreaks=NULL # change this for salinity; others?
           )
           rm (zR)
         }
