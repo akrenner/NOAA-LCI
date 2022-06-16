@@ -128,7 +128,10 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   xCo <- makeSection (xC, stn)
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
   xCo <- KBsectionSort (xCo)
-  xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = FALSE) # should understand this step more fully! XXX
+  xCo <- sectionGrid (xCo
+                      # , p=100  ## some pressures are NA or Inf??--but may be prettiest if it works
+                      , p=standardDepths(9)
+                      , method = "boxcar", trim = TRUE)
   #  xCo <- sectionSmooth(xCo, method="barnes", pregrid=TRUE, trim=TRUE)  ## makes a mess -- not using it right; provide xr and yr
   xCo
 }
