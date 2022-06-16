@@ -44,7 +44,7 @@ mnthly <- c ("9", "AlongBay", "4")
 if (0){## tests
   levels (factor (subset (poAll, year == 2012)$DateISO))
   xC <- subset (poAll, (Transect == "9")&(DateISO == "2019-09-16") )
- # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
+  # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
   xCo <- sectionize (xC)
   plot (xCo)
   pSec (xCo, 1, zcol = oCol [[1]])
@@ -55,7 +55,7 @@ if (0){## tests
 
 
 test <- TRUE
-# test <- FALSE
+test <- FALSE
 
 
 useSF <- FALSE  ## use package sf and terra/stars instead of raster
@@ -66,8 +66,8 @@ useSF <- FALSE  ## use package sf and terra/stars instead of raster
 require ("marmap")
 bfer <- 0.5
 bathy <- getNOAA.bathy (min (poAll$longitude_DD)-bfer, max (poAll$longitude_DD)+bfer
-                    , min (poAll$latitude_DD)-bfer, max (poAll$latitude_DD)+bfer
-                    , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")
+                        , min (poAll$latitude_DD)-bfer, max (poAll$latitude_DD)+bfer
+                        , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")
 rm (bfer)
 if (useSF){
   require ("sf") ## or stars / terra ??
@@ -76,14 +76,14 @@ if (useSF){
   # require ("terra")
   # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
-require ("raster")
-## need to supply absolute path because raster object is just a pointer.
-## still needs uncompressed raster file accessible.
-if (.Platform$OS.type == "windows"){
-   bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}
+  require ("raster")
+  ## need to supply absolute path because raster object is just a pointer.
+  ## still needs uncompressed raster file accessible.
+  if (.Platform$OS.type == "windows"){
+    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }else{
+    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }
 }
 
 ## loop over variable, then transects and then seasons
@@ -136,10 +136,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       bottomZ <- aggregate (bathyZ, sectP, mean, na.rm = TRUE) ## stars -- hangs
       # bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1  ## terra
     }else{
-    coordinates (sect) <- ~loni+lati
-    proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
-    sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
-    bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
+      coordinates (sect) <- ~loni+lati
+      proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
+      sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
+      bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
@@ -161,20 +161,26 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       ## monthly
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       pH <- 44; pW <- 88     # go big on FWS plotter
-
+      pH <- 42; pW <- 84     # FWS paper is 42 inches wide
+      yearPP <- 11 # years (rows) per page
+      omcex <- 2   # size of mtext annotations
       require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
+      nY <- yearPP
       layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
+      omText <- month.name
       rm (nY)
-
     }else{
       ## quarterly
       pH <- 8.5; pW <- 14    # legal size
+      yearPP <- 4
+      omcex <- 1
       sampleTimes <- levels (physOcY$season)
       physOcY$smplIntvl <- physOcY$season
       layoutM <- matrix (1:16, 4, byrow = TRUE)
+      omText <- sampleTimes
     }
 
 
@@ -183,10 +189,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
+    par (oma=c(4,4,4,4)*1)
 
-
-    ## is this needed??
-    #    for (k in 1:length (levels (physOcY$year))){ # by year -- assuming no surveys span New Years Eve
     #for (k in 2){
     if (test){iO <- 1}else{iO <- 1:length (levels (physOcY$year))}
     iO <- 1:length (levels (physOcY$year))
@@ -201,7 +205,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       ## also making surveyW redundant
       physOc$transDate <- with (physOc , factor (paste0 ("T-", Transect, " ", year, "-", smplIntvl)
                                                  , levels = paste0 ("T-", Transect [1], " ", year [1], "-"
-                                                                   , sampleTimes)))
+                                                                    , sampleTimes)))
 
       ## define and plot sections
       ## turn this into a function to use in section plots as well
@@ -228,7 +232,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                   , main = paste0 (levels (physOc$transDate)[i], "--"
                                    , length (levels (factor (xC$Match_Name)))
                                    , " stations")
-                  )
+            )
           }
           rm (inFuture)
         }else{
@@ -307,7 +311,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
 
-           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
+          save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
           # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
           # section=xCo
           # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
@@ -319,9 +323,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           xCo <- sectionize (xC)
           ## sectionPad to plot incomplete sections
           xCo <- sectionPad (sect=xCo, transect = data.frame (stationId=stnT$Match_Name
-                                                                 , latitude=stnT$Lat_decDegree
-                                                                 , longitude=stnT$Lon_decDegree
-                                                                 , bottom=stnT$Depth_m))
+                                                              , latitude=stnT$Lat_decDegree
+                                                              , longitude=stnT$Lon_decDegree
+                                                              , bottom=stnT$Depth_m))
           ## sectionSort
           if (xC$Transect [1] == "AlongBay"){
             bottom <- bottom [order (bottom$lat, decreasing = FALSE),]
@@ -341,13 +345,14 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ##
           ## plot the section/transect
           ##
+          if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL}
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOcY$bathy, na.rm = TRUE))
                 , showBottom=TRUE
-                , # better?, slower interpolation
+                , zbreaks=zB # better?, slower interpolation
           )
           ## add high-res bottom profile
           # if (xC$Transect [1] %in% c("AlongBay", "6")){  ## AlongBay still messed up!
@@ -358,14 +363,14 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           with (bottom, polygon(c(min (dist), dist, max(dist))
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
-          rm (tgray)
+          rm (tgray, zB)
 
           if (nSurv > 1){
             title (main = paste (levels (physOc$transDate)[i], "* -", nSurv), col.main = "red")
           }else{
             # title (main = paste (levels (physOc$transDate)[i]))
             title (main = paste0 (levels (physOc$transDate)[i], "-"
-                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
+                                  , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
           }
           ## addBorder (xCo, TD[ov]-1)
 
@@ -375,6 +380,15 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             xMap <- xCo
           }
         }
+      }
+        ## covering yearPP years per page. Write out at end of each year
+        mtext (text=levels (physOcY$year)[k]
+               , side=2, line=2,outer=TRUE,cex=omcex
+               , at=1-((k-1)%%yearPP)/yearPP-0.5/yearPP
+        )
+      for (n in 1:length (omText)){
+        mtext (text=omText [n], side=3, line=2, outer=TRUE,cex=omcex
+               , at=(n-1)/length(omText)+0.5/length(omText))
       }
       cat ("\n")
     }
@@ -398,8 +412,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       )
       rm (xMap, xCo, nSurv,  bottom)
     }
+
     dev.off()
-   cat ("\n")
+    cat ("\n")
   }
 }
 
