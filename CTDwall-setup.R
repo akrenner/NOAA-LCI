@@ -80,6 +80,7 @@ if (0){
 }
 
 ## more bathymetry to fill in parts zimmerman bathymetry missses
+## here or in CTDwall.R??
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
@@ -176,15 +177,22 @@ rm (slog)
 
 
 ## add bathymetry to CTD metadata
+poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
+
 require (sp)
 poP <- poAll
+## migrate to sf, stars/terra
 coordinates (poP) <- ~longitude_DD+latitude_DD
 proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
 poAll$bathy <- extract (bathyP, poP)
+poAll$Bottom.Depth_survey <- extract (bathyP, poP)
 if (exists ("bathyL")){
   bL <- extract (as.raster (bathyL), poP)
-  # poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy) ## or leave them as NA?
+  poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy) ## or leave them as NA?
+  poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
+                                        , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
 }
+poAll$bathy <- poAll$Bottom.Depth_survey
 rm (poP, bL, bathyP, bathyL, bathy)
 
 
@@ -332,4 +340,4 @@ if (0){
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 cat ("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
-# EOF√
+# EOF

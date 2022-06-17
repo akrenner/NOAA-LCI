@@ -150,12 +150,7 @@ makeSection <- function (xC, stn){
                                               , pressure = Pressure..Strain.Gauge..db.
                                               , time = isoTime
                                       ))
-                        # if (is.na (sCTD$bathy [1])){
-                        if (1){
-                          ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]  ## always use Bottom.Depth?
-                        }else{
-                          ocOb@metadata$waterDepth <- sCTD$bathy [1]
-                        }
+                        ocOb@metadata$waterDepth <- sCTD$Bottom.Depth_main [1]  # Bottom.Depth is a catastrophic mix of m and feet
                         ocOb@metadata$longitude <- sCTD$longitude_DD [1]
                         ocOb@metadata$latitude <- sCTD$latitude_DD [1]
                         ocOb@metadata$stationId <- sCTD$Match_Name [1]

@@ -88,7 +88,7 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect
+if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in iY){  # tn: transect
     ## for testing
@@ -193,7 +193,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
     #for (k in 2){
     if (test){iO <- 1}else{iO <- 1:length (levels (physOcY$year))}
-    iO <- 1:length (levels (physOcY$year))
+    # iO <- 1:length (levels (physOcY$year))
     for (k in iO){
       ## for testing:
       # k <- 7 # pick 2018
@@ -215,7 +215,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       iA <-  1:length (levels (physOc$transDate))
       if (test){iA <- 1:5}else{iA <-  1:length (levels (physOc$transDate))}
-      iA <-  1:length (levels (physOc$transDate))
       for (i in iA){              # cycle through individual surveys
         # i <- 3  # for testing
         cat (i, " ")
@@ -236,47 +235,43 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           }
           rm (inFuture)
         }else{
-          if (0){  ## combine all casts in survey window (watch RAM!)
+          if (0){  ## combine all casts in survey window (watch RAM!) -- MUCH faster!
             ## or pick out long survey within X days?
             nSurv <- 1
             xC <- xC    ## use all data for month/quarter, irrespective of how far apart
           }else{
             ## check whether there is more than one survey per survey-interval
 
+            # save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")
+            # # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
+
             ## allow x-day window to make up a composite transectF
             ## better to apply to allPo?
-            # algorithm:
-            # set start Dates
-            # give all data same ID as start date as h, IF they after element h, and are
-            # within X days of start date of h
-            ## make this a universal function to all data? -> to datasetup?
+            ## make this a function for all data? -> to datasetup?
             xC <- xC [order (xC$isoTime),]
             surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
-            for (h in 2:nrow (xC)){
-              surveyW <- ifelse (1:length (surveyW) >= h
-                                 , ifelse (difftime (xC$isoTime, xC$isoTime [h-1]
-                                                     , units = "days") < 7
-                                           , surveyW [h-1], surveyW)
-                                 , surveyW)
+            secDiff <- xC$isoTime [2:nrow (xC)] - xC$isoTime [1:(nrow (xC)-1)] ## time difference [s]
+            for (h in 1:length (secDiff)){
+              if (secDiff [h] < 7*24*3600){ # 7-day cut-off
+                surveyW [h+1] <- surveyW [h]
+              }
             }
+            # for (h in 2:nrow (xC)){
+            #   surveyW <- ifelse (1:length (surveyW) >= h ## end condition
+            #                      , ifelse (difftime (xC$isoTime, xC$isoTime [h-1]
+            #                                          , units = "days") < 7
+            #                                , surveyW [h-1], surveyW)
+            #                      , surveyW)
+            # }
             xC$surveys <- factor (surveyW); rm (surveyW, h)
-            # physOc$transDate <- factor (physOc$transDate)
-
             nSurv <- length (levels (xC$surveys))
             if (nSurv > 1){
-              if (1){
-                ## use the survey with the most stations
-                nS <- sapply (levels (xC$surveys), FUN = function (x){
-                  length (levels (factor (subset (xC$Station, xC$surveys == x))))
-                })
-                xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
-                rm (nS)
-              }else{
-                ## use only the first survey
-                nR <- sapply (levels (xC$surveys), FUN = function (x){sum (xC$surveys == x)})
-                xC <- subset (xC, surveys == levels (xC$surveys)[which.max(nR)])  # use only the first survey
-                rm (nR)
-              }
+              ## use the survey with the most stations
+              nS <- sapply (levels (xC$surveys), FUN = function (x){
+                length (levels (factor (subset (xC$Station, xC$surveys == x))))
+              })
+              xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
+              rm (nS)
             }
 
             # remove duplicate stations
@@ -311,9 +306,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
 
-          save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
-          # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
-          # section=xCo
+         # section=xCo
           # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
           #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
 
@@ -321,6 +314,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## construct, pad, and sort section
           ##
           xCo <- sectionize (xC)
+          ## QAQC:
+          # sapply (1:length (xCo@data$station), function (m){
+          #   xCo@data$station[[m]]@metadata$stationId
+          # })
+
           ## sectionPad to plot incomplete sections
           xCo <- sectionPad (sect=xCo, transect = data.frame (stationId=stnT$Match_Name
                                                               , latitude=stnT$Lat_decDegree
@@ -345,7 +343,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ##
           ## plot the section/transect
           ##
-          if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL}
+          if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
@@ -383,11 +381,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       }
         ## covering yearPP years per page. Write out at end of each year
         mtext (text=levels (physOcY$year)[k]
-               , side=2, line=2,outer=TRUE,cex=omcex
+               , side=2, line=1.5,outer=TRUE,cex=omcex
                , at=1-((k-1)%%yearPP)/yearPP-0.5/yearPP
         )
       for (n in 1:length (omText)){
-        mtext (text=omText [n], side=3, line=2, outer=TRUE,cex=omcex
+        mtext (text=omText [n], side=3, line=1.5, outer=TRUE,cex=omcex
                , at=(n-1)/length(omText)+0.5/length(omText))
       }
       cat ("\n")
