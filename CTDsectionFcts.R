@@ -123,8 +123,10 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
     stop ("Need package:oce version 1.7.4 or later")
   }
   require ("oce")
-  stn <- factor (sprintf ("%02s", xC$Station))
+  if (nrow (xC) < 2){stop ("no data to make a section")}
+  # stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
+  stn <- xC$Match_Name
   xCo <- makeSection (xC, stn)
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
   xCo <- KBsectionSort (xCo)
@@ -140,7 +142,6 @@ makeSection <- function (xC, stn){
   require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
-
   as.section (lapply (1:length (levels (stn))
                       , FUN = function (x){
                         sCTD <- subset (xC, stn == levels (stn)[x])
