@@ -188,9 +188,9 @@ poAll$bathy <- extract (bathyP, poP)
 poAll$Bottom.Depth_survey <- extract (bathyP, poP)
 if (exists ("bathyL")){
   bL <- extract (as.raster (bathyL), poP)
-  poAll$bathy <- ifelse (is.na (poAll$bathy), -1* bL, poAll$bathy) ## or leave them as NA?
   poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
                                         , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+  poAll$bathy <- poAll$Bottom.Depth_survey
 }
 poAll$bathy <- poAll$Bottom.Depth_survey
 rm (poP, bL, bathyP, bathyL, bathy)

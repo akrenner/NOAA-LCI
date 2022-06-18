@@ -88,12 +88,12 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-if (test){iY <- 5}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in iY){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
-    ## ov <- 1; tn <- 5 ## T9
+    ## ov <- 1; tn <- 1
     cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
@@ -154,7 +154,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     physOcY$season <- seasonize (physOcY$month)
 
 
-
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (levels (poAll$Transect)[tn] %in% mnthly){
@@ -192,12 +191,12 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     par (oma=c(4,4,4,4)*1)
 
     #for (k in 2){
-    if (test){iO <- 1}else{iO <- 1:length (levels (physOcY$year))}
+    if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
     # iO <- 1:length (levels (physOcY$year))
     for (k in iO){
       ## for testing:
       # k <- 7 # pick 2018
-      # k <- 1 # pick 2012
+      # k <- 2
       physOc <- subset (physOcY, year == levels (physOcY$year)[k])
 
 
@@ -213,10 +212,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
-      iA <-  1:length (levels (physOc$transDate))
-      if (test){iA <- 1:5}else{iA <-  1:length (levels (physOc$transDate))}
+      if (test){iA <- 1}else{iA <-  1:length (levels (physOc$transDate))}
+      # iA <-  1:length (levels (physOc$transDate))
       for (i in iA){              # cycle through individual surveys
-        # i <- 3  # for testing
+        # i <- 1  # for testing
         cat (i, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
         if (length (levels (factor (xC$Match_Name))) < 2){
@@ -238,12 +237,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           if (0){  ## combine all casts in survey window (watch RAM!) -- MUCH faster!
             ## or pick out long survey within X days?
             nSurv <- 1
-            xC <- xC    ## use all data for month/quarter, irrespective of how far apart
           }else{
             ## check whether there is more than one survey per survey-interval
 
-            # save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")
-            # # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
+            save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")
+            # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
 
             ## allow x-day window to make up a composite transectF
             ## better to apply to allPo?
@@ -256,13 +254,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 surveyW [h+1] <- surveyW [h]
               }
             }
-            # for (h in 2:nrow (xC)){
-            #   surveyW <- ifelse (1:length (surveyW) >= h ## end condition
-            #                      , ifelse (difftime (xC$isoTime, xC$isoTime [h-1]
-            #                                          , units = "days") < 7
-            #                                , surveyW [h-1], surveyW)
-            #                      , surveyW)
-            # }
             xC$surveys <- factor (surveyW); rm (surveyW, h)
             nSurv <- length (levels (xC$surveys))
             if (nSurv > 1){
@@ -285,12 +276,13 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
               # there are duplicate CTD casts -- pick the longer one
               for (m in 1:length (levels (xC$Match_Name))){
                 sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
-                sec$isoTime <- factor (sec$isoTime)
-                castSize <- sapply (1:length (levels (sec$isoTime)), function (m){
+                isoTimeF <- factor (sec$isoTime)
+                castSize <- sapply (1:length (levels (isoTimeF)), function (m){
                   #nrow (subset (sec, sec$isoTime==levels (sec$isoTime)[m]))
-                  sum (!is.na (subset (sec, sec$isoTime==levels (sec$isoTime)[m])$Temperature_ITS90_DegC))
+                  sum (!is.na (subset (sec, isoTimeF==levels (isoTimeF)[m])$Temperature_ITS90_DegC))
                 })
-                tNew <- subset (sec, isoTime == levels (isoTime)[which.max(castSize)])
+                tNew <- subset (sec, isoTimeF == levels (isoTimeF)[which.max(castSize)])
+                rm (isoTimeF)
                 if (m == 1){
                   secN <- tNew
                 }else{
@@ -309,6 +301,8 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
          # section=xCo
           # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
           #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
+          save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
+          # # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
 
           ##
           ## construct, pad, and sort section
@@ -326,7 +320,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                                               , bottom=stnT$Depth_m))
           ## sectionSort
           if (xC$Transect [1] == "AlongBay"){
-            bottom <- bottom [order (bottom$lat, decreasing = FALSE),]
+            bottom <- bottom [order (bottom$lat, decreasing = FALSE),]   ### XXX review!!
           }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
             bottom <- bottom [order (bottom$lat, decreasing = TRUE),]
           }else{
@@ -348,15 +342,19 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                , ylim = c(0,max (physOcY$bathy, na.rm = TRUE))
+                , ylim = c(0,max (physOcY$Bottom.Depth_survey))
                 , showBottom=TRUE
                 , zbreaks=zB # better?, slower interpolation
           )
-          ## add high-res bottom profile
-          # if (xC$Transect [1] %in% c("AlongBay", "6")){  ## AlongBay still messed up!
-          #   # bottom <- bottom [nrow(bottom):1,]
-          #   bottom <- rev (bottom)
-          # }
+          if (test){   ## for QAQC: add station labels to x-axis
+            dist <- unique (xCo[['distance']])
+            stnID <- sapply (1:length (xCo@data$station), function (m){
+              xCo@data$station[[m]]@metadata$stationId
+            })
+            print (stnID)
+            try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2, lab=""))
+            rm (dist, stnID)
+          }
           tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
                                 , c(10000, -depthHR, 10000)
