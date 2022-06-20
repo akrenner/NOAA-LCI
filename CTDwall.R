@@ -55,7 +55,7 @@ if (0){## tests
 
 
 test <- TRUE
-test <- FALSE
+# test <- FALSE
 
 
 useSF <- FALSE  ## use package sf and terra/stars instead of raster
@@ -88,7 +88,7 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){iY <- 2}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in iY){  # tn: transect
     ## for testing
@@ -308,10 +308,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           ## construct, pad, and sort section
           ##
           xCo <- sectionize (xC)
-          ## QAQC:
-          # sapply (1:length (xCo@data$station), function (m){
-          #   xCo@data$station[[m]]@metadata$stationId
-          # })
 
           ## sectionPad to plot incomplete sections
           xCo <- sectionPad (sect=xCo, transect = data.frame (stationId=stnT$Match_Name
@@ -329,9 +325,12 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           bottom$dist <- with (bottom, geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)) # [km]
 
           ## test, QAQC
-          # sapply (1:length (xCo@data$station), function (k){
-          #   xCo@data$station[[k]]@data$temperature
-          # })
+          if (test){
+            sapply (1:length (xCo@data$station), function (k){
+            #  xCo@data$station[[k]]@data$temperature
+              xCo@data$station[[k]]@metadata$stationId
+            })
+          }
           # plot (subset (xC, Match_Name == "9_10")$Temperature_ITS90_DegC)
 
           ##
@@ -346,6 +345,11 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 , showBottom=TRUE
                 , zbreaks=zB # better?, slower interpolation
           )
+          tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
+          with (bottom, polygon(c(min (dist), dist, max(dist))
+                                , c(10000, -depthHR, 10000)
+                                , col=tgray))
+          rm (tgray, zB)
           if (test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
             stnID <- sapply (1:length (xCo@data$station), function (m){
@@ -355,11 +359,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2, lab=""))
             rm (dist, stnID)
           }
-          tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
-          with (bottom, polygon(c(min (dist), dist, max(dist))
-                                , c(10000, -depthHR, 10000)
-                                , col=tgray))
-          rm (tgray, zB)
 
           if (nSurv > 1){
             title (main = paste (levels (physOc$transDate)[i], "* -", nSurv), col.main = "red")
