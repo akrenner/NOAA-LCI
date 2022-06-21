@@ -16,13 +16,15 @@ rm (list = ls())
 ## Kris: check on surface PAR and salinity measurements
 
 ## 2021-08-03 -- issues
-# x multiple transects per season/month are merged -> pick first
 # x fix color scale across all graphs (across Transects as well?)
 
-# - 12-month sampling: spread over 2 pages, first plot Jan-Jun, then Jun-Dec.  --  or plotter
+## 9-10 2012-5:  double cast?
+## T-3 2012-winter: stations mislabled/out of order? 3_4 should be 3_7?
 
-#' partial transects: some bathymetries are mangled -- ensure every cast has a
-#' waterdepth, either local or from masterlist.
+## color scales: make custom breaks to show more details
+
+
+
 
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
@@ -293,15 +295,17 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             }
           }
 
+          # for (o in 2:nrow (xC)){  ## find duplicate files -- do this much earlier in CTD_file_management.R
+          #   if (xC$Match_Name [o] == xC$Match_Name [o-1]){
+          #     if (xC$Pressure..Strain.Gauge..db. [o] < xC$Pressure..Strain.Gauge..db. [o-1]){
+          #       # cat (paste (xC$Match_Name [o], xC$DateISO [o], o, "\n"))
+          #       cat (paste (xC$File.Name [o-1], " --- ", xC$File.Name [o]), "\n")
+          #     }}}
 
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
-
-         # section=xCo
-          # transect = data.frame (stationId=stnT$Match_Name, latitude=stnT$Lat_decDegree
-          #                        , longitude=stnT$Lon_decDegree, bottom=stnT$Depth_m)
           save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
-          # # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
+          ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
 
           ##
           ## construct, pad, and sort section
@@ -313,7 +317,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                                               , latitude=stnT$Lat_decDegree
                                                               , longitude=stnT$Lon_decDegree
                                                               , bottom=stnT$Depth_m))
-          ## sectionSort
+          ## sectionSort--is now in sectionPad. Still need to do same to bottom
           if (xC$Transect [1] == "AlongBay"){
             bottom <- bottom [order (bottom$lat, decreasing = FALSE),]   ### XXX review!!
           }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
@@ -324,7 +328,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           bottom$dist <- with (bottom, geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)) # [km]
 
           ## test, QAQC
-          if (test){
+          if (0){
             sapply (1:length (xCo@data$station), function (k){
             #  xCo@data$station[[k]]@data$temperature
               xCo@data$station[[k]]@metadata$stationId
@@ -349,13 +353,12 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
           rm (tgray, zB)
-          if (test){   ## for QAQC: add station labels to x-axis
+          if (!test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
             stnID <- sapply (1:length (xCo@data$station), function (m){
               xCo@data$station[[m]]@metadata$stationId
             })
-            print (stnID)
-            try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2, lab=""))
+            try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2))
             rm (dist, stnID)
           }
 
