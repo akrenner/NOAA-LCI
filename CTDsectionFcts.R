@@ -107,6 +107,10 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
 KBsectionSort <- function (xCo){
   ## sort section -- Kasitsna-Bay-Lab specific
   ## sort in here, rather than separately
+  for (i in 1:length (xCo@data$station)){
+    xCo@data$station[[i]]@metadata$stationId <-
+      as.character(xCo@data$station[[i]]@metadata$stationId)
+  }
   if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
   }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
@@ -284,27 +288,27 @@ sectionPad <- function (sect, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
   ## pad only first and last?
 
-  if (!all (c ("stationId", "latitude", "longitude")  %in% names (transect))){
+  if (!all (c ("station", "latitude", "longitude")  %in% names (transect))){
     stop ("transect needs to have fields 'latitude', 'longitude', and 'stationId'")
   }
   ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   # for (i in 1:length (transect$stationId)){
-  for (i in c(1,length (transect$stationId))){
+  for (i in c(1,nrow (transect))){
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
     stationIDs <- sapply (1:length (sect@data$station), FUN = function (k){
       sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
-    # if (!transect$stationId [i]  %in% stationIDs){  ## current results are horrid. Not why=?
-    if (!as.character (transect$stationId [i])  %in% levels (sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+    if (!transect$station [i]  %in% stationIDs){  ## current results are horrid. Not why=?
+    # if (!as.character (transect$station [i])  %in% levels (sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
       #       cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
       sect <- sectionAddCtd (sect, cloneCTD(sect@data$station [[1]]
                                                   , latitude=transect$latitude [i]
                                                   , longitude=transect$longitude [i]
-                                                  , stationId=transect$stationId [i]
+                                                  , station=transect$station [i]
                                                   , bottom=transect$bottom [i]
       )
       )

@@ -243,9 +243,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
             save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")
             # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
 
-            ## allow x-day window to make up a composite transectF
+            ## allow x-day window to make up a multi-day composite transect
             ## better to apply to allPo?
-            ## make this a function for all data? -> to datasetup?
+            ## make this a function for all data? -> move to CTDwall-setup.R / datasetup?
             xC <- xC [order (xC$isoTime),]
             surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
             secDiff <- xC$isoTime [2:nrow (xC)] - xC$isoTime [1:(nrow (xC)-1)] ## time difference [s]
@@ -255,7 +255,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
               }
             }
             xC$surveys <- factor (surveyW); rm (surveyW, h)
-            nSurv <- length (levels (xC$surveys))
+            nSurv <- length (levels (xC$surveys))  ## used again below to mark plots
             if (nSurv > 1){
               ## use the survey with the most stations
               nS <- sapply (levels (xC$surveys), FUN = function (x){
@@ -278,7 +278,6 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                 sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
                 isoTimeF <- factor (sec$isoTime)
                 castSize <- sapply (1:length (levels (isoTimeF)), function (m){
-                  #nrow (subset (sec, sec$isoTime==levels (sec$isoTime)[m]))
                   sum (!is.na (subset (sec, isoTimeF==levels (isoTimeF)[m])$Temperature_ITS90_DegC))
                 })
                 tNew <- subset (sec, isoTimeF == levels (isoTimeF)[which.max(castSize)])
@@ -310,7 +309,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           xCo <- sectionize (xC)
 
           ## sectionPad to plot incomplete sections
-          xCo <- sectionPad (sect=xCo, transect = data.frame (stationId=stnT$Match_Name
+          xCo <- sectionPad (sect=xCo, transect = data.frame (station=stnT$Match_Name
                                                               , latitude=stnT$Lat_decDegree
                                                               , longitude=stnT$Lon_decDegree
                                                               , bottom=stnT$Depth_m))
