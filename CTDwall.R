@@ -90,7 +90,7 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){iX <- 1}else{iX <- 1:length (oVars)}
-if (test){iY <- 2}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in iY){  # tn: transect
     ## for testing
@@ -343,6 +343,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
+#               , zbreaks
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOcY$Bottom.Depth_survey))
                 , showBottom=TRUE
@@ -353,7 +354,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
           rm (tgray, zB)
-          if (!test){   ## for QAQC: add station labels to x-axis
+          if (test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
             stnID <- sapply (1:length (xCo@data$station), function (m){
               xCo@data$station[[m]]@metadata$stationId
