@@ -57,7 +57,7 @@ if (0){## tests
 
 
 test <- TRUE
-# test <- FALSE
+test <- FALSE
 
 
 useSF <- FALSE  ## use package sf and terra/stars instead of raster
@@ -194,7 +194,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
     par (oma=c(4,4,4,4)*1)
 
     #for (iY in 2){
-    if (test){yL <- 2}else{yL <- 1:length (levels (physOcY$year))}
+    if (test){yL <- 1:2}else{yL <- 1:length (levels (physOcY$year))}
     # yL <- 1:length (levels (physOcY$year))
     for (iY in yL){
       ## for testing:
@@ -332,7 +332,8 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           if (0){
             sapply (1:length (xCo@data$station), function (i){
             #  xCo@data$station[[i]]@data$temperature
-              xCo@data$station[[i]]@metadata$stationId
+               xCo@data$station[[i]]@metadata$stationId
+              #xCo@data$station[[i]]@metadata$waterDepth
             })
           }
           # plot (subset (xC, Match_Name == "9_10")$Temperature_ITS90_DegC)
@@ -344,11 +345,12 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
-#               , zbreaks
+                #               , zbreaks
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                , ylim = c(0,max (physOcY$Bottom.Depth_survey))
+                , ylim = c(0,max (physOcY$Bottom.Depth))  ## replace with surveyed depth
+                # , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
                 , showBottom=TRUE
-                , zbreaks=zB # better?, slower interpolation
+                # , zbreaks=zB # better?, slower interpolation
           )
           tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
@@ -420,7 +422,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
 physOc <- poAll
 
-rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yL, iY, sL, iS, vL)
+rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yL, iY, sL, iS, vL, tL)
 
 
 

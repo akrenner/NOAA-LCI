@@ -118,7 +118,9 @@ badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
            , "2015_06-26_t9_s06b_cast111_5028"
            , "2021_05-01_ab_s06_surface-duplicate_cast036_5028")
 for (i in 1:length (badF)){
-  fNf <- fNf [-grep (badF [i], fNf)]
+  if (badF [i] %in% fNf){
+    fNf <- fNf [-grep (badF [i], fNf)]
+  }
 }
 
 
