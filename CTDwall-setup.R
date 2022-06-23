@@ -187,7 +187,7 @@ proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
 poAll$bathy <- extract (bathyP, poP)
 poAll$Bottom.Depth_survey <- extract (bathyP, poP)
 if (exists ("bathyL")){
-  bL <- extract (as.raster (bathyL), poP)
+  bL <- extract (marmap::as.raster (bathyL), poP)
   poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
                                         , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
   poAll$bathy <- poAll$Bottom.Depth_survey

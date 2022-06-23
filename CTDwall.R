@@ -342,12 +342,10 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
-                #               , zbreaks
+                # , zbreaks=zB # better?, slower interpolation
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                # , ylim = c(0,max (physOcY$Bottom.Depth))
                 , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
                 , showBottom=TRUE
-                # , zbreaks=zB # better?, slower interpolation
           )
           tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
