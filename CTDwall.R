@@ -3,8 +3,9 @@
 
 rm (list = ls())
 
-## check whether problems persist with most recent oce version
-## make sure that if title is plotted, next plot moves on to the next field!
+
+test <- TRUE
+test <- FALSE
 
 
 ## problemss:
@@ -54,10 +55,6 @@ if (0){## tests
   rm (xC, xCo)
 }
 
-
-
-test <- TRUE
-test <- FALSE
 
 
 useSF <- FALSE  ## use package sf and terra/stars instead of raster
@@ -347,8 +344,8 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 #               , zbreaks
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                , ylim = c(0,max (physOcY$Bottom.Depth))  ## replace with surveyed depth
-                # , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
+                # , ylim = c(0,max (physOcY$Bottom.Depth))
+                , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
                 , showBottom=TRUE
                 # , zbreaks=zB # better?, slower interpolation
           )
