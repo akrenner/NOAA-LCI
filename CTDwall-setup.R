@@ -58,15 +58,16 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## bathymetry and coastline
 bathy <- "polygon"
 ## Zimmermann bathymetry
-require ("raster", quietly = TRUE)
+require ("raster", quietly = TRUE)  ## move to terra/stars
 require ("marmap")
 
-## FIX !!  -- already in prepData? -- move to prepData!
+## FIX !!  -- already in prepData? -- migrate to prepData!
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
 if (0){
   ##  bR <- resample (bR, nGrid)
+  ## migrate to terra/stars
   bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf") ## not working in RStudio -- need to use decompressed after all?
   ## need to reproject to longlat
   ## then turn into topo object
