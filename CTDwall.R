@@ -89,13 +89,13 @@ if (useSF){
 }
 
 ## loop over variable, then transects and then seasons
-if (test){iX <- 1}else{iX <- 1:length (oVars)}
-if (test){iY <- 1}else{iY <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
-for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
-  for (tn in iY){  # tn: transect
+if (test){vL <- 1}else{vL <- 1:length (oVars)}
+if (test){tL <- 1}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
+  for (tn in tL){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
-    ## ov <- 1; tn <- 1
+    ## ov <- 1; tn <- 2
     cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
@@ -163,6 +163,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       pH <- 44; pW <- 88     # go big on FWS plotter
       pH <- 42; pW <- 84     # FWS paper is 42 inches wide
+      ## rotate, but do not scale. Autorotate should be ok. Too big?
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
       require ("stringr")
@@ -192,14 +193,14 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
     layout (layoutM); rm (layoutM)
     par (oma=c(4,4,4,4)*1)
 
-    #for (k in 2){
-    if (test){iO <- 2}else{iO <- 1:length (levels (physOcY$year))}
-    # iO <- 1:length (levels (physOcY$year))
-    for (k in iO){
+    #for (iY in 2){
+    if (test){yL <- 2}else{yL <- 1:length (levels (physOcY$year))}
+    # yL <- 1:length (levels (physOcY$year))
+    for (iY in yL){
       ## for testing:
-      # k <- 7 # pick 2018
-      # k <- 2
-      physOc <- subset (physOcY, year == levels (physOcY$year)[k])
+      # iY <- 7 # pick 2018
+      # iY <- 2
+      physOc <- subset (physOcY, year == levels (physOcY$year)[iY])
 
 
       ## replace transDate from above!
@@ -210,26 +211,26 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
       ## define and plot sections
       ## turn this into a function to use in section plots as well
-      cat ("   ",  formatC (k, width = 3), "/", length (levels (physOcY$year))
+      cat ("   ",  formatC (iY, width = 3), "/", length (levels (physOcY$year))
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
-      if (test){iA <- 1}else{iA <-  1:length (levels (physOc$transDate))}
-      # iA <-  1:length (levels (physOc$transDate))
-      for (i in iA){              # cycle through individual surveys
-        # i <- 1  # for testing
-        cat (i, " ")
-        xC <- subset (physOc, transDate == levels (physOc$transDate)[i])
+      if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
+      # sL <-  1:length (levels (physOc$transDate))
+      for (iS in sL){              # cycle through individual surveys
+        # iS <- 2  # for testing
+        cat (iS, " ")
+        xC <- subset (physOc, transDate == levels (physOc$transDate)[iS])
         if (length (levels (factor (xC$Match_Name))) < 2){
           ## blank plot for missing data -- unless in the future
           ## use empty slots for map rather than starting on blank page if level would be in future
 
-          #cat ("MISSING SURVEY", levels (physOc$transDate)[i], "\n#\n")
+          #cat ("MISSING SURVEY", levels (physOc$transDate)[iS], "\n#\n")
           inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
-            i/length (iA) > as.numeric (format (Sys.time(), "%m"))/12
+            iS/length (sL) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
             plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                  , main = paste0 (levels (physOc$transDate)[i], "--"
+                  , main = paste0 (levels (physOc$transDate)[iS], "--"
                                    , length (levels (factor (xC$Match_Name)))
                                    , " stations")
             )
@@ -329,9 +330,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
           ## test, QAQC
           if (0){
-            sapply (1:length (xCo@data$station), function (k){
-            #  xCo@data$station[[k]]@data$temperature
-              xCo@data$station[[k]]@metadata$stationId
+            sapply (1:length (xCo@data$station), function (i){
+            #  xCo@data$station[[i]]@data$temperature
+              xCo@data$station[[i]]@metadata$stationId
             })
           }
           # plot (subset (xC, Match_Name == "9_10")$Temperature_ITS90_DegC)
@@ -364,10 +365,10 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
           }
 
           if (nSurv > 1){
-            title (main = paste (levels (physOc$transDate)[i], "* -", nSurv), col.main = "red")
+            title (main = paste (levels (physOc$transDate)[iS], "* -", nSurv), col.main = "red")
           }else{
-            # title (main = paste (levels (physOc$transDate)[i]))
-            title (main = paste0 (levels (physOc$transDate)[i], "-"
+            # title (main = paste (levels (physOc$transDate)[iS]))
+            title (main = paste0 (levels (physOc$transDate)[iS], "-"
                                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
           }
           ## addBorder (xCo, TD[ov]-1)
@@ -380,9 +381,9 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
         }
       }
         ## covering yearPP years per page. Write out at end of each year
-        mtext (text=levels (physOcY$year)[k]
+        mtext (text=levels (physOcY$year)[iY]
                , side=2, line=1.5,outer=TRUE,cex=omcex
-               , at=1-((k-1)%%yearPP)/yearPP-0.5/yearPP
+               , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
         )
       for (n in 1:length (omText)){
         mtext (text=omText [n], side=3, line=1.5, outer=TRUE,cex=omcex
@@ -419,7 +420,7 @@ for (ov in iX){  # ov = OceanVariable (temp, salinity, etc)
 
 physOc <- poAll
 
-rm (i, k, tn, oVars, oVarsF, ov, poAll, pSec, physOcY)
+rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yL, iY, sL, iS, vL)
 
 
 
