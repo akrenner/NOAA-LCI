@@ -76,7 +76,7 @@ rL <- function (f, p = NULL){ # recursive listing of files
 ## move about HEX files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
-fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt"))
+fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt")) ## not ALL duplicates (also air casts??)
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
@@ -99,6 +99,7 @@ rm (bF)
 fDB <- data.frame (file = fL
                    , fN = gsub ("^.*/", "", fL)
 )
+rm (fL)
 ## check duplicates by name or sha256
 ## check file content
 require ("cli")

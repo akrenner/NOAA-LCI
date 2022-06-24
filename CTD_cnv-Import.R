@@ -109,6 +109,7 @@ Require (oce)
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
+
 ## cut-out bad files for now -- fix this later -- why bad?
 badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
            , "2012_10-29_t4_s07b_cast065_4141"

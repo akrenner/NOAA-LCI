@@ -248,7 +248,8 @@ if (0){
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
 oVars <- c ("temperature"
-            , "salinity" , "sigmaTheta"
+            , "salinity"
+            , "sigmaTheta"
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
             , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
             # , "PAR"
@@ -256,7 +257,8 @@ oVars <- c ("temperature"
             , "Oxygen [umol/kg]"  # , "O2perc"
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
-             , "salinity" , "sigmaTheta"
+             , "salinity"
+             , "sigmaTheta"
              , "turbidity" # , "logTurbidity"
              , "fluorescence" #, "chlorophyll" #, "logFluorescence"
 #             , "PAR.Irradiance" #, "logPAR"
@@ -293,7 +295,8 @@ if (0){
   oCol <- list (  ## old, not used
     # turbo
     oceColorsTemperature
-    , oceColorsSalinity #, oceColorsDensity
+    , oceColorsSalinity
+    , oceColorsDensity
     , oceColorsTurbidity
     , oceColorsChlorophyll
     , oceColorsPAR  #, turbo #
@@ -303,9 +306,9 @@ if (0){
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
-                        , "Salinity_PSU" #, "Density_sigma.theta.kg.m.3"
-                        , "turbidity" # , "logTurbidity"
+                        , "Salinity_PSU"
                         , "Density_sigma.theta.kg.m.3"
+                        , "turbidity" # , "logTurbidity"
                         , "Fluorescence_mg_m3"
                         # , "PAR.Irradiance"
                         , "logPAR"
@@ -313,7 +316,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Oxygen_umol_kg"
                         )
                      #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.05,0.95), na.rm = TRUE)
+                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.025,0.975), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
