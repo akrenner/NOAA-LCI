@@ -188,7 +188,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
-    par (oma=c(4,4,4,4)*1)
+    par (oma=c(5,5,5,5)*1)
 
     #for (iY in 2){
     if (test){yL <- 1:2}else{yL <- 1:length (levels (physOcY$year))}
@@ -379,7 +379,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       }
         ## covering yearPP years per page. Write out at end of each year
         mtext (text=levels (physOcY$year)[iY]
-               , side=2, line=1.5,outer=TRUE,cex=omcex
+               , side=2, line=1.2,outer=TRUE,cex=omcex
                , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
         )
       for (n in 1:length (omText)){
