@@ -188,7 +188,9 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
-    par (oma=c(5,5,5,5)*1)
+    par (oma=c(1,5,5,1)*1
+         , mar=c(4,4,3,1)
+         )
 
     #for (iY in 2){
     if (test){yL <- 1:2}else{yL <- 1:length (levels (physOcY$year))}
@@ -346,6 +348,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
                 , showBottom=TRUE
+                , drawPalette=FALSE
           )
           tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
@@ -379,16 +382,27 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       }
         ## covering yearPP years per page. Write out at end of each year
         mtext (text=levels (physOcY$year)[iY]
-               , side=2, line=1.2,outer=TRUE,cex=omcex
+               , side=2, line=1.0,outer=TRUE,cex=omcex
                , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
         )
       for (n in 1:length (omText)){
-        mtext (text=omText [n], side=3, line=1.5, outer=TRUE,cex=omcex
+        mtext (text=omText [n], side=3, line=1.0, outer=TRUE,cex=omcex
                , at=(n-1)/length(omText)+0.5/length(omText))
       }
       cat ("\n")
     }
     if (exists ("xMap")){
+      ## draw palette, color scale into next panel (or along full length?)
+      nCol <- 100
+      t.ramp <- oCol3[[ov]](nCol)
+      bp <- barplot (rep (2, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
+                     , ylim=c(0,4))  # ylim to make bar narrower, less high
+      lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
+       axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol, labels = lVal
+             , lwd = 0)
+       rm (bp, lVal, nCol)
+
+      ## maps
       plot (xMap
             , which = 99
             , coastline = "coastlineWorldFine"
