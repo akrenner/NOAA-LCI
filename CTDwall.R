@@ -188,8 +188,8 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
-    par (oma=c(1,5,5,1)*1
-         , mar=c(4,4,3,1)
+    par (oma=c(3,5,5,2)
+         , mar=c(4,4,3,0.1)
          )
 
     #for (iY in 2){
@@ -395,12 +395,12 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       ## draw palette, color scale into next panel (or along full length?)
       nCol <- 100
       t.ramp <- oCol3[[ov]](nCol)
-      bp <- barplot (rep (2, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
-                     , ylim=c(0,4))  # ylim to make bar narrower, less high
+      bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
+                     , ylim=c(0,8))  # ylim to make bar narrower, less high
       lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
-       axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol, labels = lVal
-             , lwd = 0)
-       rm (bp, lVal, nCol)
+      axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol, labels = lVal
+            , lwd = 0)
+      rm (bp, lVal, nCol)
 
       ## maps
       plot (xMap
