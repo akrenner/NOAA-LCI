@@ -52,7 +52,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
         zvar <- zvar [-cutS,]
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
-                          , nlevels = 5
+                          , nlevels = 5, labcex=1.0 # default: labcex=0.6
                           # , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
