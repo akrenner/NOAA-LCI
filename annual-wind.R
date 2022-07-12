@@ -19,9 +19,9 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-# wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-#                , "AMAA2" #, "HMSA2"
-#                )
+wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
+               , "AMAA2" #, "HMSA2"
+               )
 
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
@@ -213,32 +213,41 @@ row.names (yGale) <- aggregate (maxwspd~year, data = hmr
                                 , subset = year <= currentYear
                                 , FUN = mean)$year
 cGale <- as.data.frame (yGale)
-cGale$SCA <- cGale$SCA - rowSums (cGale[,2:3]) # SCA only -- to allow stacking
-cGale$gale <- cGale$gale - cGale$storm # gales without storms -- to allow stacking
+cGale$SCAS <- cGale$SCA - rowSums (cGale[,2:3]) # SCA only -- to allow stacking
+cGale$galeS <- cGale$gale - cGale$storm # gales without storms -- to allow stacking
 ## pull-out current year to give different col in stacked barchart
 sTab <- t (cGale)
 sTab <- rbind (sTab
-               , galeC = c (rep (0, ncol (sTab)-1), sTab [2,ncol (sTab)])
+               , galeC = c (rep (0, ncol (sTab)-1), sTab [which (row.names (sTab)=="galeS"),ncol (sTab)])
                , stormC = c (rep (0, ncol (sTab)-1), sTab [3,ncol (sTab)])
 )
-sTab [1:2, ncol (sTab)] <- 0
+# is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE
+sTab [1:(nrow (sTab)-2), ncol (sTab)] <- 0
 
 require ("RColorBrewer")
 gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
-     , width=1200, height=1200, res=300)
+# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
+#      , width=1200, height=1200, res=300)
+pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".pdf")
+     , width=4, height=4)
 par (mar=c (4,5,1,1))
-barplot (sTab [5:2,]  ## excluding SCA, storms to bottom
-         , col=gCols [4:1]
+# barplot (sTab [which (row.names(sTab)%in% c("galeS", "storm", "stormC", "galeC")),]  ## excluding SCA, storms to bottom
+barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
+                  , col=gCols# [4:1]
          , ylab="High-wind days per year"
 )
-abline (h=mean (as.data.frame (t (sTab))$gale), lwd=3, lty="dashed") # gray would be invisible
-abline (h=mean (as.data.frame (t (sTab))$storm), lwd=3, lty="dotted", col="black")
-legend ("topright", legend=c ("gale", "storm") # row.names(sTab)[1:2]
+is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE  # to have means unbiased
+abline (h=mean (as.data.frame (t (sTab))$gale, na.rm=TRUE), lwd=3, lty="dashed") # gray would be invisible
+abline (h=mean (as.data.frame (t (sTab))$storm, na.rm=TRUE), lwd=3, lty="dotted", col="black")
+## add 90%tile for gales
+# abline (h=quantile(sTab [which (row.names(sTab)=="gale"),]
+#          , probs=c(0.05,0.95), na.rm=TRUE), lty="dashed", lwd=1)
+if (metstation == "FILA2"){lP <- "topleft"}else{lP <- "topright"}
+legend (lP, legend=c ("gale", "storm") # row.names(sTab)[1:2]
         , fill=gCols[1:2], bty="n")
 dev.off()
-rm (cGale, yGale, gCols, sTab)
+rm (cGale, yGale, gCols, sTab, lP)
 ## end of wind summary
 
 
@@ -541,11 +550,12 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , pastYear=pastYear, ongoingYear=FALSE,
                )
 ## legend for gale clouds in other corner
-if (0){
+if (1){
   ## gales
-  yL <- 0.7
-  rasterImage (img, xleft=260, xright=260+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-  text (273, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=4)
+  yL <- 0.7; xL <- 250
+  rasterImage (img, xleft=xL, xright=xL+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
+  text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (>", galeT, " knots)")
+        , pos=4, adj=c(0,1))
   # yL <- 2.7
   # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
   ## no storms in 2021 -- drop this part this year
@@ -561,7 +571,7 @@ par (crt=oP$crt # reset to original plotting geometry
 
 ## show 1:1 diagonal
 dev.off()
-rm(hgt, wdh, bP, img, yL)
+rm(hgt, wdh, bP, img, yL, xL)
 
 
 ## start-over/add windrose
