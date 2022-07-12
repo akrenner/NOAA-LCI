@@ -118,6 +118,19 @@ badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
            , "2015_06-26_t9_s01b_cast117_5028"
            , "2015_06-26_t9_s06b_cast111_5028"
            , "2021_05-01_ab_s06_surface-duplicate_cast036_5028")
+badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't cause major trouble
+           , "2012_10-29_t4_s07b_cast065_4141"
+           , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
+           , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
+           , "2013_04-20_t3_s05_cast117_5028"
+           , "2015_06-26_t9_s01b_cast117_5028"
+           , "2015_06-26_t9_s06b_cast111_5028"
+           , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"
+           )
+## casts that crash readCNV()
+badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
+           , badF)
+
 for (i in 1:length (badF)){
   if (badF [i] %in% fNf){
     fNf <- fNf [-grep (badF [i], fNf)]
@@ -245,24 +258,26 @@ readCNV <- function (i){
 
 
 ## for troubleshooting
-if (0){
+if (1){
   for (i in 1:length (fNf)){
     # for (i in 193:length (fNf)){  ## speed-up for testing
-    print (paste (i, fileDB [i,c(2)]))
-    ctdX <- readCNV (i)
-    # if (i == 1){
-    if (!exists ("CTD1")){
+    ctdX <- try (readCNV (i))
+    if (class (ctdX) == "try-error"){
+      cat ("\n\n\n"); print (ctdX)
+      stop (paste (i, fileDB [i, c(2)]))
+    }
+    if (!exists ("CTD1")){  # in case test doesn't include i==1
       CTD1 <- ctdX
     }else{
       CTD1 <- rbind (CTD1, ctdX)
     }
   }
   rm (ctdX)
+}else{
+  ## more efficient, but doesn't ID errors -- so redundant
+  CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
+  CTD1 <- as.data.frame (do.call (rbind, CTD1))
 }
-## more efficient, but doesn't ID errors -- so redundant
-CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
-# require (dplyr); CTD1x <- bind_rows (CTD1x, id = fN)
-CTD1 <- as.data.frame (do.call (rbind, CTD1))
 rm (readCNV)
 rm (fN, fNf)
 
