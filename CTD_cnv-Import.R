@@ -122,6 +122,7 @@ badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't c
            , "2012_10-29_t4_s07b_cast065_4141"
            , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
            , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
+           , "2013_04-19_t6_s05b_cast076_5028"  ## same as above?!
            , "2013_04-20_t3_s05_cast117_5028"
            , "2015_06-26_t9_s01b_cast117_5028"
            , "2015_06-26_t9_s06b_cast111_5028"
@@ -129,25 +130,15 @@ badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't c
            )
 ## casts that crash readCNV()
 badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
-           , badF)
+           , "2012_10-28_t6_s23_cast006_4141", badF)
 
 for (i in 1:length (badF)){
-  if (badF [i] %in% fNf){
+  if (length (grep (badF [i], fNf)) > 0){
     fNf <- fNf [-grep (badF [i], fNf)]
   }
 }
 
-
-## to make things run with SEABIRD loopedit
-
-
-## OR (better??), skip aggregation. Don't need to
-# fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/", ".cnv", full.names = TRUE
-#                    , ignore.case = TRUE, recursive = TRUE)
-
-
 fN <- gsub ("^.*/", "", fNf)
-# print (length (fN))
 
 
 
@@ -257,27 +248,16 @@ readCNV <- function (i){
 }
 
 
-## for troubleshooting
-if (1){
-  for (i in 1:length (fNf)){
-    # for (i in 193:length (fNf)){  ## speed-up for testing
-    ctdX <- try (readCNV (i))
-    if (class (ctdX) == "try-error"){
-      cat ("\n\n\n"); print (ctdX)
-      stop (paste (i, fileDB [i, c(2)]))
-    }
-    if (!exists ("CTD1")){  # in case test doesn't include i==1
-      CTD1 <- ctdX
-    }else{
-      CTD1 <- rbind (CTD1, ctdX)
-    }
-  }
-  rm (ctdX)
-}else{
-  ## more efficient, but doesn't ID errors -- so redundant
-  CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
-  CTD1 <- as.data.frame (do.call (rbind, CTD1))
+## read and concatenate all cnv files
+CTD1 <- mclapply (1:length (fNf), function (i){
+  x <- try (readCNV (i))
+  if (class (x) == "try-error"){
+    cat (i, fNf [i], "\n\n")
+  }else{return (x)}
 }
+, mc.cores = nCPUs) # read in measurements
+CTD1 <- as.data.frame (do.call (rbind, CTD1))
+
 rm (readCNV)
 rm (fN, fNf)
 
