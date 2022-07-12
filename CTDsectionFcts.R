@@ -4,30 +4,14 @@
 ## emulate/evolve from ODV
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
-  ## old version without contours -- keep for now, but eventually replace with pSec
-  s <- try (plot (xsec, which = N
-                  , zcol = zCol
-                  , stationTicks = TRUE
-                  , showStations = TRUE  # or roll your own -- how?
-                  , ztype = "image"
-                  # , grid = TRUE
-                  , ...
-  ), silent = TRUE)
-  if (class (s) == "try-error"){
-    plot (1:10, type = "n", new = FALSE)
-    text (5,5, paste0 (N, " all values NA"))
-  }
-}
-
-
-
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
+pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
+                  , showBottom=TRUE, ...){
   ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
+  ## XXX missing feature XXX : color scale by quantiles XXX
   s <- try (plot (xsec, which = N
-                  # , showBottom = FALSE, showBottom = "lines" #FALSE
+                  , showBottom = showBottom
                   , axes = TRUE
                   , stationTicks = TRUE
                   , showStations = TRUE
@@ -38,8 +22,6 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
                   , ...
   )
   , silent = TRUE)
-
-
   if (class (s) != "try-error"){
     s <- xsec
     nstation <- length(s[['station']])
@@ -70,7 +52,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol, ...){
         zvar <- zvar [-cutS,]
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
-                          , nlevels = 5
+                          , nlevels = 5, labcex=1.0 # default: labcex=0.6
                           # , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
@@ -122,6 +104,22 @@ pSec0 <- function (xsec, N, cont = TRUE, custcont = NULL, zcol, ...){
   }
 }
 
+KBsectionSort <- function (xCo){
+  ## sort section -- Kasitsna-Bay-Lab specific
+  ## sort in here, rather than separately
+  for (i in 1:length (xCo@data$station)){
+    xCo@data$station[[i]]@metadata$stationId <-
+      as.character(xCo@data$station[[i]]@metadata$stationId)
+  }
+  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
+    xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
+  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
+    xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+  }else{
+    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
+  }
+
+}
 
 
 sectionize <- function (xC){  ## keep this separate as this function is specific to Kachemak Bay
@@ -129,21 +127,18 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
     stop ("Need package:oce version 1.7.4 or later")
   }
   require ("oce")
-
-  stn <- factor (sprintf ("%02s", xC$Station))
+  if (nrow (xC) < 2){stop ("no data to make a section")}
+  # stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
+  stn <- xC$Match_Name
   xCo <- makeSection (xC, stn)
-  xCo <- sectionGrid (xCo, p=standardDepths(3), method = "boxcar", trim = TRUE) # should understand this step more fully! XXX
-
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
-  ## sort in here, rather than separately
-  if (xC$Transect [1] == "AlongBay"){ # extended AlongBay wraps around Pogy Ptp
-    xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
-    xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
-  }else{
-    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
-  }
+  xCo <- KBsectionSort (xCo)
+  xCo <- sectionGrid (xCo
+                      # , p=100  ## some pressures are NA or Inf??--but may be prettiest if it works
+                      , p=standardDepths(9)
+                      , method = "boxcar", trim = TRUE)
+  #  xCo <- sectionSmooth(xCo, method="barnes", pregrid=TRUE, trim=TRUE)  ## makes a mess -- not using it right; provide xr and yr
   xCo
 }
 
@@ -151,7 +146,6 @@ makeSection <- function (xC, stn){
   require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
-
   as.section (lapply (1:length (levels (stn))
                       , FUN = function (x){
                         sCTD <- subset (xC, stn == levels (stn)[x])
@@ -161,12 +155,7 @@ makeSection <- function (xC, stn){
                                               , pressure = Pressure..Strain.Gauge..db.
                                               , time = isoTime
                                       ))
-                        # if (is.na (sCTD$bathy [1])){
-                        if (1){
-                          ocOb@metadata$waterDepth <- sCTD$Bottom.Depth [1]  ## always use Bottom.Depth?
-                        }else{
-                          ocOb@metadata$waterDepth <- sCTD$bathy [1]
-                        }
+                        ocOb@metadata$waterDepth <- sCTD$Bottom.Depth_main [1]  # Bottom.Depth is a catastrophic mix of m and feet
                         ocOb@metadata$longitude <- sCTD$longitude_DD [1]
                         ocOb@metadata$latitude <- sCTD$latitude_DD [1]
                         ocOb@metadata$stationId <- sCTD$Match_Name [1]
@@ -228,8 +217,21 @@ isNightsection <- function (ctdsection){
 
 
 
-## consider having these functions in oce
-
+#' Clone CTD-cast, resulting in a new cast, but with all measurement fields left empty.
+#' Need this to create dummy casts for incomplete transects.
+#'
+#' [cloneCTD]
+#'
+#' @param ctd a [ctd-class] object
+#'
+#' @param depth
+#' @param stationID
+#' @param latitude
+#' @param longitude
+#'
+#' @return A [ctd] object
+#'
+#' @author Martin Renner
 cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
                       , longitude=ctd@metadata$longitude
                       , stationId=NULL, startTime=NULL
@@ -262,29 +264,51 @@ cloneCTD <- function (ctd, latitude=ctd@metadata$latitude
 }
 
 
-sectionPad <- function (section, transect, ...){
+#' Extend incomplete transect to the full length by adding dummy casts where
+#' stations were missed.
+#'
+#' [sectionPad]
+#'
+#' This function is needed when sections are run on pre-defined transect
+#' and some sections are incomplete, e.g. due to weather. Adding dummy
+#' casts to where stations were missed should allow plotting the full length
+#' of the transect (rather than rescaling to an incomplete one).
+#'
+#' @param section a [section-class] object
+#'
+#' @param transect a [data-frame] object with the fields latitude, longitude
+#' , stationId. stationId needs to match the stationId in section.
+#' @param parameters to be passed on to sectionSort() to specify how the resultant
+#' expanded section should be sorted.
+#'
+#' @return A [section-class] object with the same extend as `transect`.
+#'
+#' @author Martin Renner
+sectionPad <- function (sect, transect, ...){
   ## missing feature: bottom-depth of missing cast XXX
+  ## pad only first and last?
 
-  if (!all (c ("stationId", "latitude", "longitude")  %in% names (transect))){
+  if (!all (c ("station", "latitude", "longitude")  %in% names (transect))){
     stop ("transect needs to have fields 'latitude', 'longitude', and 'stationId'")
   }
   ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  for (i in 1:length (transect$stationId)){
-## only insert dummy first and last stations. skip all others to avoid overdoing things
-#  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
-#   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
-    stationIDs <- sapply (1:length (section@data$station), FUN = function (k){
-      section@data$station[[k]]@metadata$stationID})  ## oce example files use "station", not "stationId"
-#    if (!transect$stationId [i]  %in% stationIDs){
-   if (!transect$stationId [i]  %in% levels (section@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
-        cat ("No station", transect$stationId [i], "\n")
+  # for (i in 1:length (transect$stationId)){
+  for (i in c(1,nrow (transect))){
+    ## only insert dummy first and last stations. skip all others to avoid overdoing things
+    #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
+    #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
+    stationIDs <- sapply (1:length (sect@data$station), FUN = function (k){
+      sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
+    if (!transect$station [i]  %in% stationIDs){  ## current results are horrid. Not why=?
+    # if (!as.character (transect$station [i])  %in% levels (sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+      #       cat ("No station", transect$stationId [i], "\n")
       ## add a dummy-station  (sectionAddCtd and sectionAddStation are synonymous)
-      section <- sectionAddCtd (section, cloneCTD(section@data$station [[1]]
+      sect <- sectionAddCtd (sect, cloneCTD(sect@data$station [[1]]
                                                   , latitude=transect$latitude [i]
                                                   , longitude=transect$longitude [i]
-                                                  , stationId=transect$stationId [i]
+                                                  , station=transect$station [i]
                                                   , bottom=transect$bottom [i]
       )
       )
@@ -292,7 +316,8 @@ sectionPad <- function (section, transect, ...){
   }
   # section <- sectionSort (section, ...)
   ## warnings: make sure sectionSort is called next!
-  return (section)
+  sect <- KBsectionSort (sect)
+  return (sect)
 }
 
 

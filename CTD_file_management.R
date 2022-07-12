@@ -76,7 +76,7 @@ rL <- function (f, p = NULL){ # recursive listing of files
 ## move about HEX files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
-fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt"))
+fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt")) ## not ALL duplicates (also air casts??)
 fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
@@ -95,29 +95,22 @@ if (length (bF) > 0){
 rm (bF)
 
 
-## manually remove duplicates -- if any -- none found
-## check duplicates by name or sha256
+## build file database
 fDB <- data.frame (file = fL
                    , fN = gsub ("^.*/", "", fL)
 )
 rm (fL)
-# fDB <- fDB[with (fDB, order (file, fN)),]
-fDB$isD <- duplicated (fDB$fN)
-
-if (0){
-  require ("openssl")
-  fDB$sha <- sapply (1:nrow (fDB), function (i){
-    hF <- file (fDB$file [i], open = "r", raw = TRUE)
-    require (openssl)
-    x <- sha256 (hF)
-    close (hF)
-    return (as.character (x))
-  })
-  if (any (duplicated(fDB$sha))){
-    print (sum (duplicated (fDB$sha)), "files are duplicate")
-    warning ("fix duplicates first")
-  }
-}# tail (fDB)
+## check duplicates by name or sha256
+## check file content
+require ("cli")
+fDB$sha <- sapply (1:nrow (fDB), function (i){
+  hash_file_sha256(fDB$file [i])
+})
+dF <- duplicated (fDB$sha)
+cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
+# print (fDB$fN [which (dF)])
+fDB <- subset (fDB, !dF)
+rm (dF)
 ##
 
 
@@ -489,10 +482,9 @@ fDB$tErr <- as.numeric (difftime(fDB$fnDate, fDB$metDate, units = "days"))
 summary (fDB$tErr)
 if (any (abs (fDB$tErr) > 1)){
   x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
-  print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
-
   #  stop ("fix date discrepancies between metadata and file names")
   warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
+  print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
 #      fixMeta (fDB$shortFN [i], fDB$fnDate)

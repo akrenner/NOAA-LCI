@@ -109,6 +109,7 @@ Require (oce)
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
 fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
                   , full.names = TRUE, ignore.case = TRUE)
+
 ## cut-out bad files for now -- fix this later -- why bad?
 badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
            , "2012_10-29_t4_s07b_cast065_4141"
@@ -117,8 +118,23 @@ badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
            , "2015_06-26_t9_s01b_cast117_5028"
            , "2015_06-26_t9_s06b_cast111_5028"
            , "2021_05-01_ab_s06_surface-duplicate_cast036_5028")
+badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't cause major trouble
+           , "2012_10-29_t4_s07b_cast065_4141"
+           , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
+           , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
+           , "2013_04-20_t3_s05_cast117_5028"
+           , "2015_06-26_t9_s01b_cast117_5028"
+           , "2015_06-26_t9_s06b_cast111_5028"
+           , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"
+           )
+## casts that crash readCNV()
+badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
+           , badF)
+
 for (i in 1:length (badF)){
-  fNf <- fNf [-grep (badF [i], fNf)]
+  if (badF [i] %in% fNf){
+    fNf <- fNf [-grep (badF [i], fNf)]
+  }
 }
 
 
@@ -201,41 +217,6 @@ readCNV <- function (i){
   ## best: manually inspect and read-in from separate table
   # ?plotScan
 
-
-  ## loop edit and binning -- here or in SEABIRD?
-  if (0){ ##  do all this in SEABIRD now
-
-    ## attempt to use SEABIRD method "sbe". If that fails,
-    ## revert to "downcast"
-    cTrim <- try (ctdTrim (ctdF, method = "sbe"), silent = TRUE) # this is the seabird method -- some fail
-    if (class (cTrim) == "try-error"){
-      ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-      # could/should specify min soak times, soak depth -- min soak time = 40s
-      #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
-    }else{ctdF <- cTrim}
-
-
-    if (median (ctdF@data$pressure) < 0){
-      cat ("Negative pressure: ", fN [i], "\n")
-      # log bad files
-      write (fNf [i], file = "~/tmp/LCI_noaa/cache/badCTDfile.txt", append = TRUE)
-      return()
-    }else{
-
-      ## bin CTD profile by depth, not pressure XXX -- this needs fixing later? -- really needed?
-      # ctdF <- ctdDecimate (ctdF, p = 1, method = "boxcar", e = 1.5) # this is by pressure
-      ## depth values for pressures
-      dP <- swPressure (0:200, latitude = 59, eos = "unesco")
-      ctdF <- ctdDecimate (ctdF, p = dP, method = "unesco")
-      ## keeping both at 'unesco' seems to keep depth closest to prescribed depth
-      rm (dP)
-
-      # Require ("vprr")
-      # ctdFx <- bin_calculate (ctdF, binSize = 1, imageVolume = 1, rev = FALSE) # 1 meter
-    }
-  }
-
-
   ## fix-up missing fields
   meta <- function (x){rep (x, length (ctdF@data$temperature))}
   if ("upoly" %in% names (ctdF@data)){
@@ -277,24 +258,26 @@ readCNV <- function (i){
 
 
 ## for troubleshooting
-if (0){
+if (1){
   for (i in 1:length (fNf)){
     # for (i in 193:length (fNf)){  ## speed-up for testing
-    print (paste (i, fileDB [i,c(2)]))
-    ctdX <- readCNV (i)
-    # if (i == 1){
-    if (!exists ("CTD1")){
+    ctdX <- try (readCNV (i))
+    if (class (ctdX) == "try-error"){
+      cat ("\n\n\n"); print (ctdX)
+      stop (paste (i, fileDB [i, c(2)]))
+    }
+    if (!exists ("CTD1")){  # in case test doesn't include i==1
       CTD1 <- ctdX
     }else{
       CTD1 <- rbind (CTD1, ctdX)
     }
   }
   rm (ctdX)
+}else{
+  ## more efficient, but doesn't ID errors -- so redundant
+  CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
+  CTD1 <- as.data.frame (do.call (rbind, CTD1))
 }
-## more efficient, but doesn't ID errors -- so redundant
-CTD1 <- mclapply (1:length (fNf), readCNV, mc.cores = nCPUs) # read in measurements
-# require (dplyr); CTD1x <- bind_rows (CTD1x, id = fN)
-CTD1 <- as.data.frame (do.call (rbind, CTD1))
 rm (readCNV)
 rm (fN, fNf)
 
@@ -318,7 +301,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 ## update Access tables from Notebook database
 ## may need to adapt this to make this portable
 system("cmd.exe"
-       , input = paste('"C:/Users/Martin.Renner/Documents/Applications/R-Portable/App/R-Portable/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+       , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
 
 
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
@@ -340,7 +323,7 @@ stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Ti
 Require ("lubridate") # for time-zone adjustment
 stationEv$timeStamp <- ymd_hms (paste (gsub (" .*", '', stationEv$Date)
                                        , gsub (".* ", '', stationEv$Time))
-                                , tz = "America/Anchorage")
+                                        , tz = "America/Anchorage")
 stationEv [is.na (stationEv$timeStamp), c (8, 10, 5, 6)]  ## 40 notebook records with missing timestamps
 ## ignore these, if there are no matching CTD files available. No point trying to interpolate them?
 
