@@ -1,5 +1,7 @@
 ## produce temp file for CTDwall to process further
-
+## define color ramps
+## define data ranges
+## clean data (move to earlier??)
 
 
 ## issues:
