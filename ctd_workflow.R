@@ -57,8 +57,9 @@ source ("CTDwall-setup.R")
 source ("CTDsections.R")
 # source ("CTD-testSectionPlot.R")  # look for plots
 source ("CTDwall.R")
+# source ("CTDwallrsync.R")  # sync to GoogleDrive -- requires rclone
 
-# source ("ctd_T9-anomaly.R")
+# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R")
 
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
