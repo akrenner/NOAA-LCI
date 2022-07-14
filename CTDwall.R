@@ -214,9 +214,10 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
+      ## already defined surveys in CTDwall-setup.R -- use physOc$survey
       if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
       # sL <-  1:length (levels (physOc$transDate))
-      for (iS in sL){              # cycle through individual surveys
+      for (iS in sL){              # cycle through individual survey
         # iS <- 2  # for testing
         cat (iS, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[iS])
@@ -267,7 +268,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
               rm (nS)
             }
 
-            # remove duplicate stations
+            # remove duplicate stations -- move to CTDwall-setup.R?
             ## any duplicated stations? -- if so, keep only the longest cast
             xC$Match_Name <- factor (xC$Match_Name)
             if (any (sapply (1:length (levels (xC$Match_Name)), function (m){
@@ -430,7 +431,6 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
 
 physOc <- poAll
-
 rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yL, iY, sL, iS, vL, tL)
 
 
@@ -466,11 +466,13 @@ if (0){
 
 ## for error checking: map of every transect
 # double-used plots may appear out-of-line in chronology
-
-if (0){
+## this should come at the end of CTDwall-setup.R
+if (1){
+  xC <- xC [order (xC$isoTime),]
   pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
-  for (i in 1:length ())
-    plot (xC
+  for (i in 1:length (levels (xC$survey)))
+    xCx <- subset (xC, survey == levels (xC$survey)[i])
+    plot (xCx
           , which = 99
           , coastline = "coastlineWorldFine"
           , showStations = TRUE

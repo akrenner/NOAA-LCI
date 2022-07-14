@@ -21,9 +21,12 @@
 #
 # make sure matchName for link to other datasets is correct
 #
+## 2. QAQC of CTD measurements
+##    consistency across years and instruments.
+##    Especially check O2, turbidity, fluorescence
 #
 ##
-## 2. produce annual aggregates
+## 3. produce annual aggregates
 #     zip-up aggregates for export
 #
 #####################################################
