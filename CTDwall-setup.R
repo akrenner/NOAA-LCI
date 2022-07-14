@@ -318,13 +318,13 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Oxygen_umol_kg"
                         )
                      #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.025,0.975), na.rm = TRUE)
+                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.02,0.98), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
 ## manually tune some of these ranges
-oRange [1,1] <- -1 # fix min temperature
+oRange [1,1] <- 1.5 # fix min temperature
 oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
 # oRange [6,] <- c(-3,5)      # fix logPAR range
 ## what's better to use here, umol/kg or mg/l?
@@ -336,13 +336,10 @@ oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (obse
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
-
-## show data availability by year
 if (0){
-  cat ("data availability per year and transect\n")
-  aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
+  hist (poAll$Temperature_ITS90_DegC)
+  abline (v = oRange [1,])
 }
-
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
