@@ -323,14 +323,16 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
-oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go
-# oRange [5,] <- c(0,100)      # fix PAR range
+## manually tune some of these ranges
+oRange [1,1] <- -1 # fix min temperature
+oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
+# oRange [6,] <- c(-3,5)      # fix logPAR range
 ## what's better to use here, umol/kg or mg/l?
-# oRange [6,] <- c (-0.1,1.5)  # fix O2 perc range
-# oRange [6,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
+# oRange [7,] <- c (-0.1,1.5)  # fix O2 perc range
+# oRange [7,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
 # https://repository.oceanbestpractices.org/bitstream/handle/11329/417/56281.pdf?sequence=1&isAllowed=y
 ## umol/l = 31.2512* cO2 mg/l
-oRange [6,] <- c (2,12) * 31.2512
+# oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
