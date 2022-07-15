@@ -214,7 +214,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
-      ## already defined surveys in CTDwall-setup.R -- use physOc$survey
+      ## already defined surveys in CTDwall-setup.R -- use physOc$survey?
       if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
       # sL <-  1:length (levels (physOc$transDate))
       for (iS in sL){              # cycle through individual survey
@@ -222,11 +222,10 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
         cat (iS, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[iS])
         if (length (levels (factor (xC$Match_Name))) < 2){
-          ## blank plot for missing data -- unless in the future
-          ## use empty slots for map rather than starting on blank page if level would be in future
-
-          #cat ("MISSING SURVEY", levels (physOc$transDate)[iS], "\n#\n")
-          inFuture <- as.numeric (as.character (physOc$year))[1] >= as.numeric (format (Sys.time(), "%Y")) &&
+          ## if a scheduled survey was not done, plot a blank placeholder in the panel instead
+          ## unless the scheduled survey is in the future from runtime (do nothing then)
+          inFuture <- as.numeric (as.character (physOc$year))[1] >=
+            as.numeric (format (Sys.time(), "%Y")) &&
             iS/length (sL) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
             plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
@@ -243,7 +242,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           }else{
             ## check whether there is more than one survey per survey-interval
 
-            save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")
+            if (test){save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")}
             # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
 
             ## allow x-day window to make up a multi-day composite transect
@@ -295,13 +294,6 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
               rm (secN, tNew, sec, m, castSize)
             }
           }
-
-          # for (o in 2:nrow (xC)){  ## find duplicate files -- do this much earlier in CTD_file_management.R
-          #   if (xC$Match_Name [o] == xC$Match_Name [o-1]){
-          #     if (xC$Pressure..Strain.Gauge..db. [o] < xC$Pressure..Strain.Gauge..db. [o-1]){
-          #       # cat (paste (xC$Match_Name [o], xC$DateISO [o], o, "\n"))
-          #       cat (paste (xC$File.Name [o-1], " --- ", xC$File.Name [o]), "\n")
-          #     }}}
 
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
