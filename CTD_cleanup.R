@@ -564,10 +564,10 @@ yr <- factor (format (physOc$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (physOc, yr == levels (yr)[i])
   ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
-  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time, File.Name
+  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
-                                  , CTD.serial
+                                  , File.Name, CTD.serial
                                   , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
                                   , Temperature_ITS90_DegC, Salinity_PSU
                                   , Density_sigma.theta.kg.m.3
