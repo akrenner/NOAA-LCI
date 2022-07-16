@@ -45,11 +45,7 @@ source ("CTD_DataAvailability.R")
 
 
 source ("datasetup.R")
-
-## anaCTD.R needs updates/work -- not currently working -- multiplatform issue?
-# source ("anaCTD.R")              ## CTD profiles?
-# cat ("\n# END anaCTD.R #\n")
-cat ("\n# SKIPPED anaCTD.R #\n")
+source ("CTD_castQAQC.R")              ## CTD profiles
 
 
 ## the Wall

@@ -1,17 +1,26 @@
 #!/usr/bin/env Rscript
 
 ## make CTD plots, profile plots, QA/QC
+## checking on instrument integrity
+## also location of station??
 
-
-## start with file from dataSetup.R
+## start with file from CTD_cleanup.R
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
+## from datasetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")
 
-# system ("mkdir -p ~/tmp/LCI_noaa/media/TSdiagrams")
 dir.create("~/tmp/LCI_noaa/media/CTDtests/CTDcasts", recursive = TRUE, showWarnings = FALSE)
 
 
 print (summary (physOc))
-# q()
+
+
+
+## define sensible data ranges
+## define conditions to flag questionable values
+
+
+
 
 ###########################
 ## play with TS-Diagrams ##
@@ -78,79 +87,80 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
 ## physOc <- subset (physOc, 1:nrow (physOc) %in% 1:500 ) # to prototype
 ## physOc$File.Name <- factor (physOc$File.Name)
 
-system ("mkdir ~/tmp/LCI_noaa/media/CTDprofiles")
+  dirN <- "~/tmp/LCI_noaa/media/CTDtests/CTDprofiles/"
+dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 Require ("oce")
 plotCTDprof <- function (i){
-    ## for (i in 1:length (levels (physOc$File.Name))){
-    cat (i, " ")
-    if (i %% 7 == 0){cat ("\n")}
-    ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
-    if (nrow (ctd) > 3){
-        try ({
-            PDF (paste ("CTDprofiles/", levels (physOc$File.Name)[i], ".pdf", sep = ""))
-                                        #               png (paste ("~/tmp/LCI_noaa/media/CTDprofiles/", levels (physOc$File.Name)[i], ".png", sep = ""))
-            ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
-                                     , temperature = Temperature_ITS90_DegC
-                                     , pressure = Pressure..Strain.Gauge..db.
-                                     , longitude = longitude_DD
-                                     , latitude = latitude_DD
-                                       ))
-            ## add fluorescence
-            ctdF <- oceSetData (ctdF, value = ctd$Fluorescence_mg_m3
-                              , name = "fluorescence"
-                                        #, label = "fluorescence"
-                              , unit = "mg/m^3")
-            ## add PAR
-            ctdF <- oceSetData (ctdF, value = ctd$PAR.Irradiance
-                              , name = "PAR"
-                                        #, label = "Irradiance"
-                              , unit = "mg/m^3")
-            ## add O2
-            ctdF <- oceSetData (ctdF, value = ctd$Oxygen_SBE.43..mg.l.
-                              , name = "O2"
-                                        #, label = "Oxygen"
-                              , unit = "mg/l")
+  cat (i, " ")
+  if (i %% 7 == 0){cat ("\n")}
+  ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
+  if (nrow (ctd) > 3){
+    pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
+    #               png (paste ("~/tmp/LCI_noaa/media/CTDprofiles/", levels (physOc$File.Name)[i], ".png", sep = ""))
+    try ({
+      ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
+                                 , temperature = Temperature_ITS90_DegC
+                                 , pressure = Pressure..Strain.Gauge..db.
+                                 , longitude = longitude_DD
+                                 , latitude = latitude_DD
+      ))
+      ## add fluorescence
+      ctdF <- oceSetData (ctdF, value = ctd$Fluorescence_mg_m3
+                          , name = "fluorescence"
+                          #, label = "fluorescence"
+                          , unit = "mg/m^3")
+      ## add PAR
+      ctdF <- oceSetData (ctdF, value = ctd$PAR.Irradiance
+                          , name = "PAR"
+                          #, label = "Irradiance"
+                          , unit = "mg/m^3")
+      ## add O2
+      ctdF <- oceSetData (ctdF, value = ctd$Oxygen_SBE.43..mg.l.
+                          , name = "O2"
+                          #, label = "Oxygen"
+                          , unit = "mg/l")
 
-            plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
-#           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)
-            dev.off()
-            ## next page, plot:
-            ## O2 over depth
-            ## fluorescence
-            ## Irradiance
-            PDF (paste ("CTDprofiles/"
-                      , levels (physOc$File.Name)[i]
-                      , "_additions.pdf", sep = ""))
-
-            par (mfrow = c(2,2))
-            plotProfile (ctdF, xtype = "O2", ytype = "depth")
-            plotProfile (ctdF, xtype = "fluorescence", ytype = "depth")
-            plotProfile (ctdF, xtype = "PAR", ytype = "depth")
-            plot (ctdF, which = 1)
-            dev.off()
-            if (0){
-            system ("sleep 5", wait = TRUE)
-            system (paste ("pdfunite ~/tmp/LCI_noaa/media/CTDprofiles/"
-                         , levels (physOc$File.Name)[i]
-                         , ".pdf ~/tmp/LCI_noaa/media/CTDprofiles/"
-                         , levels (physOc$File.Name)[i]
-                         , "_additions.pdf ~/tmp/LCI_noaa/media/CTDprofiles/c_"
-                        ,  levels (physOc$File.Name)[i], ".pdf"
-                        , sep = ""), wait = FALSE)
-            system (paste ("rm ~/tmp/LCI_noaa/media/CTDprofiles/"
-                         , levels (physOc$File.Name)[i], "*.pdf", sep = "")
-                  , wait = FALSE)
-            }
-        })
-    }else{
-        warning (paste (levels (physOc$File.Name)[i]), "comes up short\n\n")
+      plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
+      #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)
+    })
+    dev.off()
+    ## next page, plot:
+    ## O2 over depth
+    ## fluorescence
+    ## Irradiance
+    pdf (paste0 (dirN
+                 , levels (physOc$File.Name)[i]
+                 , "_additions.pdf"))
+    try({
+      par (mfrow = c(2,2))
+      plotProfile (ctdF, xtype = "O2", ytype = "depth")
+      plotProfile (ctdF, xtype = "fluorescence", ytype = "depth")
+      plotProfile (ctdF, xtype = "PAR", ytype = "depth")
+      plot (ctdF, which = 1)
+    })
+    dev.off()
+    if (0){
+      system ("sleep 5", wait = TRUE)
+      system (paste ("pdfunite ~/tmp/LCI_noaa/media/CTDprofiles/"
+                     , levels (physOc$File.Name)[i]
+                     , ".pdf ~/tmp/LCI_noaa/media/CTDprofiles/"
+                     , levels (physOc$File.Name)[i]
+                     , "_additions.pdf ~/tmp/LCI_noaa/media/CTDprofiles/c_"
+                     ,  levels (physOc$File.Name)[i], ".pdf"
+                     , sep = ""), wait = FALSE)
+      system (paste ("rm ~/tmp/LCI_noaa/media/CTDprofiles/"
+                     , levels (physOc$File.Name)[i], "*.pdf", sep = "")
+              , wait = FALSE)
     }
+  }else{
+    warning (paste (levels (physOc$File.Name)[i]), "comes up short\n\n")
+  }
 }
 
 if (0){
-Require ("parallel")
-x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
+  Require ("parallel")
+  x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }
 x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
 # dev.off()
@@ -168,8 +178,8 @@ system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
 ## find windows equivalent here XXX  -- still needed?
 if (1){
     Require ("zip")
-    unlink ("~/tmp/LCI_noaa/media/CTDprofiles.zip", force = TRUE)
-    zFiles <- list.files ("~/tmp/LCI_noaa/media/CTDprofiles", pattern = ".pdf", full.names = FALSE)
+    unlink ("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles.zip", force = TRUE)
+    zFiles <- list.files (dirN, pattern = ".pdf", full.names = FALSE)
     zip::zip ("~/tmp/LCI_noaa/media/CTDprofiles.zip", files = zFiles, recurse = FALSE
               , include_directories = FALSE)
 #    unlink (zFiles, force = TRUE)
@@ -179,7 +189,7 @@ if (1){
 }
 ## system ("zip -m -b ~/tmp/LCI_noaa/media/ --junk-paths CTDprofiles.zip CTDprofiles/*.pdf")
 ## system ("zip -m -b ~/tmp/LCI_noaa/media/ CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles/*.pdf CTD.zip")
-unlink("~/tmp/LCI_noaa/media/CTDprofiles", recursive = TRUE, force = TRUE)
+unlink("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles", recursive = TRUE, force = TRUE)
 rm (plotCTDprof)
 cat ("\n\n")
 
