@@ -90,6 +90,7 @@ Require ("parallel")
 nCPUs <- detectCores()
 if (.Platform$OS.type != "unix"){
   nCPUs <- 1
+  isWin <- TRUE
 }
 # require (doParallel)
 # cl <- makeCluster(nCPUs)
@@ -280,9 +281,14 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 
 ## update Access tables from Notebook database
 ## may need to adapt this to make this portable
-system("cmd.exe"
-       , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
-
+if (isWin){
+  system("cmd.exe"
+         , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+}else{
+  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+}
 
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
 stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
