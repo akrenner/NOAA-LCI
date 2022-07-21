@@ -137,6 +137,7 @@ for (i in 1:length (levels (poAll$year))){
 ## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
 ## 2020: 5028 looks quite different than 4141. 4141 has two groups
 dev.off()
+rm (i)
 
 
 # png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
@@ -224,6 +225,12 @@ for (h in 2:length (levels (surveyW))){
 }
 poAll$survey <- factor (surveyW)  ## need to reset factor levels after combining days
 rm (surveyW, h)
+
+## migrate code over from CTDwall.R:
+## several surveys in one month
+## several surveys on one day
+## replicate station casts
+## if two surveys in one month, asign early survey to previous month if that month is empty
 
 # ## new, slow version -- but reliable?
 # for (h in 2:length (surveyW)){
@@ -343,6 +350,7 @@ if (0){
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
+# save (oRange, oCol, poAll, file="~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 cat ("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
 # EOF
