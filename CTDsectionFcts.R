@@ -159,6 +159,7 @@ makeSection <- function (xC, stn){
                         ocOb@metadata$longitude <- sCTD$longitude_DD [1]
                         ocOb@metadata$latitude <- sCTD$latitude_DD [1]
                         ocOb@metadata$stationId <- sCTD$Match_Name [1]
+                        ocOb@metadata$filename <- sCTD$File.Name [1]
 
                         ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
