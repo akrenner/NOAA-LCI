@@ -343,8 +343,12 @@ physOc$latitude_DD <- ifelse (is.na (physOc$latitude_DD)
                               , physOc$latitude_DD)
 physOc$Bottom.Depth <- ifelse (is.na (physOc$Bottom.Depth)
                                , stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
-                               , physOc$Bottom.Depth
-                               )
+                               , physOc$Bottom.Depth)
+## executive decision: assign ALL casts nominal positions
+physOc$longitude_DD <- stn$Lon_decDegree [match (physOc$Match_Name, stn$Match_Name)]
+physOc$latitude_DD <- stn$Lat_decDegree [match (physOc$Match_Name, stn$Match_Name)]
+physOc$Bottom.Depth <- stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
+
 
 
 
