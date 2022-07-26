@@ -87,7 +87,7 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){vL <- 1}else{vL <- 1:length (oVars)}
-if (test){tL <- 1}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){tL <- 5}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in tL){  # tn: transect
     ## for testing
@@ -191,9 +191,14 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
     par (oma=c(3,5,5,2)
          , mar=c(4,4,3,0.1)
          )
+    if (test){
+      par (oma=c(3,5,15,2)
+           , mar=c(4,4,16,0.1)
+      )
+    }
 
     #for (iY in 2){
-    if (test){yL <- 1:2}else{yL <- 1:length (levels (physOcY$year))}
+    if (test){yL <- 7}else{yL <- 1:length (levels (physOcY$year))}
     # yL <- 1:length (levels (physOcY$year))
     for (iY in yL){
       ## for testing:
@@ -214,7 +219,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
            , " Sections/year:", length (levels (physOc$transDate)), "-- ")
 
 
-      ## already defined surveys in CTDwall-setup.R -- use physOc$survey?
+      ## already defined surveys in CTDwall-setup.R -- use physOc$survey
       if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
       # sL <-  1:length (levels (physOc$transDate))
       for (iS in sL){              # cycle through individual survey
@@ -248,22 +253,25 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
             ## allow x-day window to make up a multi-day composite transect
             ## better to apply to allPo?
             ## make this a function for all data? -> move to CTDwall-setup.R / datasetup?
-            xC <- xC [order (xC$isoTime),]
-            surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
-            secDiff <- xC$isoTime [2:nrow (xC)] - xC$isoTime [1:(nrow (xC)-1)] ## time difference [s]
-            for (h in 1:length (secDiff)){
-              if (secDiff [h] < 7*24*3600){ # 7-day cut-off
-                surveyW [h+1] <- surveyW [h]
-              }
-            }
-            xC$surveys <- factor (surveyW); rm (surveyW, h)
-            nSurv <- length (levels (xC$surveys))  ## used again below to mark plots
+
+            ## this has already been done in CTDwall-setup.R
+            # xC <- xC [order (xC$isoTime),]
+            # surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
+            # secDiff <- xC$isoTime [2:nrow (xC)] - xC$isoTime [1:(nrow (xC)-1)] ## time difference [s]
+            # for (h in 1:length (secDiff)){
+            #   if (secDiff [h] < 7*24*3600){ # 7-day cut-off
+            #     surveyW [h+1] <- surveyW [h]
+            #   }
+            # }
+            # xC$surveys <- factor (surveyW); rm (surveyW, h)
+            xC$survey <- factor (xC$survey)
+            nSurv <- length (levels (xC$survey))  ## used again below to mark plots
             if (nSurv > 1){
               ## use the survey with the most stations
-              nS <- sapply (levels (xC$surveys), FUN = function (x){
-                length (levels (factor (subset (xC$Station, xC$surveys == x))))
+              nS <- sapply (levels (xC$survey), FUN = function (x){
+                length (levels (factor (subset (xC$Station, xC$survey == x))))
               })
-              xC <- subset (xC, surveys == levels (xC$surveys)[which.max (nS)])
+              xC <- subset (xC, survey == levels (xC$survey)[which.max (nS)])
               rm (nS)
             }
 
@@ -333,7 +341,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           ##
           ## plot the section/transect
           ##
-          if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
+          ## if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
@@ -347,11 +355,12 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
           with (bottom, polygon(c(min (dist), dist, max(dist))
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
-          rm (tgray, zB)
+          rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
             stnID <- sapply (1:length (xCo@data$station), function (m){
               xCo@data$station[[m]]@metadata$stationId
+#              xCo@data$station[[m]]@metadata$filename
             })
             try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2))
             rm (dist, stnID)
@@ -461,9 +470,12 @@ if (0){
 ## this should come at the end of CTDwall-setup.R
 if (1){
   xC <- xC [order (xC$isoTime),]
+  xC$survey <- factor (xC$survey)
   pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
   for (i in 1:length (levels (xC$survey)))
     xCx <- subset (xC, survey == levels (xC$survey)[i])
+    ## cat (xC$File.Name[i], "\n")
+    xCx <- sectionize(xCx)
     plot (xCx
           , which = 99
           , coastline = "coastlineWorldFine"

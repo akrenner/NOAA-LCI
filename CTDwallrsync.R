@@ -11,7 +11,7 @@ rm (list=ls())
 
 
 ## need to make sure that rclone is correctly installed and configured!
-rcloneDir <- "/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
+rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
 
 
 if (.Platform$OS.type == "unix"){
@@ -20,12 +20,20 @@ if (.Platform$OS.type == "unix"){
   system ("rclone sync ~/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
 }else{
     wd <- getwd()
-    setwd (rcloneDir)
-    ## shell or system2 ??
-    shell ("./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
-    setwd (wd)
-}
 
+## get rclone to work with something like this?
+#    system("cmd.exe"
+#           , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+system ("cmd.exe"
+        , input=paste (rcloneDir
+                        , "rclone.exe sync"
+                        , "C:/Users/Martin Rnner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/"
+                        , "remote:GulfWatch/plots/CTDsections/"))
+    # setwd (rcloneDir)
+    # ## shell or system2 ??
+    # shell ("./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
+    # setwd (wd)
+}
 
 
 
