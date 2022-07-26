@@ -25,9 +25,9 @@ if (.Platform$OS.type == "unix"){
 #    system("cmd.exe"
 #           , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
 system ("cmd.exe"
-        , input=paste (rcloneDir
-                        , "rclone.exe sync"
-                        , "C:/Users/Martin Rnner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/"
+        , input=paste0 (rcloneDir
+                        , "rclone.exe sync "
+                        , '"C:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
                         , "remote:GulfWatch/plots/CTDsections/"))
     # setwd (rcloneDir)
     # ## shell or system2 ??
