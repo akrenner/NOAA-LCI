@@ -45,7 +45,7 @@ source ("CTD_DataAvailability.R")
 
 
 source ("datasetup.R")
-source ("CTD_castQAQC.R")              ## CTD profiles
+source ("CTD_castQAQC.R")              ## CTD profiles -- still issues
 
 
 ## the Wall

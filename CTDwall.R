@@ -123,6 +123,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
+    # if (levels (poAll$Transect)[tn] != "AlongBay"){dist <- rev (dist)}
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
     ## extract from bathyZ. then fill-in the missing values from get.depth
@@ -347,14 +348,16 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , zbreaks=zB # better?, slower interpolation
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                , ylim = c(0,max (physOcY$Bottom.Depth_survey))  ## need to fix CTDwall-setup.R first
+                , ylim = c(0,max (physOcY$Bottom.Depth_survey)+5)  ## need to fix CTDwall-setup.R first
                 , showBottom=TRUE
                 , drawPalette=FALSE
           )
           tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
-          with (bottom, polygon(c(min (dist), dist, max(dist))
-                                , c(10000, -depthHR, 10000)
-                                , col=tgray))
+          if ((levels (poAll$Transect)[tn] != "AlongBay")&(!test)){  ## AlongBay still has bathymetry problems to be resolved. Units of NOAA grid?
+            with (bottom, polygon(c(min (dist), dist, max(dist))
+                                  , c(10000, -depthHR, 10000)
+                                  , col=tgray))
+          }
           rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
@@ -468,7 +471,7 @@ if (0){
 ## for error checking: map of every transect
 # double-used plots may appear out-of-line in chronology
 ## this should come at the end of CTDwall-setup.R
-if (1){
+if (0){
   xC <- xC [order (xC$isoTime),]
   xC$survey <- factor (xC$survey)
   pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
