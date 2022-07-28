@@ -9,7 +9,7 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
 ## from datasetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")
 
-dir.create("~/tmp/LCI_noaa/media/CTDtests/CTDcasts", recursive = TRUE, showWarnings = FALSE)
+dir.create("~/tmp/LCI_noaa/media/CTDcasts/CTDsummarieplots", recursive = TRUE, showWarnings = FALSE)
 
 
 print (summary (physOc))
@@ -37,7 +37,7 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
     }else{
         cT <- physOc
     }
-    png (paste0 ("~/tmp/LCI_noaa/media/CTDtests/CTDcasts/", fn, ".png"))
+    png (paste0 ("~/tmp/LCI_noaa/media/CTDcasts/CTDsummarieplots/", fn, ".png"))
     if (exists ("fctr")){
         if (class (fctr) == "character"){
             fctr <- factor (cT [,which (names (cT) == fctr)])
@@ -45,10 +45,6 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
         plot (Temperature_ITS90_DegC~Salinity_PSU, cT, col = fctr, pch = 19
             , xlim = c(13.5, 33.5), ylim = c(-1.1,16)
               )
-        ## smoothScatter (cT$Salinity_PSU, cT$Temperature_ITS90_DegC, col = fctr
-        ##              , pch = 19
-        ##              , xlim = c(13.5, 33.5), ylim = c(-1.1,16)
-        ##                )
         legend ("bottomleft", legend = levels (fctr), col = 1:length (levels (fctr))
               , pch = 19)
     }else{
@@ -87,7 +83,7 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
 ## physOc <- subset (physOc, 1:nrow (physOc) %in% 1:500 ) # to prototype
 ## physOc$File.Name <- factor (physOc$File.Name)
 
-  dirN <- "~/tmp/LCI_noaa/media/CTDtests/CTDprofiles/"
+  dirN <- "~/tmp/LCI_noaa/media/CTDcasts/CTDprofiles/"
 dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 Require ("oce")
@@ -97,7 +93,6 @@ plotCTDprof <- function (i){
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
     pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
-    #               png (paste ("~/tmp/LCI_noaa/media/CTDprofiles/", levels (physOc$File.Name)[i], ".png", sep = ""))
     try ({
       ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
                                  , temperature = Temperature_ITS90_DegC
@@ -124,14 +119,14 @@ plotCTDprof <- function (i){
       plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
       #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)
     })
-    dev.off()
+#    dev.off()
     ## next page, plot:
     ## O2 over depth
     ## fluorescence
     ## Irradiance
-    pdf (paste0 (dirN
-                 , levels (physOc$File.Name)[i]
-                 , "_additions.pdf"))
+    # pdf (paste0 (dirN
+    #              , levels (physOc$File.Name)[i]
+    #              , "_additions.pdf"))
     try({
       par (mfrow = c(2,2))
       plotProfile (ctdF, xtype = "O2", ytype = "depth")
@@ -158,11 +153,12 @@ plotCTDprof <- function (i){
   }
 }
 
-if (0){
+if (.Platform$OS.type=="unix"){
   Require ("parallel")
   x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
-}
+}else{
 x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
+}
 # dev.off()
 
 if (0){
@@ -290,5 +286,9 @@ for (j in 1:length (levels (KBay$season))){
 }
 rm (ctdX, ctdF, ctdS, i,j,KBay)
 }
+
+
+## flag unrealistic conditions
+## inverted density
 
 
