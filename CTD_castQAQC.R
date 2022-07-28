@@ -290,5 +290,6 @@ rm (ctdX, ctdF, ctdS, i,j,KBay)
 
 ## flag unrealistic conditions
 ## inverted density
+## CTD > 4 m than surveyed depth at location
 
 

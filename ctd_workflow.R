@@ -38,14 +38,14 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
-source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
+source ("CTD_cleanup.R")         ## move error corrections into here. Also aggregate-output
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 
 
 source ("datasetup.R")
-source ("CTD_castQAQC.R")              ## CTD profiles -- still issues
+source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 
 ## the Wall
