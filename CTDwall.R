@@ -87,7 +87,7 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){vL <- 1}else{vL <- 1:length (oVars)}
-if (test){tL <- 5}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){tL <- 6}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
 for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in tL){  # tn: transect
     ## for testing
@@ -96,8 +96,6 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
     cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
-    # 4-3 = AlongBay-3
-    # 9-6 = AlongBay-6
     ## should make this a function?
     if (levels (poAll$Transect)[tn] == "AlongBay"){
       swMN <- c ("4_3", "9_6", "6_2", "7_22")
@@ -161,7 +159,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       pH <- 44; pW <- 88     # go big on FWS plotter
       pH <- 42; pW <- 84     # FWS paper is 42 inches wide
-      ## rotate, but do not scale. Autorotate should be ok. Too big?
+      ## rotate, but do not scale. Autorotate should be ok.
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
       require ("stringr")
@@ -222,7 +220,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
       if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
-      # sL <-  1:length (levels (physOc$transDate))
+     # sL <-  1:length (levels (physOc$transDate))
       for (iS in sL){              # cycle through individual survey
         # iS <- 2  # for testing
         cat (iS, " ")
@@ -349,15 +347,13 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                 # , zbreaks=zB # better?, slower interpolation
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
                 , ylim = c(0,max (physOcY$Bottom.Depth_survey)+5)  ## need to fix CTDwall-setup.R first
-                , showBottom=TRUE
+                , showBottom=FALSE
                 , drawPalette=FALSE
           )
-          tgray <- rgb (t (col2rgb ("pink")), max=255, alpha=0.5*255) ## transparent
-          if ((levels (poAll$Transect)[tn] != "AlongBay")&(!test)){  ## AlongBay still has bathymetry problems to be resolved. Units of NOAA grid?
-            with (bottom, polygon(c(min (dist), dist, max(dist))
-                                  , c(10000, -depthHR, 10000)
-                                  , col=tgray))
-          }
+          tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
+          with (bottom, polygon(c(min (dist), dist, max(dist))
+                                , c(10000, -depthHR, 10000)
+                                , col=tgray))
           rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
             dist <- unique (xCo[['distance']])
@@ -401,7 +397,9 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       nCol <- 100
       t.ramp <- oCol3[[ov]](nCol)
       bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
-                     , ylim=c(0,8))  # ylim to make bar narrower, less high
+                     , ylim=c(0,8)  # ylim to make bar narrower, less high
+                     )
+      title (main = oVars [ov], cex=3, line=-6)
       lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
       axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol, labels = lVal
             , lwd = 0)

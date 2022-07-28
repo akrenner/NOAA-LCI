@@ -15,6 +15,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , axes = TRUE
                   , stationTicks = TRUE
                   , showStations = TRUE
+                  , xtype="track"
                   # , grid = TRUE
                   # , ztype = "contour"
                   , ztype = "image"
@@ -296,7 +297,18 @@ sectionPad <- function (sect, transect, ...){
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   # for (i in 1:length (transect$stationId)){
-  for (i in c(1,nrow (transect))){
+
+  ## sort transect correctly! (esp. for AlongBay!)
+  if (stnT$Line [1] == "AlongBay"){
+    transect <- transect [order (transect$latitude, decreasing=FALSE),]
+  }else if (stnT$Line [1] %in% c("4", "9")){
+    transect <- transect [order (transect$latitude, decreasing=TRUE),]
+  }else{
+    transect <- transect [order (transect$longitude, decreasing=FALSE),]
+  }
+
+  # for (i in c(1,nrow (transect))){
+  for (i in 1:nrow (transect)){
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
