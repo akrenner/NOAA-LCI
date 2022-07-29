@@ -172,14 +172,14 @@ system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
 # R-internal zip file generation -- still troubled
 
 ## find windows equivalent here XXX  -- still needed?
-if (1){
-    Require ("zip")
-    unlink ("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles.zip", force = TRUE)
-    zFiles <- list.files (dirN, pattern = ".pdf", full.names = FALSE)
-    zip::zip ("~/tmp/LCI_noaa/media/CTDprofiles.zip", files = zFiles, recurse = FALSE
-              , include_directories = FALSE)
-#    unlink (zFiles, force = TRUE)
-    rm (zFiles)
+if (.Platform$OS.type!="unix"){
+#     Require ("zip")
+#     unlink ("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles.zip", force = TRUE)
+#     zFiles <- list.files (dirN, pattern = ".pdf", full.names = FALSE)
+#     zip::zip ("~/tmp/LCI_noaa/media/CTDprofiles.zip", files = zFiles, recurse = FALSE
+#               , include_directories = FALSE)
+# #    unlink (zFiles, force = TRUE)
+#     rm (zFiles)
 }else{
     system ("zip -mjr ~/tmp/LCI_noaa/media/CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles")  ## XXX Error
 }

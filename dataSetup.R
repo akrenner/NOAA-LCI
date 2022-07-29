@@ -502,7 +502,7 @@ save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 ## phytoplankton ##
 ###################
 
-phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2020-04.csv")
+phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2017-02.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2018-10-sorted.csv")
 ## current 2018 version does not have date
@@ -561,9 +561,7 @@ rm (phyp)
 ## zooplankton ##
 #################
 
-## zoop <- read.csv ("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton\ Masterfile_26Apr16_RawData.csv", as.is = TRUE)
-zoop <- read.csv ("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton\ Masterfile_15Dec19_RawData.csv"
-                  , as.is = TRUE)
+zoop <- read.csv ("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton.csv", as.is = TRUE)
 
 ## Require ("XLConnect")
 ## stn <- readWorksheetFromFile ("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
