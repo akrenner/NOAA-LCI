@@ -23,6 +23,9 @@ if (length (grep ("darwin", version$os)) >0 ){
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 
+if (!require("pacman", quietly=TRUE)){install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
+Require <- pacman::p_load
+
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
 ## should be poSS and stn -- check!
@@ -37,7 +40,7 @@ if (length (grep ("darwin", version$os)) >0 ){
 ## set-up plot and paper size
 
 ### data prep
-require ("oce")
+Require ("oce")
 ## define sections
 physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
@@ -60,8 +63,8 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## bathymetry and coastline
 bathy <- "polygon"
 ## Zimmermann bathymetry
-require ("raster", quietly = TRUE)  ## move to terra/stars
-require ("marmap")
+Require ("raster", quietly = TRUE)  ## move to terra/stars
+Require ("marmap")
 
 ## FIX !!  -- already in prepData? -- migrate to prepData!
 
@@ -89,7 +92,7 @@ if (0){
 try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 
 
-require ("ocedata") # coastlineWorldFine
+Require ("ocedata") # coastlineWorldFine
 
 
 
@@ -183,7 +186,7 @@ rm (slog)
 ## add bathymetry to CTD metadata
 poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-require (sp)
+Require (sp)
 poP <- poAll
 ## migrate to sf, stars/terra
 coordinates (poP) <- ~longitude_DD+latitude_DD
@@ -280,8 +283,8 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 # remotes::install_github("jlmelville/vizier")
 ## move these into CTDsectionFcts.R -- or not?
 
-# require ('vizier')
-require ("cmocean")  ## for color ramps
+# Require ('vizier')
+Require ("cmocean")  ## for color ramps
 
 
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
@@ -293,12 +296,16 @@ oCol3 <- list (  ## fix versions?
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
   , function (n){
-    require ("vizier")
-    turbo (n, start = 0.25, end = 0.8)
+    Require ("viridis")
+    turbo (n, start=0.25, end=0.8)
+    # if (!require ("vizier")){  ## find better source for turbo!
+    #   Require ("devtools")
+    #   devtools::install_github("jlmelville/vizier")
+    #   turbo (n, start = 0.25, end = 0.8)
+    # }
   }
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??
-
 )
 if (0){
   oCol <- list (  ## old, not used

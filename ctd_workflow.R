@@ -5,7 +5,7 @@ rm (list = ls())
 print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
-  if (version$os != "mingw32"){
+  if (.Platform$OS.type != "windows"){
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
   }else{
     setwd ("~/myDocs/amyfiles/NOAA-LCI/")
