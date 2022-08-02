@@ -521,47 +521,47 @@ plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
 dev.off()
 
 
-if (0){   # moved from CTDwall-setup.R
-  ## plots from CTDwall-setup.R -- still need to test and verify
-  ## compare attenuation and turbidity -- ok to merge? QAQC
-  summary (physOc$turbidity)
-  summary (physOc$beamAttenuation)
-  pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
-  par (mfrow = c (2,1))
-  hist (log (physOc$beamAttenuation), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
-  hist (log (physOc$turbidity), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
-  dev.off()
+# moved from CTDwall-setup.R
+## plots from CTDwall-setup.R -- still need to test and verify
+## compare attenuation and turbidity -- ok to merge? QAQC
+summary (physOc$turbidity)
+summary (physOc$beamAttenuation)
+pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
+par (mfrow = c (2,1))
+hist (log (physOc$beamAttenuation), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+hist (log (physOc$turbidity), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+dev.off()
 
 
-  pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
-  year <- factor (as.numeric (format (physOc$isoTime, "%Y")))
-  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc, col = year)
-  # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = year)
-  # legend ("bottomleft", col = levels (physOc$year), pch = 19, legend = levels (physOc$year))
-  # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = as.numeric (CTD.serial))
-  for (i in 1:length (levels (physOc$year))){
-    #  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc
-    plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc
-          , subset = year == levels (year)[i], col = as.numeric (CTD.serial))
-    legend ("topright", col = levels (factor (as.numeric (physOc$CTD.serial)))
-            , legend = levels (factor (physOc$CTD.serial)), pch = 19
-            , title = levels (year)[i])
-  }
-  ## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
-  ## 2020: 5028 looks quite different than 4141. 4141 has two groups
-  dev.off()
-
-  # png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
-  # plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., physOc
-  #       , col = year, main = "colored by year"
-  #       , subset = Depth.saltwater..m. < 10)
-  # dev.off()
-
-  ## histogram and QAQC -- do this in previous script?!?
-  ## add some thresholds/QAQC; log-scale?
-  # physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < )
-  rm (i, year)
+pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
+year <- factor (as.numeric (format (physOc$isoTime, "%Y")))
+plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc, col = year)
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = year)
+# legend ("bottomleft", col = levels (physOc$year), pch = 19, legend = levels (physOc$year))
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = as.numeric (CTD.serial))
+for (i in 1:length (levels (year))){
+  #  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc
+  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc
+        , subset = year == levels (year)[i], col = as.numeric (CTD.serial))
+  legend ("topright", col = levels (factor (as.numeric (physOc$CTD.serial)))
+          , legend = levels (factor (physOc$CTD.serial)), pch = 19
+          , title = levels (year)[i])
 }
+## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
+## 2020: 5028 looks quite different than 4141. 4141 has two groups
+dev.off()
+
+# png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
+# plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., physOc
+#       , col = year, main = "colored by year"
+#       , subset = Depth.saltwater..m. < 10)
+# dev.off()
+
+## histogram and QAQC -- do this in previous script?!?
+## add some thresholds/QAQC; log-scale?
+# physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < )
+rm (i, year)
+
 
 
 
