@@ -30,14 +30,6 @@ Require <- pacman::p_load
 ## link physOc and stn
 ## should be poSS and stn -- check!
 
-## turbo colors
-#   ## see https://github.com/jlmelville/vizier
-#   # install.packages("remotes")
-#   # remotes::install_github("jlmelville/vizier")
-# require ('vizier')
-
-
-## set-up plot and paper size
 
 ### data prep
 Require ("oce")
@@ -53,8 +45,6 @@ physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through th
 #                                                           "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 # print (summary (physOc))
-
-
 
 
 
@@ -85,7 +75,7 @@ if (0){
   load ("~/tmp/LCI_noaa/cache/bathymetryZ.RData")
 }
 
-## more bathymetry to fill in parts zimmerman bathymetry missses
+## more bathymetry to fill in parts Zimmerman bathymetry missses
 ## here or in CTDwall.R??
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
@@ -94,18 +84,10 @@ try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRU
 
 Require ("ocedata") # coastlineWorldFine
 
-
-
-# poAll <- physOc
-# poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Gauge..db.)),]
-
-
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
 #
 # add flourescence to other variables. To do that, need to make section from oce-ctd object
-
-## AlongBay (tn=6), i = 2, sections to process: 4, k= 5 fails
 
 
 # poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate -- keep them in!
@@ -114,59 +96,6 @@ rm (physOc)
 poAll$Transect <- factor (poAll$Transect)
 
 
-## compare attenuation and turbidity -- ok to merge? QAQC
-summary (poAll$turbidity)
-summary (poAll$attenuation)
-pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
-par (mfrow = c (2,1))
-hist (log (poAll$beamAttenuation), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
-hist (log (poAll$turbidity), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
-dev.off()
-
-
-pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
-plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll, col = year)
-# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = year)
-# legend ("bottomleft", col = levels (poAll$year), pch = 19, legend = levels (poAll$year))
-# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = as.numeric (CTD.serial))
-for (i in 1:length (levels (poAll$year))){
-#  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll
-  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll
-              , subset = year == levels (poAll$year)[i], col = as.numeric (CTD.serial))
-  legend ("topright", col = levels (factor (as.numeric (poAll$CTD.serial)))
-          , legend = levels (factor (poAll$CTD.serial)), pch = 19
-          , title = levels (poAll$year)[i])
-}
-## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
-## 2020: 5028 looks quite different than 4141. 4141 has two groups
-dev.off()
-rm (i)
-
-
-# png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
-# plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., poAll
-#       , col = year, main = "colored by year"
-#       , subset = Depth.saltwater..m. < 10)
-# dev.off()
-
-
-
-## histogram and QAQC -- do this in previous script?!?
-## add some thresholds/QAQC; log-scale?
-# poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
-
-## attenuation vs turbidy -- mix them here?!?
-poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$beamAttenuation, poAll$turbidity) ## is this wise or correct ? XXX
-
-## remove implausible values
-poAll$Density_sigma.theta.kg.m.3 <- ifelse (poAll$Density_sigma.theta.kg.m.3 < 15, NA, poAll$Density_sigma.theta.kg.m.3)
-poAll$Oxygen_umol_kg <- ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
-poAll$Oxygen_umol_kg <-  ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
-# poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-# poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg)
-## recalc other O2 values here?
-poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < 20, NA, poAll$Salinity_PSU)
 
 ## log transformations
 slog <- function (x){
@@ -298,27 +227,11 @@ oCol3 <- list (  ## fix versions?
   , function (n){
     Require ("viridis")
     turbo (n, start=0.25, end=0.8)
-    # if (!require ("vizier")){  ## find better source for turbo!
-    #   Require ("devtools")
-    #   devtools::install_github("jlmelville/vizier")
-    #   turbo (n, start = 0.25, end = 0.8)
-    # }
   }
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??
 )
-if (0){
-  oCol <- list (  ## old, not used
-    # turbo
-    oceColorsTemperature
-    , oceColorsSalinity
-    , oceColorsDensity
-    , oceColorsTurbidity
-    , oceColorsChlorophyll
-    , oceColorsPAR  #, turbo #
-    , oceColorsOxygen
-  )
-}
+## oceColorsTemperature and the likes are dated -- don't use them
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"

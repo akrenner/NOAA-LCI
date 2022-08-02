@@ -466,11 +466,35 @@ physOc$File.Name <- factor (physOc$File.Name)
 rm (gC)
 
 
+
+
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
 is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
 # is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
+if (1){  ## moved from CTDwall-setup.R
+  ## QAQC/Error correction of values -- do this before or after data export??  XXX
+
+  ## attenuation vs turbidy -- mix them here?!?
+  physOc$turbidity <- ifelse (is.na (physOc$turbidity), physOc$beamAttenuation, physOc$turbidity) ## is this wise or correct ? XXX
+
+
+  ## remove implausible values
+  physOc$Density_sigma.theta.kg.m.3 <- ifelse (physOc$Density_sigma.theta.kg.m.3 < 15, NA, physOc$Density_sigma.theta.kg.m.3)
+  physOc$Oxygen_umol_kg <- ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
+  physOc$Oxygen_umol_kg <-  ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
+  # physOc$Oxygen_SBE.43..mg.l. <- ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
+  # physOc$Oxygen_SBE.43..mg.l. <-  ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
+  physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg)
+  ## recalc other O2 values here?
+  physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < 20, NA, physOc$Salinity_PSU)
+  ## end of plots from CTDwall-setup.R
+}
+
+
+
+
 
 
 ## plot all casts: depth-density, temp, salinity
@@ -495,6 +519,51 @@ plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
 ## plot (physOc$Depth.saltwater..m., physOc$Oxygen_SBE.43..mg.l.
 ##     , col = physOc$CTD.serial)
 dev.off()
+
+
+if (0){   # moved from CTDwall-setup.R
+  ## plots from CTDwall-setup.R -- still need to test and verify
+  ## compare attenuation and turbidity -- ok to merge? QAQC
+  summary (physOc$turbidity)
+  summary (physOc$beamAttenuation)
+  pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
+  par (mfrow = c (2,1))
+  hist (log (physOc$beamAttenuation), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+  hist (log (physOc$turbidity), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+  dev.off()
+
+
+  pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
+  year <- factor (as.numeric (format (physOc$isoTime, "%Y")))
+  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc, col = year)
+  # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = year)
+  # legend ("bottomleft", col = levels (physOc$year), pch = 19, legend = levels (physOc$year))
+  # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = as.numeric (CTD.serial))
+  for (i in 1:length (levels (physOc$year))){
+    #  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc
+    plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc
+          , subset = year == levels (year)[i], col = as.numeric (CTD.serial))
+    legend ("topright", col = levels (factor (as.numeric (physOc$CTD.serial)))
+            , legend = levels (factor (physOc$CTD.serial)), pch = 19
+            , title = levels (year)[i])
+  }
+  ## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
+  ## 2020: 5028 looks quite different than 4141. 4141 has two groups
+  dev.off()
+
+  # png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
+  # plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., physOc
+  #       , col = year, main = "colored by year"
+  #       , subset = Depth.saltwater..m. < 10)
+  # dev.off()
+
+  ## histogram and QAQC -- do this in previous script?!?
+  ## add some thresholds/QAQC; log-scale?
+  # physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < )
+  rm (i, year)
+}
+
+
 
 
 if (0){  # currently fails -- fix later XXX
