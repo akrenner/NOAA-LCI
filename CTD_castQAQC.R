@@ -132,7 +132,7 @@ plotCTDprof <- function (i){
       plotProfile (ctdF, xtype = "O2", ytype = "depth")
       plotProfile (ctdF, xtype = "fluorescence", ytype = "depth")
       plotProfile (ctdF, xtype = "PAR", ytype = "depth")
-      plot (ctdF, which = 1)
+      # plot (ctdF, which = 1)
     })
     dev.off()
     if (0){

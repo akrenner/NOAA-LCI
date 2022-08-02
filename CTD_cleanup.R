@@ -620,12 +620,29 @@ dev.off()
 rm (dayF, crs, cF, crsC)
 
 
-#####################################
-## 2. annual aggregates for export ##
-#####################################
+###############################################
+## 2. annual aggregates for GulfWatch export ##
+###############################################
 
 save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
+
+
+
+## filter out all the non-standard casts ##
+phy <- physOc
+## double-used AlongBay - use only once??
+phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_6", "9_6", phy$Match_Name)
+# phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_2", "4_3", phy$Match_Name)
+# phy$Match_Name <- ifelse (phy$MatchName=="AlongBay_6", "9_6", phy$MatchName)
+## all stations are already standard stations
+phy$Match_Name <- factor (phy$Match_Name)
+phy$File.Name <- factor (phy$File.Name)
+x <- aggregate (File.Name~Match_Name+Date, phy, FUN=function (x){length (levels(factor (x)))})
+x <- subset (x, File.Name > 1)
+dim (x)
+x
+# phy <- subset (phy, )
 
 
 Require ("zip")
@@ -633,9 +650,10 @@ outD <- "~/tmp/LCI_noaa/data-products/CTD"
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 wD <- getwd()
 setwd (outD) ## zip blows up otherwise
-yr <- factor (format (physOc$isoTime, "%Y"))
+
+yr <- factor (format (phy$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
-  ctdA <- subset (physOc, yr == levels (yr)[i])
+  ctdA <- subset (phy, yr == levels (yr)[i])
   ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
   ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
                                   , Latitude_DD = latitude_DD

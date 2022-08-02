@@ -18,6 +18,9 @@ if (.Platform$OS.type == "unix"){
   ## system ("rclone dedupe")
   system ("rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P")
   system ("rclone sync ~/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
+
+#  system ("rclone sync ~/tmp/LCI_noaa/cache/ remote:")
+
 }else{
     wd <- getwd()
 
@@ -57,6 +60,13 @@ if (0){
   ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P
   ## same for state-of-the-bay
   ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P
+
+
+## office docs
+  ./rclone sync ~/My\ Documents/amyfiles/NOAA/ remote:NOAAoffice/ -P
+## tmp files
+  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/cache/ remote:LCIcache/cache/ -P
+  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/CTD-cache/ remote:LCIcache/CTD-cache/ -P
 
   ## on occasion, update rclone:
   ./rclone selfupdate
