@@ -410,6 +410,8 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       rm (bp, lVal, nCol)
 
       ## maps
+      xLim <- c(-154, -151)
+      yLim <- c(57.5, 60.1)
       plot (xMap
             , which = 99
             , coastline = "coastlineWorldFine"
@@ -421,22 +423,37 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
             , clongitude = -152
             , span = 250
       )
-      plot (xMap
-            , which = 99
-            , coastline = "coastlineWorldFine"
-            , showStations = TRUE
-            , gird = TRUE
-            # , span=50
-      )
       ## add eye for perspective;  save eye to eye.ps with Inkscape
-      Require ("grImport")
-      grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-      p <- readPicture("pictograms/eye.ps.xml")
-      unlink ("pictograms/eye.ps.xml")
-      grid.picture(p
-                   # , x=-152.0
-                   # , y=59.5
-                   )
+      if (levels (poAll$Transect)[tn] %in% c ("4", "9")){
+        xU <- 0.1 ; yU <- 0.5; rU <- 0
+      }else if (levels (poAll$Transect)[tn] %in% c ("3", "6", "7")){
+        xU <- 0.5 ; yU <- 0.1; rU <- 90
+      }else{
+        xU <- 0.9 ; yU <- 0.2; rU <- 120  ## AlongBay
+      }
+      if (.Platform$OS.type=="unix"){
+        Require ("grImport")  ## requires installation of GS -- go raster after all
+        grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
+        p <- readPicture("pictograms/eye.ps.xml")
+        unlink ("pictograms/eye.ps.xml")
+        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+        grid.picture (p  # no easy way to rotate p by n-degrees?
+                      , x=unit (xU, "npc"), y=unit (yU, "npc")
+                      # , angle=rU
+                      , width=unit (0.07, "npc"), height=unit (0.07, "npc")
+        )
+      }
+      Require ("png")
+      p <- readPNG ("pictograms/eye.png")
+      # Require ("OpenImageR")
+      # p <- rotateImage (p, angle=rU, method="nearest")
+      rasterImage(p
+                  , xleft=-152       +3*1*(xU-0.5)
+                  , xright=-152+0.3  +3*1*(xU-0.5)
+                  , ytop=59.4        +1*1*(yU-0.5)
+                  , ybottom=59.4+0.3 +1*1*(yU-0.5)
+                  , angle=rU)
+      rm (p, xU, yU, rU)
       ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
       # if (.Platform$OS.type=="unix"){
       #   if (!require ("grConvert")){
@@ -448,7 +465,14 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       # p <- grImport2::readPicture ("pictograms/eye2.svg")
       # g <- grImport2::pictureGrob(p)
       # grid.picture(g)
-      rm (xMap, xCo, nSurv,  bottom, p)
+      plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
+            , which = 99
+            , coastline = "coastlineWorldFine"
+            , showStations = TRUE
+            , gird = TRUE
+            # , span=50
+      )
+      rm (xMap, xCo, nSurv,  bottom)
     }
     dev.off()
     cat ("\n")
