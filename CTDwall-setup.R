@@ -53,7 +53,7 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## bathymetry and coastline
 bathy <- "polygon"
 ## Zimmermann bathymetry
-Require ("raster", quietly = TRUE)  ## move to terra/stars
+Require ("raster")  ## move to terra/stars
 Require ("marmap")
 
 ## FIX !!  -- already in prepData? -- migrate to prepData!
@@ -232,6 +232,7 @@ oCol3 <- list (  ## fix versions?
   , cmocean ("haline") # why is this here? should it be??
 )
 ## oceColorsTemperature and the likes are dated -- don't use them
+## (stick to algorithmic pic of scale limits. Cleanups.)
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
@@ -245,14 +246,14 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "Oxygen_umol_kg"
                         )
                      #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.02,0.98), na.rm = TRUE)
+                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
                          #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
 ## manually tune some of these ranges
-oRange [1,1] <- 1.5 # fix min temperature
-oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
+# oRange [1,1] <- 1.5 # fix min temperature
+# oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
 # oRange [6,] <- c(-3,5)      # fix logPAR range
 ## what's better to use here, umol/kg or mg/l?
 # oRange [7,] <- c (-0.1,1.5)  # fix O2 perc range
