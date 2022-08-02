@@ -29,6 +29,17 @@ if (.Platform$OS.type == "unix"){
                             , "rclone.exe sync "
                             , '"C:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
                             , "remote:GulfWatch/plots/CTDsections/"))
+    # system (shell="cmd.exe"
+    #         , cmd=paste0 (rcloneDir
+    #                         , "rclone.exe sync "
+    #                         , '"C:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
+    #                         , "remote:GulfWatch/plots/CTDsections/"))
+    # shell (shell="cmd.exe"
+    #         , cmd=paste0 (rcloneDir
+    #                         , "rclone.exe sync "
+    #                         , '"~/tmp/LCI_noaa/media/CTDsections/" '
+    #                         , "remote:GulfWatch/plots/CTDsections/"))
+
     # setwd (rcloneDir)
     # ## shell or system2 ??
     # shell ("./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
@@ -41,11 +52,11 @@ if (.Platform$OS.type == "unix"){
 if (0){
   ## on Windows: paste this into Git-bash:
   "
-  cd Applications/rclone-v1.59.0-windows-amd64/
+  cd ~/Applications/rclone-v1.59.0-windows-amd64/
   ./rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P
   ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P
   ## same for state-of-the-bay
-  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/StateOfBay/ remote:GulfWatch/plots/StateOfBay/ -P
+  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P
 
   ## on occasion, update rclone:
   ./rclone selfupdate
