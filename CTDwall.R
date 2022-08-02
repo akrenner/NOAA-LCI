@@ -25,6 +25,10 @@ test <- FALSE
 ## color scales: make custom breaks to show more details
 
 
+# Require <- function (pack){if (!require (pack)){install.packages(pack); library (pack)}}
+if (!require("pacman")) install.packages("pacman"
+                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+Require <- pacman::p_load
 
 
 ## decisions made:
@@ -34,7 +38,7 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 if (exists ("sectionSort")){detach ("package:oce")}  ## reload new version of oce
-require ("oce")
+Require ("oce")
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 # x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 source ("CTDsectionFcts.R")
@@ -62,20 +66,20 @@ useSF <- FALSE  ## use package sf and terra/stars instead of raster
 
 ## add high-res bottom/bathymetry profile
 ## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
-require ("marmap")
+Require ("marmap")
 bfer <- 0.5
 bathy <- getNOAA.bathy (min (poAll$longitude_DD)-bfer, max (poAll$longitude_DD)+bfer
                         , min (poAll$latitude_DD)-bfer, max (poAll$latitude_DD)+bfer
                         , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")
 rm (bfer)
 if (useSF){
-  require ("sf") ## or stars / terra ??
-  require ("stars") ## or better to use terra?
+  Require ("sf") ## or stars / terra ??
+  Require ("stars") ## or better to use terra?
   bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  # require ("terra")
+  # Require ("terra")
   # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
-  require ("raster")
+  Require ("raster")
   ## need to supply absolute path because raster object is just a pointer.
   ## still needs uncompressed raster file accessible.
   if (.Platform$OS.type == "windows"){
@@ -162,7 +166,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       ## rotate, but do not scale. Autorotate should be ok.
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
-      require ("stringr")
+      Require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
@@ -422,10 +426,30 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
             , coastline = "coastlineWorldFine"
             , showStations = TRUE
             , gird = TRUE
+            # , span=50
       )
-      rm (xMap, xCo, nSurv,  bottom)
+      ## add eye for perspective;  save eye to eye.ps with Inkscape
+      Require ("grImport")
+      grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
+      p <- readPicture("pictograms/eye.ps.xml")
+      unlink ("pictograms/eye.ps.xml")
+      grid.picture(p
+                   # , x=-152.0
+                   # , y=59.5
+                   )
+      ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
+      # if (.Platform$OS.type=="unix"){
+      #   if (!require ("grConvert")){
+      #     devtools::install_github("sjp/grConvert")
+      #     library (grConvert)}
+      #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
+      # }
+      # Require ("grImport2")
+      # p <- grImport2::readPicture ("pictograms/eye2.svg")
+      # g <- grImport2::pictureGrob(p)
+      # grid.picture(g)
+      rm (xMap, xCo, nSurv,  bottom, p)
     }
-
     dev.off()
     cat ("\n")
   }
