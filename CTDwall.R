@@ -91,7 +91,8 @@ if (useSF){
 
 ## loop over variable, then transects and then seasons
 if (test){vL <- 1}else{vL <- 1:length (oVars)}
-if (test){tL <- 6}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+if (test){tL <- 1:length (levels (poAll$Transect))}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
+
 for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in tL){  # tn: transect
     ## for testing
@@ -194,15 +195,14 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
     par (oma=c(3,5,5,2)
          , mar=c(4,4,3,0.1)
          )
-    if (test){
+    if (0){ # test){
       par (oma=c(3,5,15,2)
            , mar=c(4,4,16,0.1)
       )
     }
 
     #for (iY in 2){
-    if (test){yL <- 7}else{yL <- 1:length (levels (physOcY$year))}
-    # yL <- 1:length (levels (physOcY$year))
+    if (test){yL <- 3}else{yL <- 1:length (levels (physOcY$year))}
     for (iY in yL){
       ## for testing:
       # iY <- 7 # pick 2018
@@ -318,6 +318,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
           ## sectionPad to plot incomplete sections
           xCo <- sectionPad (sect=xCo, transect = data.frame (station=stnT$Match_Name
+                                                              , line=stnT$Line
                                                               , latitude=stnT$Lat_decDegree
                                                               , longitude=stnT$Lon_decDegree
                                                               , bottom=stnT$Depth_m))
@@ -424,24 +425,57 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
             , span = 250
       )
       ## add eye for perspective;  save eye to eye.ps with Inkscape
-      if (levels (poAll$Transect)[tn] %in% c ("4", "9")){
-        xU <- 0.1 ; yU <- 0.5; rU <- 0
-      }else if (levels (poAll$Transect)[tn] %in% c ("3", "6", "7")){
-        xU <- 0.5 ; yU <- 0.1; rU <- 90
-      }else{
-        xU <- 0.9 ; yU <- 0.2; rU <- 120  ## AlongBay
+      # if (levels (poAll$Transect)[tn] %in% c ("4", "9")){
+      #   xU <- 0.1 ; yU <- 0.5; rU <- 0
+      # }else if (levels (poAll$Transect)[tn] %in% c ("3", "6", "7")){
+      #   xU <- 0.5 ; yU <- 0.1; rU <- 90
+      # }else{
+      #   xU <- 0.9 ; yU <- 0.2; rU <- 120  ## AlongBay
+      # }
+      ## individual treatment of eye
+      if (levels (poAll$Transect)[tn] == "3"){
+        xU <- 0.1 ; yU <- 0.1; rU <- 80
       }
-      if (.Platform$OS.type=="unix"){
+      if (levels (poAll$Transect)[tn] == "4"){
+        xU <- 0.1 ; yU <- 0.5; rU <- 0
+        cat (rU, "rU\n")
+      }
+      if (levels (poAll$Transect)[tn] == "6"){
+        xU <- 0.4 ; yU <- 0.1; rU <- 110
+      }
+      if (levels (poAll$Transect)[tn] == "7"){
+        xU <- 0.2 ; yU <- 0.1; rU <- 85
+      }
+      if (levels (poAll$Transect)[tn] == "9"){
+        xU <- 0.1 ; yU <- 0.5; rU <- 0
+      }else{                         # AlongBay
+        xU <- 0.8 ; yU <- -0.01; rU <- 120
+      }
+
+      if (0){  ## vector based -- not windows compatible and doesn't rotate
         Require ("grImport")  ## requires installation of GS -- go raster after all
         grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
         p <- readPicture("pictograms/eye.ps.xml")
         unlink ("pictograms/eye.ps.xml")
-        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
-        grid.picture (p  # no easy way to rotate p by n-degrees?
+        grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
                       , x=unit (xU, "npc"), y=unit (yU, "npc")
                       # , angle=rU
                       , width=unit (0.07, "npc"), height=unit (0.07, "npc")
         )
+        ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
+        # if (.Platform$OS.type=="unix"){
+        #   if (!require ("grConvert")){
+        #     devtools::install_github("sjp/grConvert")
+        #     library (grConvert)}
+        #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
+        # }
+        # Require ("grImport2")
+        # p <- grImport2::readPicture ("pictograms/eye2.svg")
+        # g <- grImport2::pictureGrob(p)
+        # grid.picture(g)
+      }
+      if (.Platform$OS.type=="unix"){
+#        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
       }
       Require ("png")
       p <- readPNG ("pictograms/eye.png")
@@ -450,21 +484,10 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       rasterImage(p
                   , xleft=-152       +3*1*(xU-0.5)
                   , xright=-152+0.3  +3*1*(xU-0.5)
-                  , ytop=59.4        +1*1*(yU-0.5)
-                  , ybottom=59.4+0.3 +1*1*(yU-0.5)
+                  , ybottom=59.4     +1*1*(yU-0.5)
+                  , ytop=   59.4+0.3 +1*1*(yU-0.5)
                   , angle=rU)
       rm (p, xU, yU, rU)
-      ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
-      # if (.Platform$OS.type=="unix"){
-      #   if (!require ("grConvert")){
-      #     devtools::install_github("sjp/grConvert")
-      #     library (grConvert)}
-      #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
-      # }
-      # Require ("grImport2")
-      # p <- grImport2::readPicture ("pictograms/eye2.svg")
-      # g <- grImport2::pictureGrob(p)
-      # grid.picture(g)
       plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
             , which = 99
             , coastline = "coastlineWorldFine"
