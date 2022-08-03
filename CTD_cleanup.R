@@ -680,7 +680,9 @@ for (i in 1:length (levels (yr))){
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 ("CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
-  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every, zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
+         , file=tF, append=FALSE, ncolumns=1)
+  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE, append=TRUE)
 }
 
 

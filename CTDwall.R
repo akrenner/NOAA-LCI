@@ -432,16 +432,16 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
         xU <- 0.9 ; yU <- 0.2; rU <- 120  ## AlongBay
       }
       if (.Platform$OS.type=="unix"){
-        Require ("grImport")  ## requires installation of GS -- go raster after all
-        grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-        p <- readPicture("pictograms/eye.ps.xml")
-        unlink ("pictograms/eye.ps.xml")
         system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
-        grid.picture (p  # no easy way to rotate p by n-degrees?
-                      , x=unit (xU, "npc"), y=unit (yU, "npc")
-                      # , angle=rU
-                      , width=unit (0.07, "npc"), height=unit (0.07, "npc")
-        )
+        # Require ("grImport")  ## requires installation of GS and can't rotate -> raster
+        # grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
+        # p <- readPicture("pictograms/eye.ps.xml")
+        # unlink ("pictograms/eye.ps.xml")
+        # grid.picture (p  # no easy way to rotate p by n-degrees?
+        #               , x=unit (xU, "npc"), y=unit (yU, "npc")
+        #               # , angle=rU
+        #               , width=unit (0.07, "npc"), height=unit (0.07, "npc")
+        # )
       }
       Require ("png")
       p <- readPNG ("pictograms/eye.png")
@@ -454,7 +454,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                   , ybottom=59.4+0.3 +1*1*(yU-0.5)
                   , angle=rU)
       rm (p, xU, yU, rU)
-      ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
+      ## read directly from SVG -- can't rotate; better in MacOs, no advantage in Windows
       # if (.Platform$OS.type=="unix"){
       #   if (!require ("grConvert")){
       #     devtools::install_github("sjp/grConvert")
