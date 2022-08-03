@@ -226,7 +226,7 @@ oCol3 <- list (  ## fix versions?
   #, oceColorsTurbo # cmocean ("solar")
   , function (n){
     Require ("viridis")
-    turbo (n, start=0.25, end=0.8)
+    turbo (n, begin=0.25, end=0.8)
   }
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??

@@ -299,9 +299,9 @@ sectionPad <- function (sect, transect, ...){
   # for (i in 1:length (transect$stationId)){
 
   ## sort transect correctly! (esp. for AlongBay!)
-  if (stnT$Line [1] == "AlongBay"){
+  if (transect$line [1] == "AlongBay"){
     transect <- transect [order (transect$latitude, decreasing=FALSE),]
-  }else if (stnT$Line [1] %in% c("4", "9")){
+  }else if (transect$line [1] %in% c("4", "9")){
     transect <- transect [order (transect$latitude, decreasing=TRUE),]
   }else{
     transect <- transect [order (transect$longitude, decreasing=FALSE),]
