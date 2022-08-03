@@ -5,7 +5,7 @@ rm (list = ls())
 
 
 test <- TRUE
-test <- FALSE
+# test <- FALSE
 
 
 ## problemss:
@@ -397,7 +397,9 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       }
       cat ("\n")
     }
-    if (exists ("xMap")){
+
+    ## add color scale and map after all section plots are done
+#    if (exists ("xMap")){
       ## draw palette, color scale into next panel (or along full length?)
       nCol <- 100
       t.ramp <- oCol3[[ov]](nCol)
@@ -432,25 +434,28 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       # }else{
       #   xU <- 0.9 ; yU <- 0.2; rU <- 120  ## AlongBay
       # }
+
       ## individual treatment of eye
       if (levels (poAll$Transect)[tn] == "3"){
-        xU <- 0.1 ; yU <- 0.1; rU <- 80
-      }
-      if (levels (poAll$Transect)[tn] == "4"){
-        xU <- 0.1 ; yU <- 0.5; rU <- 0
-        cat (rU, "rU\n")
-      }
-      if (levels (poAll$Transect)[tn] == "6"){
-        xU <- 0.4 ; yU <- 0.1; rU <- 110
-      }
-      if (levels (poAll$Transect)[tn] == "7"){
-        xU <- 0.2 ; yU <- 0.1; rU <- 85
-      }
-      if (levels (poAll$Transect)[tn] == "9"){
-        xU <- 0.1 ; yU <- 0.5; rU <- 0
+        xU <- -152.5; yU <- 59.4; rdU <- 60
+        cat (tn, levels (poAll$Transect)[tn], "\n")
+      }else if (levels (poAll$Transect)[tn] == "4"){
+        xU <- -152.8; yU <- 59.4; rdU <- 0
+        cat (tn, levels (poAll$Transect)[tn], "\n")
+      }else if (levels (poAll$Transect)[tn] == "6"){
+        xU <- -151.5; yU <- 58.4; rdU <- 115
+        cat (tn, levels (poAll$Transect)[tn], "\n")
+      }else  if (levels (poAll$Transect)[tn] == "7"){
+        xU <- -152.5; yU <- 58.7; rdU <- 85
+        cat (tn, levels (poAll$Transect)[tn], "\n")
+      }else if (levels (poAll$Transect)[tn] == "9"){
+        xU <- -152.8; yU <- 59.0; rdU <- 20
+        cat (tn, levels (poAll$Transect)[tn], "\n")
       }else{                         # AlongBay
-        xU <- 0.8 ; yU <- -0.01; rU <- 120
+        xU <- -150.5; yU <- 58.95; rdU <- 125
+        cat (tn, levels (poAll$Transect)[tn], "\n")
       }
+      title (main=paste (levels (poAll$Transect)[tn], tn, rdU, xU, yU))
 
       if (0){  ## vector based -- not windows compatible and doesn't rotate
         Require ("grImport")  ## requires installation of GS -- go raster after all
@@ -482,24 +487,25 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       # Require ("OpenImageR")
       # p <- rotateImage (p, angle=rU, method="nearest")
       rasterImage(p
-                  , xleft=-152       +3*1*(xU-0.5)
-                  , xright=-152+0.3  +3*1*(xU-0.5)
-                  , ybottom=59.4     +1*1*(yU-0.5)
-                  , ytop=   59.4+0.3 +1*1*(yU-0.5)
-                  , angle=rU)
-      rm (p, xU, yU, rU)
-      plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
-            , which = 99
-            , coastline = "coastlineWorldFine"
-            , showStations = TRUE
-            , gird = TRUE
-            # , span=50
-      )
+                  , xleft=xU       # -152       +3*1*(xU-0.5)
+                  , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
+                  , ybottom=yU     # 59.4     +1*1*(yU-0.5)
+                  , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
+                  , angle=rdU)
+      rm (p, xU, yU, rdU)
+      # ## fine-scale map -- no longer needed?
+      # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
+      #       , which = 99
+      #       , coastline = "coastlineWorldFine"
+      #       , showStations = TRUE
+      #       , gird = TRUE
+      #       # , span=50
+      # )
       rm (xMap, xCo, nSurv,  bottom)
-    }
+#    }
     dev.off()
     cat ("\n")
-  }
+   }
 }
 
 

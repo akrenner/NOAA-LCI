@@ -3,7 +3,7 @@
 ## requires rclone installation
 ## cross-platform somehow? -- easy in bash!
 
-## NOT working yet!
+## NOT working yet on windows
 ## failing to invoke rclone from within R on windows
 ##
 
