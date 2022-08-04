@@ -707,13 +707,15 @@ lonL <- c(-154.2,-151.2)
 latL <- c(58.8,60.6)
 
 
-Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
+# Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
+Require ("sp"); Require ("sf")
 
 
 spTran <- function (x, p4){
     # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
-    Require ("rgdal")
-    suppressWarnings (y <- spTransform (x, CRS (p4)))
+#    Require ("rgdal")
+  Require ("sf")
+  suppressWarnings (y <- spTransform (x, CRS (p4)))
     return (y)
 }
 
@@ -778,6 +780,9 @@ coastSP <- as (coastSF, "Spatial")
 Require ("raster")
 Require ("rgeos")
 coast <- raster::intersect(coastSP, bP)
+# Require ("sf")
+# Require ("terra") # replacement for raster
+# coast <- terra::intersect(coastSP, bP)
 # plot (coastC)
 unlink (tD, TRUE); rm (tD)
 rm (b, bP, coastSP, coastSF)
@@ -828,7 +833,7 @@ rm (badPO)
 Require ("raster")
 Require ("rgdal")
 
-## need to supply absolute pass because raster object is just a pointer.
+## need to supply absolute path because raster object is just a pointer.
 ## still needs uncompressed raster file accessible.
 if (.Platform$OS.type == "windows"){
   bath <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
@@ -896,8 +901,8 @@ stnT <- subset (stn, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
 stnT <- subset (stn, stn$Plankton)
 
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
-## i <- 1
-##     lBuff <- gBuffer (stn, width = stnB [i], byid = TRUE)
+## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
+
 findBirds <- function (x){
     stnBuf <- over (NPPSD2, lBuff [x,])$Match_Name
     birdD <- cbind (Match_Name = stnBuf, NPPSD2@data)
@@ -961,4 +966,7 @@ save.image ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 cat ("\n\n#\n#\n#", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                           , usetz = FALSE)
 , " \n# \n# End of dataSetup.R\n#\n#\n")
+
+cat ("\n# END datasetup.R #\n")
+
 ## EOF
