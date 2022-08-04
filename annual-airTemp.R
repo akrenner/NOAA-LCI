@@ -32,18 +32,21 @@ if (SWMP){
 # plot (totprcp~datetimestamp, data=hmr, subset=year < 2006, type="l")
 
 ## QCQA moved to windTrend.R
-x <- subset (hmr, (year == 2021)&(month %in% c(8,9,10)))
-plot (atemp~datetimestamp, x)
-x <- subset (hmr, (year == 2021)&(month %in% c(8)))
-plot (atemp~datetimestamp, x, type = "l")
-
+if (0){
+  x <- subset (hmr, (year == 2021)&(month %in% c(8,9,10)))
+  plot (atemp~datetimestamp, x)
+  x <- subset (hmr, (year == 2021)&(month %in% c(8)))
+  plot (atemp~datetimestamp, x, type = "l")
+}
+## use atemp or medtemp or mintemp or maxtemp?
+hmr <- subset (hmr, !is.na (atemp))
 
 hmr$atemp <- ifelse (hmr$atemp < -30, NA, hmr$atemp)
 hmr$atemp <- ifelse (hmr$atemp < 0 & hmr$month == 7, NA, hmr$atemp)  # 2005-07-29, -17.8 C
 hmr$atemp <- ifelse (hmr$atemp > 29, NA, hmr$atemp) # 12.8, 13.9, 11.1, 29.4, 8.9, 8.9, 8.3 -- 2002-09-07
 
 ## units: use both, C and F (F=2nd axis on the right)
-if (0){
+if (0){  ## plot all years -- rainbow spaghetti
   hmr$yearF <- factor (hmr$year)
   plot (atemp~jday,data=hmr, type="n")
   for (i in 1:length (levels (hmr$yearF))){
@@ -91,7 +94,10 @@ dev.off()
 
 
 
-## for the gardeners:
+
+########################
+## for the gardeners: ##
+########################
 ## what's the likelihood of frost? What's the last day of frost?
 rm (hmr)
 frostTH <- c (-5, -3, -2, 0, 2, 5)
