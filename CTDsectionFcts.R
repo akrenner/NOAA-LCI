@@ -16,6 +16,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
+  Require ("oce")
   s <- try (plot (xsec, which = N
                   , showBottom = showBottom
                   , axes = TRUE
@@ -33,13 +34,16 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
     depth <- unique(s[['depth']])
     np <- length(depth)
     zvar <- array(NA, dim=c(nstation, np))
-    for (ik in 1:nstation) {
+    for (ik in 1:nstation) {  ## populate the array
       try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
     }
-    distance <- unique(s[['distance']])  ## correct distance? -- better to calc from coordinates?
-    # distance <- geodDist(unique (s [['latitude']], unique (s [['longitude']]))
-    #                      , alongPath=TRUE)
-
+    # distance <- unique(s[['distance']])  ## fragile when duplicate stations are present
+    lat <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
+    lon <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
+    distance <- geodDist (lon, lat, alongPath=TRUE)
+    ## hack to add resilience to duplicated CTD stations
+    distance <- c (ifelse (diff (distance) < 0.01, distance-0.01, distance), distance[nstation])  ## hack to make contours work?
+    rm (lat, lon)
     if (sum (!apply (zvar, 2, FUN = function (x){all (is.na (x))})) < 2){
       plot (1:10, type = "n", new = FALSE)
       text (5,5, paste0 (N, " all values NA"))
@@ -57,10 +61,12 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
         cutS <- which (is.na (distance))
         distance <- distance [-cutS]
         zvar <- zvar [-cutS,]
+        stop ("bad distance")
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
-                          , nlevels = 5, labcex=1.0 # default: labcex=0.6
-                          # , levels = cLev  ## error XXX
+                          # , nlevels = 5
+                          , labcex=1.0 # default: labcex=0.6
+                           , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
         legend ("bottomleft", legend = "no contours")

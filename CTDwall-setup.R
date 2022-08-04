@@ -273,7 +273,7 @@ Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
    oceColorsTurbo  # cmocean ("thermal")
-  , cmocean ("haline")
+  , cmocean ("haline") # oceColorsTurbo #, cmocean ("haline")
   , cmocean ("dense")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")

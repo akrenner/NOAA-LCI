@@ -39,7 +39,7 @@ mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year
 
 if (test){
   oceanvarC <- 1:length (oVars)
-# transectC <- 1:length (levels (poAll$Transect))
+  transectC <- 1:length (levels (poAll$Transect))
   transectC <- 6
 }else{
   oceanvarC <- 1:length (oVars)
@@ -111,11 +111,13 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       bottomZ <- aggregate (bathyZ, sectP, mean, na.rm = TRUE) ## stars -- hangs
       # bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1  ## terra
     }else{
+      Require ("sp")
       coordinates (sect) <- ~loni+lati
       proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
       sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
       bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
+    Require ("marmap")
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
     bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
@@ -239,37 +241,46 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
               rm (nS)
             }
 
-            # remove duplicate stations -- move to CTDwall-setup.R?
-            ## any duplicated stations? -- if so, keep only the longest cast
-            xC$Match_Name <- factor (xC$Match_Name)
-            if (any (sapply (1:length (levels (xC$Match_Name)), function (m){
-              sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
-              tR <- difftime (max (sec$isoTime), min (sec$isoTime), units = "min")
-              tR > 20
-            }))){
-              # there are duplicate CTD casts -- pick the longer one
-              for (m in 1:length (levels (xC$Match_Name))){
-                sec <- subset (xC, xC$Match_Name == levels (xC$Match_Name)[m])
-                isoTimeF <- factor (sec$isoTime)
-                castSize <- sapply (1:length (levels (isoTimeF)), function (m){
-                  sum (!is.na (subset (sec, isoTimeF==levels (isoTimeF)[m])$Temperature_ITS90_DegC))
-                })
-                tNew <- subset (sec, isoTimeF == levels (isoTimeF)[which.max(castSize)])
-                rm (isoTimeF)
-                if (m == 1){
-                  secN <- tNew
+            # remove duplicate stations (shared positions)
+            ## any duplicated stations? -- if so, keep the closest in time
+            posF <- factor (xC$longitude_DD*10e6-xC$latitude_DD)
+            xC$File.Name <- factor (xC$File.Name)
+            if (length (levels (xC$File.Name)) != length (levels (posF))){
+              ## there are duplicate stations
+              ## identify duplicate file names; remove time outlier
+              nFN <- sapply (1:length (levels (posF)), function (iQ){
+                length (unique (subset (xC, posF==levels (posF)[iQ])$File.Name))
+              })
+              mT <- mean (xC$isoTime)
+
+              for (iQ in 1:length (levels (posF))){
+                sec <- subset (xC, posF == levels (posF)[iQ])
+                sec$File.Name <- factor (sec$File.Name)
+                if (nFN [iQ] > 1){
+                  bF <- sapply (1:length (levels (sec$File.Name)), function (iQ){
+                    cx <- subset (sec, File.Name == levels (sec$File.Name)[iQ])
+                    # 1/abs (difftime (mT, cx$isoTime [1], "minutes"))
+                    # cx$File.Name [1]
+                    nrow (cx)
+                  })
+                  ## pick the best cast
+                  sec <- subset (sec
+                                 , File.Name == levels (sec$File.Name)[which.max (bF)])
+                }
+                if (iQ == 1){
+                  nSec <- sec
                 }else{
-                  secN <- rbind (secN, tNew)
+                  nSec <- rbind (nSec, sec)
                 }
               }
-              xC <- secN
-              rm (secN, tNew, sec, m, castSize)
+              xC <- nSec
+              rm (iQ, nFN, posF, nSec, sec, bF)
             }
           }
 
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
-          save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")
+          if (test){save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")}
           ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
 
           ##
@@ -285,8 +296,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                                               , bottom=stnT$Depth_m))
           ## sectionSort--is now in sectionPad. Still need to do same to bottom
           if (xC$Transect [1] == "AlongBay"){
-            bottom <- bottom [order (bottom$lat, decreasing = FALSE),]   ### XXX review!!
-          }else if (xC$Transect [1] %in% c("4", "9")){  # requires new version of oce
+            bottom <- bottom [order (bottom$lat, decreasing = FALSE),]
+          }else if (xC$Transect [1] %in% c("4", "9")){
             bottom <- bottom [order (bottom$lat, decreasing = TRUE),]
           }else{
             bottom <- bottom [order (bottom$lon),]
@@ -315,6 +326,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                 , ylim = c(0,max (physOcY$Depth.saltwater..m., na.rm=TRUE)+5)  ## need to fix CTDwall-setup.R first
                 , showBottom=FALSE
                 , drawPalette=FALSE
+                , custcont=5
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
