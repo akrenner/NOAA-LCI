@@ -5,8 +5,8 @@ rm (list = ls())
 
 
 test <- TRUE
-test <- FALSE
-
+# test <- FALSE
+F
 
 ## problems:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
@@ -25,30 +25,32 @@ test <- FALSE
 ## color scales: make custom breaks to show more details
 
 
-# Require <- function (pack){if (!require (pack)){install.packages(pack); library (pack)}}
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
-
-
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
-# only AlongBay and 9 are monthly -- 4?
 
-
-dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
-if (exists ("sectionSort")){detach ("package:oce")}  ## reload new version of oce
-Require ("oce")
-load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-# x <- load ("~/tmp/LCI_noaa/cache/ctdwall1.RData")  # from CTDsections.R
 source ("CTDsectionFcts.R")
+dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
+## get bathymetry, standard colors, and data ranges
+load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+
+
+useSF <- FALSE  ## still using raster -- need to migrate to sf and terra/stars
+mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year plots
+
+if (test){
+  oceanvarC <- 1
+  transectC <- 1:length (levels (poAll$Transect))
+  yearC <- 3
+}else{
+  oceanvarC <- 1:length (oVars)
+  transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
+  yearC <- 1:length (levels (poAll$year))
+}
 
 
 
-mnthly <- c ("9", "AlongBay", "4")
 
-
-if (0){## tests
+if (0){ ## tests
   levels (factor (subset (poAll, year == 2012)$DateISO))
   xC <- subset (poAll, (Transect == "9")&(DateISO == "2019-09-16") )
   # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
@@ -61,47 +63,15 @@ if (0){## tests
 
 
 
-useSF <- FALSE  ## use package sf and terra/stars instead of raster
-# useSF <- TRUE
-
-## add high-res bottom/bathymetry profile
-## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
-Require ("marmap")
-bfer <- 0.5
-bathy <- getNOAA.bathy (min (poAll$longitude_DD)-bfer, max (poAll$longitude_DD)+bfer
-                        , min (poAll$latitude_DD)-bfer, max (poAll$latitude_DD)+bfer
-                        , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")
-rm (bfer)
-if (useSF){
-  Require ("sf") ## or stars / terra ??
-  Require ("stars") ## or better to use terra?
-  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  # Require ("terra")
-  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  Require ("raster")
-  ## need to supply absolute path because raster object is just a pointer.
-  ## still needs uncompressed raster file accessible.
-  if (.Platform$OS.type == "windows"){
-    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }else{
-    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }
-}
-
-## loop over variable, then transects and then seasons
-if (test){vL <- 1}else{vL <- 1:length (oVars)}
-if (test){tL <- 1:length (levels (poAll$Transect))}else{tL <- 1:length (levels (poAll$Transect))}# by transect. 5: T9
-
-for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
-  for (tn in tL){  # tn: transect
+for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
+  for (tn in transectC){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
     cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
-    ## should make this a function?
+    ## make this a function?
     if (levels (poAll$Transect)[tn] == "AlongBay"){
       swMN <- c ("4_3", "9_6", "6_2", "7_22")
       poAll$Transect [poAll$Match_Name %in% swMN] <- "AlongBay"
@@ -121,10 +91,12 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
     ## to use as a reference for partial stations
     ## and for bathymetry profile
+    ## turn this into a function?
     stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
+    Require ("oce")
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
     # if (levels (poAll$Transect)[tn] != "AlongBay"){dist <- rev (dist)}
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
@@ -201,9 +173,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
       )
     }
 
-    #for (iY in 2){
-    if (test){yL <- 3}else{yL <- 1:length (levels (physOcY$year))}
-    for (iY in yL){
+    for (iY in yearC){
       ## for testing:
       # iY <- 7 # pick 2018
       # iY <- 2
@@ -257,16 +227,6 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
             ## better to apply to allPo?
             ## make this a function for all data? -> move to CTDwall-setup.R / datasetup?
 
-            ## this has already been done in CTDwall-setup.R
-            # xC <- xC [order (xC$isoTime),]
-            # surveyW <- ifelse (duplicated(xC$DateISO), 'NA', xC$DateISO)
-            # secDiff <- xC$isoTime [2:nrow (xC)] - xC$isoTime [1:(nrow (xC)-1)] ## time difference [s]
-            # for (h in 1:length (secDiff)){
-            #   if (secDiff [h] < 7*24*3600){ # 7-day cut-off
-            #     surveyW [h+1] <- surveyW [h]
-            #   }
-            # }
-            # xC$surveys <- factor (surveyW); rm (surveyW, h)
             xC$survey <- factor (xC$survey)
             nSurv <- length (levels (xC$survey))  ## used again below to mark plots
             if (nSurv > 1){
@@ -351,7 +311,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , zbreaks=zB # better?, slower interpolation
                 # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-                , ylim = c(0,max (physOcY$Bottom.Depth_survey)+5)  ## need to fix CTDwall-setup.R first
+                , ylim = c(0,max (physOcY$Depth.saltwater..m., na.rm=TRUE)+5)  ## need to fix CTDwall-setup.R first
                 , showBottom=FALSE
                 , drawPalette=FALSE
           )
@@ -495,7 +455,7 @@ for (ov in vL){  # ov = OceanVariable (temp, salinity, etc)
 
 
 physOc <- poAll
-rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yL, iY, sL, iS, vL, tL)
+rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
 
 
 
@@ -555,7 +515,7 @@ if (0){
 
 
 ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-require (ocedata) #for the coastlineWorldFine data
+Require (ocedata) #for the coastlineWorldFine data
 data(coastlineWorldFine)
 
 mp <- function() {

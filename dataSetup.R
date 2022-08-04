@@ -170,14 +170,15 @@ poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
 rm (mD)
 
 dMean <- function (fn, fldn){
-    ## calculate mean of field for the last 5 m above the bottom
+    ## calculate mean of field for the last 10 m above the bottom
     cast <- subset (physOc, File.Name == fn)
-    lLay <- c (-5, 0) + max (cast$Depth.saltwater..m.)
+    lLay <- c (-10, 0) + max (cast$Depth.saltwater..m.)
     outM <- mean (subset (cast [,which (names (cast) == fldn)]
                         , (lLay [1] < cast$Depth.saltwater..m.)
                           ))
     return (outM)
 }
+
 Require ("rtide")
 tRange <- function (tstmp){
     ## uses NOAA tide table data
@@ -233,27 +234,26 @@ daylight <- function (dt){
 poSS$dayLight <- daylight (poSS$timeStamp)
 rm (daylight)
 
+agg <- function (var, ..., refDF){ # more robust in case of NA
+  agDF <- aggregate (var~File.Name, data = physOc, ...)
+  agDF [match (refDF$File.Name, agDF [,1]),2]
+}
 
-poSS$SST <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                       , subset = Depth.saltwater..m. <= 3
-                       , FUN = mean)$Temperature_ITS90_DegC
 poSS$aveTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = mean)$Temperature_ITS90_DegC
+
+poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
+                       , FUN = mean, na.rm=TRUE, refDF=poSS)
 poSS$minTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = min)$Temperature_ITS90_DegC
 poSS$deepTemp <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Temperature_ITS90_DegC"
                                    , mc.cores = nCPUs))
-poSS$SSS <- aggregate (Salinity_PSU~File.Name, data = physOc
-                       , subset = Depth.saltwater..m. <= 3
-                       , FUN = mean)$Salinity_PSU
+poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm = TRUE, refDF=poSS)
 poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
                                , FUN = mean)$Salinity_PSU
-## poSS$deepSal_old <- aggregate (Salinity_PSU~File.Name, data = physOc, FUN = function (x){
-##     if (length (x) > 50){mean (x [50:length (x)])}else{NA}
-## })$Salinity_PSU
 poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
                                   , mc.cores = nCPUs))
-rm (dMean)
+rm (dMean, agg)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
 ## almost the same als salinity. skip it
 

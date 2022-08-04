@@ -44,7 +44,9 @@ source ("CTD_cleanup.R")         ## move error corrections into here. Also aggre
 source ("CTD_DataAvailability.R")
 
 
-source ("datasetup.R")
+source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value = c(28.5532333333333, 31.4265333333333,  :
+# replacement has 3833 rows, data has 3834
+
 # source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 

@@ -4,6 +4,13 @@
 ## emulate/evolve from ODV
 
 
+# Require <- function (pack){if (!require (pack)){install.packages(pack); library (pack)}}
+if (!require("pacman")) install.packages("pacman"
+                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+Require <- pacman::p_load
+
+
+
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , showBottom=TRUE, ...){
   ## as above, but add contours. Replace pSec once this is working
@@ -127,7 +134,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   if (packageVersion("oce") <= "1.7.3"){
     stop ("Need package:oce version 1.7.4 or later")
   }
-  require ("oce")
+  Require ("oce")
   if (nrow (xC) < 2){stop ("no data to make a section")}
   # stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
@@ -144,7 +151,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
 }
 
 makeSection <- function (xC, stn){
-  require ("oce")
+  Require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
   as.section (lapply (1:length (levels (stn))
@@ -198,7 +205,7 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
 
 
 is.night <- function (ctd){
-  require ("suncalc")
+  Require ("suncalc")
   sunAlt <- getSunlightPosition (date = as.POSIXct (ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
                                  , lat = ctd@data$latitude [1]
                                  , lon = ctd@data$longitude [1])$altitude # in radians
@@ -335,7 +342,7 @@ sectionPad <- function (sect, transect, ...){
 
 
 # ## execute for each run rather than pull from .RData (which gets messed up)
-# require ("cmocean")
+# Require ("cmocean")
 # oCol3 <- list (
 #   cmocean ("thermal")
 #   , cmocean ("haline")

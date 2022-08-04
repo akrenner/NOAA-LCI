@@ -51,7 +51,7 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 ## get coastline and bathymetry
 ## bathymetry and coastline
-bathy <- "polygon"
+
 ## Zimmermann bathymetry
 Require ("raster")  ## move to terra/stars
 Require ("marmap")
@@ -60,26 +60,70 @@ Require ("marmap")
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
-if (0){
+cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
+unlink (cFile)
+if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
+  ## need to migrate this to TERRA or STARS!
+
   ##  bR <- resample (bR, nGrid)
   ## migrate to terra/stars
-  bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf") ## not working in RStudio -- need to use decompressed after all?
+
+  if (.Platform$OS.type == "windows"){
+    bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }else{
+    bR <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }
   ## need to reproject to longlat
   ## then turn into topo object
-  bathyP <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first
-  bathy <- as.topo (as.bathy (bathyP)); rm (bR)  # still not right
+  bathyZ <- bR
+#  bathyZ <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first -- not necessary?!??
+  # bathyZ <- as.topo (as.bathy (bathyP))  # still not right -- for oce only
   # bathy <- as.topo (z = bRg [[1]][,,1])
-  save (bathy, bathyP, file = "~/tmp/LCI_noaa/cache/bathymetryZ.RData")
-  #  rm (bR, bRg, bRb)
+  Require ("marmap")
+  bfer <- 0.5
+  bathy <- try (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
+                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
+                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/"))
+  rm (bfer, bR)
+
+  save (bathy, bathyZ, file = cFile)
 }else{
-  load ("~/tmp/LCI_noaa/cache/bathymetryZ.RData")
+  load (cFile)
 }
 
 ## more bathymetry to fill in parts Zimmerman bathymetry missses
 ## here or in CTDwall.R??
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+# try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+
+
+if (0){useSF <- FALSE  ## use package sf and terra/stars instead of raster
+# useSF <- TRUE
+
+## add high-res bottom/bathymetry profile
+## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
+## load from previous script? datasetup?
+if (useSF){
+  Require ("sf") ## or stars / terra ??
+  Require ("stars") ## or better to use terra?
+  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  # Require ("terra")
+  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+}else{
+  Require ("raster")
+  ## need to supply absolute path because raster object is just a pointer.
+  ## still needs uncompressed raster file accessible.
+  if (.Platform$OS.type == "windows"){
+    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }else{
+    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }
+}
+}
+
+
+
 
 
 Require ("ocedata") # coastlineWorldFine
@@ -111,7 +155,7 @@ poAll$logTurbidity <- slog (poAll$turbidity)
 rm (slog)
 
 
-
+if (0){  ## use hi-res bathymetry profiles now -- this is no longer of use
 ## add bathymetry to CTD metadata
 poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
@@ -129,8 +173,9 @@ if (exists ("bathyL")){
   poAll$bathy <- poAll$Bottom.Depth_survey
 }
 poAll$bathy <- poAll$Bottom.Depth_survey
-rm (poP, bL, bathyP, bathyL, bathy)
 
+rm (poP, bL, bathyP, bathyL, bathy)
+}
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
@@ -212,10 +257,19 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 # remotes::install_github("jlmelville/vizier")
 ## move these into CTDsectionFcts.R -- or not?
 
-# Require ('vizier')
+
+
+########################
+## define color ramps ##
+########################
+
+## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
+ODV_colours <- c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa")
+# scale_colour_gradientn(colours = rev(ODV_colours))
+
+
+
 Require ("cmocean")  ## for color ramps
-
-
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
    oceColorsTurbo  # cmocean ("thermal")
