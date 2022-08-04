@@ -13,7 +13,6 @@ Require <- pacman::p_load
 
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , showBottom=TRUE, ...){
-  ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -23,15 +22,13 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , stationTicks = TRUE
                   , showStations = TRUE
                   , xtype="track"
-                  # , grid = TRUE
-                  # , ztype = "contour"
                   , ztype = "image"
                   , zcol = zCol
                   , ...
   )
   , silent = TRUE)
   if (class (s) != "try-error"){
-    s <- xsec
+    # s <- xsec
     nstation <- length(s[['station']])
     depth <- unique(s[['depth']])
     np <- length(depth)
@@ -39,7 +36,9 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
     for (ik in 1:nstation) {
       try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
     }
-    distance <- unique(s[['distance']])
+    distance <- unique(s[['distance']])  ## correct distance? -- better to calc from coordinates?
+    # distance <- geodDist(unique (s [['latitude']], unique (s [['longitude']]))
+    #                      , alongPath=TRUE)
 
     if (sum (!apply (zvar, 2, FUN = function (x){all (is.na (x))})) < 2){
       plot (1:10, type = "n", new = FALSE)

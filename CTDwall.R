@@ -5,8 +5,8 @@ rm (list = ls())
 
 
 test <- TRUE
-# test <- FALSE
-F
+test <- FALSE
+
 
 ## problems:
 ## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
@@ -38,13 +38,13 @@ useSF <- FALSE  ## still using raster -- need to migrate to sf and terra/stars
 mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year plots
 
 if (test){
-  oceanvarC <- 1
-  transectC <- 1:length (levels (poAll$Transect))
-  yearC <- 3
+  oceanvarC <- 1:length (oVars)
+# transectC <- 1:length (levels (poAll$Transect))
+  transectC <- 6
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  yearC <- 1:length (levels (poAll$year))
+  transectC <- 6
 }
 
 
@@ -172,7 +172,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
            , mar=c(4,4,16,0.1)
       )
     }
-
+    ## test-option
+    yearC <- 1:length (levels (physOcY$year))  ## or fix subset below
     for (iY in yearC){
       ## for testing:
       # iY <- 7 # pick 2018
