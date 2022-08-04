@@ -17,39 +17,44 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
   Require ("oce")
-  s <- try (plot (xsec, which = N
-                  , showBottom = showBottom
-                  , axes = TRUE
-                  , stationTicks = TRUE
-                  , showStations = TRUE
-                  , xtype="track"
-                  , ztype = "image"
-                  , zcol = zCol
-                  , ...
-  )
-  , silent = TRUE)
-  if (class (s) != "try-error"){
-    # s <- xsec
-    nstation <- length(s[['station']])
-    depth <- unique(s[['depth']])
-    np <- length(depth)
-    zvar <- array(NA, dim=c(nstation, np))
-    for (ik in 1:nstation) {  ## populate the array
-      try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
-    }
-    # distance <- unique(s[['distance']])  ## fragile when duplicate stations are present
-    lat <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
-    lon <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
-    distance <- geodDist (lon, lat, alongPath=TRUE)
-    ## hack to add resilience to duplicated CTD stations
-    distance <- c (ifelse (diff (distance) < 0.01, distance-0.01, distance), distance[nstation])  ## hack to make contours work?
-    rm (lat, lon)
-    if (sum (!apply (zvar, 2, FUN = function (x){all (is.na (x))})) < 2){
-      plot (1:10, type = "n", new = FALSE)
-      text (5,5, paste0 (N, " all values NA"))
-    }
+  if (length (xsec@data$station) < 2){
+    plot (1:10, type="n")
+  }else{
+    s <- try (plot (xsec, which = N
+                    , showBottom = showBottom
+                    , axes = TRUE
+                    , stationTicks = TRUE
+                    , showStations = TRUE
+                    , xtype="track"
+                    , ztype = "image"
+                    , zcol = zCol
+                    , ...
+    )
+    , silent = TRUE)
+    if (class (s) != "try-error"){
+      # s <- xsec
+      nstation <- length(s[['station']])
+      depth <- unique(s[['depth']])
+      np <- length(depth)
+      zvar <- array(NA, dim=c(nstation, np))
+      for (ik in 1:nstation) {  ## populate the array
+        try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
+      }
+      distance <- unique(s[['distance']])  ## fragile when duplicate stations are present
+      if (length (distance) < nstation){
+        lat <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
+        lon <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$longitude})
+        distance <- geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)
+        ## hack to add resilience to duplicated CTD stations; repeat?
+        distance <- c (ifelse (diff (distance) < 0.01, distance-0.01, distance), distance[nstation])  ## hack to make contours work?
+        rm (lat, lon)
+      }
+      if (sum (!apply (zvar, 1, FUN = function (x){all (is.na (x))})) < 2){
+        plot (1:10, type = "n", new = FALSE)
+        text (5,5, paste0 (N, " all values NA"), col = "red", cex=2)
+      }
 
-    # ## add contours -- see last example ?plot.section
+      # ## add contours -- see last example ?plot.section
       if (length (custcont) > 1){
         cLev <- custcont
       }else{
@@ -66,11 +71,12 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
       cT <- try (contour (distance, depth, zvar, add = TRUE
                           # , nlevels = 5
                           , labcex=1.0 # default: labcex=0.6
-                           , levels = cLev  ## error XXX
+                          , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
         legend ("bottomleft", legend = "no contours")
       }
+    }
   }
 }
 
