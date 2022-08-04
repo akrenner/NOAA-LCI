@@ -265,7 +265,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
 ODV_colours <- c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa")
-odv <- colorRampPalette(col=ODV_colours, bas=0.5)
+odv <- colorRampPalette(col=ODV_colours, bias=0.5)
 rm (ODV_colours)
 
 

@@ -136,9 +136,11 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-      pH <- 44; pW <- 88     # go big on FWS plotter
+      ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
       pH <- 42; pW <- 84     # FWS paper is 42 inches wide
       ## rotate, but do not scale. Autorotate should be ok.
+
+      pH <- 32; pW <- 42  ## full-width version
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
       Require ("stringr")
@@ -326,7 +328,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                 , ylim = c(0,max (physOcY$Depth.saltwater..m., na.rm=TRUE)+5)  ## need to fix CTDwall-setup.R first
                 , showBottom=FALSE
                 , drawPalette=FALSE
-                , custcont=5
+                , custcont=pretty (oRange [ov,], 20)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))

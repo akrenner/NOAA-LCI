@@ -52,12 +52,11 @@ source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value
 
 ## the Wall
 source ("CTDwall-setup.R")
-# source ("CTDsections.R")
-# source ("CTD-testSectionPlot.R")  # look for plots
+source ("CTDsections.R")
 source ("CTDwall.R")
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
-# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R")
+# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
