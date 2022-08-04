@@ -52,7 +52,7 @@ source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value
 
 ## the Wall
 source ("CTDwall-setup.R")
-source ("CTDsections.R")
+# source ("CTDsections.R")
 # source ("CTD-testSectionPlot.R")  # look for plots
 source ("CTDwall.R")
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone

@@ -265,15 +265,17 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
 ODV_colours <- c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa")
-# scale_colour_gradientn(colours = rev(ODV_colours))
+odv <- colorRampPalette(col=ODV_colours, bas=0.5)
+rm (ODV_colours)
 
 
 
 Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
-   oceColorsTurbo  # cmocean ("thermal")
-  , cmocean ("haline") # oceColorsTurbo #, cmocean ("haline")
+   # colorRampPalette(oceColorsTurbo(8), bias=0.5)
+  oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
+  , odv #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
   , cmocean ("dense")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
