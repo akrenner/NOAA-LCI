@@ -44,7 +44,7 @@ if (test){
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  transectC <- 6
+# transectC <- 6
 }
 
 
