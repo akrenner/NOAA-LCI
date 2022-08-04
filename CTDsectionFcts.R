@@ -130,10 +130,12 @@ KBsectionSort <- function (xCo){
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
-  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
+  if (xC$Transect [1] %in% c ("AlongBay")){ # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
+  }else if (xC$Transect [1] %in% c("4")){ ## include 9 here?
     xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+  }else if (xC$Transect [1] %in% c("9")){
+    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }else{
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }

@@ -44,7 +44,7 @@ if (test){
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  # transectC <- 6
+  # transectC <- 5
 }
 
 
@@ -415,7 +415,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     }else if (levels (poAll$Transect)[tn] == "9"){
       xU <- -152.8; yU <- 59.0; rU <- 20
     }else{                         # AlongBay
-      xU <- -150.5; yU <- 58.95; rU <- 125
+      xU <- -150.5; yU <- 59.1; rU <- 130
     }
 
     if (0){  ## vector based -- not windows compatible and doesn't rotate
