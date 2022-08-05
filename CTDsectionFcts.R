@@ -4,41 +4,57 @@
 ## emulate/evolve from ODV
 
 
+# Require <- function (pack){if (!require (pack)){install.packages(pack); library (pack)}}
+if (!require("pacman")) install.packages("pacman"
+                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+Require <- pacman::p_load
+
+
+
 pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
                   , showBottom=TRUE, ...){
-  ## as above, but add contours. Replace pSec once this is working
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
-  s <- try (plot (xsec, which = N
-                  , showBottom = showBottom
-                  , axes = TRUE
-                  , stationTicks = TRUE
-                  , showStations = TRUE
-                  # , grid = TRUE
-                  # , ztype = "contour"
-                  , ztype = "image"
-                  , zcol = zCol
-                  , ...
-  )
-  , silent = TRUE)
-  if (class (s) != "try-error"){
-    s <- xsec
-    nstation <- length(s[['station']])
-    depth <- unique(s[['depth']])
-    np <- length(depth)
-    zvar <- array(NA, dim=c(nstation, np))
-    for (ik in 1:nstation) {
-      try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
-    }
-    distance <- unique(s[['distance']])
+  Require ("oce")
+  if (length (xsec@data$station) < 2){
+    plot (1:10, type="n")
+  }else{
+    s <- try (plot (xsec, which = N
+                    , showBottom = showBottom
+                    , axes = TRUE
+                    , stationTicks = TRUE
+                    , showStations = TRUE
+                    , xtype="track"
+                    , ztype = "image"
+                    , zcol = zCol
+                    , ...
+    )
+    , silent = TRUE)
+    if (class (s) != "try-error"){
+      # s <- xsec
+      nstation <- length(s[['station']])
+      depth <- unique(s[['depth']])
+      np <- length(depth)
+      zvar <- array(NA, dim=c(nstation, np))
+      for (ik in 1:nstation) {  ## populate the array
+        try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
+      }
+      distance <- unique(s[['distance']])  ## fragile when duplicate stations are present
+      if (length (distance) < nstation){
+        lat <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
+        lon <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$longitude})
+        distance <- geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)
+        ## hack to add resilience to duplicated CTD stations; repeat?
+        distance <- c (ifelse (diff (distance) < 0.01, distance-0.01, distance), distance[nstation])  ## hack to make contours work?
+        rm (lat, lon)
+      }
+      if (sum (!apply (zvar, 1, FUN = function (x){all (is.na (x))})) < 2){
+        plot (1:10, type = "n", new = FALSE)
+        text (5,5, paste0 (N, " all values NA"), col = "red", cex=2)
+      }
 
-    if (sum (!apply (zvar, 2, FUN = function (x){all (is.na (x))})) < 2){
-      plot (1:10, type = "n", new = FALSE)
-      text (5,5, paste0 (N, " all values NA"))
-    }
-
-    # ## add contours -- see last example ?plot.section
+      # ## add contours -- see last example ?plot.section
       if (length (custcont) > 1){
         cLev <- custcont
       }else{
@@ -50,14 +66,17 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
         cutS <- which (is.na (distance))
         distance <- distance [-cutS]
         zvar <- zvar [-cutS,]
+        stop ("bad distance")
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
-                          , nlevels = 5, labcex=1.0 # default: labcex=0.6
-                          # , levels = cLev  ## error XXX
+                          # , nlevels = 5
+                          , labcex=1.0 # default: labcex=0.6
+                          , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
         legend ("bottomleft", legend = "no contours")
       }
+    }
   }
 }
 
@@ -111,10 +130,12 @@ KBsectionSort <- function (xCo){
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
-  if (xC$Transect [1] %in% c ("AlongBay", "9")){ # extended AlongBay wraps around Pogy Ptp
+  if (xC$Transect [1] %in% c ("AlongBay")){ # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  }else if (xC$Transect [1] %in% c("4")){  # requires new version of oce
+  }else if (xC$Transect [1] %in% c("4")){ ## include 9 here?
     xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
+  }else if (xC$Transect [1] %in% c("9")){
+    xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }else{
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }
@@ -126,7 +147,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   if (packageVersion("oce") <= "1.7.3"){
     stop ("Need package:oce version 1.7.4 or later")
   }
-  require ("oce")
+  Require ("oce")
   if (nrow (xC) < 2){stop ("no data to make a section")}
   # stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
@@ -143,7 +164,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
 }
 
 makeSection <- function (xC, stn){
-  require ("oce")
+  Require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
   as.section (lapply (1:length (levels (stn))
@@ -159,6 +180,7 @@ makeSection <- function (xC, stn){
                         ocOb@metadata$longitude <- sCTD$longitude_DD [1]
                         ocOb@metadata$latitude <- sCTD$latitude_DD [1]
                         ocOb@metadata$stationId <- sCTD$Match_Name [1]
+                        ocOb@metadata$filename <- sCTD$File.Name [1]
 
                         ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                         # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
@@ -196,7 +218,7 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
 
 
 is.night <- function (ctd){
-  require ("suncalc")
+  Require ("suncalc")
   sunAlt <- getSunlightPosition (date = as.POSIXct (ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
                                  , lat = ctd@data$latitude [1]
                                  , lon = ctd@data$longitude [1])$altitude # in radians
@@ -295,7 +317,18 @@ sectionPad <- function (sect, transect, ...){
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
   # for (i in 1:length (transect$stationId)){
-  for (i in c(1,nrow (transect))){
+
+  ## sort transect correctly! (esp. for AlongBay!)
+  if (transect$line [1] == "AlongBay"){
+    transect <- transect [order (transect$latitude, decreasing=FALSE),]
+  }else if (transect$line [1] %in% c("4", "9")){
+    transect <- transect [order (transect$latitude, decreasing=TRUE),]
+  }else{
+    transect <- transect [order (transect$longitude, decreasing=FALSE),]
+  }
+
+  # for (i in c(1,nrow (transect))){
+  for (i in 1:nrow (transect)){
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
@@ -322,7 +355,7 @@ sectionPad <- function (sect, transect, ...){
 
 
 # ## execute for each run rather than pull from .RData (which gets messed up)
-# require ("cmocean")
+# Require ("cmocean")
 # oCol3 <- list (
 #   cmocean ("thermal")
 #   , cmocean ("haline")

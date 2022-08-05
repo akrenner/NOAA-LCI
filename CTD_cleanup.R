@@ -21,9 +21,12 @@
 #
 # make sure matchName for link to other datasets is correct
 #
+## 2. QAQC of CTD measurements
+##    consistency across years and instruments.
+##    Especially check O2, turbidity, fluorescence
 #
 ##
-## 2. produce annual aggregates
+## 3. produce annual aggregates
 #     zip-up aggregates for export
 #
 #####################################################
@@ -340,8 +343,12 @@ physOc$latitude_DD <- ifelse (is.na (physOc$latitude_DD)
                               , physOc$latitude_DD)
 physOc$Bottom.Depth <- ifelse (is.na (physOc$Bottom.Depth)
                                , stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
-                               , physOc$Bottom.Depth
-                               )
+                               , physOc$Bottom.Depth)
+## executive decision: assign ALL casts nominal positions
+physOc$longitude_DD <- stn$Lon_decDegree [match (physOc$Match_Name, stn$Match_Name)]
+physOc$latitude_DD <- stn$Lat_decDegree [match (physOc$Match_Name, stn$Match_Name)]
+physOc$Bottom.Depth <- stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
+
 
 
 
@@ -459,11 +466,35 @@ physOc$File.Name <- factor (physOc$File.Name)
 rm (gC)
 
 
+
+
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
 is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
 # is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
+if (1){  ## moved from CTDwall-setup.R
+  ## QAQC/Error correction of values -- do this before or after data export??  XXX
+
+  ## attenuation vs turbidy -- mix them here?!?
+  physOc$turbidity <- ifelse (is.na (physOc$turbidity), physOc$beamAttenuation, physOc$turbidity) ## is this wise or correct ? XXX
+
+
+  ## remove implausible values
+  physOc$Density_sigma.theta.kg.m.3 <- ifelse (physOc$Density_sigma.theta.kg.m.3 < 15, NA, physOc$Density_sigma.theta.kg.m.3)
+  physOc$Oxygen_umol_kg <- ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
+  physOc$Oxygen_umol_kg <-  ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
+  # physOc$Oxygen_SBE.43..mg.l. <- ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
+  # physOc$Oxygen_SBE.43..mg.l. <-  ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
+  physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg)
+  ## recalc other O2 values here?
+  physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < 20, NA, physOc$Salinity_PSU)
+  ## end of plots from CTDwall-setup.R
+}
+
+
+
+
 
 
 ## plot all casts: depth-density, temp, salinity
@@ -488,6 +519,51 @@ plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
 ## plot (physOc$Depth.saltwater..m., physOc$Oxygen_SBE.43..mg.l.
 ##     , col = physOc$CTD.serial)
 dev.off()
+
+
+# moved from CTDwall-setup.R
+## plots from CTDwall-setup.R -- still need to test and verify
+## compare attenuation and turbidity -- ok to merge? QAQC
+summary (physOc$turbidity)
+summary (physOc$beamAttenuation)
+pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
+par (mfrow = c (2,1))
+hist (log (physOc$beamAttenuation), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+hist (log (physOc$turbidity), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+dev.off()
+
+
+pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
+year <- factor (as.numeric (format (physOc$isoTime, "%Y")))
+plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc, col = year)
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = year)
+# legend ("bottomleft", col = levels (physOc$year), pch = 19, legend = levels (physOc$year))
+# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = as.numeric (CTD.serial))
+for (i in 1:length (levels (year))){
+  #  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc
+  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc
+        , subset = year == levels (year)[i], col = as.numeric (CTD.serial))
+  legend ("topright", col = levels (factor (as.numeric (physOc$CTD.serial)))
+          , legend = levels (factor (physOc$CTD.serial)), pch = 19
+          , title = levels (year)[i])
+}
+## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
+## 2020: 5028 looks quite different than 4141. 4141 has two groups
+dev.off()
+
+# png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
+# plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., physOc
+#       , col = year, main = "colored by year"
+#       , subset = Depth.saltwater..m. < 10)
+# dev.off()
+
+## histogram and QAQC -- do this in previous script?!?
+## add some thresholds/QAQC; log-scale?
+# physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < )
+rm (i, year)
+
+
+
 
 
 if (0){  # currently fails -- fix later XXX
@@ -544,12 +620,29 @@ dev.off()
 rm (dayF, crs, cF, crsC)
 
 
-#####################################
-## 2. annual aggregates for export ##
-#####################################
+###############################################
+## 2. annual aggregates for GulfWatch export ##
+###############################################
 
 save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
+
+
+
+## filter out all the non-standard casts ##
+phy <- physOc
+## double-used AlongBay - use only once??
+phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_6", "9_6", phy$Match_Name)
+# phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_2", "4_3", phy$Match_Name)
+# phy$Match_Name <- ifelse (phy$MatchName=="AlongBay_6", "9_6", phy$MatchName)
+## all stations are already standard stations
+phy$Match_Name <- factor (phy$Match_Name)
+phy$File.Name <- factor (phy$File.Name)
+x <- aggregate (File.Name~Match_Name+Date, phy, FUN=function (x){length (levels(factor (x)))})
+x <- subset (x, File.Name > 1)
+dim (x)
+x
+# phy <- subset (phy, )
 
 
 Require ("zip")
@@ -557,14 +650,15 @@ outD <- "~/tmp/LCI_noaa/data-products/CTD"
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 wD <- getwd()
 setwd (outD) ## zip blows up otherwise
-yr <- factor (format (physOc$isoTime, "%Y"))
+
+yr <- factor (format (phy$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
-  ctdA <- subset (physOc, yr == levels (yr)[i])
+  ctdA <- subset (phy, yr == levels (yr)[i])
   ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
-  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time, File.Name
+  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
-                                  , CTD.serial
+                                  , File.Name, CTD.serial
                                   , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
                                   , Temperature_ITS90_DegC, Salinity_PSU
                                   , Density_sigma.theta.kg.m.3
@@ -586,7 +680,9 @@ for (i in 1:length (levels (yr))){
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 ("CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
-  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every, zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
+         , file=tF, append=FALSE, ncolumns=1)
+  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE, append=TRUE)
 }
 
 

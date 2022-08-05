@@ -134,14 +134,21 @@ for (i in 1:length (conF)){
   # bT <- paste (l1, l2, sep = "\n")
   # bT <- paste (l1, sep = "\n")
 
-  write (bT, file = "~/CTDbatch.txt")
-  # write (paste (l1, l2, sep = "\n"))## XXX TEST
+  if (.Platform$OS.type=="windows"){
+    write (bT, file = "~/CTDbatch.txt")
+    # write (paste (l1, l2, sep = "\n"))## XXX TEST
 
-  # efforts to suppress console output failed: invisible(), capture.output()...
-  x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait=TRUE, intern=TRUE)
-  ## cleanup
-  # unlink (tL, recursive=TRUE, force=TRUE)  ## need this or next batch will get files from wrong CTD
-  unlink ("~/CTDbatch.txt")
+    # efforts to suppress console output failed: invisible(), capture.output()...
+    x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait=TRUE, intern=TRUE)
+    ## cleanup
+    # unlink (tL, recursive=TRUE, force=TRUE)  ## need this or next batch will get files from wrong CTD
+    unlink ("~/CTDbatch.txt")
+  }else{
+    ## ensure that wine64 is installed
+    write (bT, file = "~/Documents/CTDbatch.txt") ## is symlinked to .wine/dosdevices/c:/users/crossover/My\\ Documents
+    x <- system (paste0 ("wine64 ~/.wine/dosdevices/c:/Program\\ Files \\(x86\\)/Sea-Bird/SBEDataProcessing-Win32/SBEBatch.exe"))
+    unlink ("~/Documents/CTDbatch.txt")
+  }
 }
 
 

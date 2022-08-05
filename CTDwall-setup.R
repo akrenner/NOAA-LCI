@@ -1,5 +1,7 @@
 ## produce temp file for CTDwall to process further
-
+## define color ramps
+## define data ranges
+## clean data (move to earlier??)
 
 
 ## issues:
@@ -21,21 +23,16 @@ if (length (grep ("darwin", version$os)) >0 ){
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 
+if (!require("pacman", quietly=TRUE)){install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
+Require <- pacman::p_load
+
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
 ## should be poSS and stn -- check!
 
-## turbo colors
-#   ## see https://github.com/jlmelville/vizier
-#   # install.packages("remotes")
-#   # remotes::install_github("jlmelville/vizier")
-# require ('vizier')
-
-
-## set-up plot and paper size
 
 ### data prep
-require ("oce")
+Require ("oce")
 ## define sections
 physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
@@ -52,55 +49,89 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 
 
-
-
 ## get coastline and bathymetry
 ## bathymetry and coastline
-bathy <- "polygon"
+
 ## Zimmermann bathymetry
-require ("raster", quietly = TRUE)  ## move to terra/stars
-require ("marmap")
+Require ("raster")  ## move to terra/stars
+Require ("marmap")
 
 ## FIX !!  -- already in prepData? -- migrate to prepData!
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
-if (0){
+cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
+unlink (cFile)
+if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
+  ## need to migrate this to TERRA or STARS!
+
   ##  bR <- resample (bR, nGrid)
   ## migrate to terra/stars
-  bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf") ## not working in RStudio -- need to use decompressed after all?
+
+  if (.Platform$OS.type == "windows"){
+    bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }else{
+    bR <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }
   ## need to reproject to longlat
   ## then turn into topo object
-  bathyP <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first
-  bathy <- as.topo (as.bathy (bathyP)); rm (bR)  # still not right
+  bathyZ <- bR
+#  bathyZ <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first -- not necessary?!??
+  # bathyZ <- as.topo (as.bathy (bathyP))  # still not right -- for oce only
   # bathy <- as.topo (z = bRg [[1]][,,1])
-  save (bathy, bathyP, file = "~/tmp/LCI_noaa/cache/bathymetryZ.RData")
-  #  rm (bR, bRg, bRb)
+  Require ("marmap")
+  bfer <- 0.5
+  bathy <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
+                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
+                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
+  rm (bfer, bR)
+
+  save (bathy, bathyZ, file = cFile)
 }else{
-  load ("~/tmp/LCI_noaa/cache/bathymetryZ.RData")
+  load (cFile)
 }
 
-## more bathymetry to fill in parts zimmerman bathymetry missses
+## more bathymetry to fill in parts Zimmerman bathymetry missses
 ## here or in CTDwall.R??
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
+# try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 
 
-require ("ocedata") # coastlineWorldFine
+if (0){useSF <- FALSE  ## use package sf and terra/stars instead of raster
+# useSF <- TRUE
+
+## add high-res bottom/bathymetry profile
+## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
+## load from previous script? datasetup?
+if (useSF){
+  Require ("sf") ## or stars / terra ??
+  Require ("stars") ## or better to use terra?
+  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  # Require ("terra")
+  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+}else{
+  Require ("raster")
+  ## need to supply absolute path because raster object is just a pointer.
+  ## still needs uncompressed raster file accessible.
+  if (.Platform$OS.type == "windows"){
+    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }else{
+    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  }
+}
+}
 
 
 
-# poAll <- physOc
-# poAll <- poAll [with (poAll, order (Transect, year, isoTime, Pressure..Strain.Gauge..db.)),]
 
+
+Require ("ocedata") # coastlineWorldFine
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
 #
 # add flourescence to other variables. To do that, need to make section from oce-ctd object
-
-## AlongBay (tn=6), i = 2, sections to process: 4, k= 5 fails
 
 
 # poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate -- keep them in!
@@ -109,58 +140,6 @@ rm (physOc)
 poAll$Transect <- factor (poAll$Transect)
 
 
-## compare attenuation and turbidity -- ok to merge? QAQC
-summary (poAll$turbidity)
-summary (poAll$attenuation)
-pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
-par (mfrow = c (2,1))
-hist (log (poAll$beamAttenuation), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
-hist (log (poAll$turbidity), xlim = range (log (c (poAll$attenuation, poAll$turbidity)), na.rm = TRUE))
-dev.off()
-
-
-pdf ("~/tmp/LCI_noaa/media/CTDtests/O2-temp.pdf")
-plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll, col = year)
-# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = year)
-# legend ("bottomleft", col = levels (poAll$year), pch = 19, legend = levels (poAll$year))
-# plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll, col = as.numeric (CTD.serial))
-for (i in 1:length (levels (poAll$year))){
-#  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = poAll
-  plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = poAll
-              , subset = year == levels (poAll$year)[i], col = as.numeric (CTD.serial))
-  legend ("topright", col = levels (factor (as.numeric (poAll$CTD.serial)))
-          , legend = levels (factor (poAll$CTD.serial)), pch = 19
-          , title = levels (poAll$year)[i])
-}
-## issues: 2017!  (positive spike to >7). 2012: negative values. 2018: low values of 4141 (pre-callibration?)
-## 2020: 5028 looks quite different than 4141. 4141 has two groups
-dev.off()
-
-
-# png ("~/tmp/LCI_noaa/media/CTDtests/O2-SBEvsGG.png", width = 600, height = 400)
-# plot (Oxygen.Saturation.Garcia.Gordon.umol_kg~Oxygen_SBE.43..mg.l., poAll
-#       , col = year, main = "colored by year"
-#       , subset = Depth.saltwater..m. < 10)
-# dev.off()
-
-
-
-## histogram and QAQC -- do this in previous script?!?
-## add some thresholds/QAQC; log-scale?
-# poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < )
-
-## attenuation vs turbidy -- mix them here?!?
-poAll$turbidity <- ifelse (is.na (poAll$turbidity), poAll$beamAttenuation, poAll$turbidity) ## is this wise or correct ? XXX
-
-## remove implausible values
-poAll$Density_sigma.theta.kg.m.3 <- ifelse (poAll$Density_sigma.theta.kg.m.3 < 15, NA, poAll$Density_sigma.theta.kg.m.3)
-poAll$Oxygen_umol_kg <- ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
-poAll$Oxygen_umol_kg <-  ifelse (poAll$Oxygen_umol_kg <= 0, NA, poAll$Oxygen_umol_kg)
-# poAll$Oxygen_SBE.43..mg.l. <- ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-# poAll$Oxygen_SBE.43..mg.l. <-  ifelse (poAll$Oxygen_SBE.43..mg.l. <= 0, NA, poAll$Oxygen_SBE.43..mg.l.)
-poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, poAll$Oxygen.Saturation.Garcia.Gordon.umol_kg)
-## recalc other O2 values here?
-poAll$Salinity_PSU <- ifelse (poAll$Salinity_PSU < 20, NA, poAll$Salinity_PSU)
 
 ## log transformations
 slog <- function (x){
@@ -176,11 +155,11 @@ poAll$logTurbidity <- slog (poAll$turbidity)
 rm (slog)
 
 
-
+if (0){  ## use hi-res bathymetry profiles now -- this is no longer of use
 ## add bathymetry to CTD metadata
 poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-require (sp)
+Require (sp)
 poP <- poAll
 ## migrate to sf, stars/terra
 coordinates (poP) <- ~longitude_DD+latitude_DD
@@ -194,8 +173,9 @@ if (exists ("bathyL")){
   poAll$bathy <- poAll$Bottom.Depth_survey
 }
 poAll$bathy <- poAll$Bottom.Depth_survey
-rm (poP, bL, bathyP, bathyL, bathy)
 
+rm (poP, bL, bathyP, bathyL, bathy)
+}
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
@@ -222,6 +202,12 @@ for (h in 2:length (levels (surveyW))){
 }
 poAll$survey <- factor (surveyW)  ## need to reset factor levels after combining days
 rm (surveyW, h)
+
+## migrate code over from CTDwall.R:
+## several surveys in one month
+## several surveys on one day
+## replicate station casts
+## if two surveys in one month, asign early survey to previous month if that month is empty
 
 # ## new, slow version -- but reliable?
 # for (h in 2:length (surveyW)){
@@ -271,38 +257,38 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 # remotes::install_github("jlmelville/vizier")
 ## move these into CTDsectionFcts.R -- or not?
 
-# require ('vizier')
-require ("cmocean")  ## for color ramps
 
 
+########################
+## define color ramps ##
+########################
+
+## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
+ODV_colours <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+odv <- colorRampPalette(col=ODV_colours, bias=0.3)
+rm (ODV_colours)
+
+
+
+Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
-   oceColorsTurbo  # cmocean ("thermal")
-  , cmocean ("haline")
+   # colorRampPalette(oceColorsTurbo(8), bias=0.5)
+  oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
+  , odv #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
   , cmocean ("dense")
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
   , function (n){
-    require ("vizier")
-    turbo (n, start = 0.25, end = 0.8)
+    Require ("viridis")
+    turbo (n, begin=0.25, end=0.8)
   }
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??
-
 )
-if (0){
-  oCol <- list (  ## old, not used
-    # turbo
-    oceColorsTemperature
-    , oceColorsSalinity
-    , oceColorsDensity
-    , oceColorsTurbidity
-    , oceColorsChlorophyll
-    , oceColorsPAR  #, turbo #
-    , oceColorsOxygen
-  )
-}
+## oceColorsTemperature and the likes are dated -- don't use them
+## (stick to algorithmic pic of scale limits. Cleanups.)
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
@@ -315,33 +301,32 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
                         , "Oxygen_umol_kg"
                         )
-                     #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.025,0.975), na.rm = TRUE)
-                         #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
+                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
+                       # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
-oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go
-# oRange [5,] <- c(0,100)      # fix PAR range
+## manually tune some of these ranges
+# oRange [1,1] <- 1.5 # fix min temperature
+# oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
+# oRange [6,] <- c(-3,5)      # fix logPAR range
 ## what's better to use here, umol/kg or mg/l?
-# oRange [6,] <- c (-0.1,1.5)  # fix O2 perc range
-# oRange [6,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
+# oRange [7,] <- c (-0.1,1.5)  # fix O2 perc range
+# oRange [7,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
 # https://repository.oceanbestpractices.org/bitstream/handle/11329/417/56281.pdf?sequence=1&isAllowed=y
 ## umol/l = 31.2512* cO2 mg/l
-oRange [6,] <- c (2,12) * 31.2512
+# oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
 ###########################################################################
 
-
-## show data availability by year
 if (0){
-  cat ("data availability per year and transect\n")
-  aggregate (Date~year+Transect, poAll, function (x){length (levels (factor (x)))})[,c(2,1,3)]
+  hist (poAll$Temperature_ITS90_DegC)
+  abline (v = oRange [1,])
 }
 
 
-
 save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
+# save (oRange, oCol, poAll, file="~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
 cat ("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
 # EOF

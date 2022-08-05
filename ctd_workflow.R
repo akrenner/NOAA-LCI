@@ -5,7 +5,7 @@ rm (list = ls())
 print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
-  if (version$os != "mingw32"){
+  if (.Platform$OS.type != "windows"){
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
   }else{
     setwd ("~/myDocs/amyfiles/NOAA-LCI/")
@@ -38,27 +38,25 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
-source ("CTD_cleanup.R")         ## move error corrections and QAQC into here. Also aggregate-output
+source ("CTD_cleanup.R")         ## move error corrections into here. Also aggregate-output
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 
 
-source ("datasetup.R")
+source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value = c(28.5532333333333, 31.4265333333333,  :
+# replacement has 3833 rows, data has 3834
 
-## anaCTD.R needs updates/work -- not currently working -- multiplatform issue?
-# source ("anaCTD.R")              ## CTD profiles?
-# cat ("\n# END anaCTD.R #\n")
-cat ("\n# SKIPPED anaCTD.R #\n")
+# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 
 ## the Wall
 source ("CTDwall-setup.R")
 source ("CTDsections.R")
-# source ("CTD-testSectionPlot.R")  # look for plots
 source ("CTDwall.R")
+source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
-# source ("ctd_T9-anomaly.R")
+# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
 ## replot The Wall
 ## produce 2019 aggregate file (and others as well)
