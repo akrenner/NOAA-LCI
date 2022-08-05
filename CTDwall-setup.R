@@ -52,12 +52,6 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## get coastline and bathymetry
 ## bathymetry and coastline
 
-## Zimmermann bathymetry
-Require ("raster")  ## move to terra/stars
-Require ("marmap")
-
-## FIX !!  -- already in prepData? -- migrate to prepData!
-
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
 cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
@@ -67,6 +61,12 @@ if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
 
   ##  bR <- resample (bR, nGrid)
   ## migrate to terra/stars
+
+  ## Zimmermann bathymetry
+  Require ("raster")  ## move to terra/stars
+  Require ("rgal")
+  Require ("marmap")
+  ## FIX !!  -- already in prepData? -- migrate to prepData!
 
   if (.Platform$OS.type == "windows"){
     bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
@@ -155,26 +155,27 @@ poAll$logTurbidity <- slog (poAll$turbidity)
 rm (slog)
 
 
-if (0){  ## use hi-res bathymetry profiles now -- this is no longer of use
-## add bathymetry to CTD metadata
-poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
+## use hi-res bathymetry profiles now -- this is no longer of use
+if (0){
+  ## add bathymetry to CTD metadata
+  poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-Require (sp)
-poP <- poAll
-## migrate to sf, stars/terra
-coordinates (poP) <- ~longitude_DD+latitude_DD
-proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
-poAll$bathy <- extract (bathyP, poP)
-poAll$Bottom.Depth_survey <- extract (bathyP, poP)
-if (exists ("bathyL")){
-  bL <- extract (marmap::as.raster (bathyL), poP)
-  poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
-                                        , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+  Require (sp)
+  poP <- poAll
+  ## migrate to sf, stars/terra
+  coordinates (poP) <- ~longitude_DD+latitude_DD
+  proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
+  poAll$bathy <- extract (bathyP, poP)
+  poAll$Bottom.Depth_survey <- extract (bathyP, poP)
+  if (exists ("bathyL")){
+    bL <- extract (marmap::as.raster (bathyL), poP)
+    poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
+                                          , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+    poAll$bathy <- poAll$Bottom.Depth_survey
+  }
   poAll$bathy <- poAll$Bottom.Depth_survey
-}
-poAll$bathy <- poAll$Bottom.Depth_survey
 
-rm (poP, bL, bathyP, bathyL, bathy)
+  rm (poP, bL, bathyP, bathyL, bathy)
 }
 
 
