@@ -211,11 +211,12 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
             as.numeric (format (Sys.time(), "%Y")) &&
             iS/length (sL) > as.numeric (format (Sys.time(), "%m"))/12
           if (!inFuture){
-            plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""
-                  , main = paste0 (levels (physOc$transDate)[iS], "--"
-                                   , length (levels (factor (xC$Match_Name)))
-                                   , " stations")
-            )
+            nS <- length (levels (factor (xC$Match_Name)))
+            plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""   ## XXX in here or in CTDsectionFcts.R? XXX
+                  , main = paste0 (levels (physOc$transDate)[iS], ": ", nS
+                                   , ifelse (nS > 1, " stations", " station")
+                  ))
+            rm (nS)
           }
           rm (inFuture)
         }else{
@@ -261,9 +262,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                 if (nFN [iQ] > 1){
                   bF <- sapply (1:length (levels (sec$File.Name)), function (iQ){
                     cx <- subset (sec, File.Name == levels (sec$File.Name)[iQ])
-                    # 1/abs (difftime (mT, cx$isoTime [1], "minutes"))
+                    # qal <- nrow (cx)
+                    qal <- 1/abs (as.numeric (difftime (mT, cx$isoTime [1], "minutes")))
                     # cx$File.Name [1]
-                    nrow (cx)
+                    qal
                   })
                   ## pick the best cast
                   sec <- subset (sec

@@ -50,8 +50,8 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
         rm (lat, lon)
       }
       if (sum (!apply (zvar, 1, FUN = function (x){all (is.na (x))})) < 2){
-        plot (1:10, type = "n", new = FALSE)
-        text (5,5, paste0 (N, " all values NA"), col = "red", cex=2)
+        # plot (1:10, type = "n", new = FALSE)
+        mtext (paste0 (N, " all NA"), side=3,line=-5, col = "red", cex=1)
       }
 
       # ## add contours -- see last example ?plot.section
