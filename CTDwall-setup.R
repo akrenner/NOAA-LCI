@@ -81,9 +81,9 @@ if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
   # bathy <- as.topo (z = bRg [[1]][,,1])
   Require ("marmap")
   bfer <- 0.5
-  bathy <- try (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
+  bathy <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
                                , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
-                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/"))
+                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
   rm (bfer, bR)
 
   save (bathy, bathyZ, file = cFile)
@@ -264,7 +264,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ########################
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
-ODV_colours <- c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa")
+ODV_colours <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 odv <- colorRampPalette(col=ODV_colours, bias=0.5)
 rm (ODV_colours)
 
@@ -301,9 +301,8 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
                         , "Oxygen_umol_kg"
                         )
-                     #, FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
-                         #  quantile (poAll [,which (names (poAll) == vn)], na.rm = TRUE, c(0.01, 0.99), type = 8)
+                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
+                       # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
                      }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
