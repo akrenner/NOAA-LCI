@@ -112,9 +112,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       # bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1  ## terra
     }else{
       Require ("sp")
+      Require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
       coordinates (sect) <- ~loni+lati
       proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
-      sectP <- spTransform(sect, CRS (proj4string(bathyZ)))
+      sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
       bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
     Require ("marmap")
@@ -526,17 +527,16 @@ if (0){
         , span = 250
   )
   dev.off()
-}
 
+  ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
+  Require (ocedata) #for the coastlineWorldFine data
+  data(coastlineWorldFine)
 
-## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-Require (ocedata) #for the coastlineWorldFine data
-data(coastlineWorldFine)
-
-mp <- function() {
-  mapPlot(coastlineWorldFine, #projection=proj4string (bR),
-          longitudelim = c(-154.2, -150.5),
-          latitudelim = c(58.5, 60.5), col='grey')
+  mp <- function() {
+    mapPlot(coastlineWorldFine, #projection=proj4string (bR),
+            longitudelim = c(-154.2, -150.5),
+            latitudelim = c(58.5, 60.5), col='grey')
+  }
 }
 
 cat ("\n# END CTDwall.R #\n")
