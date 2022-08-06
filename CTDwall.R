@@ -1,7 +1,10 @@
 ## replot CTD wallpaper for office
 ## provide line-graph alternatives
-
 rm (list = ls())
+## get bathymetry, standard colors, and data ranges
+load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+
+
 
 
 test <- TRUE
@@ -28,14 +31,10 @@ test <- FALSE
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 
-source ("CTDsectionFcts.R")
-dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
-## get bathymetry, standard colors, and data ranges
-load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 
+stopatDate <- "2022-07-31"
+# stopatDate <- Sys.time()
 
-useSF <- FALSE  ## still using raster -- need to migrate to sf and terra/stars
-mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year plots
 
 if (test){
   oceanvarC <- 1:length (oVars)
@@ -44,10 +43,22 @@ if (test){
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  # transectC <- 5
+  # transectC <- c(1,5)
 }
 
 
+
+
+################################
+## enf of user configurations ##
+################################
+
+if (class (stopatDate)[1]=="character"){stopatDate <- as.POSIXct(stopatDate)}
+source ("CTDsectionFcts.R")
+dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
+
+useSF <- FALSE  ## still using raster -- need to migrate to sf and terra/stars
+mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year plots
 
 
 if (0){ ## tests
@@ -138,16 +149,15 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       ## monthly
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
-      pH <- 42; pW <- 84     # FWS paper is 42 inches wide
-      ## rotate, but do not scale. Autorotate should be ok.
+      pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
+      pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
 
-      pH <- 32; pW <- 42  ## full-width version
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
       Require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
-      nY <- as.numeric (format (Sys.time(), "%Y")) - min (as.integer (levels (poAll$year))) + 1
+      nY <- as.numeric (format (stopatDate, "%Y")) - min (as.integer (levels (poAll$year))) + 1
       nY <- yearPP
       layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
       omText <- month.name
@@ -209,8 +219,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           ## if a scheduled survey was not done, plot a blank placeholder in the panel instead
           ## unless the scheduled survey is in the future from runtime (do nothing then)
           inFuture <- as.numeric (as.character (physOc$year))[1] >=
-            as.numeric (format (Sys.time(), "%Y")) &&
-            iS/length (sL) > as.numeric (format (Sys.time(), "%m"))/12
+            as.numeric (format (stopatDate, "%Y")) &&
+            iS/length (sL) > as.numeric (format (stopatDate, "%m"))/12
           if (!inFuture){
             nS <- length (levels (factor (xC$Match_Name)))
             plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""   ## XXX in here or in CTDsectionFcts.R? XXX
@@ -362,6 +372,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           if (length (xCo@data$station) > length (xMap@data$station)){
             xMap <- xCo
           }
+          rm (xCo, nSurv)
         }
       }
       ## covering yearPP years per page. Write out at end of each year
@@ -380,18 +391,6 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## add color scale and map after all section plots are done ##
     ##############################################################
 
-    ## draw palette, color scale into next panel (or along full length?)
-    nCol <- 100
-    t.ramp <- oCol3[[ov]](nCol)
-    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
-                   , ylim=c(0,8)  # ylim to make bar narrower, less high
-    )
-    title (main = oVars [ov], cex=3, line=-6)
-    lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
-    axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol, labels = lVal
-          , lwd = 0)
-    rm (bp, lVal, nCol)
-
     ## maps
     xLim <- c(-154, -151)
     yLim <- c(57.5, 60.1)
@@ -407,65 +406,97 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           , span = 250
     )
     ## add eye for perspective;  save eye to eye.ps with Inkscape
-    if (levels (poAll$Transect)[tn] == "3"){
-      xU <- -152.5; yU <- 59.4; rU <- 60
-    }else if (levels (poAll$Transect)[tn] == "4"){
-      xU <- -152.8; yU <- 59.4; rU <- 0
-    }else if (levels (poAll$Transect)[tn] == "6"){
-      xU <- -151.5; yU <- 58.4; rU <- 115
-    }else  if (levels (poAll$Transect)[tn] == "7"){
-      xU <- -152.5; yU <- 58.7; rU <- 85
-    }else if (levels (poAll$Transect)[tn] == "9"){
-      xU <- -152.8; yU <- 59.0; rU <- 20
-    }else{                         # AlongBay
-      xU <- -150.5; yU <- 59.1; rU <- 130
-    }
+    if (1){
+      if (levels (poAll$Transect)[tn] == "3"){
+        xU <- -152.5; yU <- 59.4; rU <- 60
+      }else if (levels (poAll$Transect)[tn] == "4"){
+        xU <- -152.8; yU <- 59.4; rU <- 0
+      }else if (levels (poAll$Transect)[tn] == "6"){
+        xU <- -151.5; yU <- 58.4; rU <- 115
+      }else  if (levels (poAll$Transect)[tn] == "7"){
+        xU <- -152.5; yU <- 58.7; rU <- 85
+      }else if (levels (poAll$Transect)[tn] == "9"){
+        xU <- -152.8; yU <- 59.0; rU <- 20
+      }else{                         # AlongBay
+        xU <- -150.5; yU <- 59.1; rU <- 130
+      }
 
-    if (0){  ## vector based -- not windows compatible and doesn't rotate
-      Require ("grImport")  ## requires installation of GS -- go raster after all
-      grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-      p <- readPicture("pictograms/eye.ps.xml")
-      unlink ("pictograms/eye.ps.xml")
-      grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
-                    , x=unit (xU, "npc"), y=unit (yU, "npc")
-                    # , angle=rU
-                    , width=unit (0.07, "npc"), height=unit (0.07, "npc")
-      )
-      ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
-      # if (.Platform$OS.type=="unix"){
-      #   if (!require ("grConvert")){
-      #     devtools::install_github("sjp/grConvert")
-      #     library (grConvert)}
-      #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
-      # }
-      # Require ("grImport2")
-      # p <- grImport2::readPicture ("pictograms/eye2.svg")
-      # g <- grImport2::pictureGrob(p)
-      # grid.picture(g)
+      if (0){  ## vector based -- not windows compatible and doesn't rotate
+        Require ("grImport")  ## requires installation of GS -- go raster after all
+        grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
+        p <- readPicture("pictograms/eye.ps.xml")
+        unlink ("pictograms/eye.ps.xml")
+        grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
+                      , x=unit (xU, "npc"), y=unit (yU, "npc")
+                      # , angle=rU
+                      , width=unit (0.07, "npc"), height=unit (0.07, "npc")
+        )
+        ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
+        # if (.Platform$OS.type=="unix"){
+        #   if (!require ("grConvert")){
+        #     devtools::install_github("sjp/grConvert")
+        #     library (grConvert)}
+        #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
+        # }
+        # Require ("grImport2")
+        # p <- grImport2::readPicture ("pictograms/eye2.svg")
+        # g <- grImport2::pictureGrob(p)
+        # grid.picture(g)
+      }
+      if (.Platform$OS.type=="unix"){
+        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+      }
+      Require ("png")
+      p <- readPNG ("pictograms/eye.png")
+      # Require ("OpenImageR")
+      # p <- rotateImage (p, angle=rU, method="nearest")
+      rasterImage(p
+                  , xleft=xU       # -152       +3*1*(xU-0.5)
+                  , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
+                  , ybottom=yU     # 59.4     +1*1*(yU-0.5)
+                  , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
+                  , angle=rU)
+      rm (p, xU, yU, rU)
+      # ## fine-scale map -- no longer needed?
+      # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
+      #       , which = 99
+      #       , coastline = "coastlineWorldFine"
+      #       , showStations = TRUE
+      #       , gird = TRUE
+      #       # , span=50
+      # )
     }
-    if (.Platform$OS.type=="unix"){
-      system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+    rm (xMap, bottom)
+
+    ###############################################
+    ## draw palette, color scale into next panel ##
+    ###############################################
+
+    nCol <- 100
+    t.ramp <- oCol3[[ov]](nCol)
+    if (pH > 30){
+      yL <- 1.8
+      par (mar=c(14, 1,3,1))
+    }else{
+      yL <-1.2
+      par (mar=c(10, 1,3,1))
     }
-    Require ("png")
-    p <- readPNG ("pictograms/eye.png")
-    # Require ("OpenImageR")
-    # p <- rotateImage (p, angle=rU, method="nearest")
-    rasterImage(p
-                , xleft=xU       # -152       +3*1*(xU-0.5)
-                , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
-                , ybottom=yU     # 59.4     +1*1*(yU-0.5)
-                , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
-                , angle=rU)
-    rm (p, xU, yU, rU)
-    # ## fine-scale map -- no longer needed?
-    # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
-    #       , which = 99
-    #       , coastline = "coastlineWorldFine"
-    #       , showStations = TRUE
-    #       , gird = TRUE
-    #       # , span=50
-    # )
-    rm (xMap, xCo, nSurv,  bottom)
+    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
+                   , ylim=c(0,yL)  # ylim to make bar narrower, less high
+    )
+    rm (yL)
+    title (main = oVars [ov], cex=3, line=0.5)
+    lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
+    axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol
+          , labels = lVal, lwd = 0)
+    rm (bp, lVal, nCol)
+
+    ## add date and logos for reference
+    mtext (text=paste ("NOAA Kasitsna Bay Lab and KBNERR\n", Sys.Date())
+           , side=1, line=6, outer=FALSE, cex=0.7, adj=1)
+    ## add NCCOS and KBNERR logos
+
+    ### end of wall poster
     dev.off()
     cat ("\n")
   }
