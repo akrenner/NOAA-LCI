@@ -507,32 +507,6 @@ rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, t
 
 
 
-if (0){
-  ## plot CTD-profiles of station over time
-  pdf ("CTDtime.pdf")
-  # for (i in 1:length (levels (physOc$Match_Name))){
-  for (i in 1:6){
-    ## section over time? or wrap by hand?
-    xCp <- subset (physOc, Match_Name == levels (physOc$Match_Name)[i])
-    if (length (levels (as.factor (xC$Date))) > 1){
-      xC <- with (xCp, as.section (salinity = Salinity_PSU
-                                   , temperature = Temperature_ITS90_DegC
-                                   , pressure = Pressure..Strain.Gauge..db.
-                                   , longitude = Lon_decDegree
-                                   , latitude = Lat_decDegree
-                                   , station = paste0 (Match_Name, DateISO)
-                                   , sectionId = transDate
-      ))
-      ## need to add/supply time,
-      xC@metadata$time <- xCp$isoTime
-
-      sG <- sectionGrid (xC, p = 'levitus')
-    }
-  }
-  dev.off()
-}
-
-
 
 ## for error checking: map of every transect
 # double-used plots may appear out-of-line in chronology
