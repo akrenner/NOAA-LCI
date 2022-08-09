@@ -54,41 +54,41 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
-cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
-unlink (cFile)
-if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
-  ## need to migrate this to TERRA or STARS!
 
-  ##  bR <- resample (bR, nGrid)
-  ## migrate to terra/stars
+useSF <- TRUE
+useSF <- FALSE  ## need to wait for marmap update or produce own. marmap depends on sp/raster
+
+
+Require ("marmap")
+bfer <- 0.5
+cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
+# unlink (cFile)
+bathyNoaa <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
+                                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
+                                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
+if (class (bathyNoaa)=="try-error"){
+  load (cFile)
+}else{
+  save (bathyNoaa, file=cFile)
+}
+
+if (useSF){
+  ## Zimmermann bathymetry
+  Require ("stars")
+  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+}else{
 
   ## Zimmermann bathymetry
-  Require ("raster")  ## move to terra/stars
-  Require ("rgal")
-  Require ("marmap")
+  Require ("raster")
+  # Require ("rgdal")
   ## FIX !!  -- already in prepData? -- migrate to prepData!
 
-  if (.Platform$OS.type == "windows"){
-    bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }else{
-    bR <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }
-  ## need to reproject to longlat
-  ## then turn into topo object
-  bathyZ <- bR
-#  bathyZ <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first -- not necessary?!??
-  # bathyZ <- as.topo (as.bathy (bathyP))  # still not right -- for oce only
-  # bathy <- as.topo (z = bRg [[1]][,,1])
-  Require ("marmap")
-  bfer <- 0.5
-  bathy <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
-                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
-                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
-  rm (bfer, bR)
-
-  save (bathy, bathyZ, file = cFile)
-}else{
-  load (cFile)
+    if (.Platform$OS.type == "windows"){
+      bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+    }else{
+      bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+    }
+    rm (bfer, bR)
 }
 
 ## more bathymetry to fill in parts Zimmerman bathymetry missses
@@ -96,33 +96,6 @@ if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 # try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-
-
-if (0){useSF <- FALSE  ## use package sf and terra/stars instead of raster
-# useSF <- TRUE
-
-## add high-res bottom/bathymetry profile
-## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
-## load from previous script? datasetup?
-if (useSF){
-  Require ("sf") ## or stars / terra ??
-  Require ("stars") ## or better to use terra?
-  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  # Require ("terra")
-  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  Require ("raster")
-  ## need to supply absolute path because raster object is just a pointer.
-  ## still needs uncompressed raster file accessible.
-  if (.Platform$OS.type == "windows"){
-    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }else{
-    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }
-}
-}
-
-
 
 
 
@@ -155,27 +128,38 @@ poAll$logTurbidity <- slog (poAll$turbidity)
 rm (slog)
 
 
-## use hi-res bathymetry profiles now -- this is no longer of use
+## use hi-res bathymetry profiles now -- this is no longer of use -- abandone!
 if (0){
   ## add bathymetry to CTD metadata
   poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-  Require (sp)
-  poP <- poAll
-  ## migrate to sf, stars/terra
-  coordinates (poP) <- ~longitude_DD+latitude_DD
-  proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
-  poAll$bathy <- extract (bathyP, poP)
-  poAll$Bottom.Depth_survey <- extract (bathyP, poP)
-  if (exists ("bathyL")){
-    bL <- extract (marmap::as.raster (bathyL), poP)
-    poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
-                                          , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
-    poAll$bathy <- poAll$Bottom.Depth_survey
-  }
-  poAll$bathy <- poAll$Bottom.Depth_survey
+  if (useSF){
+    ## migrate to sf, stars/terra
+    Require (c ("sf", "lubridate"))
+    pop <- poAll %>%
+      st_as_sf (coords = c("longitude_DD", "latitude_DD")) %>%
+      st_set_crs(value="+proj=longlat +datum=WGS84 +units=m")
 
-  rm (poP, bL, bathyP, bathyL, bathy)
+    poAll$bathy <- st_extract(bathyZ, at=pop)
+    poAll$Bottom.Depth_survey <- st_extract (bathyP, pop)
+    rm (pop)
+    # sapply(st_intersects(x,y), function(z) if (length(z)==0) NA_integer_ else z[1])
+  }else{
+    Require (sp)
+    poP <- poAll
+    coordinates (poP) <- ~longitude_DD+latitude_DD
+    proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
+    poAll$bathy <- extract (bathyP, poP)
+    poAll$Bottom.Depth_survey <- extract (bathyP, poP)
+    if (exists ("bathyL")){
+      bL <- extract (marmap::as.raster (bathyL), poP)
+      poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
+                                            , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+      poAll$bathy <- poAll$Bottom.Depth_survey
+    }
+    poAll$bathy <- poAll$Bottom.Depth_survey
+    rm (poP, bL, bathyP, bathyL, bathy)
+  }
 }
 
 

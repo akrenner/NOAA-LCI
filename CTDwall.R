@@ -57,7 +57,7 @@ if (class (stopatDate)[1]=="character"){stopatDate <- as.POSIXct(stopatDate)}
 source ("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 
-useSF <- FALSE  ## still using raster -- need to migrate to sf and terra/stars
+if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
 mnthly <- c ("9", "AlongBay", "4")  ## for which transects to produce 12x n-year plots
 
 
@@ -109,18 +109,16 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
     Require ("oce")
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
-    # if (levels (poAll$Transect)[tn] != "AlongBay"){dist <- rev (dist)}
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
     ## extract from bathyZ. then fill-in the missing values from get.depth
-    ## need to geo-ref points and raster first?
     if (useSF){
-      sect <- st_as_sf(sect, coords = c("loni", "lati"))
-      st_crs(sect) <- 4326  ## WGS84 definition
-      sectP <- st_transform(sect, st_crs (bathyZ))
-      # bottomZ <- aggregate (bathyZ, sectP, function(x){x[1]}) ## this step fails in stars -- terra?
-      bottomZ <- aggregate (bathyZ, sectP, mean, na.rm = TRUE) ## stars -- hangs
-      # bottomZ <- extract (bathyZ, sectP, method="bilinear")*-1  ## terra
+      Require ("sf")
+      sect <- st_as_sf(sect, coords=c("loni", "lati"))
+      sf::st_crs(sect) <- 4326  ## WGS84 definition
+      Require ("stars")
+      sectP <- sf::st_transform(sect, st_crs (bathyZ))
+      bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
     }else{
       Require ("sp")
       Require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
@@ -131,10 +129,9 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     }
     Require ("marmap")
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
-    bottom <- get.depth (bathy, x=sect$loni, y=sect$lati, locator=FALSE)
+    bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
     bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
     rm (sect, sectP, bottomZ)
-
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
