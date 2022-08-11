@@ -654,7 +654,7 @@ setwd (outD) ## zip blows up otherwise
 yr <- factor (format (phy$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (phy, yr == levels (yr)[i])
-  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
+  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
   ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
