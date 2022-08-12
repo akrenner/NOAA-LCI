@@ -648,21 +648,20 @@ x
 Require ("zip")
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
-wD <- getwd()
-setwd (outD) ## zip blows up otherwise
 
 yr <- factor (format (phy$isoTime, "%Y"))
 for (i in 1:length (levels (yr))){
   ctdA <- subset (phy, yr == levels (yr)[i])
-  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "1", "4", "6", "7", "9"))
+  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
   ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
                                   , File.Name, CTD.serial
                                   , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
+                                  , Depth=Depth.saltwater..m.
                                   , Temperature_ITS90_DegC, Salinity_PSU
                                   , Density_sigma.theta.kg.m.3
-                                  , Oxygen_umol.kg = Oxygen_umol_kg
+                                  , Oxygen_umol.kg=Oxygen_umol_kg
                                   , Oxygen.Saturation_perc=Oxygen_sat.perc.
                                   # need SBE O2 concentration umol.kg in here
                                   , Nitrogen.saturation..mg.l.  ## make it umol.kg
@@ -674,31 +673,34 @@ for (i in 1:length (levels (yr))){
   ))
   ctdA <- ctdB; rm (ctdB)
   if ("Spice" %in% names (ctdA)){
-## [,1:(ncol (ctdA)-1)] # remove Spice
    ctdA <- ctdA [,-which (names (ctdA) == "Spice")]
   }
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
-  tF <- paste0 ("CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
-  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every, zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
+  tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
+  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
          , file=tF, append=FALSE, ncolumns=1)
-  write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE, append=TRUE)
+  suppressWarnings(write.table(ctdA, file=tF, append=TRUE, quote=FALSE, sep=","
+                               , na="", row.names=FALSE, col.names=TRUE))
+  # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
 }
 
 
-if (0){
+if (.Platform$OS.type=="windows"){
   ## zip-up files -- about 100 MB
+  wD <- getwd()
+  setwd (outD) ## zip blows up otherwise
   unlink ("processedCTD_annual.zip", force = TRUE)
   zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
   zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
             , include_directories = FALSE)
-  ## zip individuals files
-  unlink (gsub (".csv", ".zip", zFiles [i]))
-  for (i in 1:length (zFiles)){
-    zip::zip (gsub (".csv", ".zip", zFiles [i]), files = zFiles [i]
-              , include_directories = FALSE, mode = "cherry-pick")
-  }
-  unlink (zFiles, force = TRUE)
+  # ## zip individuals files
+  # unlink (gsub (".csv", ".zip", zFiles [i]))
+  # for (i in 1:length (zFiles)){
+  #   zip::zip (gsub (".csv", ".zip", zFiles [i]), files = zFiles [i]
+  #             , include_directories = FALSE, mode = "cherry-pick")
+  # }
+  # unlink (zFiles, force = TRUE)
   rm (zFiles)
 }
 setwd (wD); rm (wD)
@@ -706,6 +708,7 @@ rm (showBad, oldMatch, ctdA, yr, i, j)
 ls()
 
 
+## no longer save RData dump here -- datasetup.R to read from aggregated files
 save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
 
 cat ("\n# END CTD_cleanup.R #\n")
