@@ -56,7 +56,7 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 # nGrid <- .... ## define new grid -- the missing link
 
 useSF <- TRUE
-useSF <- FALSE  ## need to wait for marmap update or produce own. marmap depends on sp/raster
+useSF <- FALSE  ## marmap still depends on sp/raster -- temp work-around
 
 
 Require ("marmap")
@@ -66,6 +66,7 @@ cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
 bathyNoaa <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
                                                , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
                                                , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
+
 if (class (bathyNoaa)=="try-error"){
   load (cFile)
 }else{
@@ -73,22 +74,37 @@ if (class (bathyNoaa)=="try-error"){
 }
 
 if (useSF){
+  detach_package <- function(pkg, character.only = FALSE)  ## see https://stackoverflow.com/questions/6979917/how-to-unload-a-package-without-restarting-r
+  {
+    if(!character.only)
+    {
+      pkg <- deparse(substitute(pkg))
+    }
+    search_item <- paste("package", pkg, sep = ":")
+    while(search_item %in% search())
+    {
+      detach(search_item, unload = TRUE, character.only = TRUE)
+    }
+  }
+
+  detach_package ("marmap")
+  detach_package ("adehabitatMA")
+  detach_package ("raster")
+  detach_package ("sp") ## needed as long as marmap depends on sp and raster. Still need to convert bathyNaa?
+  rm (detach_Package)
   ## Zimmermann bathymetry
   Require ("stars")
   bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
-
   ## Zimmermann bathymetry
   Require ("raster")
-  # Require ("rgdal")
   ## FIX !!  -- already in prepData? -- migrate to prepData!
-
     if (.Platform$OS.type == "windows"){
       bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
     }else{
       bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
     }
-    rm (bfer, bR)
+    rm (bfer)
 }
 
 ## more bathymetry to fill in parts Zimmerman bathymetry missses
