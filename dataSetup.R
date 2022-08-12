@@ -97,8 +97,38 @@ if (.Platform$OS.type != "unix"){
 ## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
 ## this is done by scripts called in ctd_workflow.R
 
-load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
+# load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
 
+Require ("tidyverse")
+physOcT <- list.files("~/tmp/LCI_noaa/data-products/CTD/", pattern=".csv", full.name=TRUE) %>%
+  lapply (read.csv, skip=1, header=TRUE) %>%
+  bind_rows
+
+physOc <- with (physOcT, data.frame (Match_Name=Station
+                                     , isoTime=as.POSIXct (paste (Date, Time))
+                                , latitude_DD=Latitude_DD
+                                , longitude_DD=Longitude_DD
+                                , File.Name=factor (File.Name), CTD.serial
+                                , Bottom.Depth
+                                , Pressure..Strain.Gauge..db.=pressure_db
+                                , Depth.saltwater..m.=Depth
+                                , Temperature_ITS90_DegC, Salinity_PSU
+                                , Density_sigma.theta.kg.m.3
+                                , Oxygen_umol_kg=Oxygen_umol.kg
+                                , Oxygen_sat.perc.=Oxygen.Saturation_perc
+                                # need SBE O2 concentration umol.kg in here
+                                , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                , PAR.Irradiance
+                                , Fluorescence_mg_m3
+                                , turbidity=Turbidity
+                                , beamAttenuation=Beam_attenuation
+                                , beamTransmission=Beam_transmission
+))
+
+stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
+stn <- subset (stn, !is.na (Lon_decDegree))
+stn <- subset (stn, !is.na (Lat_decDegree))
+stn$Plankton <- stn$Plankton == "Y"
 
 
 
@@ -288,7 +318,7 @@ sAgg <- function (varN, data = physOc, FUN = sum, ...){
 poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
 # poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
 poSS$minO2 <- sAgg ("Oxygen_umol_kg")
-poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
+# poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
 poSS$O2perc <- sAgg ("Oxygen_sat.perc.")
 if ("turbidity" %in% names (physOc)){
     ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
