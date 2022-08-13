@@ -265,19 +265,15 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ########################
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
-ODV_colours <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
-odv <- colorRampPalette(col=ODV_colours, bias=0.3)
-rm (ODV_colours)
-
-
+odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
 Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
    # colorRampPalette(oceColorsTurbo(8), bias=0.5)
   oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
-  , odv #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
-  , cmocean ("dense")
+  , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
+  , colorRampPalette (cmocean ("dense")(5), bias=0.3)
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
@@ -288,6 +284,7 @@ oCol3 <- list (  ## fix versions?
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??
 )
+rm (odv)
 ## oceColorsTemperature and the likes are dated -- don't use them
 ## (stick to algorithmic pic of scale limits. Cleanups.)
 
