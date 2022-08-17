@@ -158,7 +158,7 @@ tnN <- sapply (1:length (stnSp), function (i){stnSp[[i]][2]}) # 2 is transect
 
 x <- which (stN == "tran3")
 stnSp [[x[1]]]
-
+rm (x)
 
 rbind (tran = length (tnN),## check that length is correct
        stat = length (stN),
@@ -642,6 +642,7 @@ x <- aggregate (File.Name~Match_Name+Date, phy, FUN=function (x){length (levels(
 x <- subset (x, File.Name > 1)
 dim (x)
 x
+rm (x)
 # phy <- subset (phy, )
 
 
@@ -685,6 +686,7 @@ for (i in 1:length (levels (yr))){
   suppressWarnings(write.table(ctdA, file=tF, append=TRUE, quote=FALSE, sep=","
                                , na="", row.names=FALSE, col.names=TRUE))
   # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+  rm (tF)
 }
 
 
@@ -698,14 +700,14 @@ if (0){  # if (.Platform$OS.type=="windows"){
             , include_directories = FALSE)
   unlink (zFiles, force = TRUE)
   rm (zFiles)
+  setwd (wD); rm (wD)
 }
-setwd (wD); rm (wD)
 rm (showBad, oldMatch, ctdA, yr, i, j)
-ls()
+# ls()
 
 
 ## no longer save RData dump here -- datasetup.R to read from aggregated files
-save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by dataSetup.R
+save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by CTD_DataAvailability.R
 
 cat ("\n# END CTD_cleanup.R #\n")
 

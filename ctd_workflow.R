@@ -26,7 +26,7 @@ if (!require("pacman")) install.packages("pacman"
 Require <- pacman::p_load
 
 ## set-up renv
-Require ("renv")
+# Require ("renv")  ## avoid clash between base::load() and renv::load()
 # renv::init()
 
 ## pre-load widely needed packages
