@@ -39,7 +39,7 @@ stopatDate <- "2022-07-31"
 
 
 ## add AlongBay-short transect as a new virtual transect
-levels (poAll$Transect) <- c (levels (poAll$Transect), "ABshort")
+levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 
 
 if (test){
@@ -64,7 +64,7 @@ source ("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 
 if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
-mnthly <- c ("9", "4", "ABshort")  ## for which transects to produce 12x n-year plots
+mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
 if (0){ ## tests
@@ -89,10 +89,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     ## doubly-used stations:
     ## make this a function?
-    if (levels (poAll$Transect)[tn] == "AlongBay"){
+    if (levels (poAll$Transect)[tn] == "ABext"){
       swMN <- c ("4_3", "9_6", "6_2", "7_22")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "AlongBay"
-      stn$Line [stn$Match_Name %in% swMN] <- "AlongBay"
+      poAll$Transect [poAll$Match_Name %in% swMN] <- "ABext"
+      stn$Line [stn$Match_Name %in% swMN] <- "ABext"
     }
     if (levels (poAll$Transect)[tn] == "4"){
       swMN <- c("4_3")
@@ -104,10 +104,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       poAll$Transect [poAll$Match_Name %in% swMN] <- "9"
       stn$Line [stn$Match_Name %in% swMN] <- "9"
     }
-    if (levels (poAll$Transect)[tn] == "ABshort"){
+    if (levels (poAll$Transect)[tn] == "AlongBay"){
       swMN <- c (paste ("AlongBay", 1:13, sep="_"), "4_3", "9_6")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "ABshort"
-      stn$Line [stn$Match_Name %in% swMN] <- "ABshort"
+      poAll$Transect [poAll$Match_Name %in% swMN] <- "AlongBay"
+      stn$Line [stn$Match_Name %in% swMN] <- "AlongBay"
     }
 
     ## to use as a reference for partial stations
