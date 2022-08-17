@@ -24,6 +24,12 @@ sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to fi
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 Require <- pacman::p_load
+
+## set-up renv
+Require ("renv")
+renv::init()
+
+## pre-load widely needed packages
 Require ("tools")
 Require ("dplyr")
 Require ("oce")
@@ -60,8 +66,9 @@ source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
 # source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
-## replot The Wall
-## produce 2019 aggregate file (and others as well)
+## save snapshot of current package versions
+renv::snapshot()
+
 sink() # end console logging
 cat ("open log file to examine output")
 print (Sys.time())
