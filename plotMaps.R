@@ -23,13 +23,13 @@ gRes <- 5e3
 
 seasonSelect <- "all"
 
-if (seasonSelect == "all"){    
+if (seasonSelect == "all"){
     ##    poSS <- subset (poSS, (1:nrow (poSS)) %in% grep ("^Along", poSS$Match_Name, invert = TRUE))
     ## cut "Along Bay", if using full year
 
     ## Kris' suggestion to make sure equal weights across season -- not sure I agree
     poSS <- subset (poSS, (1:nrow (poSS)) %in% grep ("^\\d_\\d", poSS$Match_Name))
-    
+
 }else{
     poSS <- subset (poSS, season == seasonSelect)
 }
@@ -121,7 +121,7 @@ ak <- function (i, poSS = poSS){
 ## poSS <- subset (poSS, !is.na (poSS$stability))
     poSS <- subset (poSS, !is.na (poSS@data [,i]))
 
-    
+
     ## jitter duplicate coordinates
     Require (geoR)
     jC <- jitter2d (coordinates (poSS), max = 1e3, min = 10)
@@ -132,7 +132,7 @@ ak <- function (i, poSS = poSS){
 ##     ## average same positions
 ##     poSSdf <- cbind (coordinates (poSS), poSS@data)
 ##     poSSa <- aggregate (poSSdf [,c(1,2, i+2)]~poSSdf$SampleID, FUN = mean)
-## ##   poSSA <- aggregate (poSS, by = list (poSS@data$SampleID), FUN = mean)     
+## ##   poSSA <- aggregate (poSS, by = list (poSS@data$SampleID), FUN = mean)
 
     ## also test: akima
     ## interp.new
@@ -151,15 +151,15 @@ ak <- function (i, poSS = poSS){
         ## run test:
         checkSetup(obj)
         ## do interpolation steps:
-        
+
         ## obj = preProcess(obj)
         ## obj = estimateParameters(obj) # faster
         ## obj = spatialPredict(obj)
         ## obj = postProcess(obj)
 #        obj <- interpolate (obj)
-        
+
         kr <- obj$predictions
-        
+
     }else{
     kr <- autoKrige (formula (paste (names (poSS)[i], "~1")), poSSA
       ##             , grd
@@ -217,7 +217,7 @@ plotKrige <- function (i){
                       , as.table = TRUE           # see bering.layout
                       , sp.layout = list (
                             ## list ("sp.lines", rasterToContour (bath, levels = c(-100, 100, 200, 500, 1000)))
-                            
+
                             list ("sp.polygons", coast, lwd = 0.1, fill = "beige", first = FALSE)
                           , list ("sp.lines", bathCont, lwd = 1, col = "black")
                           , list ("sp.points", stn, pch = 1, lwd = 2, cex = 0.5, col = "black")
@@ -236,13 +236,13 @@ plotKrige <- function (i){
         ## convert automap to raster, then plot raster (includes legend!)
         ## see https://cran.r-project.org/web/packages/graticule/vignettes/graticule.html
                                         #        rk <- raster (kr$krig_output)
-                                        # graticule could be improved upon! 
+                                        # graticule could be improved upon!
         kout <- krigL[[i]]$krige_output
         plot (kout
               ## , xlim = c (bbox (stn)[1,1]*0.98, bbox (stn)[1,2]*1.02)
               ##   , ylim = c(bbox (stn)[2,1]*0.98, bbox (stn)[2,2]*1.02)
             , axes = FALSE
-              )                         # now includs a legend :) 
+              )                         # now includs a legend :)
         plot (coast, add = TRUE, col = "beige")
 #         plot (stn, add = TRUE, pch = 19, cex = 0.3)
         plot (poSS, add = TRUE, pch = 19, cex = 0.3)
@@ -254,14 +254,14 @@ plotKrige <- function (i){
         Require (rgdal)
         llgridlines (kout, lty = 3, side = "WS", offset = -0.5, lwd = 0.5, cex = 0.5)
     }
-    
+
     if (0){
         image (unique (coordinates (kr$krige_output)[,1])
              , unique (coordinates (kr$krige_output)[,2])
              , kr$krige_output$var1.pred)
 
-    
-    Require (oce)                       # a real possibility!! 
+
+    Require (oce)                       # a real possibility!!
     drawPalette(colormap=cm)
     mapPlot(coastlineWorld, projection="+proj=moll", grid=FALSE)
     par(mar=c(2, 2, 1, 1))
@@ -271,18 +271,18 @@ plotKrige <- function (i){
             longitudelim=lonlim, latitudelim=latlim)
     mapImage (coordinates (kr$krige_output)$Var1, coordinates (kr$krige_output)$Var2, kr$krige_output$var1.pred, colormap = cm)
 
-    
+
     krR <- raster (kr$krige_output)
     Require (raster)
 #    plot (as.raster (
-    
+
 #   plot (kr$krige_output$var1.pred, xaxs="i", yaxs = "i")
     plot (stn, add = TRUE)
     plot (coast, col = "beige", add = TRUE)
     dev.off()
     }
 
-    
+
     dev.off()
 }
 
@@ -311,7 +311,7 @@ Require ("raster")
 dir.create ("~/tmp/LCI_noaa/media/fronts", recursive = TRUE)
 slopeF <- function (i){
     Require ("raster")
-    dR <- krigL[[i]]$krige_output    
+    dR <- krigL[[i]]$krige_output
     dR@data <- data.frame (dR@data$var1.pred)
     if (var (dR@data [,1]) > 0){
     tR <- terrain (raster (dR)
@@ -319,7 +319,7 @@ slopeF <- function (i){
     PDF (paste ("front/", names (krigL)[i], ".pdf", sep = ""))
     spplot (tR)
     dev.off()
-    return (tR)    
+    return (tR)
     }
 }
 slopeL <- lapply (1:length (krigL), slopeF) #, mc.cores = nCPUs) # raster not working with mclapply
@@ -348,17 +348,17 @@ q()
     plot (kr)
     spplot (kr$krige_output, "var1.pred")
 
-    ggplot(aes(x = x, y = y, fill = var1.pred), data = dat) + 
-        geom_tile() + 
-        scale_fill_continuous(low = "white", high = muted("blue")) + 
+    ggplot(aes(x = x, y = y, fill = var1.pred), data = dat) +
+        geom_tile() +
+        scale_fill_continuous(low = "white", high = muted("blue")) +
         coord_equal()
 
-    
+
     # "var1.pred", "var1.var", "var1.stdev"
-#     spplot (kr$krige_output, "var1.pred")      
+#     spplot (kr$krige_output, "var1.pred")
     dev.off()
 
-    
+
 
 Require (oceanmap)                      # requires Lat Lon, not projected
 ## plotmap ()
@@ -375,11 +375,11 @@ pdf (paste ("~/tmp/LCI_noaa/media/", names (poSS)[i], "_map.pdf", sep = ""))
     plot (krL, add = TRUE)              # color scale
     plot (coast, col = "beige", add = TRUE)
     ##  go back to spplot because of color scale on the side
-    ## good-looking color scale in basic graphics? You'd think so!? 
+    ## good-looking color scale in basic graphics? You'd think so!?
     dev.off()
-    
+
     return (kr)
-}
+
 
 
 # for (i in 9:ncol (poSS)){
@@ -397,7 +397,7 @@ save.image ("~/tmp/LCI_noaa/cache/krigResults.RData")
 ## cor (as.numeric (kr$krige_output$var1.pred), as.numeric (kr$krige_output$stdev))
 
 plotLCI <- function (rstr, fn){
-    pdf (paste ("~/tmp/LCI_noaa/media/", fn, ".pdf", sep = ""))    
+    pdf (paste ("~/tmp/LCI_noaa/media/", fn, ".pdf", sep = ""))
     plotmap (lon=c(-154.5,-150.9), lat = c(58.7,60.5), main ="", grid = FALSE, add = TRUE)
     dev.off()
 }

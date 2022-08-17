@@ -27,7 +27,7 @@ Require <- pacman::p_load
 
 ## set-up renv
 Require ("renv")
-renv::init()
+# renv::init()
 
 ## pre-load widely needed packages
 Require ("tools")
@@ -67,7 +67,7 @@ source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 # source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
 ## save snapshot of current package versions
-renv::snapshot()
+# renv::snapshot()
 
 sink() # end console logging
 cat ("open log file to examine output")
