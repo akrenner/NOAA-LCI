@@ -2,8 +2,6 @@
 ## provide line-graph alternatives
 
 
-## missing features: consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
-
 
 
 rm (list = ls())
