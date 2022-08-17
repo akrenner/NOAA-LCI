@@ -106,10 +106,8 @@ if (.Platform$OS.type != "unix"){
 
 Require (oce)
 ## read in processed files of individual CTD casts
-# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--homogene/", ".cnv"
-# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV--turbid/", ".cnv"
-fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv"
-                  , full.names = TRUE, ignore.case = TRUE)
+# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv", full.names = TRUE, ignore.case = TRUE)
+fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)
 
 ## cut-out bad files for now -- fix this later -- why bad?
 badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"

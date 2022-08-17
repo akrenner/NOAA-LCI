@@ -43,6 +43,7 @@ Require ("LakeMetabolizer")
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
+
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
@@ -62,6 +63,10 @@ source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value
 source ("CTDwall-setup.R")
 source ("CTDsections.R")
 source ("CTDwall.R")
+
+## push to GoogleDrive
+## requires rclone
+## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
 # source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's

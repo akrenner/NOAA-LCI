@@ -98,12 +98,13 @@ if (.Platform$OS.type != "unix"){
 ## this is done by scripts called in ctd_workflow.R
 
 # load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-
 Require ("tidyverse")
-physOcT <- list.files("~/tmp/LCI_noaa/data-products/CTD/", pattern=".csv", full.name=TRUE) %>%
+aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
+aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
+physOcT <- list.files(aD, pattern=".csv", full.name=TRUE) %>%
   lapply (read.csv, skip=1, header=TRUE) %>%
   bind_rows
-
+rm (aD)
 physOc <- with (physOcT, data.frame (Match_Name=Station
                                      , isoTime=as.POSIXct (paste (Date, Time))
                                 , latitude_DD=Latitude_DD
@@ -749,6 +750,7 @@ spTran <- function (x, p4){
 
 
 ## find all seabird observations within XX km of station at the same date as zoop station
+## dependent on a R-dump file -- load straight from NPPSD?
 load ("~/tmp/NPPSDv2countW_-1.RData")
 NPPSD2 <- subset (NPPSD2, tArea > 0)
 bD <- 1                  # buffer distance

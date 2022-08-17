@@ -647,6 +647,8 @@ x
 
 Require ("zip")
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
+# outD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"
+# manually update files in ~/GISdata/LCI/CTD-processing/ !
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
 yr <- factor (format (phy$isoTime, "%Y"))
