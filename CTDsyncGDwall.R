@@ -23,8 +23,14 @@ if (.Platform$OS.type == "unix"){
 }else{
   ## more elegant to do this all in R, but failed to get this to work.
   ## if this isn't working, copy and paste from GoogleDriveRclone.sh
-    shell ("GoogleDriveRclone.sh")
+  ## works from bash shell -- and windows comd shell will call bash
+  ## likely isslue: ~/ interpretation by bash and windows-shell
+  shell ("GoogleDriveRclone.sh")
 
+  # shell (shell="cmd.exe", input=paste0 (rcloneDir, "rclone.exe "
+  #        , "C:/Users/Martin.Renner/Documents/tmp/LCI_noaa/media/CTDsections/ "
+  #        , "remote:GulfWatch/plots/CTDsections/"))
+  #
 
 
 
