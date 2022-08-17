@@ -38,7 +38,7 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
-source ("CTD_cleanup.R")         ## move error corrections into here. Also aggregate-output
+source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
@@ -58,8 +58,6 @@ source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
 # source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
-## replot The Wall
-## produce 2019 aggregate file (and others as well)
 sink() # end console logging
 cat ("open log file to examine output")
 print (Sys.time())
