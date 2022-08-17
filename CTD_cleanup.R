@@ -686,21 +686,15 @@ for (i in 1:length (levels (yr))){
 }
 
 
-if (.Platform$OS.type=="windows"){
+if (0){  # if (.Platform$OS.type=="windows"){
   ## zip-up files -- about 100 MB
   wD <- getwd()
   setwd (outD) ## zip blows up otherwise
   unlink ("processedCTD_annual.zip", force = TRUE)
   zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
-  zip::zip ("processedCTD_annual.zip", files = zFiles, recurse = FALSE
+  zip::zip ("processedCTD_annuals.zip", files = zFiles, recurse = FALSE
             , include_directories = FALSE)
-  # ## zip individuals files
-  # unlink (gsub (".csv", ".zip", zFiles [i]))
-  # for (i in 1:length (zFiles)){
-  #   zip::zip (gsub (".csv", ".zip", zFiles [i]), files = zFiles [i]
-  #             , include_directories = FALSE, mode = "cherry-pick")
-  # }
-  # unlink (zFiles, force = TRUE)
+  unlink (zFiles, force = TRUE)
   rm (zFiles)
 }
 setwd (wD); rm (wD)

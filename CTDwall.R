@@ -1,10 +1,14 @@
 ## replot CTD wallpaper for office
 ## provide line-graph alternatives
+
+
+## missing features: consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
+
+
+
 rm (list = ls())
 ## get bathymetry, standard colors, and data ranges
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-
-
 
 
 test <- TRUE
@@ -41,7 +45,7 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABshort")
 
 
 if (test){
-  oceanvarC <- 1:length (oVars)
+  oceanvarC <- 1 #1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))
   transectC <- 6
 }else{
