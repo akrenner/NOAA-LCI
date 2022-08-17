@@ -43,13 +43,15 @@ print (sTime)
 #################################
 conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = "con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
 # conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2process", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
+# conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2test", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
 
 ## path to psa files
 psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive=TRUE, full.names=TRUE)
 
 ## where to put results
-outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
-# outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
+# outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
+outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
 #################################
 
 
