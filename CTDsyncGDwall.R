@@ -1,75 +1,35 @@
 ## sync all section plots and wall to GoogleDrive useing rclone
 
 ## requires rclone installation
-## cross-platform somehow? -- easy in bash!
+## need to make sure that rclone is correctly installed and configured
+## works cross-platform
 
-## NOT working yet on windows
-## failing to invoke rclone from within R on windows
-##
+## allow deletion of files?
 
 rm (list=ls())
 
 
-## need to make sure that rclone is correctly installed and configured!
-rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
 
 
 if (.Platform$OS.type == "unix"){
-  ## system ("rclone dedupe")
-  system ("rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P")
-  system ("rclone sync ~/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
-  system ("rclone sync ~/Documents/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/")
-# system ("rclone sync ~/tmp/LCI_noaa/data-products remote:NOAA-laptop/tmp/LCI_noaa/")
+  rcloneDir <- ""
+  hm <- "~/"
 }else{
-  ## more elegant to do this all in R, but failed to get this to work.
-  ## if this isn't working, copy and paste from GoogleDriveRclone.sh
-  ## works from bash shell -- and windows comd shell will call bash
-  ## likely isslue: ~/ interpretation by bash and windows-shell
-  shell ("GoogleDriveRclone.sh")
-
-  # shell (shell="cmd.exe", input=paste0 (rcloneDir, "rclone.exe "
-  #        , "C:/Users/Martin.Renner/Documents/tmp/LCI_noaa/media/CTDsections/ "
-  #        , "remote:GulfWatch/plots/CTDsections/"))
-  #
-
-
-
-    #    shell (shell="C\\:/Program\\ Files/Git/git-bash.exe", cmd="ls")
-    #    shell (shell="git-bash.exe", cmd="ls")
-
-## get rclone to work with something like this?
-#    system("cmd.exe"
-#           , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
-    # system ("cmd.exe"
-    #         , input=paste0 (rcloneDir
-    #                         , "rclone.exe sync "
-    #                         , "~/Documents/tmp/LCI_noaa/media/CTDsections/ "
-    #                         , "remote:GulfWatch/plots/CTDsections/"))
-    # system (shell="cmd.exe"
-    #         , cmd=paste0 (rcloneDir
-    #                         , "rclone.exe sync "
-    #                         , '"C\:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
-    #                         , "remote:GulfWatch/plots/CTDsections/"))
-    # shell (shell="cmd.exe"
-    #         , cmd=paste0 (rcloneDir
-    #                         , "rclone.exe sync "
-    #                         , '"~/tmp/LCI_noaa/media/CTDsections/" '
-    #                         , "remote:GulfWatch/plots/CTDsections/"))
-
-    # shell (shell="cmd.exe", cmd=paste0 (rcloneDir
-    #                                     , "rclone.exe sync "
-    #                                     , "~/Documents/tmp/LCI_noaa/media/CTDsections/ "
-    #                                     , "remote:GulfWatch/plots/CTDsetions/"))
-
-
-    # ## shell or system2 ??
-    # setwd (wd)
-    # shell (paste0 (rcloneDir, "rclone.exe sync ~/Documents/tmp/LCI_noaa/media/CTDsections/ "
-    #                , "remote:GulfWatch/plots/CTDsections/"), translate=TRUE)
+  rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
+  hm <- "C:/Users/Martin.Renner/Documents/"
 }
 
+## unified cross-platform rclone commands
+system (paste0 (rcloneDir, "rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P"))
 
-## sync documents back and forth
+## office docs
+system (paste0 (rcloneDir, "rclone sync ", hm, "Documents/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
+
+
+## sync documents back and forth -- manually!
 # if (.Platform$OS.type=="unix"){
 if (0){
 #  system ("rclone sync remote:tmp/LCI_noaa/cache/ ~/tmp/LCI_noaa/cache/ -P")
