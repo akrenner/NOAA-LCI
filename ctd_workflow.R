@@ -38,7 +38,7 @@ Require ("parallel")
 Require ("lubridate")
 Require ("geosphere")
 Require ("zip")
-Require ("LakeMetabolizer")
+# Require ("LakeMetabolizer")
 
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
@@ -53,8 +53,9 @@ source ("CTD_cleanup.R")         ## move error corrections into here. Also aggre
 source ("CTD_DataAvailability.R")
 
 
-source ("datasetup.R")   ## crash -- ror in `$<-.data.frame`(`*tmp*`, SSS, value = c(28.5532333333333, 31.4265333333333,  :
-# replacement has 3833 rows, data has 3834
+## pull together CTD and biological data.
+## Also pull in external GIS data and produce data summaries
+source ("datasetup.R")
 
 # source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 

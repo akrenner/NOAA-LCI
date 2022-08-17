@@ -26,8 +26,9 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/StateOfTheBay
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P"))
 
 ## office docs
-system (paste0 (rcloneDir, "rclone sync ", hm, "Documents/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
-
+if (grep ("artin", getwd())){ # portability
+  system (paste0 (rcloneDir, "rclone sync ", hm, "Documents/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
+}
 
 ## sync documents back and forth -- manually!
 # if (.Platform$OS.type=="unix"){

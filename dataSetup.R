@@ -125,6 +125,7 @@ physOc <- with (physOcT, data.frame (Match_Name=Station
                                 , beamAttenuation=Beam_attenuation
                                 , beamTransmission=Beam_transmission
 ))
+rm (physOcT)
 
 stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset (stn, !is.na (Lon_decDegree))
@@ -522,8 +523,6 @@ rm (poAg, poSS)
 poSS <- poID
 }
 
-
-rm (physOc)                             # no needed any more, poSS takes it place
 save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 
@@ -932,6 +931,7 @@ stnT <- subset (stn, stn$Plankton)
 
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
 ## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
+rm (stnT)
 
 findBirds <- function (x){
     stnBuf <- over (NPPSD2, lBuff [x,])$Match_Name
@@ -988,6 +988,10 @@ print (summary (poSS))
 ## print (summary (physOc@data))
 print (ls())
 
+
+## save CTD data for oceanographic processing. poSS = summary data -> signatureData
+save (stn, physOc, file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
+rm (physOc)                             # no needed any more, poSS takes it place
 
 save.image ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")

@@ -18,8 +18,6 @@ cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixi
 
 
 
-# rm (list = ls())
-
 if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
 
 

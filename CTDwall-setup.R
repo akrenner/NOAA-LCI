@@ -12,11 +12,10 @@
 
 
 
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## get CTD data (physOc) directly from CTD_cleanup.R, rather than through dataSetup.R
-
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
+
 if (length (grep ("darwin", version$os)) >0 ){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }else{

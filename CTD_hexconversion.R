@@ -49,7 +49,7 @@ psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", 
 
 ## where to put results
 outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
-outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
+# outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
 #################################
 
 

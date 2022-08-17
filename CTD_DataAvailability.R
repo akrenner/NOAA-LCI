@@ -21,6 +21,8 @@ if (nColumns > 3){Cx <- 1; las = 2}else{Cx <- 1}
 
 
 load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
+# load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+
 
 ## add time variables
 phy <- physOc; rm (physOc)
