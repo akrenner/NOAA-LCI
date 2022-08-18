@@ -14,7 +14,7 @@
 
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
+rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
 
 if (length (grep ("darwin", version$os)) >0 ){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
@@ -67,7 +67,7 @@ bathyNoaa <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfe
                                                , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
 
 if (class (bathyNoaa)=="try-error"){
-  load (cFile)
+  base::load (cFile)
 }else{
   save (bathyNoaa, file=cFile)
 }

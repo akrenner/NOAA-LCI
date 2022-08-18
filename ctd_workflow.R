@@ -29,6 +29,7 @@ Require <- pacman::p_load
 ## do all renv work manually to avoid clash between base::load() and renv::load()
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
+# renv::activate()
 
 ## pre-load widely needed packages
 Require ("tools")
@@ -62,7 +63,7 @@ source ("CTD_DataAvailability.R")
 
 
 ## the Wall
-source ("CTDwall-setup.R")
+source ("CTDwall-setup.R")  # XXX oceadata not available with renv -- gshhg from datasetup.R instead?
 source ("CTDsections.R")
 source ("CTDwall.R")
 
