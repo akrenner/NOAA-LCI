@@ -8,7 +8,7 @@
   ./rclone.exe sync ~/Documents/tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P
 
   ## office docs
-  ./rclone.exe sync ~/Documents/myDocs/amyfiles/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P
+  ./rclone.exe sync ~/Documents/myDocs/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/NOAA/currentDocs/ -P
 
   ## tmp files
 #  ./rclone.exe sync ~/Documents/tmp/LCI_noaa/cache/ remote:NOAA-laptop/LCIcache/cache/ -P
