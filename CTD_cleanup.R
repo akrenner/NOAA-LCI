@@ -40,7 +40,7 @@
 
 
 
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
+rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV2.RData")
 
 
 
@@ -640,25 +640,29 @@ phy$Match_Name <- factor (phy$Match_Name)
 phy$File.Name <- factor (phy$File.Name)
 x <- aggregate (File.Name~Match_Name+Date, phy, FUN=function (x){length (levels(factor (x)))})
 x <- subset (x, File.Name > 1)
+cat ("\n##\n##\n## stations with multiple casts per day\n")
 dim (x)
 x
 rm (x)
 # phy <- subset (phy, )
 
 
-Require ("zip")
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
 # outD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"
 # manually update files in ~/GISdata/LCI/CTD-processing/ !
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
 yr <- factor (format (phy$isoTime, "%Y"))
-for (i in 1:length (levels (yr))){
+phy <- subset (phy, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
+
+ctdX <- sapply (1:length (levels (yr)), function (i){
   ctdA <- subset (phy, yr == levels (yr)[i])
-  ctdA <- subset (ctdA, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
-  ctdB <- with (ctdA, data.frame (Station = Match_Name, Date, Time
+  ctdB <- with (ctdA, data.frame (Station = Match_Name
+                                  , Date, Time
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
+                                  , Transect
+                                  , StationN=ifelse (Station %in% 1:100, paste0 ("S_", Station), Station)
                                   , File.Name, CTD.serial
                                   , Bottom.Depth, pressure_db=Pressure..Strain.Gauge..db.
                                   , Depth=Depth.saltwater..m.
@@ -674,24 +678,22 @@ for (i in 1:length (levels (yr))){
                                   , Beam_attenuation = beamAttenuation
                                   , Beam_transmission = beamTransmission
   ))
-  ctdA <- ctdB; rm (ctdB)
-  if ("Spice" %in% names (ctdA)){
-   ctdA <- ctdA [,-which (names (ctdA) == "Spice")]
-  }
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
   write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
          , file=tF, append=FALSE, ncolumns=1)
-  suppressWarnings(write.table(ctdA, file=tF, append=TRUE, quote=FALSE, sep=","
+  suppressWarnings(write.table(ctdB, file=tF, append=TRUE, quote=FALSE, sep=","
                                , na="", row.names=FALSE, col.names=TRUE))
   # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
   rm (tF)
-}
+  ctdB
+})
 
 
 if (0){  # if (.Platform$OS.type=="windows"){
   ## zip-up files -- about 100 MB
+  Require ("zip")
   wD <- getwd()
   setwd (outD) ## zip blows up otherwise
   unlink ("processedCTD_annual.zip", force = TRUE)

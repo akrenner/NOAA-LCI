@@ -107,23 +107,24 @@ physOcT <- list.files(aD, pattern=".csv", full.name=TRUE) %>%
 rm (aD)
 physOc <- with (physOcT, data.frame (Match_Name=Station
                                      , isoTime=as.POSIXct (paste (Date, Time))
-                                , latitude_DD=Latitude_DD
-                                , longitude_DD=Longitude_DD
-                                , File.Name=factor (File.Name), CTD.serial
-                                , Bottom.Depth
-                                , Pressure..Strain.Gauge..db.=pressure_db
-                                , Depth.saltwater..m.=Depth
-                                , Temperature_ITS90_DegC, Salinity_PSU
-                                , Density_sigma.theta.kg.m.3
-                                , Oxygen_umol_kg=Oxygen_umol.kg
-                                , Oxygen_sat.perc.=Oxygen.Saturation_perc
-                                # need SBE O2 concentration umol.kg in here
-                                , Nitrogen.saturation..mg.l.  ## make it umol.kg
-                                , PAR.Irradiance
-                                , Fluorescence_mg_m3
-                                , turbidity=Turbidity
-                                , beamAttenuation=Beam_attenuation
-                                , beamTransmission=Beam_transmission
+                                     , latitude_DD=Latitude_DD
+                                     , longitude_DD=Longitude_DD
+                                     , Transect
+                                     , File.Name=factor (File.Name), CTD.serial
+                                     , Bottom.Depth
+                                     , Pressure..Strain.Gauge..db.=pressure_db
+                                     , Depth.saltwater..m.=Depth
+                                     , Temperature_ITS90_DegC, Salinity_PSU
+                                     , Density_sigma.theta.kg.m.3
+                                     , Oxygen_umol_kg=Oxygen_umol.kg
+                                     , Oxygen_sat.perc.=Oxygen.Saturation_perc
+                                     # need SBE O2 concentration umol.kg in here
+                                     , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                     , PAR.Irradiance
+                                     , Fluorescence_mg_m3
+                                     , turbidity=Turbidity
+                                     , beamAttenuation=Beam_attenuation
+                                     , beamTransmission=Beam_transmission
 ))
 rm (physOcT)
 
@@ -1000,7 +1001,5 @@ save.image ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 cat ("\n\n#\n#\n#", format (Sys.time(), format = "%Y-%m-%d %H:%M"
                           , usetz = FALSE)
 , " \n# \n# End of dataSetup.R\n#\n#\n")
-
-cat ("\n# END datasetup.R #\n")
 
 ## EOF
