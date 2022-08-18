@@ -48,7 +48,7 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
-source ("CTD_cleanup.R")         ## move error corrections into here. Also aggregate-output
+source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 
 
 
@@ -75,6 +75,7 @@ source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
 ## save snapshot of current package versions
 # renv::snapshot()
+
 
 sink() # end console logging
 cat ("open log file to examine output")
