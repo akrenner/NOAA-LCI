@@ -911,7 +911,7 @@ v <- ncvar_get (con, "v")
 ## match stn and birds at different levels of buffer
 # for (i in length (stnB)){
 
-Require (rgeos); Require (parallel)
+Require ("rgeos"); Require ("parallel")
 bDist <- function (stnL){
     ## stnL is SpatialPointsDataFrame
     ## buffDist <- unlist (mclapply (1:nrow (stnL), FUN = function (i){
