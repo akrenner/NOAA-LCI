@@ -736,7 +736,7 @@ latL <- c(58.8,60.6)
 
 
 # Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp"); Require ("sf")
+Require ("sp") ; Require ("sf")
 
 
 spTran <- function (x, p4){
@@ -750,7 +750,7 @@ spTran <- function (x, p4){
 
 ## find all seabird observations within XX km of station at the same date as zoop station
 ## dependent on a R-dump file -- load straight from NPPSD?
-load ("~/tmp/NPPSDv2countW_-1.RData")
+base::load ("~/tmp/NPPSDv2countW_-1.RData")
 NPPSD2 <- subset (NPPSD2, tArea > 0)
 bD <- 1                  # buffer distance
 NPPSD2 <- subset (NPPSD2 # subset to LCI to reduce size and speed up things

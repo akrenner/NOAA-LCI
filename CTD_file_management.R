@@ -38,8 +38,6 @@ hexCache <- "~/tmp/LCI_noaa/CTD-cache/allCTD/"
 
 
 # unlink ("~/GISdata/LCI/CTD-processing/allCTD/", recursive = TRUE)  ## careful!! -- overkill
-# unlink (paste0 (hexCache, "edited_hex"), recursive = TRUE)
-# unlink (paste0 (hexCache, "hex2process"), recursive = TRUE)
 unlink ("~/tmp/LCI_noaa/CTD-cache/", recursive=TRUE) ## carefully blast it all away
 set.seed (8)
 
