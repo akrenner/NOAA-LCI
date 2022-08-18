@@ -30,7 +30,7 @@ Require <- pacman::p_load
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
 
-## pre-load widely needed packages
+## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
 Require ("dplyr")
 Require ("oce")

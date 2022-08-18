@@ -101,6 +101,8 @@ if (.Platform$OS.type != "unix"){
 Require ("tidyverse")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
+                      # forcing physOct$Station to "character" would be convenient
+                      # (trouble when some CSV files have only numeric, others also characters)
 physOcT <- list.files(aD, pattern=".csv", full.name=TRUE) %>%
   lapply (read.csv, skip=1, header=TRUE) %>%
   bind_rows
