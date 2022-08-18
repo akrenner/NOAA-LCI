@@ -1,7 +1,7 @@
 #!/bin/sh
 
   cd ~/Applications/rclone-v1.59.0-windows-amd64/
-  ./rclone.exe dedupe remote:GulfWatch/media --dedupe-mode newest -P
+  ./rclone.exe dedupe remote:GulfWatch/plots --dedupe-mode newest -P
   ## plots and data products
   ./rclone.exe sync ~/Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P
   ./rclone.exe sync ~/Documents/tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P

@@ -25,7 +25,7 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/CTDsections/ 
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P"))
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P"))
 
-## office docs
+## office docs -- specific to Martin Renner's computer!
 if (grep ("artin", getwd())){ # portability
   if (.Platform$OS.type=="windows"){
     system (paste0 (rcloneDir, "rclone sync ", hm, "myDocs/amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
