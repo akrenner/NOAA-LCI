@@ -286,6 +286,9 @@ poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
                                , FUN = mean)$Salinity_PSU
 poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
                                   , mc.cores = nCPUs))
+poSS$aveDens <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
+                                  , mc.cores = nCPUs))
+
 rm (dMean, agg)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
 ## almost the same als salinity. skip it
@@ -777,12 +780,13 @@ phyCenv <- subset (phyCenv, !is.na (phyCenv$lon))
 ## geographically overlay seabirds and physical oceanography stations
 print (poSS [which (is.na (poSS$longitude_DD) | is.na (poSS$latitude_DD)),])
 
-coordinates (stn) <- ~Lon_decDegree+Lat_decDegree
+stnP <- stn
+coordinates (stnP) <- ~Lon_decDegree+Lat_decDegree
 coordinates (poSS) <- ~longitude_DD+latitude_DD
 coordinates (phyCenv) <- ~lon+lat
 coordinates (zooCenv) <- ~Lon_decDegree+Lat_decDegree
 coordinates (NPPSD2) <- ~lon+lat
-proj4string (stn) <- LLprj
+proj4string (stnP) <- LLprj
 proj4string (poSS) <- LLprj
 proj4string (phyCenv) <- LLprj
 proj4string (zooCenv) <- LLprj
@@ -827,7 +831,7 @@ PDF ("testSamplesites")
 plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL
       )
 # plot (NPPSD2, pch = 1, add = TRUE)
-plot (stn, col = "red", pch =2, add = TRUE)
+plot (stnP, col = "red", pch =2, add = TRUE)
 plot (poSS, col = ifelse (badPO, "red", "yellow")
     , pch = ifelse (badPO, 19, 1)
     , cex = ifelse (badPO, 2, 1), add = TRUE)
@@ -886,7 +890,7 @@ rm (ch, chCoor, sp_poly)
 
 pr <- proj4string (bath)
 
-stn <- spTran (stn, pr)
+stnP <- spTran (stnP, pr)
 poSS <- spTran (poSS, pr)
 zooCenv <- spTran (zooCenv, pr)
 NPPSD2 <- spTran (NPPSD2, pr)
@@ -909,7 +913,7 @@ u <- ncvar_get (con, "u")
 v <- ncvar_get (con, "v")
 }
 
-## match stn and birds at different levels of buffer
+## match stnP and birds at different levels of buffer
 # for (i in length (stnB)){
 
 Require ("rgeos"); Require ("parallel")
@@ -927,8 +931,8 @@ bDist <- function (stnL){
 ## stnB <- mean (bDist (stn))
 ## stnB <- mean (bDist (subset (stn, stn$Plankton)))
 
-stnT <- subset (stn, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
-stnT <- subset (stn, stn$Plankton)
+stnT <- subset (stnP, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
+stnT <- subset (stnP, stnP$Plankton) ## better subset here from stnT? XX
 
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
 ## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
@@ -994,6 +998,7 @@ print (ls())
 save (stn, physOc, file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
 rm (physOc)                             # no needed any more, poSS takes it place
 
+stn <- stnP  # for zoop and other scripts that use sp
 save.image ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 

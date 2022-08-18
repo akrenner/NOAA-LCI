@@ -42,8 +42,7 @@ for (sv in iX){
       fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
       nS <- -3:0
       for (k in 1:length (fS)){
-        s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay"
-        s$Station [which (s$Match_Name == fS [k])] <- nS [k]
+        s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
       }
     }
     if (levels (s$Transect)[tn] == "4"){
@@ -56,9 +55,9 @@ for (sv in iX){
 
     ## transect from station list for use with plot.section
     transectTemplate <- with (subset (stn, Line == levels (s$Transect)[tn]),
-                                      data.frame (station = Match_Name
-                                                  , longitude = Lon_decDegree
-                                                  , latitude = Lat_decDegree))
+                                      data.frame (station=Match_Name
+                                                  , longitude=Lon_decDegree
+                                                  , latitude=Lat_decDegree))
 
 
     phT <- subset (s, Transect == levels (s$Transect)[tn])
