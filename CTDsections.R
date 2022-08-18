@@ -120,6 +120,7 @@ for (sv in iX){
                 #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                 , zlim = zR
                 , zbreaks=NULL # change this for salinity; others?
+                , custcont=10, labcex=0.6
           )
           rm (zR)
         }

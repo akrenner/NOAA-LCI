@@ -11,8 +11,8 @@ Require <- pacman::p_load
 
 
 
-pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
-                  , showBottom=TRUE, ...){
+pSec <- function (xsec, N, cont = TRUE, zCol
+                  , showBottom=TRUE, custcont = NULL, labcex=1.0,  ...){
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -70,7 +70,7 @@ pSec <- function (xsec, N, cont = TRUE, custcont = NULL, zCol
       }
       cT <- try (contour (distance, depth, zvar, add = TRUE
                           # , nlevels = 5
-                          , labcex=1.0 # default: labcex=0.6
+                          , labcex=labcex # default: labcex=0.6
                           , levels = cLev  ## error XXX
                           , col = "black", lwd = 1), silent = TRUE)
       if (class (cT) == "try-error"){
