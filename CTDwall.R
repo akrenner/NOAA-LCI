@@ -403,7 +403,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     yLim <- c(57.5, 60.1)
     plot (xMap
           , which = 99
-          , coastline = "coastlineWorldFine"
+          , coastline = "coastlineWorldFine" ## or a coastline object (from gshhg, removing dependency on ocedata)
           , showStations = TRUE
           , gird = TRUE
           , map.xlim = c(-154, -151)
