@@ -3,8 +3,8 @@
 
 ## load data
 ## start with file from dataSetup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
-load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physOc -- raw CTD profiles
+# load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
@@ -60,7 +60,7 @@ save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
 
-pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
+# pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
 for (k in 1:length (levels (physOc$Match_Name))){
   try ({
 # for (k in pickStn){

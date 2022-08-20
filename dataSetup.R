@@ -1000,7 +1000,8 @@ print (ls())
 
 write.csv (poSS@data, file="~/tmp/LCI_noaa/data-products/CTDcastSummaries.csv")
 ## save CTD data for oceanographic processing. poSS = summary data -> signatureData
-save (stn, physOc, file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
+save (stn, physOc, poSS, coast, bath  ## bath = Zimmerman bathymetry
+      , file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
 rm (physOc)                             # no needed any more, poSS takes it place
 
 stn <- stnP  # for zoop and other scripts that use sp
