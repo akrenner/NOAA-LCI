@@ -23,9 +23,16 @@ meanCol <- "darkgray"
 # year2 <- TRUE   ## switch 1 vs. 2 years on/off -- where best to put this switch?
 
 
+if (!require("pacman")) install.packages("pacman"
+                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+Require <- pacman::p_load
+
+
+
+
 if (0){
 ## using RColorBrewer:
-require ("RColorBrewer")
+Require ("RColorBrewer")
 bCol <- brewer.pal(12, "Paired")
 rangCol <- bCol [5:6]
 qantCol <- bCol [9]
@@ -225,7 +232,7 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
     ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
 if (1){ # align at center
-  suppressMessages (require ("zoo"))
+  suppressPackageStartupMessages (Require ("zoo"))
 #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
 #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
   dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
@@ -234,7 +241,7 @@ if (1){ # align at center
                           , align = "center")
 }else{
     ## bug in SWMPr smoothing function: last day=up-tick?
-    require ("SWMPr")
+    Require ("SWMPr")
     dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
     # dMeans$MA <- maT (dMeans$xVar, maO)
 
@@ -312,7 +319,7 @@ addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
   df$jday <- as.integer (strftime (df$datetimestamp, "%j"))
   df$year <- as.integer (strftime (df$datetimestamp, "%Y"))
-  suppressMessages (require (lubridate))
+  suppressPackageStartupMessages (Require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
   return (df)
@@ -362,7 +369,7 @@ getSWMP <- function (station, QAQC=TRUE){
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-  require ("SWMPr")
+  Require ("SWMPr")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   zipFile <- "~/GISdata/LCI/SWMP/current"      # "current" needs to be shortcut or symbolic link
@@ -371,7 +378,7 @@ getSWMP <- function (station, QAQC=TRUE){
   dir.create(cacheFolder, showWarnings=FALSE)
   # if (version$os == "mingw32"){
   #   # if (.Platform$OS.type == "windows"){
-    require ("R.utils")
+    Require ("R.utils")
     SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
   # }else{ # MacOS or Linux
   #   SMPfile <- zipFile
@@ -440,7 +447,7 @@ getSWMP <- function (station, QAQC=TRUE){
 
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-  require ("rnoaa")
+  Require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
   }
@@ -560,12 +567,12 @@ cDir <- function (wd, nDir=8){
 merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
   ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
   #### Package Install ####
-  gridExists <- require ("grid")
+  gridExists <- Require ("grid")
   if ( !gridExists ) {
     install.packages ("grid")
     library ("grid")
   }
-  pngPackageExists <- require ("png")
+  pngPackageExists <- Require ("png")
   if ( !pngPackageExists ) {
     install.packages ("png")
     library ("png")

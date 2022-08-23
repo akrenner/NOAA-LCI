@@ -1,11 +1,20 @@
 #! /usr/bin/env Rscript
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
+## if this is a new installation, it may be necessary to disconnect from VPN
+## to avoid timeouts
+## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
+
+
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 rm (list = ls())
 
 sT <- Sys.time()
 
+
+# setRepositories(graphics=FALSE, ind=76)
+# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
+chooseCRANmirror(graphics=FALSE, ind=76)
 
 if (0){ ## 2017 contract
   ## BUGS:
@@ -47,12 +56,13 @@ source ("annual-wind.R")
 
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
 source ("annual-rainy.R")
-source ("annual-salinity.R")
+# source ("annual-salinity.R")
+source ("annual-waterTempSal.R")
 source ("annual-airTemp.R")
 
-source ("annual-snowpack.R")
-source ("annual-stratification.R")
+source ("annual-stratification.R")   ## projects/bottomTempTS ?
 source ("annual-waves.R")  ## pull-out waves and surf?
+source ("annual-snowpack.R")
 
 
 cat ("all done\n")

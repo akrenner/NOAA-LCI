@@ -18,9 +18,7 @@
 # }else{ # MacOS or Linux
 #   SMPfile <- "~/GISdata/LCI/SWMP/current"
 # }
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
+source ("annualPlotFct.R") # already loads SWMPr
 
 suppressPackageStartupMessages (Require ("R.utils"))
 SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # works on all platforms?
@@ -33,7 +31,6 @@ dir.create ("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursiv
 
 
 ## load and process SWMP data
-source ("annualPlotFct.R") # already loads SWMPr
 ## defines getSWMP () -- use this to replace import_local()
 # unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
 
