@@ -64,6 +64,8 @@ source ("annual-stratification.R")   ## projects/bottomTempTS ?
 source ("annual-waves.R")  ## pull-out waves and surf?
 source ("annual-snowpack.R")
 
+source ("CTDsyncGDwall.R")
+
 
 cat ("all done\n")
 print (Sys.time())
