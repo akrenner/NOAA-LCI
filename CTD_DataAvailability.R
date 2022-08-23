@@ -21,6 +21,8 @@ if (nColumns > 3){Cx <- 1; las = 2}else{Cx <- 1}
 
 
 load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
+# load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")
+
 
 ## add time variables
 phy <- physOc; rm (physOc)
@@ -65,12 +67,13 @@ xT <- xT [nrow (xT):1,]   # top = first samples
 
 
 ## keep lables at normal size?
-yL <- function (mx){
-  ## construct lables for y-axis from rownames of matrix of from YYYY-MM
+yL <- function (mx){  ##  BUG in here?
+  ## construct labels for y-axis from rownames of matrix of from YYYY-MM
   yr <- factor (substr (row.names(mx), 1, 4))
   mt <- factor (1:12, ordered = TRUE)
   lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
-    c(levels (yr)[i], rep ("", 11))}))
+    c(levels (yr)[i], rep ("", 11))  ## label only first month with year
+    }))
     , rep (levels (mt), length (levels (yr))))
   # lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
   #   c("", levels (yr)[i], rep ("", 10))}))

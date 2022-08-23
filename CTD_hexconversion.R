@@ -31,8 +31,6 @@
 rm (list=ls())
 cWD <- getwd()
 setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
-## manually delete pre-existing outF?
-unlink ("~/GISdata/LCI/CTD-processing/allCTD/CNV", recursive=TRUE)  ## careful!
 sTime <- Sys.time()
 print (sTime)
 
@@ -43,17 +41,19 @@ print (sTime)
 #################################
 
 #################################
-conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2process", pattern = "con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
-# conF <- list.files("~/GISdata/LCI/CTD-processing/allCTD/hex2test", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2process", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
+# conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2test", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
 
 ## path to psa files
 psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive=TRUE, full.names=TRUE)
 
 ## where to put results
-outF <- "~/GISdata/LCI/CTD-processing/allCTD/CNV/"
+outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
 #################################
 
 
+## manually delete pre-existing outF?
+unlink (outF, recursive=TRUE) ## careful!
 
 ## create directories and temp directories
 require (tools)

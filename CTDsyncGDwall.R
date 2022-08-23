@@ -1,74 +1,43 @@
 ## sync all section plots and wall to GoogleDrive useing rclone
 
 ## requires rclone installation
-## cross-platform somehow? -- easy in bash!
+## need to make sure that rclone is correctly installed and configured
+## works cross-platform
 
-## NOT working yet on windows
-## failing to invoke rclone from within R on windows
-##
+## allow deletion of files?
 
 rm (list=ls())
 
 
-## need to make sure that rclone is correctly installed and configured!
-rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
 
 
 if (.Platform$OS.type == "unix"){
-  ## system ("rclone dedupe")
-  system ("rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P")
-  system ("rclone sync ~/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
-
-#  system ("rclone sync ~/tmp/LCI_noaa/cache/ remote:")
-
+  rcloneDir <- ""
+  hm <- "~/"
+  docs <- paste0 (hm, "Documents/")
 }else{
-    wd <- getwd()
-
-## get rclone to work with something like this?
-#    system("cmd.exe"
-#           , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
-    system ("cmd.exe"
-            , input=paste0 (rcloneDir
-                            , "rclone.exe sync "
-                            , '"C:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
-                            , "remote:GulfWatch/plots/CTDsections/"))
-    # system (shell="cmd.exe"
-    #         , cmd=paste0 (rcloneDir
-    #                         , "rclone.exe sync "
-    #                         , '"C:/Users/Martin Renner/Documents/My Documents/tmp/LCI_noaa/media/CTDsections/" '
-    #                         , "remote:GulfWatch/plots/CTDsections/"))
-    # shell (shell="cmd.exe"
-    #         , cmd=paste0 (rcloneDir
-    #                         , "rclone.exe sync "
-    #                         , '"~/tmp/LCI_noaa/media/CTDsections/" '
-    #                         , "remote:GulfWatch/plots/CTDsections/"))
-
-    # setwd (rcloneDir)
-    # ## shell or system2 ??
-    # shell ("./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/")
-    # setwd (wd)
+  rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
+  hm <- "C:/Users/Martin.Renner/Documents/"
+  docs <- paste0 (hm, "myDocs/")
 }
 
+## unified cross-platform rclone commands
+system (paste0 (rcloneDir, "rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P"))
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P"))
 
+## office docs -- specific to Martin Renner's computer!
+if (grep ("artin", getwd())){ # portability
+    system (paste0 (rcloneDir, "rclone sync ", docs, "amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
+}
 
-
+## sync documents back and forth -- manually!
+# if (.Platform$OS.type=="unix"){
 if (0){
-  ## on Windows: paste this into Git-bash:
-  "
-  cd ~/Applications/rclone-v1.59.0-windows-amd64/
-  ./rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P
-  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/CTDsections/ remote:GulfWatch/plots/CTDsections/ -P
-  ## same for state-of-the-bay
-  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P
-
-
-## office docs
-  ./rclone sync ~/My\ Documents/amyfiles/NOAA/ remote:NOAAoffice/ -P
-## tmp files
-  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/cache/ remote:LCIcache/cache/ -P
-  ./rclone sync ~/My\ Documents/tmp/LCI_noaa/CTD-cache/ remote:LCIcache/CTD-cache/ -P
-
-  ## on occasion, update rclone:
-  ./rclone selfupdate
-  "
+#  system ("rclone sync remote:tmp/LCI_noaa/cache/ ~/tmp/LCI_noaa/cache/ -P")
+#  system ("rclone sync remote:LCIcache/CTD-cache/ ~/tmp/LCI_noaa/CTD-cache/ -P")
+  system ("rclone sync remote:NOAA-laptop/amyfiles/currentDocs/ ~/Documents/amyfiles/NOAA/currentDocs/ -P")
+  system ("rclone sync remote:GulfWatch/data-products/ ~/tmp/LCI_noaa/data-products/")
 }
+

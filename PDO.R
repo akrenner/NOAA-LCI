@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 ## compare PDO with Seldovia water temperature data
 
+## not working as of 2022 -- update or abandone?
+
 rm (list = ls())
 ## read-in PDO data
 dsource <- "http://research.jisao.washington.edu/pdo/PDO.latest.txt"
@@ -51,20 +53,20 @@ sldvia <- subset (sldvia, as.character (sldvia$F_Temp) %in% c("<0>", "<1>", "<4>
     tempM$mMonth <- with (tempM, as.POSIXct (paste (year, month, "15", sep = "-")))
 #    plot (TempAnom~mMonth, tempM, type = "lines")
     save (tempM, file = "~/tmp/LCI_noaa/cach/tempAnomalyMonth.RData")
-    
+
     ## aggregate daily, make ts object
     if (0){
         tempD <- aggregate (Temp~day+month+year, sldvia, FUN = "mean")
-        ##    tempTS <- ts (tempD$Temp, start = c(2004, 1, 1), 
+        ##    tempTS <- ts (tempD$Temp, start = c(2004, 1, 1),
         tempTS <- ts (sldvia$Temp, start = 1, frequency = 4*24)
     library (forecast)
-    tempTS <- ts (sldvia$Temp, start = 
+    # tempTS <- ts (sldvia$Temp, start =
     sTemp <- with (sldvia, data.frame (time = sldvia$dateTime, Temp))
     }
-    
- 
 
-    
+
+
+
 ## sldvia$dateTime <- strptime (sldvia$DateTimeStamp, format = "%m/%d/%Y %H:%M") #, tz = "-0900") #, tz = "America/Anchorage"), tz = "AKST"
 # sldvia <- subset (sldvia, !is.na (dateTime))
 # SSal <- swmpr (sldvia, meta_in = "kacswq")
@@ -79,10 +81,10 @@ sldvia <- subset (sldvia, as.character (sldvia$F_Temp) %in% c("<0>", "<1>", "<4>
 ## calculate ARIMA -- annual and daily signals
     ## dD <- decomp (sTemp, para = "Temp", frequency = "daily")
 ## aD <- decomp (sTemp, para = "Temp", frequency = "annual")
-## x <- tbats (sTemp$Temp, seasonal.periods = c(4*60*24, 4*60*24*265, start = 2004)) # way to go -- fix XXX 
+## x <- tbats (sTemp$Temp, seasonal.periods = c(4*60*24, 4*60*24*265, start = 2004)) # way to go -- fix XXX
 }
 
-            
+
 sldvia$pdo <- pdoL$pdo [match (sldvia$Mon_Yr, pdoL$date)] # look up corresponding pdo
 pCor <- cor (sldvia[,which (names (sldvia) == c("Anomaly..C.", "pdo"))])
 
@@ -121,7 +123,7 @@ dev.off()
 
 
 ## define as time series
-## calculate seasonal anomalies --- already done in Excel?! 
+## calculate seasonal anomalies --- already done in Excel?!
 
 ## reshape temp to wide
 sTS <- ts (sldvia$Monthly.Average..C., frequency = 12, start = c(2004, 1))
@@ -158,6 +160,6 @@ dev.off()
 
 pdf ("~/tmp/LCI_noaa/media/seldoviaTemp.pdf")
 plot (ts (sldL$temp, frequency = 12, start = c(2004,1))
-, type = "l", ylab = "Seldovia temperature [C]")#   plot(x~y,ylab=~degree~C) ;  plot(x~y,ylab=expression(~degree~C)) 
+, type = "l", ylab = "Seldovia temperature [C]")#   plot(x~y,ylab=~degree~C) ;  plot(x~y,ylab=expression(~degree~C))
 abline (v = 0:3+2014, col = "gray", lwd = 1)
 dev.off()

@@ -18,8 +18,6 @@ cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixi
 
 
 
-# rm (list = ls())
-
 if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
 
 
@@ -33,15 +31,19 @@ if (!exists ("hexFileD")){
   hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 }
 
+## PRO: leave it here: a better file structure
+## CON: move it: it will never happen, making these cache files
+hexCache <- "~/GISdata/LCI/CTD-processing/allCTD/"
+hexCache <- "~/tmp/LCI_noaa/CTD-cache/allCTD/"
+
 
 # unlink ("~/GISdata/LCI/CTD-processing/allCTD/", recursive = TRUE)  ## careful!! -- overkill
-unlink ("~/GISdata/LCI/CTD-processing/allCTD/edited_hex", recursive = TRUE)
-unlink ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", recursive = TRUE)
+unlink ("~/tmp/LCI_noaa/CTD-cache/", recursive=TRUE) ## carefully blast it all away
 set.seed (8)
 
 
 ## define new destinations
-nD <- "~/GISdata/LCI/CTD-processing/allCTD/edited_hex/"
+nD <- paste0 (hexCache, "edited_hex/")
 instL <- c ("4141", "5028", "8138")  # do this from data?
 instL <- c ("4141", "5028")  # do this from data?
 # XXX add new CTD to this list!!!
@@ -63,7 +65,6 @@ rm (x, instL)
 rL <- function (f, p = NULL){ # recursive listing of files
   ## NULL because some files are .txt -- gobble all up
   x <- list.files(paste0 (hexFileD, f)
-#  "~/GISdata/LCI/CTD-processing/Workspace/", f)
              , pattern = p, ignore.case = TRUE, recursive = TRUE
              , full.names = TRUE)
   # print (length (x))
@@ -355,7 +356,7 @@ fixMeta ("2017-05-22", "2018-05-22") # meta was 2018-01-17
 
 
 ## end of file manipulations
-# rm (inspFile)
+rm (inspFile)
 # save.image ("~/tmp/LCI_noaa/cache/ctdHex2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHex2.RData")
 
@@ -370,12 +371,6 @@ fDB$shortFN <- gsub ("^.*/", "", fDB$file)
 fDB$metDate <- as.POSIXct(rep (NA, nrow (fDB)))
 fDB$instN <- character (nrow (fDB))
 
-
-# ## quick test-run for prototyping
-# if (TESTrun == TRUE){
-#   # fDB <- fDB [sample (1:nrow (fDB), size = nrow (fDB)/10, replace = FALSE)]
-#   fDB <- fDB [1:(nrow (fDB)/10),]
-# }
 
 
 ## filename-dates
@@ -527,7 +522,7 @@ fDB$shortFNx <- sapply (1:nrow (fDB), function (i){
 cDir <- "~/GISdata/LCI/CTD-processing/Workspace/conFiles/"
 cFDB <- data.frame (file = list.files (cDir, full.names = FALSE))
 cFDB$date <- gsub (".(xmlcon|CON)", "", cFDB$file)
-cFDB$dir <- paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/"
+cFDB$dir <- paste0 (hexCache, "hex2process/"
                     , cFDB$date, "/")
 cFDB$inst <- substr (x = cFDB$file, start = 11, stop = 14)
 
@@ -605,22 +600,22 @@ unlink (nD, recursive = TRUE, force = TRUE)
 ## make small dataset for testing
 x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
              , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
-xmlC <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process", ".xmlcon"
+xmlC <- list.files (paste0 (hexCache, "hex2process"), ".xmlcon"
                     , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
 ## remove 8138 and 2021 callibration until they've been used!
 # xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
 xmlC <- xmlC [-grep ("2021", xmlC)]
 
-file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", xmlC)
-           , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", xmlC))
+file.copy (paste0 (hexCache, "hex2process/", xmlC)
+           , paste0 (hexCache, "hex2test/", xmlC))
 rm (xmlC)
 
-fDB2 <- list.files ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", ".HEX"
+fDB2 <- list.files (paste0 (hexCache, "hex2process/"), ".HEX"
                     , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
 set.seed (8)
 fDB2 <- sample (fDB2, 30) ## better to force distribution, but good for now -- happens to work
-file.copy (paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2process/", fDB2)
-           , paste0 ("~/GISdata/LCI/CTD-processing/allCTD/hex2test/", fDB2))
+file.copy (paste0 (hexCache, "hex2process/", fDB2)
+           , paste0 (hexCache, "hex2test/", fDB2))
 
 
 cat ("\n# END CTD_file_management.R #\n")

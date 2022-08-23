@@ -12,11 +12,10 @@
 
 
 
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## get CTD data (physOc) directly from CTD_cleanup.R, rather than through dataSetup.R
-
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
+
 if (length (grep ("darwin", version$os)) >0 ){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }else{
@@ -52,43 +51,59 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 ## get coastline and bathymetry
 ## bathymetry and coastline
 
-## Zimmermann bathymetry
-Require ("raster")  ## move to terra/stars
-Require ("marmap")
-
-## FIX !!  -- already in prepData? -- migrate to prepData!
-
 ## reproject?  crop? -- review!!
 # nGrid <- .... ## define new grid -- the missing link
+
+useSF <- TRUE
+useSF <- FALSE  ## marmap still depends on sp/raster -- temp work-around
+
+
+Require ("marmap")
+bfer <- 0.5
 cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
-unlink (cFile)
-if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
-  ## need to migrate this to TERRA or STARS!
+# unlink (cFile)
+bathyNoaa <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
+                                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
+                                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
 
-  ##  bR <- resample (bR, nGrid)
-  ## migrate to terra/stars
-
-  if (.Platform$OS.type == "windows"){
-    bR <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }else{
-    bR <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }
-  ## need to reproject to longlat
-  ## then turn into topo object
-  bathyZ <- bR
-#  bathyZ <- projectRaster(bR, crs = crs ("+proj=longlat +datum=WGS84 +units=m")) ## need to downsample first -- not necessary?!??
-  # bathyZ <- as.topo (as.bathy (bathyP))  # still not right -- for oce only
-  # bathy <- as.topo (z = bRg [[1]][,,1])
-  Require ("marmap")
-  bfer <- 0.5
-  bathy <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
-                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
-                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
-  rm (bfer, bR)
-
-  save (bathy, bathyZ, file = cFile)
-}else{
+if (class (bathyNoaa)=="try-error"){
   load (cFile)
+}else{
+  save (bathyNoaa, file=cFile)
+}
+
+if (useSF){
+  detach_package <- function(pkg, character.only = FALSE)  ## see https://stackoverflow.com/questions/6979917/how-to-unload-a-package-without-restarting-r
+  {
+    if(!character.only)
+    {
+      pkg <- deparse(substitute(pkg))
+    }
+    search_item <- paste("package", pkg, sep = ":")
+    while(search_item %in% search())
+    {
+      detach(search_item, unload = TRUE, character.only = TRUE)
+    }
+  }
+
+  detach_package ("marmap")
+  detach_package ("adehabitatMA")
+  detach_package ("raster")
+  detach_package ("sp") ## needed as long as marmap depends on sp and raster. Still need to convert bathyNaa?
+  rm (detach_Package)
+  ## Zimmermann bathymetry
+  Require ("stars")
+  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+}else{
+  ## Zimmermann bathymetry
+  Require ("raster")
+  ## FIX !!  -- already in prepData? -- migrate to prepData!
+    if (.Platform$OS.type == "windows"){
+      bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+    }else{
+      bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+    }
+    rm (bfer)
 }
 
 ## more bathymetry to fill in parts Zimmerman bathymetry missses
@@ -96,33 +111,6 @@ if (!file.exists (cFile)){  ## reading large raster is slow -- cache results
 # positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
 # bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 # try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-
-
-if (0){useSF <- FALSE  ## use package sf and terra/stars instead of raster
-# useSF <- TRUE
-
-## add high-res bottom/bathymetry profile
-## see https://www.clarkrichards.org/2017/04/01/adding-noaa-bottom-profile-to-section-plots/
-## load from previous script? datasetup?
-if (useSF){
-  Require ("sf") ## or stars / terra ??
-  Require ("stars") ## or better to use terra?
-  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  # Require ("terra")
-  # bathyZ <- rast ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  Require ("raster")
-  ## need to supply absolute path because raster object is just a pointer.
-  ## still needs uncompressed raster file accessible.
-  if (.Platform$OS.type == "windows"){
-    bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }else{
-    bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  }
-}
-}
-
-
 
 
 
@@ -155,26 +143,38 @@ poAll$logTurbidity <- slog (poAll$turbidity)
 rm (slog)
 
 
-if (0){  ## use hi-res bathymetry profiles now -- this is no longer of use
-## add bathymetry to CTD metadata
-poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
+## use hi-res bathymetry profiles now -- this is no longer of use -- abandone!
+if (0){
+  ## add bathymetry to CTD metadata
+  poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-Require (sp)
-poP <- poAll
-## migrate to sf, stars/terra
-coordinates (poP) <- ~longitude_DD+latitude_DD
-proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
-poAll$bathy <- extract (bathyP, poP)
-poAll$Bottom.Depth_survey <- extract (bathyP, poP)
-if (exists ("bathyL")){
-  bL <- extract (marmap::as.raster (bathyL), poP)
-  poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
-                                        , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
-  poAll$bathy <- poAll$Bottom.Depth_survey
-}
-poAll$bathy <- poAll$Bottom.Depth_survey
+  if (useSF){
+    ## migrate to sf, stars/terra
+    Require (c ("sf", "lubridate"))
+    pop <- poAll %>%
+      st_as_sf (coords = c("longitude_DD", "latitude_DD")) %>%
+      st_set_crs(value="+proj=longlat +datum=WGS84 +units=m")
 
-rm (poP, bL, bathyP, bathyL, bathy)
+    poAll$bathy <- st_extract(bathyZ, at=pop)
+    poAll$Bottom.Depth_survey <- st_extract (bathyP, pop)
+    rm (pop)
+    # sapply(st_intersects(x,y), function(z) if (length(z)==0) NA_integer_ else z[1])
+  }else{
+    Require (sp)
+    poP <- poAll
+    coordinates (poP) <- ~longitude_DD+latitude_DD
+    proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
+    poAll$bathy <- extract (bathyP, poP)
+    poAll$Bottom.Depth_survey <- extract (bathyP, poP)
+    if (exists ("bathyL")){
+      bL <- extract (marmap::as.raster (bathyL), poP)
+      poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
+                                            , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+      poAll$bathy <- poAll$Bottom.Depth_survey
+    }
+    poAll$bathy <- poAll$Bottom.Depth_survey
+    rm (poP, bL, bathyP, bathyL, bathy)
+  }
 }
 
 
@@ -264,19 +264,15 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ########################
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
-ODV_colours <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
-odv <- colorRampPalette(col=ODV_colours, bias=0.3)
-rm (ODV_colours)
-
-
+odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
 Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 oCol3 <- list (  ## fix versions?
    # colorRampPalette(oceColorsTurbo(8), bias=0.5)
   oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
-  , odv #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
-  , cmocean ("dense")
+  , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
+  , colorRampPalette (cmocean ("dense")(5), bias=0.3)
   , cmocean ("turbid") #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
@@ -287,6 +283,7 @@ oCol3 <- list (  ## fix versions?
   , cmocean ("oxy")
   , cmocean ("haline") # why is this here? should it be??
 )
+rm (odv)
 ## oceColorsTemperature and the likes are dated -- don't use them
 ## (stick to algorithmic pic of scale limits. Cleanups.)
 
