@@ -5,6 +5,7 @@
 
 
 if (exists ("metstation")){ rm (list=ls())}  # not if called from a script
+source ("annualPlotFct.R")
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
@@ -44,8 +45,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 # rm (scAdvT, galeT, stormT)
 
 ## get up-to-date SWMP data
-source ("annualPlotFct.R")
-Require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
+Require ("openair") # for windRose
 
 
 

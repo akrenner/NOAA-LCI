@@ -8,13 +8,19 @@
 
 setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 rm (list = ls())
-
+sink (file="StateOfBay-runlog.txt", append=FALSE)
 sT <- Sys.time()
+
+
+
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE
+
 
 
 # setRepositories(graphics=FALSE, ind=76)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
-chooseCRANmirror(graphics=FALSE, ind=76)
+# chooseCRANmirror(graphics=FALSE, ind=76)
 
 if (0){ ## 2017 contract
   ## BUGS:
@@ -60,9 +66,9 @@ source ("annual-rainy.R")
 source ("annual-waterTempSal.R")
 source ("annual-airTemp.R")
 
-source ("annual-stratification.R")   ## projects/bottomTempTS ?
 source ("annual-waves.R")  ## pull-out waves and surf?
 source ("annual-snowpack.R")
+# source ("annual-stratification.R")   ## projects/bottomTempTS ?
 
 source ("CTDsyncGDwall.R")
 
@@ -70,6 +76,8 @@ source ("CTDsyncGDwall.R")
 cat ("all done\n")
 print (Sys.time())
 print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+sink()
 
 ## EOF
+
 

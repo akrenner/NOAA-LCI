@@ -213,9 +213,9 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
 
 
 prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
-                     , maO=31
-                     , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
-                     , qntl=c(0.8, 0.9)
+                    , maO=31
+                    , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
+                    , qntl=c(0.8, 0.9)
 ){
   if (! all (c("jday", "year", varName) %in% names (dat))){
     stop (paste ("Data frame must contain the variables jday, year, and", varName))
@@ -229,17 +229,17 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   xVar <- dat [,which (names (dat) == varName)]
   dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
 
-    ## moving average in here or supply as varName?
+  ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
-if (1){ # align at center
-  suppressPackageStartupMessages (Require ("zoo"))
-#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
-#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
-  dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
-                          , fill=c(NA, "extend", NA)
-                          , partial=FALSE # maO/2
-                          , align = "center")
-}else{
+  if (1){ # align at center
+    suppressPackageStartupMessages (Require ("zoo"))
+    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
+    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
+    dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
+                                 , fill=c(NA, "extend", NA)
+                                 , partial=FALSE # maO/2
+                                 , align = "center")
+  }else{
     ## bug in SWMPr smoothing function: last day=up-tick?
     Require ("SWMPr")
     dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
@@ -250,7 +250,7 @@ if (1){ # align at center
 
     # dMeans$XXX <- XX$varName [match (...)
     ## match ().... when length (varName) > 1
-}
+  }
 
   dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
   tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
@@ -276,7 +276,7 @@ if (1){ # align at center
 
   # is this critically needed?? -- N years of data per date
   tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN=sum
-                           , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
+                            , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
 
   ## previous year
   pcY <- subset (dMeans, year == (currentYear-1))
@@ -305,7 +305,7 @@ if (1){ # align at center
   tDay <- cbind (tDay, yr); rm (yr)
 
   ## fix names
-#  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
+  #  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
   names (tDay) <- gsub ("xVar", varName, names (tDay))
   names (tDay)[3:ncol (tDay)] <- paste0 (names (tDay)[3:ncol (tDay)], "_", varName)
 
@@ -376,13 +376,8 @@ getSWMP <- function (station, QAQC=TRUE){
   # pointing to the most recent zip file. "current" has no extension.
 
   dir.create(cacheFolder, showWarnings=FALSE)
-  # if (version$os == "mingw32"){
-  #   # if (.Platform$OS.type == "windows"){
-    Require ("R.utils")
-    SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
-  # }else{ # MacOS or Linux
-  #   SMPfile <- zipFile
-  # }
+  Require ("R.utils")
+  SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
 
 
 

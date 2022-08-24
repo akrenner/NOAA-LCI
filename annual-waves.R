@@ -204,7 +204,6 @@ alt.ax <- pretty (wFt)
 alt.at <- (alt.ax) * 0.3048
 axis (side = 4, at = alt.at, labels = alt.ax, srt = 90)
 mtext ("wave height [ft]", side = 4, line = 2.5)
-rm (wFt, alt.ax, alt.at)
 # for (i in 2011:2018){
 #   x <- try (lines (tDayW$jday
 #         , tDayW [,which (names (tDayW) == paste0 ("y_", i, "_wave_height"))]
@@ -213,7 +212,7 @@ rm (wFt, alt.ax, alt.at)
 # rm (x)
 # legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
 dev.off()
-rm (tDayW, wFt)
+rm (tDayW, wFt, alt.ax, alt.at)
 
 
 

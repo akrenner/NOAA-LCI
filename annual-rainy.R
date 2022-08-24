@@ -4,15 +4,15 @@ rm (list=ls())
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 ## what to show
-pastYear <- TRUE
-ongoingY <- FALSE
+pastYear <- FALSE
+ongoingY <- TRUE
 
 
 maO <- 30  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("lightblue", "blue", "black")
+currentCol <- c("black", "blue", "lightblue")
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
@@ -20,7 +20,7 @@ SWMP <- TRUE
 
 source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
+  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
 #  source ("noaaWeather.R")
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
@@ -67,7 +67,7 @@ yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY)&(year < currentYear)
                   , FUN=sum, na.rm=TRUE)
 ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm=TRUE)
 
-## violin plot of annua rain
+## violin plot of annual rain
 if (0){
   require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
