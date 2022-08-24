@@ -4,6 +4,11 @@ rm (list=ls())
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
+
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE
+
+
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
@@ -12,7 +17,8 @@ currentCol <- c("red" , "magenta"
                 , "purple")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
+# currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
+currentCol <- rev (currentCol)
 SWMP <- TRUE
 SWMP <- FALSE  ## for 2021, but maybe from here on onwards
 
@@ -72,7 +78,7 @@ par (mar=c(4,4,2,4))
 aPlot (tDay, "atemp"
        , ylab=expression ('air'~'temperature '~'['*degree~'C'*']')
        , currentCol=currentCol, MA=TRUE
-       , pastYear=TRUE, ongoingYear=FALSE
+       , pastYear=pastYear, ongoingYear=ongoingY
        )
 if (SWMP){title (main="Air Temperature at Homer Spit")}else{title (main="Air Temperature at Homer Airport")}
 # for (i in 1:length (levels (factor (hmr$year)))){
@@ -86,7 +92,7 @@ cLegend ("bottom", inset=0.05
          , cYcol=currentCol
          , title=paste (maO, "day moving average")
          , qntl=qntl
-         , pastYear=TRUE, ongoingYear=FALSE
+         , pastYear=pastYear, ongoingYear=ongoingY
 )
 dev.off()
 

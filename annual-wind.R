@@ -4,7 +4,7 @@
 ## use Lands End wind data from SWMP station
 
 
-if (exists ("metstation")){ rm (list=ls())}  # not if called from a script
+rm (list=ls())
 source ("annualPlotFct.R")
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -24,6 +24,9 @@ wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
                , "AMAA2" #, "HMSA2"
                )
 
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE
+
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
@@ -35,8 +38,8 @@ scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained o
 # currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
 Require ("RColorBrewer")
 currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
-pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
+currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
+
 ## leave code below as-is
 ##########################################################
 
@@ -511,7 +514,7 @@ with (tDay, addGraphs (longMean=smoothWindMA, percL=lowPerMA, percU=uppPerMA
                        , current=cbind (pp365ma, p365ma, og365ma)
                        , jday=jday
                        , currentCol=currentCol
-                       , pastYear=pastYear, ongoingYear=FALSE,
+                       , pastYear=pastYear, ongoingYear=ongoingY,
 ))
 # lines (og365ma~jday, tDay, col="pink", lwd=3) # partial year -- temporary
 ## otherwise include in addGraphs with ongoingYear=TRUE
@@ -547,7 +550,7 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , mRange=c(min (hmr$year), currentYear - 1)
                , cYcol=currentCol
                , title=paste (maO, "day moving average")
-               , pastYear=pastYear, ongoingYear=FALSE,
+               , pastYear=pastYear, ongoingYear=ongoingY,
                )
 ## legend for gale clouds in other corner
 if (1){
