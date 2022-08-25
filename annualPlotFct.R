@@ -377,7 +377,7 @@ getSWMP <- function (station, QAQC=TRUE){
 
   dir.create(cacheFolder, showWarnings=FALSE)
   Require ("R.utils")
-  SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
+  SMPfile <- filePath (zipFile, expandLinks = "local") # works in Windows, but not symlinked Mac XXX
 
 
 

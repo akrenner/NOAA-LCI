@@ -5,8 +5,11 @@
 ## to avoid timeouts
 ## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
 
-
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}else{
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}
 rm (list = ls())
 sink (file="StateOfBay-runlog.txt", append=FALSE)
 sT <- Sys.time()
@@ -54,7 +57,16 @@ if (0){ # Dec 2019 seasonality
 }
 
 
-## State of the Bay Report 2019
+## set up required work environment
+## gebco, gshhg, zimmerman bathymetry, CTD hex files, etc.
+## source ("workEnvironment.R")
+
+if (0){
+## The Wall
+source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
+}
+
+## State of the Bay Report
 
 ## plot SWMP weather data for annual state of the bay report
 source ("SeldoviaTemp.R")
