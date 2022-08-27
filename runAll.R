@@ -57,9 +57,8 @@ if (0){ # Dec 2019 seasonality
 }
 
 
-## set up required work environment
-## gebco, gshhg, zimmerman bathymetry, CTD hex files, etc.
-## source ("workEnvironment.R")
+## set up required work environment and external files/data
+source ("EnvironmentSetup.R")
 
 if (0){
 ## The Wall

@@ -27,6 +27,7 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/CTDsections/ 
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/StateOfTheBay/ remote:GulfWatch/plots/StateOfBay/ -P"))
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ remote:GulfWatch/data-products/ -P"))
 ## clone cache for convenience (e.g. SWMP and noaar  downloads)?
+system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/SWMP/ remote:NOAA-laptop/cache/SWMP/ -P"))
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/ remote:NOAA-laptop/cache -P"))
 
 ## office docs -- specific to Martin Renner's computer!
