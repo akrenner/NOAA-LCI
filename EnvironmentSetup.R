@@ -14,13 +14,22 @@ options (timeout=max (1200, getOption("timeout")))
 ## bathymetry: gebco and AOOS
 ## AOOS http://thredds/ncss/CI_BATHY.nc?var=Band1&disableLLSubset=on&disableProjSubset=on&horizStride=1&time_start=2009-01-01T00%3A00%3A00Z&time_end=2009-01-01T00%3A00%3A00Z&timeStride=1&accept=netcdf4
 ## hi-resolution Kachemak Bay DEM
-outF <- "~/GISdata/LCI/kachemak_bay_13_mhr_2010.nc"
+# outF <- "~/GISdata/LCI/kachemak_bay_13_mhr_2010.nc"
+# # unlink (outF)
+# if (!file.exists(outF)){
+#   download.file (url="https://www.ngdc.noaa.gov/thredds/fileServer/regional/kachemak_bay_13_mhw_2010.nc"
+#                  , destfile=outF, method="auto") ## 269.4 MB
+# }
+# rm (outF)
+
+## Zimmermann Cook Inlet Bathymetry
+outF <- "~/GISdata/LCI/Cook_Bathymetry_Grid.zip"
 # unlink (outF)
 if (!file.exists(outF)){
-  download.file (url="https://www.ngdc.noaa.gov/thredds/fileServer/regional/kachemak_bay_13_mhw_2010.nc"
-                 , destfile=outF, method="auto") ## 269.4 MB
+  download.file(url="http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/Cook_bathymetry_grid.zip"
+              , destfile=outF, method="auto")
 }
-rm (outF)
+
 ## gebco
 
 
