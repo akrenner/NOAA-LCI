@@ -52,13 +52,14 @@ Require ("dplyr")
 source ("annualPlotFct.R")
 ## meteo_pull_monitors appears to be incomplete. Start with data from manual download
 ## from https://www.ncei.noaa.gov/cdo-web/
+if (0){
 # hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport2959063.csv") %>%  ## old version to 2022-04
 hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
   dplyr::rename_with (tolower) %>%
   dplyr::rename (datetimestamp = date, location = station
                  ) %>%
   select (!ends_with ("_attributes"))
-
+}
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               # , date_min = "2022-04-18"  # goes back to 1932-09-01
                                , date_min = "1933-01-01"  # goes back to 1932-09-01
@@ -74,8 +75,8 @@ hmrL <-  meteo_pull_monitors ("USW00025507"
 #                        , prcp, wdf5, wsf5, wsf2, wdf2))) %>%
 hmr <- rbind (hmrL) %>%
     addTimehelpers()
-
-rm (hmr1, hmrL)
+rm (hmrL)
+# rm (hmr1)
 
 ## adjust units to mm/day and degrees C
 hmr$totprcp <- hmr$prcp * 0.1 # PRCP = Precipitation (tenths of mm)
