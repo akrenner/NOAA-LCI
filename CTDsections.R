@@ -18,6 +18,16 @@ test <- FALSE
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
 if (test){iX <- 10}else{iX <- 1:length (levels (poAll$survey))}
+
+require ("parallel")
+if (.Platform$OS.type=="unix"){
+  ncores=12
+}else{
+  ncores <- 1
+}
+# mclapply (X=iX, poAll=poAll, mc.cores=ncores, FUN=function (sv,...){
+# })
+
 for (sv in iX){
   cat (sv, " ")
   if (sv %% 10 == 0){cat (" ", sv, "/", max (iX), "\n", sep = "")}
@@ -55,9 +65,9 @@ for (sv in iX){
 
     ## transect from station list for use with plot.section
     transectTemplate <- with (subset (stn, Line == levels (s$Transect)[tn]),
-                                      data.frame (station=Match_Name
-                                                  , longitude=Lon_decDegree
-                                                  , latitude=Lat_decDegree))
+                              data.frame (station=Match_Name
+                                          , longitude=Lon_decDegree
+                                          , latitude=Lat_decDegree))
 
 
     phT <- subset (s, Transect == levels (s$Transect)[tn])
@@ -103,9 +113,9 @@ for (sv in iX){
                                        , Fluorescence_mg_m3, logPAR
                                        , Oxygen_umol_kg
                                        # , Oxygen_sat.perc.
-                                       ))
+          ))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
-        # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
+          # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
           zR <- quantile (cDF [,ov], probs = c(0.05, 0.95), na.rm = TRUE); rm (cDF)
         }
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
@@ -125,10 +135,10 @@ for (sv in iX){
           rm (zR)
         }
         ## mark PAR at night
-      #   if (oVars [ov] == "PAR"){
-      #     if (is.night(xCo@data [[1]][[1]]))
-      #       box (lwd = 4, col = "navy")
-      #   }
+        #   if (oVars [ov] == "PAR"){
+        #     if (is.night(xCo@data [[1]][[1]]))
+        #       box (lwd = 4, col = "navy")
+        #   }
       }
       if (s$Transect[tn] == "AlongBay"){mt <- ""}else{mt <- "T"}
       mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
@@ -142,9 +152,9 @@ for (sv in iX){
             # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
             ## , map.xlim = c(-154, -151)
             ## , map.ylim = c(57.5, 60.1)
-             , clatitude = mean (range (poAll$latitude_DD)) # 59.4
-             , clongitude = mean (range (poAll$longitude_DD)) # -152
-             , span = 200
+            , clatitude = mean (range (poAll$latitude_DD)) # 59.4
+            , clongitude = mean (range (poAll$longitude_DD)) # -152
+            , span = 200
             # , showSpine = TRUE
       )
       plot (xCo

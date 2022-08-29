@@ -64,6 +64,7 @@ if (!require("pacman")) install.packages("pacman"
   , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 Require <- pacman::p_load
 
+Require ("sp")
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -809,13 +810,15 @@ coastSP <- as (coastSF, "Spatial")
 # coast <- st_intersection (coastSP, bP)
 # coast <- st_intersects (coastSP, bP)
 
-if (0){
+if (1){
 Require ("raster")
 # Require ("rgeos")
 coast <- raster::intersect(coastSP, bP)
 }else{
-  Require ("terra") # replacement for raster
- coast <- terra::intersect(coastSP, bP)
+ #  Require ("terra") # replacement for raster
+ # coast <- terra::intersect(coastSP, bP)
+ Require ("stars")
+ coast <- st_intersects (coastSP, bP)
 }
 # plot (coastC)
 unlink (tD, TRUE); rm (tD)

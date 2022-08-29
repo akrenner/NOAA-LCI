@@ -72,14 +72,13 @@ source ("CTDsections.R")
 source ("CTDwall.R")
 
 
-# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
+# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 source ("CTD_signatureData.R")
 
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
-
 
 ## save snapshot of current package versions
 # renv::snapshot()
