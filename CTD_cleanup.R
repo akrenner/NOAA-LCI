@@ -632,7 +632,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
 ## filter out all the non-standard casts ##
 phy <- physOc
 ## double-used AlongBay - use only once??
-phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_6", "9_6", phy$Match_Name)
+phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_6", "9_6", phy$Match_Name) ## needed? both in stn
 # phy$Match_Name <- ifelse (phy$Match_Name=="AlongBay_2", "4_3", phy$Match_Name)
 # phy$Match_Name <- ifelse (phy$MatchName=="AlongBay_6", "9_6", phy$MatchName)
 ## all stations are already standard stations
@@ -653,10 +653,12 @@ outD <- "~/tmp/LCI_noaa/data-products/CTD"
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
 yr <- factor (format (phy$isoTime, "%Y"))
-phy <- subset (phy, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
+phyE <- subset (phy, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
+phy2 <- subset (phy, !Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
+write.csv (phy2, file=paste0 (outD, "/extraCTD.csv"), row.names=FALSE, quote=FALSE)
 
 ctdX <- sapply (1:length (levels (yr)), function (i){
-  ctdA <- subset (phy, yr == levels (yr)[i])
+  ctdA <- subset (phyE, yr == levels (yr)[i])
   ctdB <- with (ctdA, data.frame (Station = Match_Name
                                   , Date, Time
                                   , Latitude_DD = latitude_DD

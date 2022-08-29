@@ -31,7 +31,7 @@ Require <- pacman::p_load
 # renv::init()
 # renv::activate()
 
-## pre-load widely needed packages
+## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
 Require ("dplyr")
 Require ("oce")
@@ -67,12 +67,13 @@ source ("CTDwall-setup.R")  # XXX oceadata not available with renv -- gshhg from
 source ("CTDsections.R")
 source ("CTDwall.R")
 
+
+# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
-
-# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
 ## save snapshot of current package versions
 # renv::snapshot()

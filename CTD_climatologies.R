@@ -407,3 +407,6 @@ print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
 dev.off()
 
 
+graphics.off()
+
+## EOF
