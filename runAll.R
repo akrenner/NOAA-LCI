@@ -66,20 +66,9 @@ source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and w
 }
 
 ## State of the Bay Report
+source ("annualStateOfTheBay.R")
 
-## plot SWMP weather data for annual state of the bay report
-source ("SeldoviaTemp.R")
-source ("annual-wind.R")
 
-# source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
-source ("annual-rainy.R")
-# source ("annual-salinity.R")
-source ("annual-waterTempSal.R")
-source ("annual-airTemp.R")
-
-source ("annual-waves.R")  ## pull-out waves and surf?
-source ("annual-snowpack.R")
-# source ("annual-stratification.R")   ## projects/bottomTempTS ?
 
 source ("CTDsyncGDwall.R")
 
