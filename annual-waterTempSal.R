@@ -123,18 +123,20 @@ for (i in 1:length (waterL)){
   hM <- try (prepDF (dat=waterL [[i]], varName="chlfluor", maO=maO
                      , currentYear=currentYear, qntl=qntl))
   if (class (hM) != "try-error"){
-  aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]"
-         , main=c ("Homer shallow", "Homer deep", "Seldovia shallow"
-         , "Seldovia deep")[i]
-         # , ylim=c(1, 1.3)
-         )
-  cLegend ("topleft", inset=0.05
-           , mRange=c (min (homerS$year), currentYear -1)
-           , currentYear=currentYear
-           , cYcol=currentCol # "blue"
-           , qntl=qntl [1]
-  )
-  axis (1, at=366, labels=FALSE)
+    aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]"
+           , main=c ("Homer shallow", "Homer deep", "Seldovia shallow"
+                     , pastYear=pastYear, ongoingYear=ongoingY
+                     , "Seldovia deep")[i]
+           # , ylim=c(1, 1.3)
+    )
+    cLegend ("topleft", inset=0.05
+             , mRange=c (min (homerS$year), currentYear -1)
+             , currentYear=currentYear
+             , pastYear=pastYear, ongoingYear=ongoingY
+             , cYcol=currentCol # "blue"
+             , qntl=qntl [1]
+    )
+    axis (1, at=366, labels=FALSE)
   }
 }
 dev.off()
@@ -239,7 +241,9 @@ cLegend ("bottomleft", inset=0.05, currentYear=currentYear
          , pastYear=pastYear, ongoingYear=ongoingY
          )
 ## add homer data
-aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity")
+aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity"
+       , pastYear=pastYear, ongoingYear=ongoingY
+)
 title (main="Homer surface")
 box()
 dev.off()

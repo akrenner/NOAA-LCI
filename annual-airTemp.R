@@ -9,6 +9,11 @@ pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
 
 
+## may have to delete cache
+if (.Platform$OS.type=="windows"){
+  unlink ("C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/", recursive=TRUE)
+}
+
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
@@ -20,7 +25,7 @@ currentCol <- brewer.pal (3, "Paired")
 # currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
 currentCol <- rev (currentCol)
 SWMP <- TRUE
-SWMP <- FALSE  ## for 2021, but maybe from here on onwards
+SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
 
 

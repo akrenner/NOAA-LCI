@@ -22,7 +22,7 @@ source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
-#  source ("noaaWeather.R")
+  source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
 
@@ -69,7 +69,7 @@ ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm=TRUE)
 
 ## violin plot of annual rain
 if (0){
-  require ("vioplot")
+  Require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
                     , FUN=sum, na.rm=TRUE)
   x <- vioplot(yA2$totprcp, ylab="annual precipitation [mm]")
@@ -99,14 +99,18 @@ iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 cCex <- 2
 text (tDay$jday, ifelse (tDay$pY_totprcp > 10
                          #, tDay$pYMA_totprcp + 0.2
-                         , 0
-                         , NA)
+                         , 0, NA)
       , labels="*", col=currentCol [2], cex=cCex)
 if (pastYear){
   text (tDay$jday, ifelse (tDay$pcY_totprcp > 10
                            , 0.18
                            , NA)
         , labels="*", col=currentCol [1], cex=cCex)
+}
+if (ongoingY){
+  text (tDay$jday, ifelse (tDay$ogy_totprcp > 10
+                           , 0.18, NA)
+        , labels="*", col=currentCol [3], cex=cCex)
 }
 # require ("png")
 # img <- readPNG ("pictograms/rain-cloud.png")

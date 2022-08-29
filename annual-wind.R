@@ -23,6 +23,7 @@ metstation <- "kachomet"  # SWMP
 wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
                , "AMAA2" #, "HMSA2"
                )
+rm (wStations)
 
 pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE

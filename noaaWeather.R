@@ -62,8 +62,9 @@ hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
 }
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               # , date_min = "2022-04-18"  # goes back to 1932-09-01
-                               , date_min = "1933-01-01"  # goes back to 1932-09-01
-                              , date_max = as.character (Sys.Date())) %>%
+#                              , date_min = "1933-01-01"  # goes back to 1932-09-01
+#                              , date_max = as.character (Sys.Date())
+                               ) %>%
   dplyr::rename (datetimestamp = date, location = id) # wdfg and awnd now missing
 
   ## merge hmr1 and hmrL
