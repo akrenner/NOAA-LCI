@@ -85,7 +85,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
-    cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
+    cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
     ## make this a function?
@@ -186,9 +186,15 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
-    par (oma=c(3,5,5,2)
+    if (pH > 14){
+    par (oma=c(3,5,12,2)
          , mar=c(4,4,3,0.1)
     )
+    }else {
+      par (oma=c(3,5,8,2)
+           , mar=c(4,4,3,0.1)
+      )
+}
     if (0){ # test){
       par (oma=c(3,5,15,2)
            , mar=c(4,4,16,0.1)
@@ -371,6 +377,9 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
             # title (main = paste (levels (physOc$transDate)[iS]))
             title (main = paste0 (levels (physOc$transDate)[iS], "-"
                                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
+          }
+          if (iY==1){ ## big title on top
+            mtext (text = oVars [ov], side=3, cex=4, outer=TRUE)  ## always?
           }
           ## addBorder (xCo, TD[ov]-1)
 
