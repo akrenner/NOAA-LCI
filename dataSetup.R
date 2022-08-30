@@ -132,6 +132,26 @@ physOc <- with (physOcT, data.frame (Match_Name=Station
 ))
 rm (physOcT)
 
+
+
+## add new derived variable: slope of density gradient
+## best to do this here = ??
+## plan A: calculate slope for each step
+## plan B: fit smoothing spline and produce derivative
+cast <- factor (paste0 (physOc$Match_Name, physOc$isoTime))
+physOc$densityGradient <- sapply (1:length (levels (cast))
+                                  , function (i){
+                                    cst <- subset (physOc, cast == levels (cast)[i])
+                                    slp <- (lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
+                                      (lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
+                                    #slp <- data.frame (gradient=slp)
+                                    slp
+                                  }) %>%
+  unlist
+rm (cast)
+
+
+
 stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset (stn, !is.na (Lon_decDegree))
 stn <- subset (stn, !is.na (Lat_decDegree))
@@ -140,7 +160,7 @@ stn$Plankton <- stn$Plankton == "Y"
 
 
 ## Kris:
-## - presistance of mixing across seasons and tides
+## - persistence of mixing across seasons and tides
 ## fluorescence in total water column?
 
 
