@@ -30,7 +30,7 @@ Require <- pacman::p_load
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
 
-## pre-load widely needed packages
+## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
 Require ("dplyr")
 Require ("oce")
@@ -55,6 +55,11 @@ source ("CTD_cleanup.R")         ## move error corrections into here. Produce ag
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source ("datasetup.R")
+## separate out CTD-specific stuff??
+#; bathymetry
+#; coastline
+#; CTD data
+
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
@@ -66,12 +71,14 @@ source ("CTDwall-setup.R")
 source ("CTDsections.R")
 source ("CTDwall.R")
 
+
+# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+source ("CTD_signatureData.R")
+
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
-
-# source ("CTD_climatologies.R")  # was: source ("ctd_T9-anomaly.R") -- also see Jim's
 
 ## save snapshot of current package versions
 # renv::snapshot()
