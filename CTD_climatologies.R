@@ -36,6 +36,10 @@ load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
 
 
 
+plotRAW <- FALSE
+# plotRAW <- TRUE
+
+
 
 ### data prep
 require ("oce")
@@ -211,7 +215,11 @@ for (k in 1:length (levels (physOc$Match_Name))){
   pdf (paste0 ("~/tmp/LCI_noaa/media/ctdClimatologies/"
                , stnK, "-profile.pdf")
        , height = 11, width = 8.5)
-  par (mfrow = c(5,1))
+  if (plotRAW){
+    par (mfrow=c(5,1))
+  }else{
+    par (mfrow=c(3,1))
+  }
   ## current anomaly range: -7.5 to 6.7
   sF <- function (v, n = 12){
     aR <- max (abs (range (v, na.rm = TRUE)))
@@ -230,17 +238,19 @@ for (k in 1:length (levels (physOc$Match_Name))){
   }
 
   xCS <- mkSection (xC)
-  ## time series of raw data
-  plot.station (xCS, which="temperature"
-                , zcol=oceColorsTemperature (11)
-                # , zbreaks=sF (xC$Temperature_ITS90_DecC)
-  )
+  if (plotRAW){
+    ## time series of raw data
+    plot.station (xCS, which="temperature"
+                  , zcol=oceColorsTemperature (11)
+                  # , zbreaks=sF (xC$Temperature_ITS90_DecC)
+    )
 
-  zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)), by=0.5)
-  plot.station (xCS, which="salinity"
-                , zcol = oceColorsSalinity(length (zB)-1)
-                , zbreaks=zB
-  )
+    zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)), by=0.5)
+    plot.station (xCS, which="salinity"
+                  , zcol = oceColorsSalinity(length (zB)-1)
+                  , zbreaks=zB
+    )
+  }
 
   ## time series of anomalies
   zB <- sF (xC$anTem)
