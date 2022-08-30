@@ -63,7 +63,6 @@ save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
 for (k in 1:length (levels (physOc$Match_Name))){
   try ({
-# for (k in pickStn){
   stnK <- levels (physOc$Match_Name)[k]
   cat (stnK, "\n")
   xC <- subset (physOc, Match_Name == stnK)
@@ -124,7 +123,6 @@ for (k in 1:length (levels (physOc$Match_Name))){
   })
   ctdAgg$sloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
   ## fluorescence
-
   sOut <- sapply (levels (sDF$depthR), FUN = function (i){
     loess(Fluorescence_mg_m3~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
   })
@@ -157,7 +155,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
   xC$anSal <- xC$Salinity_PSU - xC$nSal
 
 
-  mkSection <- function (xC){
+  mkSection <- function (xC){  ## use CTDfunctions insted?!
     require (oce)
     cL <- lapply (1:length (levels (xC$Date))
                   , FUN = function (i){
@@ -213,7 +211,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
   pdf (paste0 ("~/tmp/LCI_noaa/media/ctdClimatologies/"
                , stnK, "-profile.pdf")
        , height = 11, width = 8.5)
-  par (mfrow = c(3,1))
+  par (mfrow = c(5,1))
   ## current anomaly range: -7.5 to 6.7
   sF <- function (v, n = 12){
     aR <- max (abs (range (v, na.rm = TRUE)))
@@ -222,30 +220,48 @@ for (k in 1:length (levels (physOc$Match_Name))){
   }
 
 
-  zB <- sF (xC$anTem)
+  # zB <- sF (xC$anTem)
   # zB <- seq (-8.25, 9, by = 1.5)
   # zB <- seq (-8.0, 8.0, length.out = 12)
-  plot.station (mkSection (xC)
-                , which = "anTem"
-                , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
-                , zbreaks = zB
-  )
-  rm (zB)
-  #axis (2, at = c(0, 50, 100))
-
   sF <- function (v, n = 12){
     aR <- max (abs (range (v, na.rm = TRUE)))
     aR <- ceiling (aR)
     seq (-aR, aR, length.out = n)
   }
+
+  xCS <- mkSection (xC)
+  ## time series of raw data
+  plot.station (xCS, which="temperature"
+                , zcol=oceColorsTemperature (11)
+                # , zbreaks=sF (xC$Temperature_ITS90_DecC)
+  )
+
+  zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)), by=0.5)
+  plot.station (xCS, which="salinity"
+                , zcol = oceColorsSalinity(length (zB)-1)
+                , zbreaks=zB
+  )
+
+  ## time series of anomalies
+  zB <- sF (xC$anTem)
+  plot.station (xCS, which = "anTem"
+                , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
+                , zbreaks = zB
+  )
+  #axis (2, at = c(0, 50, 100))
+
   zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. <= 10))
   plot.station (mkSection (subset (xC, Depth.saltwater..m. <= 10))
-                , which = "anSal", zcol = brewer.pal (11, "PiYG"), zbreaks = zB
-                , axes = FALSE)
-  axis (2, at = seq (0, 10, by = 2)) #c(0, 5, 10))
+                , which="anSal", zcol=brewer.pal (11, "PiYG")
+                , zbreaks=zB
+                , axes=FALSE)
+  axis (2, at = seq (0, 10, by = 2))
+
   zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. > 10))
   plot.station (mkSection (subset (xC, Depth.saltwater..m. > 10))
-                , which = "anSal", zcol = brewer.pal (11, "PiYG"), zbreaks = zB)
+                , which="anSal", zcol=brewer.pal (11, "PiYG")
+                , zbreaks=zB)
+  rm (xCS, zB)
   dev.off()
 
 #  save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
@@ -343,6 +359,7 @@ rm (clPlot, anAx)
 #########################
 ## freshwater contents ##
 #########################
+## move this elsewhere! -- signature data?
 
 fw <- subset (xC, Depth.saltwater..m. <= 10)
 fw <- aggregate (Salinity_PSU~Date, data = fw, FUN = function (x){
