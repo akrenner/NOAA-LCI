@@ -3,8 +3,8 @@
 
 ## load data
 ## start with file from dataSetup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")  # contains physOc -- raw CTD profiles
-load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physOc -- raw CTD profiles
+# load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
@@ -54,13 +54,15 @@ physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through th
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 # print (summary (physOc))
 
-dir.create("~/tmp/LCI_noaa/media/ctdClimatologies", recursive = TRUE, showWarnings = FALSE)
+mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections/"
+dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
+
 
 save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
 
-pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
+# pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
 for (k in 1:length (levels (physOc$Match_Name))){
   try ({
 # for (k in pickStn){
@@ -210,8 +212,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
 
 
   require ("RColorBrewer")
-  pdf (paste0 ("~/tmp/LCI_noaa/media/ctdClimatologies/"
-               , stnK, "-profile.pdf")
+  pdf (paste0 (mediaD, stnK, "-profile.pdf")
        , height = 11, width = 8.5)
   par (mfrow = c(3,1))
   ## current anomaly range: -7.5 to 6.7
@@ -292,8 +293,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
           , ...)
   }
 
-  pdf (paste0 ("~/tmp/LCI_noaa/media/ctdClimatologies/"
-               , stnK, "-climatology.pdf")
+  pdf (paste0 (mediaD, stnK, "-climatology.pdf")
        , height = 11.5, width = 8)
   par (mfrow = c (2,1))
   clPlot (cT9, which = "temperature"
@@ -315,8 +315,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
 
 
   ## fluorescence
-  pdf (paste ("~/tmp/LCI_noaa/media/ctdClimatologies/"
-              , stnK, "-fluorescence-climatology.pdf"))
+  pdf (paste (mediaD, stnK, "-fluorescence-climatology.pdf"))
   par (las = 1)
   clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
 #  anAx(dAx = seq (0, 100, by = 20))
