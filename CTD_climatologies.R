@@ -37,7 +37,9 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physO
 
 
 plotRAW <- FALSE
-# plotRAW <- TRUE
+ plotRAW <- TRUE
+
+quantR <- 0.99
 
 
 
@@ -66,9 +68,13 @@ save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
 
-# pickStn <- which (levels (physOc$Match_Name) %in% c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1"))# , "AlongBay_10"))
-for (k in 1:length (levels (physOc$Match_Name))){
+pickStn <- which (levels (physOc$Match_Name) %in%
+                    c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
+pickStn <- 1:length (levels (physOc$Match_Name))
+pickStn <- 87 # 9-6
+for (k in pickStn){
   try ({
+  # k <- 87  ## 9-6
   stnK <- levels (physOc$Match_Name)[k]
   cat (stnK, "\n")
   xC <- subset (physOc, Match_Name == stnK)
@@ -118,26 +124,21 @@ for (k in 1:length (levels (physOc$Match_Name))){
 
   # require ("mgcv")  ## patterns in residuals -- stick with loess
   # gam (Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
-  ## temperature
-  sOut <- sapply (levels (sDF$depthR), FUN = function (i){
-    loess(Temperature_ITS90_DegC~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
-  })  # 12x103 matrix
-  ctdAgg$tloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
-  ## salinity
-  sOut <- sapply (levels (sDF$depthR), FUN = function (i){
-    loess(Salinity_PSU~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
-  })
-  ctdAgg$sloess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
-  ## fluorescence
-  sOut <- sapply (levels (sDF$depthR), FUN = function (i){
-    loess(Fluorescence_mg_m3~monthI, sDF, subset = depthR == i, span = 0.25)$fitted[(1:12)+12]
-  })
-  ctdAgg$floess <- sapply (1:nrow (ctdAgg), FUN = function (i){sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]})
-
-
-
-  rm (sOut)
-
+  anoF <- function (varN, df=sDF){
+    vN <- which (names (df) == varN)
+    sOut <- sapply (levels (df$depthR), FUN=function (i){
+      loess (as.formula(paste0 (varN, "~monthI"))
+             , df, subset=depthR==i
+             , span=0.25)$fitted[(1:12)+12]
+    })
+    sapply (1:nrow (ctdAgg), FUN=function (i){
+      sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]
+    })
+  }
+  ctdAgg$tloess <- anoF ("Temperature_ITS90_DegC")
+  ctdAgg$sloess <- anoF ("Salinity_PSU")
+  ctdAgg$floess <- anoF ("Fluorescence_mg_m3")
+  rm (anoF)
 
   ## model normals instead
   # mDF <- rbind (xC, xC, xC)
@@ -201,14 +202,15 @@ for (k in 1:length (levels (physOc$Match_Name))){
           #, at = FALSE
           # , stationTicks = TRUE
           , grid = FALSE
-          , axes = FALSE, ...)
+          , axes = FALSE, ...
+          , xlab="", ylab="")
     axis (2, at = c(0, 20, 40, 60, 80, 100))
+    tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-01-01")))
+    lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-07-01")))
+    abline (v = tAx)
     if (axes == TRUE){
-      tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-01-01")))
-      lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-07-01")))
       axis (1, at = tAx, label = FALSE)
       axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
-      abline (v = tAx)
     }
   }
 
@@ -221,22 +223,16 @@ for (k in 1:length (levels (physOc$Match_Name))){
   }else{
     par (mfrow=c(3,1))
   }
-  ## current anomaly range: -7.5 to 6.7
+  par (oma=c(0,3,2,0))
+
+  ## current anomaly range: -7.5 to 6.7 -- needs to be symmetrical
   sF <- function (v, n = 12){
-    aR <- max (abs (range (v, na.rm = TRUE)))
+    aR <- max (abs (range (v, na.rm=TRUE)))
+    aR <- max (abs (stats::quantile(v, probs=c(1-quantR, quantR), na.rm=TRUE)))
     aR <- ceiling (aR)
     seq (-aR, aR, length.out = n)
   }
 
-
-  # zB <- sF (xC$anTem)
-  # zB <- seq (-8.25, 9, by = 1.5)
-  # zB <- seq (-8.0, 8.0, length.out = 12)
-  sF <- function (v, n = 12){
-    aR <- max (abs (range (v, na.rm = TRUE)))
-    aR <- ceiling (aR)
-    seq (-aR, aR, length.out = n)
-  }
 
   xCS <- mkSection (xC)
   if (plotRAW){
@@ -244,13 +240,20 @@ for (k in 1:length (levels (physOc$Match_Name))){
     plot.station (xCS, which="temperature"
                   , zcol=oceColorsTemperature (11)
                   # , zbreaks=sF (xC$Temperature_ITS90_DecC)
+                  , legend.loc="" #legend.text="temperature anomaly [°C]"
+                   , mar=c(2.5,4,2.3,1.2)  ## default:  3.0 3.5 1.7 1.2
     )
+    title (main="temperature [°C]", line=1.2)
+    ## station-ticks
+    axis (3, at=xC$isoTime, labels=FALSE)
 
     zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)), by=0.5)
     plot.station (xCS, which="salinity"
                   , zcol = oceColorsSalinity(length (zB)-1)
                   , zbreaks=zB
+                  , legend.loc="" #legend.text="temperature anomaly [°C]"
     )
+    title (main="salinity [PSU]")
   }
 
   ## time series of anomalies
@@ -258,34 +261,51 @@ for (k in 1:length (levels (physOc$Match_Name))){
   plot.station (xCS, which = "anTem"
                 , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
                 , zbreaks = zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
-  #axis (2, at = c(0, 50, 100))
+  # legend ("bottomright", legend="temperature anomaly [°C]", fill="white") #, bty="n")
+  title (main="temperature anomaly [°C]")
 
   zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. <= 10))
   plot.station (mkSection (subset (xC, Depth.saltwater..m. <= 10))
                 , which="anSal", zcol=brewer.pal (11, "PiYG")
                 , zbreaks=zB
-                , axes=FALSE)
+                , axes=FALSE
+                , xlab=""
+                #, ylim=c(-1,-10)
+                 , mar=c(1.0,3.5,3.7,1.2)  #default:  3.0 3.5 1.7 1.2
+                , legend.loc="" #legend.text="salinity anomaly [PSU]"
+                )
   axis (2, at = seq (0, 10, by = 2))
+  title (main="salinity anomaly [PSU]")
+
 
   zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. > 10))
   plot.station (mkSection (subset (xC, Depth.saltwater..m. > 10))
                 , which="anSal", zcol=brewer.pal (11, "PiYG")
-                , zbreaks=zB)
+                , zbreaks=zB
+               # , ylim=c(-10,-1*max (xC$Depth.saltwater..m.))
+               , mar=c(4.7,3.5,0,1.2) # default:  3.0 3.5 1.7 1.2
+               , legend.loc=""
+                )
   rm (xCS, zB)
+
+  mtext ("Depth [m]", side=2, outer=TRUE)
+
   dev.off()
 
 #  save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 #  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 
 
+  ######################
+  ## plot climatology ##
+  ######################
 
-  ## plot climatology
   prC <- ctdAgg; prC$monthI <- prC$monthI - 12
   poC <- ctdAgg; poC$monthI <- poC$monthI + 12
   ctdAgg <- rbind (prC, ctdAgg, poC); rm (prC, poC)
   cT9 <- lapply (0:13, function (i){ # from prev month to month after current year -- why not longer?
-# for (i in 0:13){ cat (i, "\n")
     sCTD <- subset (ctdAgg, monthI == i)
     ocOb <- with (sCTD, as.ctd (# salinity = Salinity_PSU, temperature = Temperature_ITS90_DegC
       salinity = sloess, temperature = tloess
@@ -307,7 +327,7 @@ for (k in 1:length (levels (physOc$Match_Name))){
   # rm (ctdAgg)
 
 
-  anAx <- function (dAx = c(0, 50, 100)){
+  anAx <- function (dAx = c(0, 50, 100)){  ## annotations for x-axis
     axis (1, at = as.POSIXct (as.Date (paste0 ("2000-", 1:12, "-01"))), label = FALSE)
     axis (1, at = as.POSIXct (as.Date (paste0 ("2000-", 1:12, "-15"))), label = month.abb, tick = FALSE)
     axis (2, at = dAx)
@@ -359,7 +379,7 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 
 
 
-rm (clPlot, anAx)
+# rm (clPlot, anAx)
 
 
 
