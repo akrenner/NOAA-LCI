@@ -25,14 +25,13 @@ if (.Platform$OS.type == "unix"){
 
 ## sync current directory to Google Drive
 system (paste0 ("rclone dedupe remote:NOAA-laptop/amyfiles/NOAA-LCI/ -P"))
-system (paste0 ("rclone sync ", docs, "amyfiles/NOAA/NOAA-LCI/ remote:NOAA-laptop/amyfiles/NOAA-LCI/ -P"))
-
-
+system (paste0 ("rclone sync --exclude .git/ --exclude renv/ --exclude .Rproj.user/ --exclude=.DS_Store ", docs, "amyfiles/NOAA/NOAA-LCI/ remote:NOAA-laptop/amyfiles/NOAA-LCI/"
+                , " -P"))
 
 
 
 ## copy Google Drive back to local
-system (paste0 ("rclone sync remote:NOAA-laptop/amyfiles/NOAA-LCI/ ", docs, "amyfiles/NOAA/NOAA-LCI/ -P"))
+system (paste0 ("rclone sync remote:NOAA-laptop/amyfiles/NOAA-LCI/ ", docs, "amyfiles/NOAA/NOAA-LCI-gdcopy/ -P"))
 
 
 
