@@ -558,7 +558,7 @@ if (1){
   ## gales
   yL <- 0.7; xL <- 250
   rasterImage (img, xleft=xL, xright=xL+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-  text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (>", galeT, " knots)")
+    text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (", currentYear, ", >", galeT, " knots)")
         , pos=4, adj=c(0,1))
   # yL <- 2.7
   # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)

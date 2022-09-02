@@ -443,8 +443,9 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   Require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
+    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy", showWarnings=FALSE, recursive=TRUE)
   }
-  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")), silent=TRUE)
+  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
     if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
   }else{
