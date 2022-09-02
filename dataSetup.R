@@ -64,7 +64,7 @@ if (!require("pacman")) install.packages("pacman"
   , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 Require <- pacman::p_load
 
-Require ("sp")
+Require ("sp")  ## move to sf
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -138,18 +138,28 @@ rm (physOcT)
 ## best to do this here = ??
 ## plan A: calculate slope for each step
 ## plan B: fit smoothing spline and produce derivative
-cast <- factor (paste0 (physOc$Match_Name, physOc$isoTime))
-physOc$densityGradient <- sapply (1:length (levels (cast))
+# cast <- factor (paste0 (physOc$Match_Name, physOc$isoTime))
+# physOc$densityGradient <- sapply (1:length (levels (cast))
+#                                   , function (i){
+#                                     cst <- subset (physOc, cast == levels (cast)[i])
+#                                     slp <- (lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
+#                                       (lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
+#                                     #slp <- data.frame (gradient=slp)
+#                                     slp
+#                                   }) %>%
+#   unlist
+physOc$swN2 <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function (i){
-                                    cst <- subset (physOc, cast == levels (cast)[i])
-                                    slp <- (lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
-                                      (lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
-                                    #slp <- data.frame (gradient=slp)
-                                    slp
+                                    require ("oce")
+                                    cast <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
+                                    swN2 <- oce::swN2 (pressure=cast$Pressure..Strain.Gauge..db.
+                                                       , sigmaTheta=cast$Density_sigma.theta.kg.m.3
+                                                       , derivs="simple" ## or "smoothing"
+                                                       # , df="simple"
+                                                       )
+                                    swN2
                                   }) %>%
   unlist
-rm (cast)
-
 
 
 stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
@@ -235,7 +245,7 @@ tRange <- function (tstmp){
     return (diff (range (tid$TideHeight)))
 }
 ## this step takes a while! [approx 5 min, depending on computer]
-poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores = nCPUs))
+poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores=nCPUs))
 ## rerun tideRange
 if (0){ # keep in case mclapply fails
   poSS$tideRange <- as.numeric (poSS$tideRange)
@@ -254,13 +264,14 @@ if (0){ # keep in case mclapply fails
 }
 rm (tRange)
 ## tidal phase
-tPhase <- function (tstmp, lat, lon){
+tPhase <- function (tstmp, lat, lon){  ## REVIEW THIS!
   ## return radians degree of tidal phase during cast
   Require ("suncalc")
   poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
   ## Require (oce)
   ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
+# POss$tidePhase <- unlist (mclapply (poSS$timeStamp, mc.cores=nCPUs))
 rm (tPhase)
 
 
@@ -351,7 +362,8 @@ save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 ## derived summary statistics
 Require ("parallel")
 wcStab <- function (fn){
-    ## calculate water column stability for a given File.Name
+    ## calculate water column stability for a given File.Name as difference density between upper and lower water layer
+    ## any reference to this??
     uLay <- c (0,3)
    # lLay <- c (30,35)
     cast <- subset (physOc, File.Name == fn)
@@ -361,7 +373,7 @@ wcStab <- function (fn){
                                  (Depth.saltwater..m. < uLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
     lDens <- mean (subset (cast, (lLay [1] < Depth.saltwater..m.) &
                                  (Depth.saltwater..m. < lLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
-    stabIdx <- (lDens - uDens)/(mean (lLay) - mean (uLay))
+    stabIdx <- (lDens - uDens) - (mean (lLay) - mean (uLay))
     stabIdx <- ifelse (is.infinite (stabIdx), NA, stabIdx)
     return (stabIdx)
 #    return ((lDens - uDens)/(mean (lLay) - mean (uLay)))
@@ -369,6 +381,7 @@ wcStab <- function (fn){
 }
 poSS$stability <- unlist (mclapply (poSS$File.Name, FUN = wcStab, mc.cores = nCPUs))
 rm (wcStab)
+
 ## summary (poSS$stability)
 wcStab2 <- function (fn){
   Require ("oce")
@@ -417,6 +430,17 @@ pcDepth <- function (fn){
 }
 poSS$pcDepth <- unlist (mclapply (poSS$File.Name, FUN = pcDepth, mc.cores = nCPUs))
 rm (pcDepth)
+
+
+poSS$maxSWN2 <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  max (cast$swN2, na.rm=TRUE)
+}))
+poSS$maxN2Depth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  cast$Depth.saltwater..m. [which.max (cast$swN2)]
+}))
+
 # is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
 is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
@@ -753,7 +777,8 @@ latL <- c(58.8,60.6)
 
 
 # Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp") ; Require ("sf")
+Require ("sp")
+Require ("sf")
 
 
 spTran <- function (x, p4){
@@ -896,6 +921,12 @@ if (.Platform$OS.type == "windows"){
 }else{
   bath <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
+## move to stars
+Require ("stars")
+bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+
+
+
 bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
 
 

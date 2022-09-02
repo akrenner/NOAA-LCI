@@ -100,6 +100,8 @@ plotCTDprof <- function (i){
                                  , longitude = longitude_DD
                                  , latitude = latitude_DD
       ))
+      ## add line, marking pycnocline -- if we can?
+
       ## add fluorescence
       ctdF <- oceSetData (ctdF, value = ctd$Fluorescence_mg_m3
                           , name = "fluorescence"
@@ -115,6 +117,8 @@ plotCTDprof <- function (i){
                           , name = "O2"
                           #, label = "Oxygen"
                           , unit = "mg/l")
+      ## strength of stratification and depth of pycnocline
+      # hist (
 
       plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
       #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)

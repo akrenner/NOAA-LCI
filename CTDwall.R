@@ -45,7 +45,7 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 if (test){
   oceanvarC <- 1 #1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))
-  transectC <- 6
+  transectC <- 8
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9

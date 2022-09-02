@@ -241,15 +241,17 @@ oVars <- c ("temperature"
             # , "PAR"
             , "logPAR"
             , "Oxygen [umol/kg]"  # , "O2perc"
+            , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity"
              , "sigmaTheta"
              , "turbidity" # , "logTurbidity"
              , "fluorescence" #, "chlorophyll" #, "logFluorescence"
-#             , "PAR.Irradiance" #, "logPAR"
-            , "logPAR"
+             # , "PAR.Irradiance"
+             , "logPAR"
              , "Oxygen_umol_kg"  # , "O2perc"
+             , "swN2"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -281,6 +283,7 @@ oCol3 <- list (  ## fix versions?
     turbo (n, begin=0.25, end=0.8)
   }
   , cmocean ("oxy")
+  , colorRampPalette (cmocean ("haline")(5), bias=0.3) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
 )
 rm (odv)
@@ -297,6 +300,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "logPAR"
                         # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
                         , "Oxygen_umol_kg"
+                        , "swN2"
                         )
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)

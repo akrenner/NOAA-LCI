@@ -184,6 +184,7 @@ for (k in pickStn){
                     ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                     ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                     ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
+                    ocOb <- oceSetData (ocOb, "swN2", sCTD$swN2)
                     ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
                     ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
 
