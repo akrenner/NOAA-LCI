@@ -31,13 +31,13 @@ Require <- pacman::p_load
 
 
 if (0){
-## using RColorBrewer:
-Require ("RColorBrewer")
-bCol <- brewer.pal(12, "Paired")
-rangCol <- bCol [5:6]
-qantCol <- bCol [9]
-currentCol <- bCol [1:2]
-meanCol <- bCol [4]
+  ## using RColorBrewer:
+  Require ("RColorBrewer")
+  bCol <- brewer.pal(12, "Paired")
+  rangCol <- bCol [5:6]
+  qantCol <- bCol [9]
+  currentCol <- bCol [1:2]
+  meanCol <- bCol [4]
 }
 
 
@@ -62,7 +62,7 @@ plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
   axis (1, at=as.numeric (format (as.POSIXct (paste0 ("2019-", 1:6*2-1, "-15")), "%j"))
         , labels=month.abb[1:6*2-1], tick=FALSE) # center month-labels
   axis (1, at=c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
-                                       , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
+                                     , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
 }
 
 
@@ -336,7 +336,7 @@ fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
   nD <- data.frame (datetimestamp=tR
                     , df [match (tR, df$datetimestamp), 2:ncol (df)])
   return (addTimehelpers (nD))
-  }
+}
 
 
 ## add Fahrenheit scale to temperature plot
@@ -363,27 +363,25 @@ iAxis <- function (mmL, side=4, line=3, lab = "", ...){
 
 
 ## load cached SWMP data and update it with the latest from CDMO
-getSWMP <- function (station, QAQC=TRUE){
+getSWMP <- function (station="kachdwq", QAQC=TRUE){
   ## load SWMP data from local zip file. Update to the most current data
   ## from CDMO and cache those updates for the next run.
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
   Require ("SWMPr")
+  Require ("R.utils")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
-  zipFile <- "~/GISdata/LCI/SWMP/current"      # "current" needs to be shortcut or symbolic link
-  # pointing to the most recent zip file. "current" has no extension.
+  zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names=TRUE)
+  if (length (zF) < 1){stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
+  zipFile <- zF [which.min (file.info (zF)$ctime)] ## find most recent file
+  rm (zF)
 
   dir.create(cacheFolder, showWarnings=FALSE)
-  Require ("R.utils")
   SMPfile <- filePath (zipFile, expandLinks = "local") # this works, if symlink is called "current.zip".
 
-
-
-  ## need to delete cacheFolder if zip file is newer to avoid data gaps
-
-  ## cacheFolder should be deleted, when zip file was updated  -- automate that?
+  ## delete cacheFolder if zip file is newer
   if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){
     if (file.info (paste0 (cacheFolder, "/kachomet.RData"))$ctime <
         file.info (SMPfile)$ctime){
@@ -515,9 +513,9 @@ nEvents <- function (dat, varName, thrht){
                     , function (i){
                       agY <- aggregate (xvar~year
                                         , data=aggregate (xvar~jday+year
-                                                            , data=dat
-                                                            , FUN=function (x){
-                                                              any (x > thrht [i])}
+                                                          , data=dat
+                                                          , FUN=function (x){
+                                                            any (x > thrht [i])}
                                         )
                                         , FUN=sum)
 
@@ -581,7 +579,7 @@ merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
     pngFile <- pngFiles[i]
     pngRaster <- readPNG(pngFile)
     grid.raster(pngRaster, width=unit(0.8, "npc"), height= unit(0.8, "npc"))
-#    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
+    #    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
     if (i < n) plot.new()
   }
   dev.off()
