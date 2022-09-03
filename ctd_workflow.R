@@ -55,6 +55,11 @@ source ("CTD_cleanup.R")         ## move error corrections into here. Produce ag
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source ("datasetup.R")
+## separate out CTD-specific stuff??
+#; bathymetry
+#; coastline
+#; CTD data
+
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
@@ -68,6 +73,7 @@ source ("CTDwall.R")
 
 
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+source ("CTD_signatureData.R")
 
 ## push to GoogleDrive
 ## requires rclone
