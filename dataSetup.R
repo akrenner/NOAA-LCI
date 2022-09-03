@@ -154,7 +154,7 @@ physOc$swN2 <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly i
                                     cast <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
                                     swN2 <- oce::swN2 (pressure=cast$Pressure..Strain.Gauge..db.
                                                        , sigmaTheta=cast$Density_sigma.theta.kg.m.3
-                                                       , derivs="simple" ## or "smoothing"
+                                                       , derivs="smoothing" # "simple" ## or "smoothing"
                                                        # , df="simple"
                                                        )
                                     swN2

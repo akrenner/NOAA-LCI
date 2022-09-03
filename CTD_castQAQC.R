@@ -118,7 +118,7 @@ plotCTDprof <- function (i){
                           #, label = "Oxygen"
                           , unit = "mg/l")
       ## strength of stratification and depth of pycnocline
-      # hist (
+      # hist (poSS$swN2)
 
       plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
       #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)

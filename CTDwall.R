@@ -43,11 +43,13 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 
 
 if (test){
-  oceanvarC <- 1 #1:length (oVars)
+  oceanvarC <- 1:length (oVarsF) #
+  oceanvarC <- 8
+  oceanvarC <- c (4,8)
   transectC <- 1:length (levels (poAll$Transect))
-  transectC <- 8
+  transectC <- 6
 }else{
-  oceanvarC <- 1:length (oVars)
+  oceanvarC <- 1:length (oVarsF)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
   # transectC <- c(5,6,7)
 }
@@ -85,7 +87,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
-    cat ("\n\n", oVars [ov], " T-", levels (poAll$Transect)[tn], "\n")
+    cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
     ## make this a function?
@@ -492,7 +494,12 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                    , ylim=c(0,yL)  # ylim to make bar narrower, less high
     )
     rm (yL)
-    title (main = oVars [ov], cex=3, line=0.5)
+    if (ov != 8){ # an ugly hack to make label pretty
+      title (main = oVars [ov], cex=3, line=0.5)
+    }else{
+      if (oVarsF [ov]!= "swN2"){stop ("need to fix legend title")}
+      title (main=expression (paste0 (N^2, "[", s^-2, "]")), cex=3, line=0.5)
+    }
     lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
     axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol
           , labels = lVal, lwd = 0)

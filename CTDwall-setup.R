@@ -241,7 +241,7 @@ oVars <- c ("temperature"
             # , "PAR"
             , "logPAR"
             , "Oxygen [umol/kg]"  # , "O2perc"
-            , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"
+            , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity"
@@ -270,20 +270,22 @@ odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", 
 
 Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+
+## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
 oCol3 <- list (  ## fix versions?
    # colorRampPalette(oceColorsTurbo(8), bias=0.5)
   oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
   , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
   , colorRampPalette (cmocean ("dense")(5), bias=0.3)
-  , cmocean ("turbid") #, cmocean ("matter")  # or turbid
+  , colorRampPalette (cmocean ("turbid")(5), bias=3) #, cmocean ("matter")  # or turbid
   , cmocean ("algae")
   #, oceColorsTurbo # cmocean ("solar")
-  , function (n){
+  , function (n){  ## clip colors for PAR
     Require ("viridis")
     turbo (n, begin=0.25, end=0.8)
   }
   , cmocean ("oxy")
-  , colorRampPalette (cmocean ("haline")(5), bias=0.3) # for densityGradient
+  , colorRampPalette (cmocean ("haline")(5), bias=1) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
 )
 rm (odv)
