@@ -373,13 +373,12 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   Require ("R.utils")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
+  dir.create(cacheFolder, showWarnings=FALSE)
+
   zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names=TRUE)
   if (length (zF) < 1){stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
-  zipFile <- zF [which.min (file.info (zF)$ctime)] ## find most recent file
+  SMPfile <- zF [which.max (file.info (zF)$ctime)] ## find most recent file
   rm (zF)
-
-  dir.create(cacheFolder, showWarnings=FALSE)
-  SMPfile <- filePath (zipFile, expandLinks = "local") # this works, if symlink is called "current.zip".
 
   ## delete cacheFolder if zip file is newer
   if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){

@@ -11,18 +11,11 @@
 
 
 ## set-up parameters
-
-# if (.Platform$OS.type == "windows"){
-#   Require ("R.utils")
-#   SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-# }else{ # MacOS or Linux
-#   SMPfile <- "~/GISdata/LCI/SWMP/current"
-# }
 source ("annualPlotFct.R") # already loads SWMPr
-
 suppressPackageStartupMessages (Require ("R.utils"))
-SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # works on all platforms?
 
+sF <- list.files("~/GISdata/LCI/SWMP/", pattern="*.zip", full.names=TRUE)
+SWMPfile <- sF [which.max (file.info(sF)$ctime)]; rm (sF)
 
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
@@ -31,9 +24,6 @@ dir.create ("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursiv
 
 
 ## load and process SWMP data
-## defines getSWMP () -- use this to replace import_local()
-# unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
-
 Require ("SWMPr")
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
 sldvia1 <- getSWMP ("kacsewq") # Seldovia deep -- early, no longer updated
