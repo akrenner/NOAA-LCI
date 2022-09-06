@@ -91,7 +91,9 @@ aPlot (tDay, "totprcp", ylab="daily precipitation [mm]"
        , currentCol=currentCol
        , MA=TRUE
        , pastYear=pastYear, ongoing=ongoingY)
-if (SWMP){title (main="Precipitation at Homer Spit")}
+if (SWMP){title (main="Precipitation at Homer Spit")}else{
+  title (main="Precipitation at Homer Airport")
+}
 ## add inch scale
 iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 
@@ -108,9 +110,10 @@ if (pastYear){
         , labels="*", col=currentCol [1], cex=cCex)
 }
 if (ongoingY){
-  text (tDay$jday, ifelse (tDay$ogy_totprcp > 10
-                           , 0.18, NA)
+  rD <- ifelse (is.na (tDay$ogY_totprcp), 0, tDay$ogY_totprcp) # or next line fails
+  text (tDay$jday, ifelse (rD > 10, 0.14, NA)
         , labels="*", col=currentCol [3], cex=cCex)
+  rm (rD)
 }
 # require ("png")
 # img <- readPNG ("pictograms/rain-cloud.png")
