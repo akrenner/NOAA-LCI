@@ -45,7 +45,8 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 if (test){
   oceanvarC <- 1:length (oVarsF) #
   oceanvarC <- 8
-  oceanvarC <- c (4,8)
+ # oceanvarC <- c (4,8)
+  oceanvarC <- 1:length (oVarsF)
   transectC <- 1:length (levels (poAll$Transect))
   transectC <- 6
 }else{
@@ -218,7 +219,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
-      if (test){sL <- 2}else{sL <-  1:length (levels (physOc$transDate))}
+      if (test){sL <- 1:5}else{sL <-  1:length (levels (physOc$transDate))}
       # sL <-  1:length (levels (physOc$transDate))
       for (iS in sL){              # cycle through individual survey
         # iS <- 2  # for testing
@@ -494,12 +495,12 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                    , ylim=c(0,yL)  # ylim to make bar narrower, less high
     )
     rm (yL)
-    if (ov != 8){ # an ugly hack to make label pretty
+#    if (ov != 8){ # an ugly hack to make label pretty
       title (main = oVars [ov], cex=3, line=0.5)
-    }else{
-      if (oVarsF [ov]!= "swN2"){stop ("need to fix legend title")}
-      title (main=expression (paste0 (N^2, "[", s^-2, "]")), cex=3, line=0.5)
-    }
+    # }else{
+    #   if (oVarsF [ov]!= "swN2"){stop ("need to fix legend title")}
+    #   title (main=expression (buoyancy~frequency~N^2~"["*s^-2*"]"), cex=3, line=0.5)
+    # }
     lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
     axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol
           , labels = lVal, lwd = 0)

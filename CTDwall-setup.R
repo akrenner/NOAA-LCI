@@ -233,15 +233,15 @@ if (0){
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- c ("temperature"
-            , "salinity"
-            , "sigmaTheta"
+oVars <- expression (temperature~"["*""^o~C*"]"
+            , salinity~"["*PSU*"]"
+            , density~"["*sigma[theta]*"]"  #"sigmaTheta"  ## spell in Greek?
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-            , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
+            , chlorophyll~"["*mg~m^-3*"]" #, "chlorophyll" #, "logFluorescence"
             # , "PAR"
-            , "logPAR"
-            , "Oxygen [umol/kg]"  # , "O2perc"
-            , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
+            , log~(PAR)
+            , Oxygen~"["*mu*mol~kg^-1*"]"  # , "O2perc"  ## use bquote ?
+           , buoyancy~frequency~N^2~"["*s^-2*"]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity"
@@ -320,6 +320,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
 ## umol/l = 31.2512* cO2 mg/l
 # oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
+oRange [which (row.names(oRange)=="swN2"),] <- quantile (poAll$swN2, probs=c(0.01,0.99), na.rm=TRUE)
 ###########################################################################
 
 if (0){

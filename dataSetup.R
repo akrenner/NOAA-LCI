@@ -935,13 +935,16 @@ chCoor <- coordinates (NPPSD2)[c(ch, ch[1]), ]  # closed polygon
 sp_poly <- SpatialPolygons(list(Polygons(list(Polygon(chCoor)), ID=1))
                          , proj4string = slot (NPPSD2, "proj4string"))
 grd <- spsample (sp_poly, n = 100^2, "regular") # ok, but grid size somewhat mysterious -- move to sf?
+                     # Warning: CRS object has comment...
+
 ## grd <- makegrid (sp_poly, cellsize = 1e3)
 ## coordinates (grd) <- ~x1+x2
 ## proj4string (grd) <- CRS (proj4string (NPPSD2))
 ## gridded (grd) <- TRUE
 rm (ch, chCoor, sp_poly)
 
-pr <- proj4string (bath)
+pr <- proj4string(bath)
+# pr <- slot (bath, "crs") ## no slot proj4string in raster object. spTran fails if pr is from crs-slot
 
 stnP <- spTran (stnP, pr)
 poSS <- spTran (poSS, pr)
