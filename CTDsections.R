@@ -104,7 +104,7 @@ for (sv in iX){
 
 
       for (ov in 1:length (oVarsF)){
-        if (ov %in% c(4,5,6, 8)){ # fix scale for O2, fluorescence, logPAR, buoyancy-N2
+        if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov,]
         }else{
           cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
