@@ -148,19 +148,19 @@ rm (physOcT)
 #                                     slp
 #                                   }) %>%
 #   unlist
-physOc$swN2 <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
+physOc$bvf <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function (i){
                                     require ("oce")
                                     cast <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
-                                    swN2 <- oce::swN2 (pressure=cast$Pressure..Strain.Gauge..db.
+                                    bvf <- oce::swN2 (pressure=cast$Pressure..Strain.Gauge..db.
                                                        , sigmaTheta=cast$Density_sigma.theta.kg.m.3
                                                        , derivs="smoothing" # "simple" ## or "smoothing"
                                                        # , df="simple"
                                                        )
-                                    swN2
+                                    bvf
                                   }) %>%
   unlist
-
+physOc$bvf <- ifelse (is.na (physOc$bvf), 0, physOc$bvf)
 
 stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset (stn, !is.na (Lon_decDegree))
@@ -434,11 +434,11 @@ rm (pcDepth)
 
 poSS$maxSWN2 <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
-  max (cast$swN2, na.rm=TRUE)
+  max (cast$bvf, na.rm=TRUE)
 }))
 poSS$maxN2Depth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
-  cast$Depth.saltwater..m. [which.max (cast$swN2)]
+  cast$Depth.saltwater..m. [which.max (cast$bvf)]
 }))
 
 # is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0

@@ -251,7 +251,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              # , "PAR.Irradiance"
              , "logPAR"
              , "Oxygen_umol_kg"  # , "O2perc"
-             , "swN2"
+             , "bvf"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -285,7 +285,7 @@ oCol3 <- list (  ## fix versions?
     turbo (n, begin=0.25, end=0.8)
   }
   , cmocean ("oxy")
-  , colorRampPalette (cmocean ("haline")(5), bias=1) # for densityGradient
+  , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
 )
 rm (odv)
@@ -302,7 +302,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "logPAR"
                         # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
                         , "Oxygen_umol_kg"
-                        , "swN2"
+                        , "bvf"
                         )
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
@@ -320,7 +320,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
 ## umol/l = 31.2512* cO2 mg/l
 # oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
-oRange [which (row.names(oRange)=="swN2"),] <- quantile (poAll$swN2, probs=c(0.01,0.99), na.rm=TRUE)
+oRange [which (row.names(oRange)=="bvf"),] <- quantile (poAll$bvf, probs=c(0.01,0.99), na.rm=TRUE)
 ###########################################################################
 
 if (0){

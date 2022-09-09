@@ -113,7 +113,7 @@ for (sv in iX){
                                        , Fluorescence_mg_m3, logPAR
                                        , Oxygen_umol_kg
                                        # , Oxygen_sat.perc.
-                                        , swN2
+                                        , bvf
           ))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
           # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)

@@ -4,11 +4,7 @@
 ## load data
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physOc -- raw CTD profiles
-# load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R
-
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
-## link physOc and stn
-## should be poSS and stn -- check!
+# source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
 
@@ -105,6 +101,7 @@ for (k in pickStn){
   ctdAgg$Salinity_PSU <- aggregate (Salinity_PSU ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
   ctdAgg$Pressure..Strain.Gauge..db. <- aggregate (Pressure..Strain.Gauge..db. ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
   ctdAgg$Fluorescence_mg_m3 <- aggregate (Fluorescence_mg_m3 ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Fluorescence_mg_m3
+  ctdAgg$bvf <- aggregate (bvf~depthR+month, xC, FUN=mean, na.rm = TRUE)$bvf
 
   ## smooth normals
 # ctdAgg$monthI <- as.numeric (ctdAgg$month)  ## this messes with things -- don't XXX
@@ -138,6 +135,7 @@ for (k in pickStn){
   ctdAgg$tloess <- anoF ("Temperature_ITS90_DegC")
   ctdAgg$sloess <- anoF ("Salinity_PSU")
   ctdAgg$floess <- anoF ("Fluorescence_mg_m3")
+  ctdAgg$bvfloess <- anoF ("bvf")
   rm (anoF)
 
   ## model normals instead
@@ -158,8 +156,10 @@ for (k in pickStn){
   # xC$nSal <- ctdAgg$Salinity_PSU [matchN]
   xC$nTem <- ctdAgg$tloess [matchN]
   xC$nSal <- ctdAgg$sloess [matchN]
+  xC$nBvf <- ctdAgg$bvfloess [matchN]
   xC$anTem <- xC$Temperature_ITS90_DegC - xC$nTem
   xC$anSal <- xC$Salinity_PSU - xC$nSal
+  xC$anBvf <- xC$bvf - xC$nBvf
 
 
   mkSection <- function (xC){  ## use CTDfunctions insted?!
@@ -178,23 +178,23 @@ for (k in pickStn){
                                           , time = isoTime
                                   ))
                     ocOb@metadata$waterDepth <- 103
+
                     ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                     ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
                     ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
                     ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
                     ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                     ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
-                    ocOb <- oceSetData (ocOb, "swN2", sCTD$swN2)
+                    ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
                     ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
                     ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
-
-                    sCTD$logFluorescence <- log (sCTD$Fluorescence_mg_m3)
-                    ocOb <- oceSetData (ocOb, "lFluorescence", sCTD$logFluorescence)
+                    ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
 
                     ocOb
                   }
     )
-    as.section(cL)
+    # sectionSort(section=as.section (cL), by="time")
+    as.section (cL)
   }
 
 
@@ -292,11 +292,14 @@ for (k in pickStn){
   rm (xCS, zB)
 
   mtext ("Depth [m]", side=2, outer=TRUE)
-
   dev.off()
 
 #  save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 #  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
+
+
+
+
 
 
   ######################
@@ -306,6 +309,7 @@ for (k in pickStn){
   prC <- ctdAgg; prC$monthI <- prC$monthI - 12
   poC <- ctdAgg; poC$monthI <- poC$monthI + 12
   ctdAgg <- rbind (prC, ctdAgg, poC); rm (prC, poC)
+  ## clean up defining section -- or go back to section functions?
   cT9 <- lapply (0:13, function (i){ # from prev month to month after current year -- why not longer?
     sCTD <- subset (ctdAgg, monthI == i)
     ocOb <- with (sCTD, as.ctd (# salinity = Salinity_PSU, temperature = Temperature_ITS90_DegC
@@ -317,12 +321,12 @@ for (k in pickStn){
                                    , ifelse (monthI <= 12, paste0 ("2000-", monthI, "-15")
                                              , paste0 ("2001-", monthI-12, "-15")))))
     ))
-    ocOb@metadata$waterDepth <- 103
-    ocOb <- oceSetData (ocOb, "sSal", sCTD$sloess)
+    ocOb@metadata$waterDepth <- 103  ## needed? vary by station
+    ocOb <- oceSetData (ocOb, "sSal",  sCTD$sloess)
     ocOb <- oceSetData (ocOb, "sTemp", sCTD$tloess)
-
     ocOb <- oceSetData (ocOb, "sFluo", sCTD$floess)
-
+    ocOb <- oceSetData (ocOb, "sBvf",  sCTD$bvloess)
+    return (ocOb)
   })
   cT9 <- as.section (cT9)
   # rm (ctdAgg)
@@ -362,12 +366,23 @@ for (k in pickStn){
 
 
   ## fluorescence
-  pdf (paste (mediaD, stnK, "-fluorescence-climatology.pdf"))
+  pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
   par (las = 1)
   clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
 #  anAx(dAx = seq (0, 100, by = 20))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
+
+  ## buoyancy
+  pdf (paste0 (mediaD, stnK, "-buoyancy.pdf"), height=11.5, width=8)
+  par ()
+  clPlot (cT9, which="bvf"
+#          , zcol = rev (viridis)
+)
+  anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+# clPlot (cT9, which="")
+  dev.off()
+
 })
 }
 ## alternative display of this data:
@@ -454,6 +469,6 @@ print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
 dev.off()
 
 
-graphics.off()
+# graphics.off()
 
 ## EOF

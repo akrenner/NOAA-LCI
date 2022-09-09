@@ -193,7 +193,7 @@ makeSection <- function (xC, stn){
                         ocOb <- oceSetData (ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
                         # ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                         # ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
-                        ocOb <- oceSetData (ocOb, "swN2", sCTD$swN2)
+                        ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
                         ocOb
                       }))
 

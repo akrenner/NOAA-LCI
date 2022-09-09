@@ -494,17 +494,11 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
                    , ylim=c(0,yL)  # ylim to make bar narrower, less high
     )
-    rm (yL)
-#    if (ov != 8){ # an ugly hack to make label pretty
-      title (main = oVars [ov], cex=3, line=0.5)
-    # }else{
-    #   if (oVarsF [ov]!= "swN2"){stop ("need to fix legend title")}
-    #   title (main=expression (buoyancy~frequency~N^2~"["*s^-2*"]"), cex=3, line=0.5)
-    # }
+    title (main = oVars [ov], cex=3, line=0.5)
     lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
     axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol
           , labels = lVal, lwd = 0)
-    rm (bp, lVal, nCol)
+    rm (bp, lVal, nCol, yL)
 
     ## add date and logos for reference
     mtext (text=paste ("NOAA Kasitsna Bay Lab and KBNERR\n", Sys.Date())
