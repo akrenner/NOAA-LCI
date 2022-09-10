@@ -189,6 +189,7 @@ for (k in pickStn){
                     ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
                     ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
                     ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
+                    ocOb <- oceSetData (ocOb, "anBvf", sCTD$anBvf)
 
                     ocOb
                   }
@@ -290,7 +291,7 @@ for (k in pickStn){
                , mar=c(4.7,3.5,0,1.2) # default:  3.0 3.5 1.7 1.2
                , legend.loc=""
                 )
-  rm (xCS, zB)
+  rm (zB)  ## keep xCS for buoyancy
 
   mtext ("Depth [m]", side=2, outer=TRUE)
   dev.off()
@@ -388,13 +389,35 @@ for (k in pickStn){
 
   ## buoyancy
   pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-  par (mfrow=c(3,1))
+  par (mfrow=c(5,1))
   ## raw buoyancy profile
   ## buoyancy-anomaly profile??
   ## bvf climatology
   ## max-bvf time-series -- with seasonal signal
   ## depth of pycnocline time-series -- with seasonal signal (or anomaly?)
 
+  ## raw time-series profile
+  #zB <- seq (0, ceiling(max (xC$bvf, na.rm=TRUE)), by=0.5)
+  require ("cmocean")  ## for color ramp cmocean -- just use viridis
+  options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+  plot.station (xCS, which="bvf"
+                , zcol=colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
+                # , zbreaks=zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
+  )
+  title (main="Buoyancy frequency [s^-2]")
+
+  ## anomaly  (too noisy?)
+  zB <- sF (xC$anBvf)
+  plot.station (xCS, which="anBvf"
+                , zcol=brewer.pal (11, "PiYG")
+                 , zbreaks=zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
+  )
+  title (main="Buoyancy frequency Anomaly [s^-2]")
+
+
+  ## seasonal climatology
   clPlot (cT9, which="sBvf"
           , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
   )
