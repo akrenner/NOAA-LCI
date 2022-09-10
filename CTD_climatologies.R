@@ -74,8 +74,6 @@ for (k in pickStn){
   stnK <- levels (physOc$Match_Name)[k]
   cat (stnK, "\n")
   xC <- subset (physOc, Match_Name == stnK)
-  ## use only T9-6
-  # xC <- subset (physOc, (Transect == "9" & Station == "6"))
   xC <- xC [order (xC$isoTime),]
   ## cut-off at 85m as several seasons missing beyond that depth
   xC <- subset (xC, Depth.saltwater..m. < 85)
@@ -94,9 +92,6 @@ for (k in pickStn){
   ## aggregate useing oce function -- skip aggregation in pre-processing by SBprocessing
   ## calculate normals
 
-
-
-
   ctdAgg <- aggregate (Temperature_ITS90_DegC ~ depthR+month, xC, FUN = mean, na.rm = TRUE)
   ctdAgg$Salinity_PSU <- aggregate (Salinity_PSU ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
   ctdAgg$Pressure..Strain.Gauge..db. <- aggregate (Pressure..Strain.Gauge..db. ~ depthR+month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
@@ -104,8 +99,6 @@ for (k in pickStn){
   ctdAgg$bvf <- aggregate (bvf~depthR+month, xC, FUN=mean, na.rm = TRUE)$bvf
 
   ## smooth normals
-# ctdAgg$monthI <- as.numeric (ctdAgg$month)  ## this messes with things -- don't XXX
-#  ctdAgg$monthI <- as.numeric (as.character (ctdAgg$month))
   ctdAgg$monthI <- as.numeric (levels (ctdAgg$month))[ctdAgg$month]
   preDF <- ctdAgg; preDF$monthI <- preDF$monthI - 12
   postDF <- ctdAgg; postDF$monthI <- postDF$monthI + 12
@@ -149,21 +142,27 @@ for (k in pickStn){
   #   gam (Temperature_ITS90_DegC~s(yDate), data = mDF, subset = mDF$depthR == i)$fitted
   # })
 
-
-  ## normal to anomaly
+  ## anomaly = observ-smoothed normal
   matchN <- match (paste0 (xC$depthR, "-", xC$month), paste0 (ctdAgg$depthR,"-", ctdAgg$month))
-  # xC$nTem <- ctdAgg$Temperature_ITS90_DegC [matchN]
-  # xC$nSal <- ctdAgg$Salinity_PSU [matchN]
-  xC$nTem <- ctdAgg$tloess [matchN]
-  xC$nSal <- ctdAgg$sloess [matchN]
-  xC$nBvf <- ctdAgg$bvfloess [matchN]
-  xC$anTem <- xC$Temperature_ITS90_DegC - xC$nTem
-  xC$anSal <- xC$Salinity_PSU - xC$nSal
-  xC$anBvf <- xC$bvf - xC$nBvf
+  xC$anTem <- xC$Temperature_ITS90_DegC - ctdAgg$tloess [matchN]
+  xC$anSal <- xC$Salinity_PSU - ctdAgg$sloess [matchN]
+  xC$anBvf <- xC$bvf - ctdAgg$bvfloess [matchN]
+
+  ##############################################
+  ## seasonal climatologies of poSS summaries ##
+  ##############################################
+  poSSclim <- aggregate (deepTemp~month, poSS, subset=poSS$Match_Name==stnK
+                         , FUN=mean, na.rm=TRUE)
+  poSSclim$pcDepth <- aggregate (pcDepth~month, poSS, subset=poSS$Match_Name==stnK ## XXX settle names!
+                         , FUN=mean, na.rm=TRUE)$pcDepth
+  poSSclim$stability <- aggregate (stability~month, poSS, subset=poSS$Match_Name==stnK
+                                 , FUN=mean, na.rm=TRUE)$stability
 
 
   mkSection <- function (xC){  ## use CTDfunctions insted?!
     require (oce)
+    xC <- xC [order (xC$isoTime),]
+    xC$Date <- factor (xC$DateISO)
     cL <- lapply (1:length (levels (xC$Date))
                   , FUN = function (i){
                     sCTD <- subset (xC, xC$Date == levels (xC$Date)[i])
@@ -173,28 +172,30 @@ for (k in pickStn){
                                           , pressure = Pressure..Strain.Gauge..db.
                                           , longitude = as.numeric (longitude_DD)
                                           , latitude = as.numeric (latitude_DD)
-                                          , station = Date
                                           #, sectionId = transDate
-                                          , time = isoTime
+                                          # , startTime = isoTime
                                   ))
+                    ocOb@metadata$station <- xC$Match_Name [1]
+                    ocOb@metadata$startTime <- sCTD$isoTime [1]
                     ocOb@metadata$waterDepth <- 103
 
                     ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
                     ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
                     ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
                     ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
+                    ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
                     ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
                     ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
                     ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
                     ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
                     ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
-                    ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
 
                     ocOb
                   }
     )
-    # sectionSort(section=as.section (cL), by="time")
-    as.section (cL)
+    cL <- as.section (cL)
+    cL <- sectionSort (cL, by="time")
+    cL
   }
 
 
@@ -294,10 +295,15 @@ for (k in pickStn){
   mtext ("Depth [m]", side=2, outer=TRUE)
   dev.off()
 
-#  save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
+  save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 #  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 
 
+  ## buoyancy
+## raw (climatoloty below)
+  ## anomaly
+  ## water column stability
+  ## depth of pycnocline
 
 
 
@@ -308,28 +314,35 @@ for (k in pickStn){
 
   prC <- ctdAgg; prC$monthI <- prC$monthI - 12
   poC <- ctdAgg; poC$monthI <- poC$monthI + 12
-  ctdAgg <- rbind (prC, ctdAgg, poC); rm (prC, poC)
+  ctdAggD <- rbind (prC, ctdAgg, poC); rm (prC, poC) ## to plot margins as well
   ## clean up defining section -- or go back to section functions?
   cT9 <- lapply (0:13, function (i){ # from prev month to month after current year -- why not longer?
-    sCTD <- subset (ctdAgg, monthI == i)
+    sCTD <- subset (ctdAggD, monthI == i)
     ocOb <- with (sCTD, as.ctd (# salinity = Salinity_PSU, temperature = Temperature_ITS90_DegC
       salinity = sloess, temperature = tloess
       , pressure = Pressure..Strain.Gauge..db.
       , longitude = rep (i, nrow (sCTD))
       , latitude = rep (0, nrow (sCTD))
-      , time = as.POSIXct (as.Date (ifelse (monthI < 1, paste0 ("1999-", monthI+12, "-15") # falls into DST gap without as.Date?
-                                   , ifelse (monthI <= 12, paste0 ("2000-", monthI, "-15")
-                                             , paste0 ("2001-", monthI-12, "-15")))))
     ))
     ocOb@metadata$waterDepth <- 103  ## needed? vary by station
     ocOb <- oceSetData (ocOb, "sSal",  sCTD$sloess)
     ocOb <- oceSetData (ocOb, "sTemp", sCTD$tloess)
     ocOb <- oceSetData (ocOb, "sFluo", sCTD$floess)
-    ocOb <- oceSetData (ocOb, "sBvf",  sCTD$bvloess)
+    ocOb <- oceSetData (ocOb, "sBvf",  sCTD$bvfloess)
     return (ocOb)
   })
   cT9 <- as.section (cT9)
-  # rm (ctdAgg)
+  dTimes <- as.POSIXct(c("1999-12-15"
+                                , paste0 ("2000-", 1:12, "-15")
+                                , "2001-01-15"))
+  cT9 [['station']] <- lapply (1:length (cT9 [['station']])
+                               , function (i){
+                                 oceSetMetadata(cT9 [['station']][[i]], 'startTime'
+                                                , dTimes [i]
+                                 )
+                               }); rm (dTimes)
+  cT9 <- sectionSort (cT9, by="time")
+  rm (ctdAggD)
 
 
   anAx <- function (dAx = c(0, 50, 100)){  ## annotations for x-axis
@@ -346,23 +359,22 @@ for (k in pickStn){
 
   pdf (paste0 (mediaD, stnK, "-climatology.pdf")
        , height = 11.5, width = 8)
-  par (mfrow = c (2,1))
+  par (mfrow=c(2,1))
   clPlot (cT9, which = "temperature"
           , zcol = oceColorsTemperature (11)
-          , zbreaks = seq (3,13, length.out = 12)
+          , zbreaks = seq (min (ctdAgg$Temperature_ITS90_DegC)
+                           , max (ctdAgg$Temperature_ITS90_DegC), length.out = 12)
           # , zlim = c(4,12)
           )
-  # clPlot (cT9, which = "sTemp", zcol = oceColorsTemperature (11))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
+
   clPlot (cT9, which = "salinity"
            , zcol = oceColorsSalinity(11)
           , zbreaks = seq (28, 31.5, length.out = 12)
           # , zlim = c(28,31.5)
           )
-  # clPlot (cT9, which = "sSal", zcol = oceColorsSalinity(11))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
-
 
 
   ## fluorescence
@@ -373,17 +385,27 @@ for (k in pickStn){
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
 
+
   ## buoyancy
-  pdf (paste0 (mediaD, stnK, "-buoyancy.pdf"), height=11.5, width=8)
-  par ()
-  clPlot (cT9, which="bvf"
-#          , zcol = rev (viridis)
-)
+  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
+  par (mfrow=c(3,1))
+  ## raw buoyancy profile
+  ## buoyancy-anomaly profile??
+  ## bvf climatology
+  ## max-bvf time-series -- with seasonal signal
+  ## depth of pycnocline time-series -- with seasonal signal (or anomaly?)
+
+  clPlot (cT9, which="sBvf"
+          , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
+  )
   anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
-# clPlot (cT9, which="")
+
+  plot (pcDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+
   dev.off()
 
-})
+  })
 }
 ## alternative display of this data:
 
