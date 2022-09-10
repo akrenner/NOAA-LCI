@@ -229,10 +229,11 @@ for (k in pickStn){
   par (oma=c(0,3,2,0))
 
   ## current anomaly range: -7.5 to 6.7 -- needs to be symmetrical
-  sF <- function (v, n = 12){
-    aR <- max (abs (range (v, na.rm=TRUE)))
-    aR <- max (abs (stats::quantile(v, probs=c(1-quantR, quantR), na.rm=TRUE)))
-    aR <- ceiling (aR)
+  sF <- function (v, n = 12, qR=quantR){
+    # aR <- max (abs (range (v, na.rm=TRUE)))
+    aR <- max (abs (stats::quantile(v, probs=c(1-qR, qR), na.rm=TRUE)))
+    aR <- signif (aR, 1)
+    # aR <- ceiling (aR)
     seq (-aR, aR, length.out = n)
   }
 
@@ -389,7 +390,7 @@ for (k in pickStn){
 
   ## buoyancy
   pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-  par (mfrow=c(5,1))
+  par (mfrow=c(7,1))
   ## raw buoyancy profile
   ## buoyancy-anomaly profile??
   ## bvf climatology
@@ -405,26 +406,27 @@ for (k in pickStn){
                 # , zbreaks=zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
-  title (main="Buoyancy frequency [s^-2]")
+  title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
 
   ## anomaly  (too noisy?)
-  zB <- sF (xC$anBvf)
+  zB <- sF (v=xC$anBvf, qR=0.90)
   plot.station (xCS, which="anBvf"
                 , zcol=brewer.pal (11, "PiYG")
-                 , zbreaks=zB
+                , zbreaks=zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
-  title (main="Buoyancy frequency Anomaly [s^-2]")
-
+  title (main=expression (Buoyancy~frequency~Anomaly~"["*s^-2*"]"))
 
   ## seasonal climatology
   clPlot (cT9, which="sBvf"
           , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
   )
   anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
-
+## summaries: timeseries of strength of stratification and pycnocline depth
+  plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+  plot (deepPyc~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
   plot (pcDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
 
   dev.off()
 

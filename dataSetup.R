@@ -382,19 +382,6 @@ wcStab <- function (fn){
 poSS$stability <- unlist (mclapply (poSS$File.Name, FUN = wcStab, mc.cores = nCPUs))
 rm (wcStab)
 
-## summary (poSS$stability)
-wcStab2 <- function (fn){
-  Require ("oce")
-  ## similar to http://www.sciencedirect.com/science/article/pii/S0967063711000884 !
-    ## \citep{Bourgain:2011}
-    cast <- subset (physOc, File.Name == fn)
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-    N2 <- swN2 (ctd, derivs = "smoothing")
-    return (mean (N2))
-}
-poSS$stability2 <- unlist (mclapply (poSS$File.Name, FUN = wcStab2, mc.cores = nCPUs))
-rm (wcStab2)
 ## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
 ## good indicator of presence of deep-water salinity gradient
 deepPyc <- function (fn){
@@ -418,25 +405,18 @@ deepPyc <- function (fn){
 }
 poSS$deepPyc <- unlist (mclapply (poSS$File.Name, FUN = deepPyc, mc.cores = nCPUs))
 rm (deepPyc)
-pcDepth <- function (fn){
-    ## also see https://saltydrip.wordpress.com/tag/halocline/  (derivative of spline)
-    ## same code here? http://dankelley.github.io/r/2014/01/11/inferring-halocline-depth.html
-  # error of some form here!
-    cast <- subset (physOc, File.Name == fn)
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-    N2 <- swN2 (ctd, derivs = "smoothing")
-    return (cast$Depth.saltwater..m. [which.max (N2)])
-}
-poSS$pcDepth <- unlist (mclapply (poSS$File.Name, FUN = pcDepth, mc.cores = nCPUs))
-rm (pcDepth)
 
+poSS$bvfMean <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  mean (cast$bvf, na.rm=TRUE)
+}))
 
-poSS$maxSWN2 <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
+poSS$bvfMax <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
   max (cast$bvf, na.rm=TRUE)
 }))
-poSS$maxN2Depth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+
+poSS$pcDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
   cast$Depth.saltwater..m. [which.max (cast$bvf)]
 }))
