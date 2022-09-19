@@ -82,18 +82,30 @@ gibfP <- st_as_sf (gbif, coords=c("decimalLongitude", "decimalLatitude"), crs="E
 ## https://www.ncei.noaa.gov/products/world-ocean-atlas  (downside: files are 3d = big)
 Require ("oceanexplorer")  # works with stars
 gN <- function (...){
-  x <- get_NOAA (..., spat_res=1, cache=TRUE)
-  filter_NOAA (x, depth=0)  ##
+  Require ("readr")
+  get_NOAA (..., spat_res=1, cache=TRUE) %>%
+    filter_NOAA (depth=0)  ##
 }
 
-sstW <- gN ("temperature", av_period="winter")
-sstS <- gN ("temperature", av_period="summer")
+if (0){
+  sstW <- gN ("temperature", av_period="winter")
+  sstS <- gN ("temperature", av_period="summer")
+  tMin <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, min)
+  tMax <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, max)
+}else{
+  for (m in month.name){
+    assign (paste0 ("T", m), gN ("temperature", av_period=m))
+  }
+  getT <- expression (parse (paste0 ("get (T", month.name, ")", collapse=", ")))
+
+  tMin <- st_apply (c (getT, along="t_an"), 1:12, min)
+  tMin <- st_apply (c (getT, along="t_an"), 1:12, max)
+  rm (parse (paste0 ("T", month.name, collapse=", ")))
+}
 sss <- gN ("salinity", av_period="annual")  # cache about 12 MB each
 rm (gN)
 
-tMin <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, min)
-tMax <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, max)
-sea <- c (sss, tMin, tMax, nms=c("sss", "Tmin", "Tmax"))
+sea <- c (sss, tMin, tMax, nms=c("sal", "Tmin", "Tmax"))
 
 ## stars/raster stack for point extraction and prediction
 # sea$sss
@@ -161,9 +173,8 @@ randPt <- st_extract (sea, rPt)
 observed <- st_extract (sea, gibfP)
 
 
-crab <- rbind (exEnv (gbif)
-               , exEnv (rPt))
-crab$status <- c (rep (1, nrow (gbif)), rep (0, nrow (rPt)))
+crab <- c(randPt, observed)
+crab$status <- c (rep ("obs", length (gibfP)), rep ("rand", length (rPt)))
 ## XX end of tests
 
 
