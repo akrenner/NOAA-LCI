@@ -179,8 +179,8 @@ stn$Plankton <- stn$Plankton == "Y"
 ############################################
 
 
+## set-up headers of poSS
 poSS <- with (physOc, data.frame (File.Name = levels (File.Name)))
-
 poM <- match (poSS$File.Name, physOc$File.Name)
 
 poSS$Match_Name <- physOc$Match_Name [poM]
@@ -198,7 +198,7 @@ poSS$SampleID <- with (poSS, paste (Match_Name
                                    ))   # no need to spec by H
 poSS$SampleID_H = with (poSS, paste (Match_Name # some days >1 sample (tide cycle)
                                    , format (timeStamp, format = "%Y-%m-%d_%H", usetz = FALSE)
-                                     ))
+                                     )) ## in case there are 1 samples per day -- include hour
 ## XXX
 ## should not need this -- fix in CTD processing!!
 poSS <- subset (poSS, !is.na (poM))
@@ -211,16 +211,6 @@ rm (poM)
 ## x <- summary (factor (poSS$SampleID), maxsum = 10000)
 ## sort (poSS$File.Name [poSS$SampleID %in% names (which (x>1))])
 
-# poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name ## fails -- needed??
-#                  , data = physOc, FUN = max)$Depth.saltwater..m.
-## not sure where NAs are coming from, but this fixes it.
-## Better to take maxDepth from station master list
-poSS$maxDepth <- rep (NA, nrow (poSS))
-mD <- aggregate (Depth.saltwater..m.~File.Name
-                          , data = physOc, FUN = max)
-poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
-rm (mD)
-
 dMean <- function (fn, fldn){
     ## calculate mean of field for the last 10 m above the bottom
     cast <- subset (physOc, File.Name == fn)
@@ -230,7 +220,27 @@ dMean <- function (fn, fldn){
                           ))
     return (outM)
 }
+agg <- function (var, ..., refDF){ # more robust in case of NA
+  agDF <- aggregate (var~File.Name, data = physOc, ...)
+  agDF [match (refDF$File.Name, agDF [,1]),2]
+}
+# poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name ## fails -- needed??
+#                  , data = physOc, FUN = max)$Depth.saltwater..m.
+## not sure where NAs are coming from, but this fixes it.
+## Better to take maxDepth from station master list
+poSS$maxDepth <- rep (NA, nrow (poSS))
+mD <- aggregate (Depth.saltwater..m.~File.Name, data = physOc, FUN = max)
+poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
+rm (mD)
 
+poSS$maxDepth2 <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS)
+
+poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
+                 , FUN = median, na.rm=TRUE, refDF=poSS)
+
+
+
+## date/time-based conditions: daylight and tidal cycle
 Require ("rtide")
 tRange <- function (tstmp){
     ## uses NOAA tide table data
@@ -287,79 +297,38 @@ daylight <- function (dt){
 poSS$dayLight <- daylight (poSS$timeStamp)
 rm (daylight)
 
-agg <- function (var, ..., refDF){ # more robust in case of NA
-  agDF <- aggregate (var~File.Name, data = physOc, ...)
-  agDF [match (refDF$File.Name, agDF [,1]),2]
-}
+
+
+
+## temperature derivaties
 
 poSS$aveTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = mean)$Temperature_ITS90_DegC
 
 poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
-                       , FUN = mean, na.rm=TRUE, refDF=poSS)
+                       , FUN = median, na.rm=TRUE, refDF=poSS)
 poSS$minTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = min)$Temperature_ITS90_DegC
 poSS$deepTemp <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Temperature_ITS90_DegC"
                                    , mc.cores = nCPUs))
+poSS$maxTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data=physOc
+                           , FUN=max)$Temperature_ITS90_DegC
+
+## salinity derivities
 poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm = TRUE, refDF=poSS)
 poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
                                , FUN = mean)$Salinity_PSU
 poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
                                   , mc.cores = nCPUs))
+
+## density and other seawater properties
 poSS$aveDens <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
                                   , mc.cores = nCPUs))
-
 rm (dMean, agg)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
 ## almost the same als salinity. skip it
 
-minPAR <- function (fn){
-  cast <- subset (physOc, File.Name == fn)
-  PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
-  return (min (PARscl))
-}
-mP <- unlist (mclapply (poSS$File.Name, FUN =minPAR, mc.cores = nCPUs))
-print (quantile (mP, probs = seq (0.8, 0.95, by = 0.05), na.rm = TRUE))
-rm (mP)
-thresPAR <- function (fn){
-    ## depth at which PAR is 1% of surface (max) PAR
-    Pperc <- 0.01
-    Pperc <- 0.05
-    cast <- subset (physOc, File.Name == fn)
-    PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
-    if (length (which (PARscl < Pperc)) == 0){
-        return (NA)
-    }else{
-            thresDepth <- cast$Depth.saltwater..m. [min (which (PARscl < Pperc))]
-            return (thresDepth)
-    }
-}
-poSS$PARdepth5p<- unlist (mclapply (poSS$File.Name, FUN = thresPAR, mc.cores = nCPUs))
-rm (thresPAR, minPAR)
-sAgg <- function (varN, data = physOc, FUN = sum, ...){
-    aDF <- aggregate (formula (paste (varN, "File.Name", sep = "~"))
-                    , data, FUN, ...)
-    return (aDF [match (poSS$File.Name, aDF$File.Name),2])
-}
-poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
-# poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
-poSS$minO2 <- sAgg ("Oxygen_umol_kg")
-# poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
-poSS$O2perc <- sAgg ("Oxygen_sat.perc.")
-if ("turbidity" %in% names (physOc)){
-    ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
-    ## print (summary (poSS$turbidity))
-    poSS$logTurb <- sAgg ("turbidity", FUN = function (x){mean(log10(x))}
-                        , subset = physOc$Depth.saltwater..m. < 20)
-}else{
-    cat ("\nno turbidity here\n")
-}
-rm (sAgg)
-save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
-
-
-## derived summary statistics
+## derived seawater summary statistics
 Require ("parallel")
 wcStab <- function (fn){
     ## calculate water column stability for a given File.Name as difference density between upper and lower water layer
@@ -420,12 +389,71 @@ poSS$pcDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (
   cast <- subset (physOc, File.Name==fn)
   cast$Depth.saltwater..m. [which.max (cast$bvf)]
 }))
+## freshwater content
+poSS$FreshWaterCont <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, File.Name==fn) %>%
+    subset (Depth.saltwater..m. <= 10)  ## surface layer only
+  # fW <- subset (fW, Depth.saltwater..m. <= 10)  ## surface layer only
+  sum (32.8 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
 
-# is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
+
+
+
+## plant stuff
+sAgg <- function (varN, data = physOc, FUN = sum, ...){
+  aDF <- aggregate (formula (paste (varN, "File.Name", sep = "~"))
+                    , data, FUN, ...)
+  return (aDF [match (poSS$File.Name, aDF$File.Name),2])
+}
+
+poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
+poSS$minO2 <- sAgg ("Oxygen_umol_kg", FUN=min)
+poSS$O2perc <- sAgg ("Oxygen_sat.perc.", FUN=mean)
+if ("turbidity" %in% names (physOc)){
+    ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
+    ## print (summary (poSS$turbidity))
+    poSS$logTurb <- sAgg ("turbidity", FUN = function (x){mean(log10(x))}
+                        , subset = physOc$Depth.saltwater..m. < 20)
+}else{
+    cat ("\nno turbidity here\n")
+}
+rm (sAgg)
+## PAR going nowhere?
+minPAR <- function (fn){
+  cast <- subset (physOc, File.Name == fn)
+  PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
+  return (min (PARscl))
+}
+mP <- unlist (mclapply (poSS$File.Name, FUN =minPAR, mc.cores = nCPUs))
+print (quantile (mP, probs = seq (0.8, 0.95, by = 0.05), na.rm = TRUE))
+rm (mP)
+thresPAR <- function (fn){
+    ## depth at which PAR is 1% of surface (max) PAR
+    Pperc <- 0.01
+    Pperc <- 0.05
+    cast <- subset (physOc, File.Name == fn)
+    PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
+    if (length (which (PARscl < Pperc)) == 0){
+        return (NA)
+    }else{
+            thresDepth <- cast$Depth.saltwater..m. [min (which (PARscl < Pperc))]
+            return (thresDepth)
+    }
+}
+
+poSS$PARdepth5p<- unlist (mclapply (poSS$File.Name, FUN = thresPAR, mc.cores = nCPUs))
+rm (thresPAR, minPAR)
 is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
-print (summary (poSS))
+save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 
+
+
+
+## QAQC --- should go elsewhere!!!
 
 #######################
 ## troubleshoot poSS ##
@@ -546,6 +574,10 @@ poSS <- poID
 
 save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/sampleTable.RData")
+
+
+
+
 
 
 
