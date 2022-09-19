@@ -9,14 +9,37 @@
 
 ## iNaturalist.org positions
 
-
 ## 10 km buffer on global coastline
+rm (list = ls())
 
 
+##################
+## native range ##
+##################
+
+natLat <- c(0,89)
+natLon <- c(-25,35)
+coastal <- TRUE
+distX <- 100   ## in km
+myspecies <- c("Carcinus maenas")
+
+## for testing only
+natLat <- c(30,60)
+natLon <- c(-5,20)
+
+### end of user-defined parameters
+
+
+
+###################
+## finish set-up ##
+###################
 
 if (!require("pacman")) install.packages("pacman")
 Require <- pacman::p_load
-
+Require ("sf")
+Require ("stars")
+units (distX) <- "km"
 
 
 ## GBIF code from https://www.r-bloggers.com/2021/03/downloading-and-cleaning-gbif-data-with-r/
@@ -34,7 +57,6 @@ Require ("maps")
 Require ("tidyverse")
 
 # IF YOU HAVE ONLY ONE SPECIES ----
-myspecies <- c("Carcinus maenas")
 # download GBIF occurrence data for this species; this takes time if there are many data points!
 ## check cache first
 cF <- paste0 ("~/tmp/LCI_noaa/cache/speciesDistribution/", myspecies, ".RData")
@@ -52,20 +74,34 @@ if (file.exists(cF)){
   save (gbif, file=cF)
 }
 rm (cF)
+gibfP <- st_as_sf (gbif, coords=c("decimalLongitude", "decimalLatitude"), crs="EPSG:4326")
 
-
-## get seascape data from World Ocean Atlas
+##############################################
+## get seascape data from World Ocean Atlas ##
+##############################################
 ## https://www.ncei.noaa.gov/products/world-ocean-atlas  (downside: files are 3d = big)
 Require ("oceanexplorer")  # works with stars
-sstwin <- get_NOAA ("temperature", spat_res=1, av_period="winter", cache=TRUE)
-sstsum <- get_NOAA ("temperature", spat_res=1, av_period="summer", cache=TRUE)
-sss <- get_NOAA ("salinity", spat_res=1, av_period="annual", cache=TRUE)  # cache about 12 MB each
+gN <- function (...){
+  x <- get_NOAA (..., spat_res=1, cache=TRUE)
+  filter_NOAA (x, depth=0)  ##
+}
 
-## slice out the surface layer
-sstwin <- filter_NOAA(sstwin, depth = 0)
-sstsum <- filter_NOAA(sstsum, depth = 0)
-sss <- filter_NOAA(sss, depth = 0)
+sstW <- gN ("temperature", av_period="winter")
+sstS <- gN ("temperature", av_period="summer")
+sss <- gN ("salinity", av_period="annual")  # cache about 12 MB each
+rm (gN)
 
+tMin <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, min)
+tMax <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, max)
+sea <- c (sss, tMin, tMax, nms=c("sss", "Tmin", "Tmax"))
+
+## stars/raster stack for point extraction and prediction
+# sea$sss
+
+
+#####################
+## setup coastline ##
+#####################
 
 ## shoreline
 Require ("maptools")
@@ -74,63 +110,67 @@ tD <- tempdir()
 unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
        , junkpaths = TRUE, exdir = tD)
 Require ("sf")
-coastG <- read_sf (dsn = tD, layer = "GSHHS_h_L1") ## select f, h, i, l, c
+coastG <- st_read (dsn = tD, layer = "GSHHS_c_L1") ## select f, h, i, l, c  ---  doesn't need to be fine-scale here
+
 ## clip to bounding box: NW Atlantic
 b <- st_bbox (coastG)
-b[c(1,3)] <- c(-25,35)
-b[c(2,4)] <- c(0,89)
-bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
-coast <- st_intersects (coastG, bP)
+b[c(1,3)] <- natLon
+b[c(2,4)] <- natLat
+rm (natLon, natLat)
+
+bP <- st_as_sfc (b, crs=st_crs (coastG))
+coastE <- st_intersection (coastG, bP)
 unlink (tD, TRUE); rm (tD)
-rm (b, bP)
+rm (b)
 # coastSF)
 
 
-## generate pseudo-negative observations
-## distance from shoreline and buffer to constrain pseudo-locations
+###########################################
+## generate pseudo-negative observations ##
+###########################################
 
-## list of ocean grid-points
-b <- st_bbox (coast)
-rPt <- vect (cbind (lon=runif (n=1e4, b[1], b[3])
-                     , lat=runif (n=1e4, b[2], b[4]))
-               , crs="+proj=longlat")
+## sample from an off-shore buffer around coast
+## could also use st_difference?  -- this is slow
 
-Require ("geosphere")
-cDist <- geosphere::dist2Line (rPt, coast)
-## subset close to shore
-rPt <- rPt [which (cDist < 20e3),]
-
-## faster to find points within coastal buffer?
-## buffer around coast
-Require ("terra")
-cB <- terra::buffer (coast, 20* 1000)
+save.image ("~/tmp/LCI_noaa/cache/specDist1.RData")
+# rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/specDist1.RData"); require (sf)
 
 
-## sample at random
-rPt <- rPt [sample (nrow (gbif)),]
+if (coastal){
+  cb <- st_buffer (coastE, dist=distX) %>%
+    st_union() %>%
+    st_sf() %>%
+    st_make_valid
 
+  cbX <- cb
+  for (i in 1:length (coastE)){ # cut out every individual polygon
+    cbX <- st_sym_difference(cbX, coastE [i,])
+  }
+}else{
+  cbX <- bP
+}
+rPt <- st_sample(cbX, nrow (gbif), type = "random")
+rm (distX, cbX, cb)
+## XXX still to be done: remove points along bounding-box line (far from coast) XXX
+## subset to avoid bounding-box line
 
 
 ## lookup environmental values at location of observation and at pseudo-locations
 ## expand environmental values into coast NAs
-exEnv <- function (pt){
-  Require ("terra")
-  sstW <- terra::extract (sstwin, pt)
-  sstS <- terra::extract (sstsum, pt)
-  crab <- data.frame (
-    Tmin=apply (cbind (sstW, sstS), 2, min)
-    , Tmax=apply (cbind (sstW, sstS), 2, max)
-    , sal=terra::extract (sss, pt)
-  )
-  rm (sstW, sstS)
-  crab
-}
+randPt <- st_extract (sea, rPt)
+observed <- st_extract (sea, gibfP)
+
 
 crab <- rbind (exEnv (gbif)
                , exEnv (rPt))
 crab$status <- c (rep (1, nrow (gbif)), rep (0, nrow (rPt)))
+## XX end of tests
 
-## resource selection function, covering 90 % of observations
+
+##################################################################
+## model species distribution using resource selection function ##
+##################################################################
+
 Require ("rsf")
 m1 <- rspf (status~Tmin+Tmax+sal, crab, m=0, B=999)
 m2 <- rspf (status~Tmin+Tmax, crab, m=0, B=999)
@@ -144,4 +184,10 @@ kdepairs (m1)
 
 ## apply RSF to global dataset
 
+# pArea <- sstW
+# pArea ['sstS'] <- sstS ['t_an']
+# pArea ['']
+
+
 ## project 50 years of global warming
+

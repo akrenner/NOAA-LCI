@@ -341,6 +341,8 @@ sAgg <- function (varN, data = physOc, FUN = sum, ...){
                     , data, FUN, ...)
     return (aDF [match (poSS$File.Name, aDF$File.Name),2])
 }
+is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
+
 poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
 # poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
 poSS$minO2 <- sAgg ("Oxygen_umol_kg")
@@ -365,7 +367,7 @@ wcStab <- function (fn){
     ## calculate water column stability for a given File.Name as difference density between upper and lower water layer
     ## any reference to this??
     uLay <- c (0,3)
-   # lLay <- c (30,35)
+    lLay <- c (30,35)
     cast <- subset (physOc, File.Name == fn)
     lLay <- c (-5, 0) + max (cast$Depth.saltwater..m.) # lowest 5 m instead of fixed depth
                                         # some casts only 2 or 5 m deep -- then what?
@@ -384,28 +386,6 @@ rm (wcStab)
 
 ## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
 ## good indicator of presence of deep-water salinity gradient
-deepPyc <- function (fn){
-  Require ("oce")
-  cast <- subset (physOc, File.Name == fn)
-    dThres <- 30
-    if (max (cast$Depth.saltwater..m.) < dThres){
-        return (NA)
-    }else{
-        ## midDens<-mean(subset(cast,40<Depth.saltwater..m.)&(Depth.saltwater..m.<50))
-        ## depDens<-mean(subset(cast,80<Depth.saltwater..m.)&(Depth.saltwater..m.<200))
-        ## return (depDens - midDens)
-        ## use max N2 of smoothed CTD object
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-        N2 <- swN2 (ctd, derivs = "smoothing")
-        dPC <- max (subset (N2, cast$Depth.saltwater..m. < dThres), na.rm = TRUE)
-        dPC <- ifelse (is.na (dPC), 0, dPC) # shouldn't need that? [unless sensor bad]
-        return (dPC)
-    }
-}
-poSS$deepPyc <- unlist (mclapply (poSS$File.Name, FUN = deepPyc, mc.cores = nCPUs))
-rm (deepPyc)
-
 poSS$bvfMean <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
   mean (cast$bvf, na.rm=TRUE)
@@ -416,13 +396,11 @@ poSS$bvfMax <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function 
   max (cast$bvf, na.rm=TRUE)
 }))
 
-poSS$pcDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+poSS$pclDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
   cast$Depth.saltwater..m. [which.max (cast$bvf)]
 }))
 
-# is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
-is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
 print (summary (poSS))
 
