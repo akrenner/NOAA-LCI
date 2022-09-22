@@ -1,4 +1,8 @@
-## CTD anomaly over time
+#!/usr/bin/env RScript
+
+###########################
+## CTD anomaly over time ##
+###########################
 
 
 ## load data
@@ -11,7 +15,9 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physO
 
 ###########################
 ## bugs/missing features ##
-###########################
+# - salinity at 50 m (ACC signature)
+# - freshwater contenst of first 30 m (local runoff, freshwater lens)
+# - sum of fluorescence over time -- see separate work on SWMP
 
 
 
@@ -200,6 +206,16 @@ for (k in pickStn){
   }
 
 
+  TSaxis <- function (isoTime, axes=TRUE){
+    tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-01-01")))
+    lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-07-01")))
+    abline (v = tAx)
+    if (axes == TRUE){
+      axis (1, at = tAx, label = FALSE)
+      axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
+    }
+
+  }
   plot.station <- function (section, axes = TRUE, ...){
     plot (section, showBottom = FALSE, xtype = "time", ztype = "image"
           #, at = FALSE
@@ -208,13 +224,7 @@ for (k in pickStn){
           , axes = FALSE, ...
           , xlab="", ylab="")
     axis (2, at = c(0, 20, 40, 60, 80, 100))
-    tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-01-01")))
-    lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (xC$isoTime, "%Y"))), "-07-01")))
-    abline (v = tAx)
-    if (axes == TRUE){
-      axis (1, at = tAx, label = FALSE)
-      axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
-    }
+    TSaxis (xC$isoTime)
   }
 
 
@@ -359,8 +369,8 @@ for (k in pickStn){
           , ...)
   }
 
-  pdf (paste0 (mediaD, stnK, "-climatology.pdf")
-       , height = 11.5, width = 8)
+  # pdf (paste0 (mediaD, stnK, "-climatology.pdf"), height = 11.5, width = 8)
+  png (paste0 (mediaD, stnK, "-climatology.png"), height=11.5*300, width=8*300, res=300)
   par (mfrow=c(2,1))
   clPlot (cT9, which = "temperature"
           , zcol = oceColorsTemperature (11)
@@ -380,7 +390,8 @@ for (k in pickStn){
 
 
   ## fluorescence
-  pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
+  # pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
+  png (paste0 (mediaD, stnK, "-fluorescence-climatology.png"))
   par (las = 1)
   clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
 #  anAx(dAx = seq (0, 100, by = 20))
@@ -442,15 +453,10 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 
 
 
-# rm (clPlot, anAx)
-
-
-
-
-
 #########################
 ## freshwater contents ##
 #########################
+
 ## move this elsewhere! -- signature data?
 
 fw <- subset (xC, Depth.saltwater..m. <= 10)
@@ -479,7 +485,7 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 
 
-if (1){
+
   pdf ("~/tmp/LCI_noaa/media/T9S6_freshwatercontent.pdf", height = 9, width = 6)
   par (mfrow = c(3,1)
        , mar = c (5,4, 0.1, 0.1)
@@ -502,8 +508,48 @@ if (1){
   plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
   abline (h = 0, col = "gray")
 
-  dev.off()
-}
+
+  plot (f)
+  TSaxis (xC$isoTime)
+
+    dev.off()
+
+
+
+
+
+## quick test on stratification
+
+t96S <- subset (poSS, Match_Name=="AlongBay_9") %>%
+  subset (month %in% c(6,7,8))
+t96S$sSSS <- scale (t96S$SSS, center=TRUE, scale=TRUE)
+t96S$sTRange <- scale (t96S$tideRange, center=TRUE, scale=TRUE)
+plot (bvfMax~tideRange, t96S)
+lmStrat <- lm (bvfMax~sTRange + sSSS, t96S)
+summary (lmStrat)
+
+poSummer <- subset (poSS, month %in% 6:8)
+poSummer$Match_Name <- factor (poSummer$Match_Name)
+stCor <- sapply (levels (poSummer$Match_Name), function (x){
+  tSum <- subset (poSummer, Match_Name == x)
+  # lmStrat <- lm (bvfMax~sTRange+sSSS)
+  lmStrat <- cor(tSum$bvfMax, tSum$tideRange, use="pairwise", method="pearson")
+  lmStrat
+})
+## expectation: the bigger the tidal range, the lower the bvfMax -> negative correlation
+## in winter: expect no correlation
+SuWi <- subset (poSS, month %in% c(1,2,3,6,7,8))
+SuWi$sSSS <- scale (SuWi$SSS)
+SuWi$stideRange <- scale (SuWi$tideRange)
+SuWi$season <- ifelse (SuWi$month %in% c(1,2,3), "winter", "summer")
+tM <- lm (bvfMax~stideRange+sSSS+season+Match_Name, SuWi)
+summary (tM)
+tM <- lm (bvfMax~sSSS+season+Match_Name, SuWi)
+summary (tM)
+tM <- lm (bvfMax~stideRange+season+Match_Name, SuWi)
+summary (tM)
+
+
 
 
 
@@ -513,7 +559,11 @@ pdf ("~/tmp/LCI_noaa/media/T9S6_freshSeason.pdf", width = 7, height = 9)
 print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
 print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
                , xlab = "freshwater anomaly"))
+
+plot ()
 dev.off()
+
+
 
 
 # graphics.off()

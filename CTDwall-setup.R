@@ -278,12 +278,9 @@ oCol3 <- list (  ## fix versions?
   , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
   , colorRampPalette (cmocean ("dense")(5), bias=0.3)
   , colorRampPalette (cmocean ("turbid")(5), bias=3) #, cmocean ("matter")  # or turbid
-  , cmocean ("algae")
+  , colorRampPalette (cmocean ("algae")(5), bias=3)
   #, oceColorsTurbo # cmocean ("solar")
-  , function (n){  ## clip colors for PAR
-    Require ("viridis")
-    turbo (n, begin=0.25, end=0.8)
-  }
+  , function (n){Require ("viridis"); turbo (n, begin=0.25, end=0.8)}
   , cmocean ("oxy")
   , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
