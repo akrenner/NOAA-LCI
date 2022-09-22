@@ -13,12 +13,20 @@
 rm (list = ls())
 
 
+## distance to coast
+## import to QGIS
+## predict on non-linear model
+
 ##################
 ## native range ##
 ##################
 
 natLat <- c(0,89)
 natLon <- c(-25,36)
+natLon <- c(-80, 36) ## include East-coast -- Australia not much use to define cold end
+# natLat <- c(-80,89)
+# natLon <- c (-170,170)
+
 coastal <- TRUE
 distX <- 20   ## in km
 myspecies <- c("Carcinus maenas")
@@ -82,17 +90,37 @@ gbifP <- subset (gbif_data$data, decimalLongitude > -25) %>%    # include Austra
   subset (decimalLongitude < 36) %>%  # for testing only XXXXXXXXXXXXXX
   st_as_sf (coords=c("decimalLongitude", "decimalLatitude"), crs="EPSG:4326")
 
+
 ##############################################
 ## get seascape data from World Ocean Atlas ##
 ##############################################
 ## https://www.ncei.noaa.gov/products/world-ocean-atlas  (downside: files are 3d = big)
-Require ("oceanexplorer")  # works with stars
-gN <- function (...){
-  Require ("readr")
-  get_NOAA (..., spat_res=1, cache=TRUE) %>%
-    filter_NOAA (depth=0)  ##
-}
 
+
+Require ("oceanexplorer")  # works with stars
+if (1){
+  gN <- function (...){
+    Require ("readr")
+    get_NOAA (..., spat_res=1, cache=TRUE) %>%
+      filter_NOAA (depth=0)  ##
+  }
+}else{
+  ## manual download to ~/GISdata/data/world-ocean-atlas/
+  # https://www.ncei.noaa.gov/thredds-ocean/fileServer/ncei/woa/salinity/decav/0.25/woa18_decav_s00_04.nc
+  gN <- function (var="temperature", av_period="January"){
+    Require ("stars")
+    if (var=="temperature"){
+      dCub <- st_read (paste0 ("~/GISdata/data/world-ocean-atlas/temperature/woa18_decav_t"
+                               , sprintf ("%02i", which (month.name %in% av_period))
+                               , "_04.nc")) %>%
+        filter_NOAA (depth=0)
+    }
+    if (var=="salinity"){
+      dCub <- st_read ("~/GISdata/data/world-ocean-atlas/salinity/woa18_decav_s00_04.nc") %>%
+        filter_NOAA (depth=0)
+    }
+  }
+}
 if (0){
   sstW <- gN ("temperature", av_period="winter")
   sstS <- gN ("temperature", av_period="summer")
@@ -118,8 +146,11 @@ rm (gN)
 
 sea <- c (sss, tMin, tMax, tMean, nms=c("sal", "Tmin", "Tmax", "Tmean"))
 
+## interpolate NA values from neighbours
+mtx <- sea$sal
+
 ## stars/raster stack for point extraction and prediction
-# sea$sss
+# sea$sal
 
 
 #####################
@@ -172,7 +203,7 @@ if (coastal){
 }else{
   cbX <- bP
 }
-rPt <- st_sample(cbX, nrow (gbif), type = "random")
+rPt <- st_sample(cbX, nrow (gbifP), type = "random") ## stuck/extremely slow?
 rm (distX, cbX, cb)
 ## XXX still to be done: remove points along bounding-box line (far from coast) XXX
 ## subset to avoid bounding-box line
@@ -189,8 +220,11 @@ if (0){
   ## idea: apply buffer to gbifP, then find sea values in that buffer to avoid NAs
   ## for unknown reasons, it's actually getting worse. Also tried with terra::buffer
 observed <- aggregate (sea
-                       , by = st_buffer (gbifP, nQuadSegs=4, dist=50e3)
-                       , FUN=mean, na.rm=TRUE, as.points=FALSE)
+                       , by = st_buffer (gbifP, nQuadSegs=4, dist=100e3) # 100 km may be reasonable with current raster
+                       , FUN=function (x){mean (x, na.rm=TRUE)}
+                       # , FUN=mean, na.rm=TRUE
+                       # , as.points=FALSE
+                       )
 if (sum (is.na (observed$sal)) > 40){stop ("still busted")}
 ## XXXXXXXXXXXXXX
 }
@@ -208,7 +242,7 @@ rm (observed)
 ##################################################################
 
 save.image ("~/tmp/LCI_noaa/cache/specDist2.RData")
-# rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/specDist2.RData"); require (sf)
+# rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/specDist2.RData"); require (sf); require (stars)
 
 # simulatedUsedAvail ()
 
@@ -228,6 +262,7 @@ sea$TmeanS <- scale2 (sea$Tmean, mDF$Tmean)
 sea$salS <- scale2 (sea$sal, mDF$sal)
 
 
+## logistic regression
 m1 <- glm (factor (status)~TminS+TmaxS+salS, mDF, family=binomial(link="logit"))
 summary (m1)
 # plot (m1)
@@ -237,9 +272,8 @@ Require ("viridis")
 png ("~/tmp/LCI_noaa/media/GreenCrab.png", width=1600, height=900, res=100)
 plot (sea ['pred'], col = inferno(12), breaks="equal")
 dev.off()
-
-image (sea$pred)
-
+# image (sea$pred)
+write_stars (sea, dsn="~/tmp/LCI_noaa/data-products/EuroGreenCrab.tif", layer="pred")
 
 
 
@@ -255,18 +289,20 @@ plot (m1)
 mep (m1)
 kdepairs (m1)
 
+sea$rsf <- predict (m1, newdata=sea) #, type="response")
 
 ## apply RSF to global dataset
 # predict (m1, )
 
 
-## rsf
+## rsf -- same as "ResourceSelection" ??
 Require ("rsf")
 m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
 
 ## maxent
-Require ("dismo")
-maxent ()
+# Require ("dismo")
+# maxent ()
+
 
 ## project 50 years of global warming
 
