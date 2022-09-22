@@ -146,9 +146,6 @@ rm (gN)
 
 sea <- c (sss, tMin, tMax, tMean, nms=c("sal", "Tmin", "Tmax", "Tmean"))
 
-## interpolate NA values from neighbours
-mtx <- sea$sal
-
 ## stars/raster stack for point extraction and prediction
 # sea$sal
 
@@ -214,19 +211,27 @@ rm (distX, cbX, cb)
 # randPt <- st_extract (sea, rPt)
 # plot (subset (randPt, !is.na (sal)))
 
-
-observed <- st_extract (sea, gbifP)  ## old version -- mostly NAs
-if (0){
+if (1){
+  ## interpolate NA values from neighbours
+  seax <- sea
+  Require ("zoo") ## use na.approx -- not ideal, but does the trick for now. ideal: r.neighbors
+  for (i in 1:length (seax)){
+    seax [[i]] <- na.approx (seax [[i]])
+  }
+  # image (na.approx (mtx))
+  observed <- st_extract (seax, gbifP)  ## old version -- mostly NAs
+  rm (seax)
+}else{
   ## idea: apply buffer to gbifP, then find sea values in that buffer to avoid NAs
   ## for unknown reasons, it's actually getting worse. Also tried with terra::buffer
-observed <- aggregate (sea
-                       , by = st_buffer (gbifP, nQuadSegs=4, dist=100e3) # 100 km may be reasonable with current raster
-                       , FUN=function (x){mean (x, na.rm=TRUE)}
-                       # , FUN=mean, na.rm=TRUE
-                       # , as.points=FALSE
-                       )
-if (sum (is.na (observed$sal)) > 40){stop ("still busted")}
-## XXXXXXXXXXXXXX
+  observed <- aggregate (sea
+                         , by = st_buffer (gbifP, nQuadSegs=4, dist=100e3) # 100 km may be reasonable with current raster
+                         , FUN=function (x){mean (x, na.rm=TRUE)}
+                         # , FUN=mean, na.rm=TRUE
+                         # , as.points=FALSE
+  )
+  if (sum (is.na (observed$sal)) > 40){stop ("still busted")}
+  ## XXXXXXXXXXXXXX
 }
 
 pnts <- st_extract(sea, rPt) %>%
