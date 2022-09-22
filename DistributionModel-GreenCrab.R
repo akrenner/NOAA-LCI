@@ -12,10 +12,11 @@
 ## 10 km buffer on global coastline
 rm (list = ls())
 
-
+## bugs and missing features
 ## distance to coast
-## import to QGIS
 ## predict on non-linear model
+## use 90% quantiles/box of habitat data
+## test and examine output
 
 ##################
 ## native range ##
@@ -145,7 +146,7 @@ sss <- gN ("salinity", av_period="annual")  # split up by month and look for ran
 rm (gN)
 
 sea <- c (sss, tMin, tMax, tMean, nms=c("sal", "Tmin", "Tmax", "Tmean"))
-
+rm (sss, tMin, tMax, tMean)
 ## stars/raster stack for point extraction and prediction
 # sea$sal
 
@@ -251,6 +252,15 @@ save.image ("~/tmp/LCI_noaa/cache/specDist2.RData")
 
 # simulatedUsedAvail ()
 
+
+### fudge Tmin and Tmax to reflect the idea behind them
+## high Tmin in tropics should not drive the function
+mMean <- mean (subset (mDF$T$mean, mDF$status==1))
+mDF$Tmin <- ifelse (mDF$status==1 & mDF$Tmin > mMean, mMean, mDF$Tmin)
+mDF$Tmax <- ifelse (mDF$status==1 & mDF$Tmax < mMean, mMean, mDF$Tmax)
+
+
+## scale predictive variables
 scale2 <- function (var, ref=NULL){
   if (length (ref) < 1){
     ref <- var
