@@ -1,4 +1,8 @@
-## CTD anomaly over time
+#!/usr/bin/env RScript
+
+###########################
+## CTD anomaly over time ##
+###########################
 
 
 ## load data
@@ -15,7 +19,9 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physO
 
 ###########################
 ## bugs/missing features ##
-###########################
+# - salinity at 50 m (ACC signature)
+# - freshwater contenst of first 30 m (local runoff, freshwater lens)
+# - sum of fluorescence over time -- see separate work on SWMP
 
 
 
