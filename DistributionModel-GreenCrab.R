@@ -29,7 +29,7 @@ natLon <- c(-80, 36) ## include East-coast -- Australia not much use to define c
 # natLon <- c (-170,170)
 
 coastal <- TRUE
-distX <- 20   ## in km
+distX <- 50   ## in km -- width of coastal zone buffer
 myspecies <- c("Carcinus maenas")
 
 ## for testing only
@@ -248,12 +248,18 @@ save.image ("~/tmp/LCI_noaa/cache/specDist2.RData")
 # simulatedUsedAvail ()
 
 
+## remove identical cell values
+## this should reduce biased observations (esp NL) and improve model fit
+## reduceds N of observations from about 7000 to 600.
+mDF <- subset (mDF, !duplicated (mDF [,which (names (mDF) %in% c("sal", "Tmin", "Tmax", "Tmean"))]))
+
 ### fudge Tmin and Tmax to reflect the idea behind them
 ## high Tmin in tropics should not drive the function
-mMean <- mean (subset (mDF$T$mean, mDF$status==1))
-mDF$Tmin <- ifelse (mDF$status==1 & mDF$Tmin > mMean, mMean, mDF$Tmin)
-mDF$Tmax <- ifelse (mDF$status==1 & mDF$Tmax < mMean, mMean, mDF$Tmax)
-
+if (0){
+  mMean <- mean (subset (mDF$Tmean, mDF$status==1))
+  mDF$Tmin <- ifelse (mDF$status==1 & mDF$Tmin > mMean, mMean, mDF$Tmin)
+  mDF$Tmax <- ifelse (mDF$status==1 & mDF$Tmax < mMean, mMean, mDF$Tmax)
+}
 
 ## scale predictive variables
 scale2 <- function (var, ref=NULL){
@@ -298,18 +304,19 @@ summary(m1)
 plot (m1)
 mep (m1)
 kdepairs (m1)
-
-sea$rsf <- predict (m1, newdata=sea) #, type="response")
+# sea$rsf <- predict (m1, newdata=sea) #, type="response")  ## not working yet data has dim 360, replacement has length 41088
 
 ## apply RSF to global dataset
 # predict (m1, )
 
 
 ## rsf -- same as "ResourceSelection" ??
-Require ("rsf")
-m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
+# Require ("rsf")
+# m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
+
 
 ## maxent
+# convert sf to sp?
 # Require ("dismo")
 # maxent ()
 
