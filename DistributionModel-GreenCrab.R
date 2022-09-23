@@ -121,31 +121,26 @@ if (1){
     }
   }
 }
-if (0){
-  sstW <- gN ("temperature", av_period="winter")
-  sstS <- gN ("temperature", av_period="summer")
-  tMin <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, min)
-  tMax <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, max)
-}else{
-  for (m in month.name){
-    assign (paste0 ("T", m), gN ("temperature", av_period=m))
-  }
-  tStr <- paste0 ("T", month.name, collapse=", ")
-  getT <- paste ("c (", tStr, ", along='t_an')")
-  temp <- eval (str2lang (getT))
-#  names (temp) <- "degC"
-  tMin <- st_apply (c (temp), 1:2, min)
-  tMax <- st_apply (c (temp), 1:2, max)
-  tMean <- st_apply (c (temp), 1:2, mean)
-  ## cleanup
-  eval (str2lang (paste0 ("rm (", tStr, ")")))
-  rm (getT, tStr, temp)
+
+for (m in month.name){
+  assign (paste0 ("T", m), gN ("temperature", av_period=m))
 }
+tStr <- paste0 ("T", month.name, collapse=", ")
+getT <- paste ("c (", tStr, ", along='t_an')")
+temp <- eval (str2lang (getT))
+#  names (temp) <- "degC"
+tMin <- st_apply (c (temp), 1:2, min)
+tMax <- st_apply (c (temp), 1:2, max)
+tMean <- st_apply (c (temp), 1:2, mean)
+## cleanup
+eval (str2lang (paste0 ("rm (", tStr, ")")))
+rm (getT, tStr, temp)
+
 sss <- gN ("salinity", av_period="annual")  # split up by month and look for range?
 rm (gN)
 
 sea <- c (sss, tMin, tMax, tMean, nms=c("sal", "Tmin", "Tmax", "Tmean"))
-
+rm (sss, tMin, tMax, tMean)
 ## stars/raster stack for point extraction and prediction
 # sea$sal
 
