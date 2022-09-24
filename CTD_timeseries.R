@@ -157,10 +157,12 @@ for (k in pickStn){
   ##############################################
   ## seasonal climatologies of poSS summaries ##
   ##############################################
-  poSSclim <- aggregate (deepTemp~month, poSS, subset=poSS$Match_Name==stnK
+  poSSclim <- aggregate (TempDeep~month, poSS, subset=poSS$Match_Name==stnK
                          , FUN=mean, na.rm=TRUE)
-  poSSclim$pcDepth <- aggregate (pcDepth~month, poSS, subset=poSS$Match_Name==stnK ## XXX settle names!
+  poSSclim$pclDepth <- aggregate (pclDepth~month, poSS, subset=poSS$Match_Name==stnK ## XXX settle names!
                          , FUN=mean, na.rm=TRUE)$pcDepth
+  poSSclim$bvfMax <- aggregate (bvfMax~month, poSS, subset=poSS$Match_Name==stnK ## XXX settle names!
+                                 , FUN=mean, na.rm=TRUE)$pcDepth
   poSSclim$stability <- aggregate (stability~month, poSS, subset=poSS$Match_Name==stnK
                                  , FUN=mean, na.rm=TRUE)$stability
 
@@ -373,15 +375,17 @@ for (k in pickStn){
   png (paste0 (mediaD, stnK, "-climatology.png"), height=11.5*300, width=8*300, res=300)
   par (mfrow=c(2,1))
   clPlot (cT9, which = "temperature"
-          , zcol = oceColorsTemperature (11)
+          , zcol = oceColorsTurbo(11) # oceColorsTemperature (11)
           , zbreaks = seq (min (ctdAgg$Temperature_ITS90_DegC)
                            , max (ctdAgg$Temperature_ITS90_DegC), length.out = 12)
           # , zlim = c(4,12)
           )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
+    odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+    colorRampPalette (col=odv, bias=0.3) #,
   clPlot (cT9, which = "salinity"
-           , zcol = oceColorsSalinity(11)
+           , zcol =  colorRampPalette (col=odv, bias=0.3)(11) #oceColorsSalinity(11)
           , zbreaks = seq (28, 31.5, length.out = 12)
           # , zlim = c(28,31.5)
           )
@@ -400,8 +404,11 @@ for (k in pickStn){
 
 
   ## buoyancy
-  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-  par (mfrow=c(7,1))
+#  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
+  rS <- 200
+  png (paste0 (mediaD, stnK, "-buoyancy-climatology.png"), height=11.5*rS, width=8*rS, res=rS)
+  rm (rS)
+  par (mfrow=c(5,1))
   ## raw buoyancy profile
   ## buoyancy-anomaly profile??
   ## bvf climatology
@@ -435,10 +442,9 @@ for (k in pickStn){
   anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
 ## summaries: timeseries of strength of stratification and pycnocline depth
   plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-  plot (deepPyc~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-  plot (pcDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-
+#  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+  plot (pclDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+#  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
   dev.off()
 
   })
@@ -486,84 +492,101 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 
 
-  pdf ("~/tmp/LCI_noaa/media/T9S6_freshwatercontent.pdf", height = 9, width = 6)
-  par (mfrow = c(3,1)
-       , mar = c (5,4, 0.1, 0.1)
-  )
-  ## time series
-  plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
-  ## seasonal climatology
-  plot (freshCont~month, fwS
-        , xlim = c(1,12), type = "l", lwd = 2
-        , ylab = "freshwater content"
-  )
-  lines (fwS$month, md$fitted.values, col = "red", lwd = 2, lty = "dashed")
-  lines (lS$x, lS$fitted, col = "blue", lwd = 2, lty = "dashed")
-  legend ("topleft", legend = c("monthly mean", "seasonal spline", "seasonal loess")
-          , lty = c("solid", "dashed", "dashed")
-          , col = c("black", "red", "blue")
-          , lwd = 2
-  )
-  ## freshwater anomaly
-  plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
-  abline (h = 0, col = "gray")
-
-
-  plot (f)
-  TSaxis (xC$isoTime)
-
-    dev.off()
-
-
-
-
-
-## quick test on stratification
-
-t96S <- subset (poSS, Match_Name=="AlongBay_9") %>%
-  subset (month %in% c(6,7,8))
-t96S$sSSS <- scale (t96S$SSS, center=TRUE, scale=TRUE)
-t96S$sTRange <- scale (t96S$tideRange, center=TRUE, scale=TRUE)
-plot (bvfMax~tideRange, t96S)
-lmStrat <- lm (bvfMax~sTRange + sSSS, t96S)
-summary (lmStrat)
-
-poSummer <- subset (poSS, month %in% 6:8)
-poSummer$Match_Name <- factor (poSummer$Match_Name)
-stCor <- sapply (levels (poSummer$Match_Name), function (x){
-  tSum <- subset (poSummer, Match_Name == x)
-  # lmStrat <- lm (bvfMax~sTRange+sSSS)
-  lmStrat <- cor(tSum$bvfMax, tSum$tideRange, use="pairwise", method="pearson")
-  lmStrat
-})
-## expectation: the bigger the tidal range, the lower the bvfMax -> negative correlation
-## in winter: expect no correlation
-SuWi <- subset (poSS, month %in% c(1,2,3,6,7,8))
-SuWi$sSSS <- scale (SuWi$SSS)
-SuWi$stideRange <- scale (SuWi$tideRange)
-SuWi$season <- ifelse (SuWi$month %in% c(1,2,3), "winter", "summer")
-tM <- lm (bvfMax~stideRange+sSSS+season+Match_Name, SuWi)
-summary (tM)
-tM <- lm (bvfMax~sSSS+season+Match_Name, SuWi)
-summary (tM)
-tM <- lm (bvfMax~stideRange+season+Match_Name, SuWi)
-summary (tM)
-
+# pdf (paste0 (mediaD, "T9S6_freshwatercontent.pdf"), height = 9, width = 6)
+rS <- 200
+png (paste0 (mediaD, "T9S6_freshwatercontent.png"), height=9*rS, width=6*rS, res=rS)
+rm (rS)
+par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1)
+)
+## time series
+plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
+## seasonal climatology
+plot (freshCont~month, fwS
+      , xlim = c(1,12), type = "l", lwd = 2
+      , ylab = "freshwater content"
+)
+lines (fwS$month, md$fitted.values, col = "red", lwd = 2, lty = "dashed")
+lines (lS$x, lS$fitted, col = "blue", lwd = 2, lty = "dashed")
+legend ("topleft", legend = c("monthly mean", "seasonal spline", "seasonal loess")
+        , lty = c("solid", "dashed", "dashed")
+        , col = c("black", "red", "blue")
+        , lwd = 2
+)
+## freshwater anomaly
+plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
+abline (h = 0, col = "gray")
+#  plot (f)
+TSaxis (xC$isoTime)
+dev.off()
 
 
 
 
 ### timing of freshwater -- panel for each year ###
 require ("lattice")
-pdf ("~/tmp/LCI_noaa/media/T9S6_freshSeason.pdf", width = 7, height = 9)
+pdf (paste0 (mediaD, "T9S6_freshSeason.pdf"), width = 7, height = 9)
 print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
 print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
                , xlab = "freshwater anomaly"))
 
-plot ()
+# plot ()
 dev.off()
 
 
+
+
+if (0){
+  ## quick test on stratification
+  t96S <- subset (poSS, Match_Name=="AlongBay_9") %>%
+    subset (month %in% c(6,7,8))
+  t96S$sSSS <- scale (t96S$SSS, center=TRUE, scale=TRUE)
+  t96S$sTRange <- scale (t96S$tideRange, center=TRUE, scale=TRUE)
+  plot (bvfMax~tideRange, t96S)
+  lmStrat <- lm (bvfMax~sTRange + sSSS, t96S)
+  summary (lmStrat)
+
+  poSummer <- subset (poSS, month %in% 6:8)
+  poSummer$Match_Name <- factor (poSummer$Match_Name)
+  stCor <- sapply (levels (poSummer$Match_Name), function (x){
+    tSum <- subset (poSummer, Match_Name == x)
+    # lmStrat <- lm (bvfMax~sTRange+sSSS)
+    lmStrat <- cor(tSum$bvfMax, tSum$tideRange, use="pairwise", method="pearson")
+    lmStrat
+  })
+  ## expectation: the bigger the tidal range, the lower the bvfMax -> negative correlation
+  ## in winter: expect no correlation
+  SuWi <- subset (poSS, month %in% c(1,2,3,6,7,8))
+  SuWi$sSSS <- scale (SuWi$SSS)
+  SuWi$stideRange <- scale (SuWi$tideRange)
+  SuWi$season <- ifelse (SuWi$month %in% c(1,2,3), "winter", "summer")
+  tM <- lm (bvfMax~stideRange+sSSS+season+Match_Name, SuWi)
+  summary (tM)
+  tM <- lm (bvfMax~sSSS+season+Match_Name, SuWi)
+  summary (tM)
+  tM <- lm (bvfMax~stideRange+season+Match_Name, SuWi)
+  summary (tM)
+}
+
+
+
+## deep water temperature time series
+## - raw time series
+## - superimposed anomalies/seasonal mean
+## - marking first day >= threshold temperature in spring
+## - timing of x degree C in spring
+
+T96 <- subset (poSS, Match_Name=="9_6")
+png (paste0 (mediaD, "tempDeepTS.png"), res=100, height=8*100, width=8*100)
+plot (TempDeep~timeStamp, T96, type = "line")
+abline (h=4, lty="dashed") # mark 4 degrees C
+dev.off()
+
+
+
+
+## TS-diagram
+# plot (Salinity_PSU~Temperature_ITS90_DegC, data=physOc, col=format (physOc$isoTime, "%m"))
+# use oce template for pretty plot
 
 
 # graphics.off()

@@ -16,6 +16,9 @@ rm (list = ls())
 print (Sys.time())
 
 
+deepThd <- 20 ## bottom threshold -- everything above considered surface,
+                ## everything below bottom water
+
 ## file structure:
 ## source files in ~/GISdata/LCI/
 GISF <- "~/GISdata/LCI/"
@@ -211,7 +214,7 @@ rm (poM)
 ## x <- summary (factor (poSS$SampleID), maxsum = 10000)
 ## sort (poSS$File.Name [poSS$SampleID %in% names (which (x>1))])
 
-dMean <- function (fn, fldn){
+dMean <- function (fn, fldn){  ## bottom Mean
     ## calculate mean of field for the last 10 m above the bottom
     cast <- subset (physOc, File.Name == fn)
     lLay <- c (-10, 0) + max (cast$Depth.saltwater..m.)
@@ -220,23 +223,12 @@ dMean <- function (fn, fldn){
                           ))
     return (outM)
 }
+
 agg <- function (var, ..., refDF){ # more robust in case of NA
   agDF <- aggregate (var~File.Name, data = physOc, ...)
   agDF [match (refDF$File.Name, agDF [,1]),2]
 }
-# poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name ## fails -- needed??
-#                  , data = physOc, FUN = max)$Depth.saltwater..m.
-## not sure where NAs are coming from, but this fixes it.
-## Better to take maxDepth from station master list
-poSS$maxDepth <- rep (NA, nrow (poSS))
-mD <- aggregate (Depth.saltwater..m.~File.Name, data = physOc, FUN = max)
-poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
-rm (mD)
-
-poSS$maxDepth2 <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS)
-
-poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
-                 , FUN = median, na.rm=TRUE, refDF=poSS)
+poSS$maxDepth <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS)
 
 
 
@@ -302,23 +294,29 @@ rm (daylight)
 
 ## temperature derivaties
 
-poSS$aveTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
+poSS$TempMean <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = mean)$Temperature_ITS90_DegC
 
-poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
+poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. <= 3
                        , FUN = median, na.rm=TRUE, refDF=poSS)
-poSS$minTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                           , FUN = min)$Temperature_ITS90_DegC
-poSS$deepTemp <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Temperature_ITS90_DegC"
-                                   , mc.cores = nCPUs))
-poSS$maxTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data=physOc
-                           , FUN=max)$Temperature_ITS90_DegC
+poSS$TempSurface <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. <= deepThd
+                 , FUN = mean, na.rm=TRUE, refDF=poSS)
+posS$TempDeep <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. > deepThd
+                      , FUN = mean, na.rm=TRUE, refDF=poSS)
+poSS$TempMin <- agg (Temperature_ITS90_DegC, data=physOc, FUN = min)$Temperature_ITS90_DegC
+poSS$TempBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Temperature_ITS90_DegC"
+                                   , mc.cores=nCPUs))
+poSS$TempMax <- agg (Temperature_ITS90_DegC, data=physOc, FUN=max)$Temperature_ITS90_DegC
 
 ## salinity derivities
-poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm = TRUE, refDF=poSS)
-poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
+poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$SalMean <- agg (Salinity_PSU~File.Name, data = physOc
                                , FUN = mean)$Salinity_PSU
-poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
+poSS$SalSurface <-agg (Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
+                       , FUN = mean, na.rm=TRUE, refDF=poSS)
+poSS$SalDeep <- -agg (Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+                      , FUN = mean, na.rm=TRUE, refDF=poSS)
+poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
                                   , mc.cores = nCPUs))
 
 ## density and other seawater properties
@@ -371,13 +369,41 @@ poSS$pclDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function 
 poSS$FreshWaterCont <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   require ("readr")
   fW <- subset (physOc, File.Name==fn) %>%
-    subset (Depth.saltwater..m. <= 10)  ## surface layer only
-  # fW <- subset (fW, Depth.saltwater..m. <= 10)  ## surface layer only
-  sum (32.8 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+    subset (Depth.saltwater..m. <= deepThd)  ## surface layer only  use deepThd XXX
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
+# poSS$FreshWaterCont30 <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+#   require ("readr")
+#   fW <- subset (physOc, File.Name==fn) %>%
+#     subset (Depth.saltwater..m. <= 30)  ## surface layer only
+#   sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+# }))
+poSS$FreshWaterContDeep <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, File.Name==fn) %>%
+    subset (Depth.saltwater..m. > deepThd)
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
+poSS$FreshWaterContDeep2 <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, File.Name==fn) %>%
+    subset (Depth.saltwater..m. > 40)
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 
 
 
+## which depth-cutoff?
+if (1){
+  png ("~/tmp/LCI_noaa/media/FreshWate20-40.png", height=11*200, width=8*200, res=200)
+  par (mfrow=c(3,1))
+  plot (FreshWaterContDeep~timeStamp, poSS, type="l")
+  plot (FreshWaterContDeep2~timeStamp, poSS, type="l")
+  # plot (FreshWaterCont~timeStamp, poSS)
+  # lines (FreshWaterCont30~timeStamp, poSS, col="red")
+  plot (FreshWaterContDeep~FreshWaterContDeep2, poSS)
+  dev.off()
+}
 
 ## plant stuff
 sAgg <- function (varN, data = physOc, FUN = sum, ...){
