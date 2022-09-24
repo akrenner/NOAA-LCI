@@ -301,20 +301,19 @@ poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m
                        , FUN = median, na.rm=TRUE, refDF=poSS)
 poSS$TempSurface <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. <= deepThd
                  , FUN = mean, na.rm=TRUE, refDF=poSS)
-posS$TempDeep <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. > deepThd
+poSS$TempDeep <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. > deepThd
                       , FUN = mean, na.rm=TRUE, refDF=poSS)
-poSS$TempMin <- agg (Temperature_ITS90_DegC, data=physOc, FUN = min)$Temperature_ITS90_DegC
+poSS$TempMin <- agg (physOc$Temperature_ITS90_DegC, FUN = min, refDF=poSS)
 poSS$TempBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Temperature_ITS90_DegC"
                                    , mc.cores=nCPUs))
-poSS$TempMax <- agg (Temperature_ITS90_DegC, data=physOc, FUN=max)$Temperature_ITS90_DegC
+poSS$TempMax <- agg (physOc$Temperature_ITS90_DegC, FUN=max, refDF=poSS)
 
-## salinity derivities
+## salinity derivatives
 poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
-poSS$SalMean <- agg (Salinity_PSU~File.Name, data = physOc
-                               , FUN = mean)$Salinity_PSU
-poSS$SalSurface <-agg (Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
+poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
+poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
                        , FUN = mean, na.rm=TRUE, refDF=poSS)
-poSS$SalDeep <- -agg (Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
                       , FUN = mean, na.rm=TRUE, refDF=poSS)
 poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
                                   , mc.cores = nCPUs))
