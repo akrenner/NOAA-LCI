@@ -319,7 +319,8 @@ poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PS
                                   , mc.cores = nCPUs))
 
 ## density and other seawater properties
-poSS$aveDens <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
+poSS$DensMean <- agg (physOc$Density_sigma.theta.kg.m.3, FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$DensBottom <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
                                   , mc.cores = nCPUs))
 rm (dMean, agg)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
@@ -350,6 +351,7 @@ rm (wcStab)
 
 ## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
 ## good indicator of presence of deep-water salinity gradient
+# XXX replace mclapply with agg, wherever possible! XXX
 poSS$bvfMean <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
   cast <- subset (physOc, File.Name==fn)
   mean (cast$bvf, na.rm=TRUE)
@@ -367,20 +369,12 @@ poSS$pclDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function 
 ## freshwater content
 poSS$FreshWaterCont <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   require ("readr")
-  fW <- subset (physOc, File.Name==fn) %>%
-    subset (Depth.saltwater..m. <= deepThd)  ## surface layer only  use deepThd XXX
+  fW <- subset (physOc, (File.Name==fn) & (Depth.saltwater..m. <= deepThd))  ## surface layer only  use deepThd XXX
   sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
-# poSS$FreshWaterCont30 <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
-#   require ("readr")
-#   fW <- subset (physOc, File.Name==fn) %>%
-#     subset (Depth.saltwater..m. <= 30)  ## surface layer only
-#   sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
-# }))
 poSS$FreshWaterContDeep <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
   require ("readr")
-  fW <- subset (physOc, File.Name==fn) %>%
-    subset (Depth.saltwater..m. > deepThd)
+  fW <- subset (physOc, (File.Name==fn) & (Depth.saltwater..m. > deepThd))
   sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep2 <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){

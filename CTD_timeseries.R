@@ -577,7 +577,7 @@ if (0){
 
 T96 <- subset (poSS, Match_Name=="9_6")
 png (paste0 (mediaD, "tempDeepTS.png"), res=100, height=8*100, width=8*100)
-plot (TempDeep~timeStamp, T96, type = "line")
+plot (TempDeep~timeStamp, T96, type = "l")
 abline (h=4, lty="dashed") # mark 4 degrees C
 dev.off()
 
