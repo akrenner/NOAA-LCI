@@ -16,7 +16,7 @@ rm (list = ls())
 print (Sys.time())
 
 
-deepThd <- 20 ## bottom threshold -- everything above considered surface,
+deepThd <- 15 ## bottom threshold -- everything above considered surface,
                 ## everything below bottom water
 
 ## file structure:

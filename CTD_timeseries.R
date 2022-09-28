@@ -8,6 +8,7 @@
 ## load data
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physOc -- raw CTD profiles
+require ("oce")
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -37,11 +38,30 @@ rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physO
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
 
+deepThd <- 15   ## deep vs surface layer
 
 plotRAW <- FALSE
- plotRAW <- TRUE
+plotRAW <- TRUE
+pngR <- 300
 
-quantR <- 0.99
+quantR <- 0.99  ## curtail data at this percentile
+
+
+
+## nauseating rainbow
+tCol <- oceColorsTurbo(50)
+odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+salCol <- colorRampPalette (col=odv, bias=0.3)(50)
+rm (odv)
+
+## modern colors -- overwrite
+if (1){
+  tCol <- oceColorsTemperature (11)
+  salCol <- oceColorsSalinity (11)
+}
+
+
+
 
 
 
@@ -69,6 +89,10 @@ dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
 save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
+anomF <- function (var, date){
+  ## calculate a seasonal anomaly function. Return normal and anomaly for each month of each year
+
+  }
 
 pickStn <- which (levels (physOc$Match_Name) %in%
                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
@@ -208,16 +232,18 @@ for (k in pickStn){
   }
 
 
-  TSaxis <- function (isoTime, axes=TRUE){
+  TSaxis <- function (isoTime, axes=TRUE, verticals=TRUE){
     tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-01-01")))
     lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-07-01")))
-    abline (v = tAx)
+    if (verticals){
+      abline (v = tAx, lty="dashed")
+    }
     if (axes == TRUE){
       axis (1, at = tAx, label = FALSE)
       axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
     }
-
   }
+
   plot.station <- function (section, axes = TRUE, ...){
     plot (section, showBottom = FALSE, xtype = "time", ztype = "image"
           #, at = FALSE
@@ -226,14 +252,13 @@ for (k in pickStn){
           , axes = FALSE, ...
           , xlab="", ylab="")
     axis (2, at = c(0, 20, 40, 60, 80, 100))
-    TSaxis (xC$isoTime)
   }
 
 
   require ("RColorBrewer")
-  pdf (paste0 (mediaD, stnK, "-profile.pdf")
-       , height = 11, width = 8.5)
-  if (plotRAW){
+#  pdf (paste0 (mediaD, stnK, "-profile.pdf"), height = 11, width = 8.5)
+  png (paste0 (mediaD, stnK, "-profile.png"), height = 11*pngR, width = 8.5*pngR, res=pngR)
+    if (plotRAW){
     par (mfrow=c(5,1))
   }else{
     par (mfrow=c(3,1))
@@ -254,21 +279,23 @@ for (k in pickStn){
   if (plotRAW){
     ## time series of raw data
     plot.station (xCS, which="temperature"
-                  , zcol=oceColorsTemperature (11)
+                  , zcol=tCol
                   # , zbreaks=sF (xC$Temperature_ITS90_DecC)
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
                    , mar=c(2.5,4,2.3,1.2)  ## default:  3.0 3.5 1.7 1.2
     )
+    TSaxis (xC$isoTime)
     title (main="temperature [°C]", line=1.2)
     ## station-ticks
     axis (3, at=xC$isoTime, labels=FALSE)
 
-    zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)), by=0.5)
+    zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)),length.out=length (salCol)+1)
     plot.station (xCS, which="salinity"
-                  , zcol = oceColorsSalinity(length (zB)-1)
+                  , zcol = salCol
                   , zbreaks=zB
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
     )
+    TSaxis (xC$isoTime)
     title (main="salinity [PSU]")
   }
 
@@ -279,12 +306,14 @@ for (k in pickStn){
                 , zbreaks = zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
+  TSaxis (xC$isoTime)
   # legend ("bottomright", legend="temperature anomaly [°C]", fill="white") #, bty="n")
   title (main="temperature anomaly [°C]")
 
-  zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. <= 10))
-  plot.station (mkSection (subset (xC, Depth.saltwater..m. <= 10))
-                , which="anSal", zcol=brewer.pal (11, "PiYG")
+  zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. <= deepThd))
+  plot.station (mkSection (subset (xC, Depth.saltwater..m. <= deepThd))
+                , which="anSal"
+                , zcol=oceColors9B(length (zB)-1)  # brewer.pal (11, "PiYG")
                 , zbreaks=zB
                 , axes=FALSE
                 , xlab=""
@@ -292,18 +321,21 @@ for (k in pickStn){
                  , mar=c(1.0,3.5,3.7,1.2)  #default:  3.0 3.5 1.7 1.2
                 , legend.loc="" #legend.text="salinity anomaly [PSU]"
                 )
-  axis (2, at = seq (0, 10, by = 2))
+  axis (2, at = pretty (0:deepThd))
   title (main="salinity anomaly [PSU]")
 
 
-  zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. > 10))
-  plot.station (mkSection (subset (xC, Depth.saltwater..m. > 10))
-                , which="anSal", zcol=brewer.pal (11, "PiYG")
+  zB <- sF (subset (xC$anSal, xC$Depth.saltwater..m. > deepThd))
+  plot.station (mkSection (subset (xC, Depth.saltwater..m. > deepThd))
+                , which="anSal"
+                , zcol=oceColors9B(length (zB)-1)  # brewer.pal (11, "PiYG")
                 , zbreaks=zB
                # , ylim=c(-10,-1*max (xC$Depth.saltwater..m.))
+               # , ylim=c(deepThd, max (xC$Depth.saltwater..m.))  ## still places a zero -- report bug
                , mar=c(4.7,3.5,0,1.2) # default:  3.0 3.5 1.7 1.2
                , legend.loc=""
                 )
+  TSaxis (xC$isoTime)
   rm (zB)  ## keep xCS for buoyancy
 
   mtext ("Depth [m]", side=2, outer=TRUE)
@@ -359,7 +391,8 @@ for (k in pickStn){
   rm (ctdAggD)
 
 
-  anAx <- function (dAx = c(0, 50, 100)){  ## annotations for x-axis
+  anAx <- function (dAx = c(0, 50, 100)){  ## annotations for x-axis -- for one year
+    ## XXX make option for time series and for climatology
     axis (1, at = as.POSIXct (as.Date (paste0 ("2000-", 1:12, "-01"))), label = FALSE)
     axis (1, at = as.POSIXct (as.Date (paste0 ("2000-", 1:12, "-15"))), label = month.abb, tick = FALSE)
     axis (2, at = dAx)
@@ -372,80 +405,99 @@ for (k in pickStn){
   }
 
   # pdf (paste0 (mediaD, stnK, "-climatology.pdf"), height = 11.5, width = 8)
-  png (paste0 (mediaD, stnK, "-climatology.png"), height=11.5*300, width=8*300, res=300)
+  png (paste0 (mediaD, stnK, "-climatology.png"), height=11.5*pngR, width=8*pngR, res=pngR)
   par (mfrow=c(2,1))
   clPlot (cT9, which = "temperature"
-          , zcol = oceColorsTurbo(11) # oceColorsTemperature (11)
+          , zcol=tCol
           , zbreaks = seq (min (ctdAgg$Temperature_ITS90_DegC)
-                           , max (ctdAgg$Temperature_ITS90_DegC), length.out = 12)
+                           , max (ctdAgg$Temperature_ITS90_DegC), length.out = length (tCol)+1)
           # , zlim = c(4,12)
           )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
     odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
     colorRampPalette (col=odv, bias=0.3) #,
-  clPlot (cT9, which = "salinity"
-           , zcol =  colorRampPalette (col=odv, bias=0.3)(11) #oceColorsSalinity(11)
-          , zbreaks = seq (28, 31.5, length.out = 12)
-          # , zlim = c(28,31.5)
-          )
+    clPlot (cT9, which = "salinity"
+            , zcol = salCol
+            , zbreaks = seq (28, 31.5, length.out=length(salCol)+1)
+            # , zlim = c(28,31.5)
+    )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
 
 
   ## fluorescence
   # pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
-  png (paste0 (mediaD, stnK, "-fluorescence-climatology.png"))
-  par (las = 1)
+  png (paste0 (mediaD, stnK, "-fluorescence-climatology.png"), res=pngR, height=11*pngR, width=8.5*pngR)
+  par (las = 1, mfrow=c(3,1))
   clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
 #  anAx(dAx = seq (0, 100, by = 20))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
+
+## add time series and anomaly
+  plot.station (xCS, which="fluorescence"
+                , zcol=oceColorsChlorophyll(32)
+                # , zbreaks=zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
+  )
+  title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+  TSaxis (xCS@metadata$time)
+## add totals?
+# aggregate (Fluorescence_mg_m3~date, xC)
   dev.off()
 
 
   ## buoyancy
 #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-  rS <- 200
-  png (paste0 (mediaD, stnK, "-buoyancy-climatology.png"), height=11.5*rS, width=8*rS, res=rS)
-  rm (rS)
-  par (mfrow=c(5,1))
+  png (paste0 (mediaD, stnK, "-buoyancy-climatology.png"), height=11.5*pngR, width=8*pngR, res=pngR)
+  par (mfrow=c(3,1))
   ## raw buoyancy profile
-  ## buoyancy-anomaly profile??
   ## bvf climatology
   ## max-bvf time-series -- with seasonal signal
-  ## depth of pycnocline time-series -- with seasonal signal (or anomaly?)
+  ## ?? depth of pycnocline time-series in summer -- with seasonal signal (or anomaly?)
 
   ## raw time-series profile
   #zB <- seq (0, ceiling(max (xC$bvf, na.rm=TRUE)), by=0.5)
   require ("cmocean")  ## for color ramp cmocean -- just use viridis
   options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
-  plot.station (xCS, which="bvf"
-                , zcol=colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
-                # , zbreaks=zB
-                , legend.loc="" #legend.text="temperature anomaly [°C]"
-  )
-  title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
-
-  ## anomaly  (too noisy?)
-  zB <- sF (v=xC$anBvf, qR=0.90)
-  plot.station (xCS, which="anBvf"
-                , zcol=brewer.pal (11, "PiYG")
-                , zbreaks=zB
-                , legend.loc="" #legend.text="temperature anomaly [°C]"
-  )
-  title (main=expression (Buoyancy~frequency~Anomaly~"["*s^-2*"]"))
 
   ## seasonal climatology
   clPlot (cT9, which="sBvf"
           , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
   )
   anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+  title (main=expression (Brunt~Väisälä~Buoyancy~frequency-seasonal~climatology~"["*s^-2*"]"))
+
+  ## raw time series of buoyancy
+    plot.station (xCS, which="bvf"
+                , zcol=colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
+                # , zbreaks=zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
+                , ylim=c(0,20)
+  )
+  title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+  TSaxis (xCS@metadata$time)
+
+### XXX anAx (pre)
+  if(0){
+  ## anomaly  (too noisy?)
+  zB <- sF (v=xC$anBvf, qR=0.90)
+  plot.station (xCS, which="anBvf"
+                , zcol=brewer.pal (11, "RdBu")
+                , zbreaks=zB
+                , legend.loc="" #legend.text="temperature anomaly [°C]"
+  )
+  title (main=expression (Buoyancy~frequency~Anomaly~"["*s^-2*"]"))
+  }
+
 ## summaries: timeseries of strength of stratification and pycnocline depth
   plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-#  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+#  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## almost the same as max
   plot (pclDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-#  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
-  dev.off()
+#  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## noisy -- errors?
+
+  ## add: anomaly and climatology of bvfMax XXX
+    dev.off()
 
   })
 }
@@ -464,18 +516,18 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 #########################
 
 ## move this elsewhere! -- signature data?
+## aggregate Freshwater contents over surface layer of T9
+xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
+fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=sum, na.rm=FALSE)
+fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=sum, na.rm=FALSE)$FreshWaterContDeep
 
-fw <- subset (xC, Depth.saltwater..m. <= 10)
-fw <- aggregate (Salinity_PSU~Date, data = fw, FUN = function (x){
-  sum (max (xC$Salinity_PSU, na.rm = TRUE)-x, na.rm = FALSE)
-})
-names (fw) <- c ("Date", "freshCont")
+names (fw) <- c ("Date", "freshCont", 'freshDeep')
 fw$Date <- as.POSIXct(as.Date (fw$Date))
 fw$month <- as.numeric (format (fw$Date, "%m"))
 fw$year <- as.numeric (format (fw$Date, "%Y"))
 
 ## QAQC
- is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
+# is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
@@ -491,13 +543,11 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 
 
+## add freshwater -- deep
 
 # pdf (paste0 (mediaD, "T9S6_freshwatercontent.pdf"), height = 9, width = 6)
-rS <- 200
-png (paste0 (mediaD, "T9S6_freshwatercontent.png"), height=9*rS, width=6*rS, res=rS)
-rm (rS)
-par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1)
-)
+png (paste0 (mediaD, "T9_freshwatercontent.png"), height=9*pngR, width=6*pngR, res=pngR)
+par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1))
 ## time series
 plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
 ## seasonal climatology
@@ -513,25 +563,27 @@ legend ("topleft", legend = c("monthly mean", "seasonal spline", "seasonal loess
         , lwd = 2
 )
 ## freshwater anomaly
-plot (fwA ~ Date, fw, type = "l", ylab = "freshwater contents anomaly")
+plot (fwA~Date, fw, type = "l", ylab = "freshwater contents anomaly", axes=FALSE)
+axis (2)
 abline (h = 0, col = "gray")
 #  plot (f)
-TSaxis (xC$isoTime)
+TSaxis (poSS$timeStamp)
+# TSaxis (xC$isoTime)
 dev.off()
 
 
 
 
 ### timing of freshwater -- panel for each year ###
-require ("lattice")
-pdf (paste0 (mediaD, "T9S6_freshSeason.pdf"), width = 7, height = 9)
-print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
-print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
-               , xlab = "freshwater anomaly"))
-
-# plot ()
-dev.off()
-
+if (0){
+  require ("lattice")
+  # pdf (paste0 (mediaD, "T9S6_freshSeason.pdf"), width = 7, height = 9)
+  png (paste0 (mediaD, "T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
+  print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
+  print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
+                 , xlab = "freshwater anomaly"))
+  dev.off()
+}
 
 
 
@@ -576,10 +628,37 @@ if (0){
 ## - timing of x degree C in spring
 
 T96 <- subset (poSS, Match_Name=="9_6")
-png (paste0 (mediaD, "tempDeepTS.png"), res=100, height=8*100, width=8*100)
-plot (TempDeep~timeStamp, T96, type = "l")
+T96 <- T96 [order (T96$timeStamp),]
+
+if (0){
+  plot (TempDeep~TempBottom, T96)
+  abline(a=0,b=1)
+}
+
+png (paste0 (mediaD, "tempDeepTS.png"), res=pngR, height=8*pngR, width=8*pngR)
+par (mfrow=c(3,1))
+plot (TempBottom~timeStamp, T96, type = "l", main="Bottom temperature at T9-6"
+      , ylab=expression('Temperature'~'['*degree~'C'*']')
+      , xlab="", axes=FALSE)
+axis (2)
+TSaxis(T96$timeStamp, verticals=FALSE)
 abline (h=4, lty="dashed") # mark 4 degrees C
+
+## anomaly
+
+
+## plot timing of 4 degrees C over year
+t4C <- aggregate (TempBottom~Year, function (x){
+## find earliest date of T > 4 degrees per year
+#  x <- approx (T96$timeStamp, T96$TempBottom, n=1000)
+})
+
+
 dev.off()
+
+## earliest day per year to reach 4 degrees C -- still useful?
+
+
 
 
 
