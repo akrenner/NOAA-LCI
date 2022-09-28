@@ -303,7 +303,7 @@ poSS$TempSurface <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.salt
                  , FUN = mean, na.rm=TRUE, refDF=poSS)
 poSS$TempDeep <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. > deepThd
                       , FUN = mean, na.rm=TRUE, refDF=poSS)
-poSS$TempMin <- agg (physOc$Temperature_ITS90_DegC, FUN = min, refDF=poSS)
+poSS$TempMin <- agg (physOc$Temperature_ITS90_DegC, FUN=min, refDF=poSS)
 poSS$TempBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Temperature_ITS90_DegC"
                                    , mc.cores=nCPUs))
 poSS$TempMax <- agg (physOc$Temperature_ITS90_DegC, FUN=max, refDF=poSS)
@@ -312,11 +312,11 @@ poSS$TempMax <- agg (physOc$Temperature_ITS90_DegC, FUN=max, refDF=poSS)
 poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
 poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
-                       , FUN = mean, na.rm=TRUE, refDF=poSS)
-poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
-                      , FUN = mean, na.rm=TRUE, refDF=poSS)
+                       , FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$SalDeep <- -agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+                      , FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
-                                  , mc.cores = nCPUs))
+                                  , mc.cores=nCPUs))
 
 ## density and other seawater properties
 poSS$DensMean <- agg (physOc$Density_sigma.theta.kg.m.3, FUN=mean, na.rm=TRUE, refDF=poSS)

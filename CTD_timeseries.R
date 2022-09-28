@@ -64,9 +64,18 @@ if (1){
 
 
 
+temperatCol <- oceColorsTurbo(50) # oceColorsTemperature (11)
+
+odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+# colorRampPalette (col=odv, bias=0.3) #,
+salCol <- colorRampPalette (col=odv, bias=0.3)(50) #oceColorsSalinity(11)
+
+
+
+
+
 
 ### data prep
-require ("oce")
 ## define sections
 physOc$DateISO <- format (physOc$isoTime, "%Y-%m-%d")
 # physOc$transDate <- factor (with (physOc, paste (DateISO, Transect, sep = " T-")))
@@ -415,7 +424,6 @@ for (k in pickStn){
           )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
-    odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
     colorRampPalette (col=odv, bias=0.3) #,
     clPlot (cT9, which = "salinity"
             , zcol = salCol
