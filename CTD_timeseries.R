@@ -49,27 +49,16 @@ quantR <- 0.99  ## curtail data at this percentile
 
 
 ## nauseating rainbow
-tCol <- oceColorsTurbo(50)
-odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
-salCol <- colorRampPalette (col=odv, bias=0.3)(50)
-rm (odv)
+temperatCol <- oceColorsTurbo(50) # oceColorsTemperature (11)
+## ODV colors
+salCol <- colorRampPalette (col=rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+                            , bias=0.3)(50) #oceColorsSalinity(50)
 
 ## modern colors -- overwrite
 if (1){
   tCol <- oceColorsTemperature (11)
   salCol <- oceColorsSalinity (11)
 }
-
-
-
-
-
-temperatCol <- oceColorsTurbo(50) # oceColorsTemperature (11)
-
-odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
-# colorRampPalette (col=odv, bias=0.3) #,
-salCol <- colorRampPalette (col=odv, bias=0.3)(50) #oceColorsSalinity(11)
-
 
 
 
@@ -98,10 +87,40 @@ dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
 save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
-anomF <- function (var, date){
-  ## calculate a seasonal anomaly function. Return normal and anomaly for each month of each year
 
-  }
+## long term mean / anomaly functions
+longM <- function (var, date, maO=31){  ## cyclical long-term mean -- move this to annualPlotFct.R ?
+  ## calculate long term mean of var for use in anomaly calculation
+  ## smooth using zoo moving average smoother
+  if (length (var) != length (date)){stop ("var and date have to be of equal length")}
+  # df <- data.frame (var, date)
+  # df <- df [order (df$date),]
+  jday=as.numeric (format (date, "%j"))-1  # 1 jan needs to be day 0, not 1!
+  df <- rbind (data.frame (var, date, jday=jday-365)
+               , data.frame (var, date, jday)
+               , data.frame (var, date, jday=jday+365)
+  )
+  aD <- aggregate (var~jday, df, FUN=mean, na.rm=TRUE)
+  aD2 <- data.frame (jday=-366:(366*2))
+  aD2$var <- aD$var [match (aD2$jday, aD$jday)]
+  suppressPackageStartupMessages(require ("zoo"))
+  aD2$MA <- zoo::rollapply(aD2$var, width=maO, FUN=mean, na.rm=TRUE ## critical for monthly data!
+                           , fill=c(NA, "extend", NA)
+                           , partial=FALSE, align = "center")
+  #aD2$MA <- na.approx (aD2$MA, na.rm=FALSE, x=aD2$jday)   # order is important -- this last (or biased)
+  aD2$MA <- na.spline (aD2$MA, na.rm=FALSE, x=aD2$jday)   # order is important -- this last (or biased)
+  aD2$loss <- predict (loess (MA~jday, aD2))
+  oD <- subset (aD2, (0 < jday)  & (jday < 367))
+  oD
+}
+anomF <- function (var, date, longM){
+  df <- data.frame (var, date, jday=format (date, "%j"))
+  ## longM needs to contain MA and jday!
+  df$anom <- df$var - longM$MA [match (df$jday, longM$jday)]
+  df$anom
+}
+
+
 
 pickStn <- which (levels (physOc$Match_Name) %in%
                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
@@ -424,12 +443,11 @@ for (k in pickStn){
           )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
-    colorRampPalette (col=odv, bias=0.3) #,
-    clPlot (cT9, which = "salinity"
-            , zcol = salCol
-            , zbreaks = seq (28, 31.5, length.out=length(salCol)+1)
-            # , zlim = c(28,31.5)
-    )
+  clPlot (cT9, which = "salinity"
+          , zcol = salCol
+          , zbreaks = seq (28, 31.5, length.out=length(salCol)+1)
+          # , zlim = c(28,31.5)
+  )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
   dev.off()
 
@@ -629,38 +647,87 @@ if (0){
 
 
 
-## deep water temperature time series
+
+
+########################################
+## deep water temperature time series ##
+########################################
+
 ## - raw time series
 ## - superimposed anomalies/seasonal mean
 ## - marking first day >= threshold temperature in spring
 ## - timing of x degree C in spring
 
 T96 <- subset (poSS, Match_Name=="9_6")
-T96 <- T96 [order (T96$timeStamp),]
+T96 <- T96@data [order (T96$timeStamp),]
+require ("tidyr")
+
+tbnorm <- longM (T96$TempBottom, T96$timeStamp)
+T96$TempBot_anom <- anomF(T96$TempBottom, T96$timeStamp, tbnorm)
+## see annualPlotFct.R::fixGap
+T96f <- data.frame (timeStamp=seq (min (T96$timeStamp), max (T96$timeStamp), by=3600*24))
+T96f$Date <- as.character (as.Date(T96f$timeStamp))
+T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
+T96f$TempBottom <- T96$TempBottom [match (T96f$Date, T96$Date)]
+T96f$TempBottomN <- na.approx (T96f$TempBottom, x=T96f$timeStamp, na.rm=FALSE)
+T96f$TempBot_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
+
+
+# T96$jday <- as.numeric (format (T96$timeStamp, "%j"))-1
+# T96$TempBot_norm <- tbnorm$MA [match (T96$jday, tbnorm$jday)]
 
 if (0){
   plot (TempDeep~TempBottom, T96)
   abline(a=0,b=1)
 }
 
+
+
 png (paste0 (mediaD, "tempDeepTS.png"), res=pngR, height=8*pngR, width=8*pngR)
 par (mfrow=c(3,1))
-plot (TempBottom~timeStamp, T96, type = "l", main="Bottom temperature at T9-6"
+plot (TempBottomN~timeStamp, T96f, type="n", main="Bottom temperature at T9-6"
       , ylab=expression('Temperature'~'['*degree~'C'*']')
       , xlab="", axes=FALSE)
 axis (2)
-TSaxis(T96$timeStamp, verticals=FALSE)
+TSaxis(T96f$timeStamp, verticals=FALSE)
 abline (h=4, lty="dashed") # mark 4 degrees C
-
-## anomaly
-
+## add lines, marking the anomaly in blue/red
+for (i in 1:nrow (T96f)){
+  with (T96f, lines (x=rep (timeStamp [i], 2)
+                    ,y=c(TempBot_norm [i], TempBottomN[i])
+                    , col=ifelse (TempBottomN [i] > TempBot_norm [i], "red", "blue")
+                    , lwd=2
+                    ))
+}
+# lines (TempBottomN~timeStamp, T96f, col="black", lwd=2)
+lines (TempBot_norm~timeStamp, T96f, col="gray", lwd=3)
+box()
 
 ## plot timing of 4 degrees C over year
-t4C <- aggregate (TempBottom~Year, function (x){
-## find earliest date of T > 4 degrees per year
-#  x <- approx (T96$timeStamp, T96$TempBottom, n=1000)
+T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
+
+
+thTempL <- seq (4, 6, by=0.5)
+
+springM <- sapply (thTempL, function (y){
+  aggregate (TempBottomN~Year, data=T96f, function (x, thTemp=y){
+    x <- c (-1, x)
+    first4 <- min ((1:length (x))[x <=4], na.rm=TRUE)
+    last4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+    lD <- ifelse (last4==1, NA, last4)
+    as.Date("2000-01-01")+lD
+    # last4
+  })$TempBottomN
 })
 
+rownames(springM) <- levels (factor (T96f$Year))
+springM <- as.Date (springM)
+
+plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab="")
+for (i in 1:length (thTempL)){
+  points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
+}
+legend ("bottomright", pch=19, col=1:nrow (springM), legend=thTempL)
 
 dev.off()
 
