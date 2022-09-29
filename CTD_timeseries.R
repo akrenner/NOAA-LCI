@@ -38,7 +38,7 @@ require ("oce")
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
 
-deepThd <- 15   ## deep vs surface layer
+deepThd <- 20   ## deep vs surface layer
 
 plotRAW <- FALSE
 plotRAW <- TRUE
@@ -126,6 +126,7 @@ pickStn <- which (levels (physOc$Match_Name) %in%
                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
 pickStn <- 1:length (levels (physOc$Match_Name))
 pickStn <- 87 # 9-6
+
 for (k in pickStn){
   try ({
   # k <- 87  ## 9-6
@@ -466,11 +467,39 @@ for (k in pickStn){
                 # , zbreaks=zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
-  title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+  title (main=expression (Chlorophyll~a~"["*mg~m^-3*"]"))
   TSaxis (xCS@metadata$time)
-## add totals?
-# aggregate (Fluorescence_mg_m3~date, xC)
+
+  ## total chlorophyll time series plot
+  clf <- aggregate (Fluorescence_mg_m3~Date, xC, FUN=sum, na.rm=TRUE)
+  names (clf) <- c ("Date", "Fluorescence")
+  clf$Date <- as.Date (clf$Date)
+  clfnorm <- longM (clf$Fluorescence, clf$Date)
+  T96f <- data.frame (timeStamp=seq (min (xC$isoTime), max (xC$isoTime), by=3600*24)) ## standardize timeStamp vs isoTime
+  T96f$Date <- as.Date(T96f$timeStamp)
+  T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
+  T96f$chl <- clf$Fluorescence [match (T96f$Date, clf$Date)]
+  T96f$chlN <- na.approx (T96f$chl, x=T96f$timeStamp, na.rm=FALSE)
+  T96f$chl_norm <- clfnorm$MA [match (T96f$jday, clfnorm$jday)]
+  rm (clfnorm)
+
+  # plot (chlN~Date, T96f, type="l", ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
+  # lines (chl_norm~Date, T96f, col = "lightgreen")
+  # for (i in 1:nrow (T96f)){
+  #   with (T96f, lines (x=rep (Date [i], 2)
+  #                      ,y=c(chl_norm [i], chlN[i])
+  #                      , col=ifelse (chlN [i] > chl_norm [i], "darkgreen", "lightgreen")
+  #                      , lwd=2
+  #   ))
+  # }
+  plot (chlN~Date, T96f, pch=19
+        , col=ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
+        , ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
+  lines (chl_norm~Date, T96f, col = "gray")
+  legend ("topright", lwd=5, col=c("darkgreen", "lightgreen"), legend=c("more", "less"))
+  abline (v = min (physOc$year):max (physOc$year), col="gray", lty="dashed")
   dev.off()
+  rm (T96f, clf)
 
 
   ## buoyancy
@@ -499,7 +528,7 @@ for (k in pickStn){
                 , zcol=colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
                 # , zbreaks=zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
-                , ylim=c(0,20)
+                , ylim=c(0,deepThd)
   )
   title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
   TSaxis (xCS@metadata$time)
@@ -519,7 +548,7 @@ for (k in pickStn){
 ## summaries: timeseries of strength of stratification and pycnocline depth
   plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
 #  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## almost the same as max
-  plot (pclDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+#  plot (pclDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## maybe useful for summer-only
 #  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## noisy -- errors?
 
   ## add: anomaly and climatology of bvfMax XXX
@@ -546,6 +575,8 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
 fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=sum, na.rm=FALSE)
 fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=sum, na.rm=FALSE)$FreshWaterContDeep
+fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
+fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
 
 names (fw) <- c ("Date", "freshCont", 'freshDeep')
 fw$Date <- as.POSIXct(as.Date (fw$Date))
@@ -595,6 +626,7 @@ abline (h = 0, col = "gray")
 #  plot (f)
 TSaxis (poSS$timeStamp)
 # TSaxis (xC$isoTime)
+box()
 dev.off()
 
 
@@ -648,6 +680,8 @@ if (0){
 
 
 
+save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
 
 ########################################
 ## deep water temperature time series ##
@@ -671,10 +705,7 @@ T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
 T96f$TempBottom <- T96$TempBottom [match (T96f$Date, T96$Date)]
 T96f$TempBottomN <- na.approx (T96f$TempBottom, x=T96f$timeStamp, na.rm=FALSE)
 T96f$TempBot_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
-
-
-# T96$jday <- as.numeric (format (T96$timeStamp, "%j"))-1
-# T96$TempBot_norm <- tbnorm$MA [match (T96$jday, tbnorm$jday)]
+rm (tbnorm)
 
 if (0){
   plot (TempDeep~TempBottom, T96)
@@ -706,15 +737,13 @@ box()
 ## plot timing of 4 degrees C over year
 T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
-
 thTempL <- seq (4, 6, by=0.5)
-
 springM <- sapply (thTempL, function (y){
   aggregate (TempBottomN~Year, data=T96f, function (x, thTemp=y){
+    lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
     x <- c (-1, x)
-    first4 <- min ((1:length (x))[x <=4], na.rm=TRUE)
-    last4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
-    lD <- ifelse (last4==1, NA, last4)
+    x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+    lD <- ifelse (x4==1, NA, x4)
     as.Date("2000-01-01")+lD
     # last4
   })$TempBottomN
@@ -728,7 +757,7 @@ plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab="
 for (i in 1:length (thTempL)){
   points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
 }
-legend ("bottomright", pch=19, col=1:nrow (springM), legend=thTempL)
+legend ("top", pch=19, col=1:nrow (springM), legend=thTempL)
 
 dev.off()
 
