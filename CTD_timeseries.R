@@ -684,7 +684,7 @@ if (0){
 
 
 png (paste0 (mediaD, "tempDeepTS.png"), res=pngR, height=8*pngR, width=8*pngR)
-par (mfrow=c(3,1))
+par (mfrow=c(2,1))
 plot (TempBottomN~timeStamp, T96f, type="n", main="Bottom temperature at T9-6"
       , ylab=expression('Temperature'~'['*degree~'C'*']')
       , xlab="", axes=FALSE)
@@ -723,7 +723,8 @@ springM <- sapply (thTempL, function (y){
 rownames(springM) <- levels (factor (T96f$Year))
 springM <- as.Date (springM)
 
-plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab="")
+plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab=""
+       , main="Timing of threshold bottom temperature")
 for (i in 1:length (thTempL)){
   points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
 }
