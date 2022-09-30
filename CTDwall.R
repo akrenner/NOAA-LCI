@@ -380,7 +380,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
           }
           if (iY==1){ ## big title on top
-            mtext (text = oVars [ov], side=3, cex=4, outer=TRUE)  ## always?
+            mtext (text = toupper(oVars [ov]), side=3, cex=4, outer=TRUE, line=3)  ## always?
           }
           ## addBorder (xCo, TD[ov]-1)
 
