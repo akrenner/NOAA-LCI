@@ -70,7 +70,7 @@ physOc$DateISO <- format (physOc$isoTime, "%Y-%m-%d")
 # physOc$transDate <- factor (with (physOc, paste (DateISO, Transect, sep = " T-")))
 physOc$transDate <- factor (with (physOc, paste0 ("T-", Transect, " ", DateISO)))
 physOc$Transect <- factor (physOc$Transect)
-physOc$year <- factor (format (physOc$isoTime, "%Y"))
+physOc$year <- as.numeric (format (physOc$isoTime, "%Y"))
 ## combine CTD and station meta-data
 physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through the cracks??
 ## stn should be no longer needed -- see dataSetup.R
@@ -119,6 +119,19 @@ anomF <- function (var, date, longM){
   df$anom <- df$var - longM$MA [match (df$jday, longM$jday)]
   df$anom
 }
+# require ("mgcv")  ## patterns in residuals -- stick with loess
+# gam (Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
+anoF <- function (varN, df=sDF){
+  vN <- which (names (df) == varN)
+  sOut <- sapply (levels (df$depthR), FUN=function (i){
+    loess (as.formula(paste0 (varN, "~monthI"))
+           , df, subset=depthR==i
+           , span=0.25)$fitted[(1:12)+12]
+  })
+  sapply (1:nrow (ctdAgg), FUN=function (i){
+    sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]
+  })
+}
 
 
 
@@ -129,7 +142,7 @@ pickStn <- 87 # 9-6
 
 for (k in pickStn){
   try ({
-  # k <- 87  ## 9-6
+#   k <- 87  ## 9-6
   stnK <- levels (physOc$Match_Name)[k]
   cat (stnK, "\n")
   xC <- subset (physOc, Match_Name == stnK)
@@ -171,19 +184,6 @@ for (k in pickStn){
   # lines (lS$x, lS$fitted, col = "green")
   # lines (lS$x, gS$fitted.values, col = "blue")
 
-  # require ("mgcv")  ## patterns in residuals -- stick with loess
-  # gam (Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
-  anoF <- function (varN, df=sDF){
-    vN <- which (names (df) == varN)
-    sOut <- sapply (levels (df$depthR), FUN=function (i){
-      loess (as.formula(paste0 (varN, "~monthI"))
-             , df, subset=depthR==i
-             , span=0.25)$fitted[(1:12)+12]
-    })
-    sapply (1:nrow (ctdAgg), FUN=function (i){
-      sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]
-    })
-  }
   ctdAgg$tloess <- anoF ("Temperature_ITS90_DegC")
   ctdAgg$sloess <- anoF ("Salinity_PSU")
   ctdAgg$floess <- anoF ("Fluorescence_mg_m3")
@@ -496,7 +496,7 @@ for (k in pickStn){
         , col=ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
         , ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
   lines (chl_norm~Date, T96f, col = "gray")
-  legend ("topright", lwd=5, col=c("darkgreen", "lightgreen"), legend=c("more", "less"))
+  legend ("topright", lwd=5, col=c("darkgreen", "lightgreen"), legend=c("more", "less"), bty="n")
   abline (v = min (physOc$year):max (physOc$year), col="gray", lty="dashed")
   dev.off()
   rm (T96f, clf)
@@ -546,14 +546,30 @@ for (k in pickStn){
   }
 
 ## summaries: timeseries of strength of stratification and pycnocline depth
-  plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
+  ### plot (bvfMax~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")
 #  plot (bvfMean~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## almost the same as max
 #  plot (pclDepth~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## maybe useful for summer-only
 #  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## noisy -- errors?
 
-  ## add: anomaly and climatology of bvfMax XXX
-    dev.off()
+  ## boyancy long-term mean
+  tbnorm <- longM (poSS$bvfMax, poSS$timeStamp)
+  T96f <- data.frame (timeStamp=seq (min (poSS$timeStamp), max (poSS$timeStamp), by=3600*24))
+  T96f$Date <- as.character (as.Date(T96f$timeStamp))
+  T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
+  T96f$TempS <- poSS$bvfMax [match (T96f$Date, poSS$Date)]
+  T96f$TempSN <- na.approx (T96f$TempS, x=T96f$timeStamp, na.rm=FALSE)
+  T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
 
+  plot (TempSN~timeStamp, T96f, type="n", main="Max buoyancy frequency"
+        , ylab= "" #expression('Temperature'~'['*degree~'C'*']')
+        , xlab="", axes=FALSE)
+  axis (2)
+  TSaxis(T96f$timeStamp, verticals=FALSE)
+  lines (TempSN~timeStamp, T96f, col="black", lwd=2)
+  lines (TempS_norm~timeStamp, T96f, col="blue", lwd=2)
+  legend ("topright", lwd=2, col=c("black", "blue"), legend=c("max buoyancy", "seasonal mean"), bty="n")
+
+  dev.off()
   })
 }
 ## alternative display of this data:
@@ -597,7 +613,7 @@ md <- gam (freshCont~s(month), data = fwS)
 lS <- loess (freshCont~month, data = fwS, span = 0.2)
 ## stick with monthly means for now, rather than smooth
 fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
-
+# fw$fwA <-
 
 
 ## add freshwater -- deep
@@ -692,80 +708,91 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
 ## - marking first day >= threshold temperature in spring
 ## - timing of x degree C in spring
 
-T96 <- subset (poSS, Match_Name=="9_6")
-T96 <- T96@data [order (T96$timeStamp),]
+T96 <- subset (poSS@data, Match_Name=="9_6")  ## migrate to sf
+T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
+require ("RColorBrewer")
 
-tbnorm <- longM (T96$TempBottom, T96$timeStamp)
-T96$TempBot_anom <- anomF(T96$TempBottom, T96$timeStamp, tbnorm)
-## see annualPlotFct.R::fixGap
-T96f <- data.frame (timeStamp=seq (min (T96$timeStamp), max (T96$timeStamp), by=3600*24))
-T96f$Date <- as.character (as.Date(T96f$timeStamp))
-T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
-T96f$TempBottom <- T96$TempBottom [match (T96f$Date, T96$Date)]
-T96f$TempBottomN <- na.approx (T96f$TempBottom, x=T96f$timeStamp, na.rm=FALSE)
-T96f$TempBot_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
-rm (tbnorm)
+tL <- c ("Bottom", "Deep", "Surface", "Mean", "Max", "Min")
+for (i in 1:length (tL)){
+  T96$TempS <- with (T96, list (TempBottom, TempDeep, TempSurface, TempMean, TempMax, TempMin))[[i]]
+  tempName <- tL [i]
 
-if (0){
-  plot (TempDeep~TempBottom, T96)
-  abline(a=0,b=1)
+  tbnorm <- longM (T96$TempS, T96$timeStamp)
+  # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
+  ## see annualPlotFct.R::fixGap -- all gaps, then interpolate NAs
+  T96f <- data.frame (timeStamp=seq (min (T96$timeStamp), max (T96$timeStamp), by=3600*24))
+  T96f$Date <- as.character (as.Date(T96f$timeStamp))
+  T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
+  T96f$TempS <- T96$TempS [match (T96f$Date, T96$Date)]
+  T96f$TempSN <- na.approx (T96f$TempS, x=T96f$timeStamp, na.rm=FALSE)
+  T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
+  rm (tbnorm)
+
+  if (0){
+    plot (TempDeep~TempBottom, T96)
+    abline(a=0,b=1)
+  }
+
+  png (paste0 (mediaD, "temp",tempName ,"TS.png"), res=pngR, height=8*pngR, width=8*pngR)
+  par (mfrow=c(2,1))
+  plot (TempSN~timeStamp, T96f, type="n", main=paste (tempName, "temperature at T9-6")
+        , ylab=expression('Temperature'~'['*degree~'C'*']')
+        , xlab="", axes=FALSE)
+  axis (2)
+  TSaxis(T96f$timeStamp, verticals=FALSE)
+  abline (h=4, lty="dashed") # mark 4 degrees C
+  ## add lines, marking the anomaly in blue/red
+  for (i in 1:nrow (T96f)){
+    with (T96f, lines (x=rep (timeStamp [i], 2)
+                       ,y=c(TempS_norm [i], TempSN[i])
+                       , col=ifelse (TempSN [i] > TempS_norm [i], "red", "blue")
+                       , lwd=2
+    ))
+  }
+  lines (TempSN~timeStamp, T96f, col="black", lwd=1)
+  lines (TempS_norm~timeStamp, T96f, col="gray", lwd=3)
+  legend ("bottomright", lwd=c (3,1, 3, 3), col=c ("gray", "black", "red", "blue"),
+          legend=c("normal", "30 d moving-average", "warm", "cold"), bty="n", ncol=2)
+  box()
+
+
+  ## plot timing of 4 degrees C over year
+  T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
+
+  thTempL <- seq (4, 8, by=0.5)
+#  thTempL <- c(4,5,6,8,12)
+  springM <- sapply (thTempL, function (y){
+    aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
+      lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
+      x <- c (-1, x)
+      x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+      lD <- ifelse (x4==1, NA, x4)
+      as.Date("2000-01-01")+lD
+      # last4
+    })$TempSN
+  })
+  rownames(springM) <- levels (factor (T96f$Year))
+  springM <- as.Date (springM)
+  colr <- 1:length (thTempL)
+  colr <- brewer.pal(length (thTempL), "Accent")
+
+  plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab=""
+         , main=paste ("Timing of threshold", tempName, "temperature"))
+  abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
+  for (i in 1:length (thTempL)){
+    # points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
+    lines (springM [,i]~as.numeric (rownames (springM)), col=colr [i], lwd=3)
+  }
+  legend ("bottomright"
+          , lwd=3 # , pch=19
+          , col=colr, legend=thTempL
+          , title=expression(temperature~"["*degree~C*"]")
+          , bty="n", ncol=3)
+  dev.off()
 }
-
-
-
-png (paste0 (mediaD, "tempDeepTS.png"), res=pngR, height=8*pngR, width=8*pngR)
-par (mfrow=c(2,1))
-plot (TempBottomN~timeStamp, T96f, type="n", main="Bottom temperature at T9-6"
-      , ylab=expression('Temperature'~'['*degree~'C'*']')
-      , xlab="", axes=FALSE)
-axis (2)
-TSaxis(T96f$timeStamp, verticals=FALSE)
-abline (h=4, lty="dashed") # mark 4 degrees C
-## add lines, marking the anomaly in blue/red
-for (i in 1:nrow (T96f)){
-  with (T96f, lines (x=rep (timeStamp [i], 2)
-                    ,y=c(TempBot_norm [i], TempBottomN[i])
-                    , col=ifelse (TempBottomN [i] > TempBot_norm [i], "red", "blue")
-                    , lwd=2
-                    ))
-}
-# lines (TempBottomN~timeStamp, T96f, col="black", lwd=2)
-lines (TempBot_norm~timeStamp, T96f, col="gray", lwd=3)
-box()
-
-## plot timing of 4 degrees C over year
-T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
-
-thTempL <- seq (4, 6, by=0.5)
-springM <- sapply (thTempL, function (y){
-  aggregate (TempBottomN~Year, data=T96f, function (x, thTemp=y){
-    lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
-    x <- c (-1, x)
-    x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
-    lD <- ifelse (x4==1, NA, x4)
-    as.Date("2000-01-01")+lD
-    # last4
-  })$TempBottomN
-})
-
-rownames(springM) <- levels (factor (T96f$Year))
-springM <- as.Date (springM)
-
-plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab=""
-       , main="Timing of threshold bottom temperature")
-for (i in 1:length (thTempL)){
-  points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
-}
-legend ("top", pch=19, col=1:nrow (springM), legend=thTempL)
-
-dev.off()
-
-## earliest day per year to reach 4 degrees C -- still useful?
-
-
-
-
+rm (springM, thTempL, tempName, tL)
+rm (T96, T96f)
 
 
 ## TS-diagram
