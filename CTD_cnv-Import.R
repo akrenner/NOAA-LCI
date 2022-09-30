@@ -243,6 +243,12 @@ readCNV <- function (i){
                       , beamTransmission = ctdF@data$beamTransmission
   )
   cDF <- subset (cDFo, density > 0) ## still necessary?
+  if (0){
+    ## depth bins
+    cDo <- subset (cDF, density >0)
+    depthBin <- factor (floor (cDFo$depth))
+    cDF <- aggregate (.~File.Name+depthBin, cDFo, fun=mean, na.rm=TRUE)
+  }
   return (cDF)
 }
 
