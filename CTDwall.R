@@ -346,6 +346,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           ## plot the section/transect
           ##
           ## if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
+          if (oVarsF [ov]=="bvf"){cCont <- NULL}else{cCont<- pretty (oRange [ov,], 20)}
           pSec (xCo, N = oVarsF [ov]
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
@@ -354,7 +355,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                 , ylim = c(0,max (physOcY$Depth.saltwater..m., na.rm=TRUE)+5)  ## need to fix CTDwall-setup.R first
                 , showBottom=FALSE
                 , drawPalette=FALSE
-                , custcont=pretty (oRange [ov,], 20)
+                , custcont=cCont
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
