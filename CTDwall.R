@@ -49,7 +49,7 @@ if (test){
 }else{
   oceanvarC <- 1:length (oVars)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  # transectC <- c(5,6,7)
+  # transectC <- c(5,6,7)  ## T9, AB, ABext
 }
 
 
@@ -380,7 +380,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
           }
           if (iY==1){ ## big title on top
-            mtext (text = oVars [ov], side=3, cex=4, outer=TRUE)  ## always?
+            mtext (text = oVars [ov], side=3, cex=4, outer=TRUE, line=3)  ## always?
           }
           ## addBorder (xCo, TD[ov]-1)
 
