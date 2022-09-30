@@ -66,7 +66,7 @@ source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and w
 }
 
 ## State of the Bay Report
-source ("annualStateOfTheBay.R")
+source ("AnnualStateOfTheBay.R")
 
 
 
