@@ -4,7 +4,10 @@ rm (list=ls())
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 ## what to show
-pastYear <- FALSE
+pastYear <- FALSE  ## for fall publication
+ongoingY <- TRUE
+
+pastYear <- FALSE  ## for winter/spring publication
 ongoingY <- TRUE
 
 
@@ -12,7 +15,9 @@ maO <- 30  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("black", "blue", "lightblue")
+currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+currentCol <- c("lightblue", "blue", "black")  ## current and prev
+
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE

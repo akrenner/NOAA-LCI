@@ -181,16 +181,16 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
   }
   ySel <- which (c(pastYear, TRUE, ongoingYear))
   yT <- c (c(currentYear-1, currentYear, currentYear+1)[ySel], sYears)
-  bg <- c (rep (NA, length (yT)+1), qantCol [1])
-  lC <- c (meanCol, cYcol [ySel], sLcol, "black") # black=border of range
-  lW <- c (3, c(2,4,4)[ySel], sLwd, 1, 0) # last 4 or NA?
-  lT <- c (1, c (1,1,1)[ySel], sLty, 0)
-  pC <- c (NA, rep (NA, length (yT)), 22)
+  lT <- c (1, 0, c (1,1,1)[ySel], sLty)
+  lW <- c (3, 0, c(2,4,4)[ySel], sLwd, 1) # last 4 or NA?
+  pC <- c (NA, 22, rep (NA, length (yT)))
+  bg <- c(NA, qantCol [1], rep (NA, length (yT)))
+  lC <- c (meanCol, "black", cYcol [ySel], sLcol) # black=border of range
   rm (ySel)
   legend (..., bty = "n"
           , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
+                     , "10-90th percentile" #"10th-90th %ile"
                      , yT
-                     , "10th-90th percentile" #"10th-90th %ile"
           )
           , lty=lT
           , lwd=lW

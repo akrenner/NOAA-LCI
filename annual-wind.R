@@ -25,7 +25,9 @@ wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
                )
 rm (wStations)
 
-pastYear <- FALSE  # plot currentYear-1 ?
+pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
+ongoingY <- TRUE
+pastYear <- FALSE  ## for winter/spring publication
 ongoingY <- TRUE
 
 

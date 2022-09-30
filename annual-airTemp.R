@@ -7,6 +7,8 @@ rm (list=ls())
 
 pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
+pastYear <- TRUE  # for winter/fall publication schedule
+ongoingY <- FALSE
 
 
 ## may have to delete cache

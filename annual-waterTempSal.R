@@ -15,6 +15,9 @@ load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
+pastYear <- TRUE  ## winter/spring publication schedule
+ongoingY <- FALSE
+
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl=c(0.9)
@@ -153,8 +156,9 @@ par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
        , pastYear=pastYear, ongoingYear=ongoingY
+       , ylim=c(0,10)  # to avoid clash of legend and plot
        )
-cLegend ("topleft", inset=0.05
+cLegend ("topleft", inset=0.01
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
          , cYcol=currentCol
