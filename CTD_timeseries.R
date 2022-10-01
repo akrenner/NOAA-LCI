@@ -38,6 +38,10 @@ require ("oce")
 ## => GAK1-comparison has been done,  water from below GAK1 coming into kachemak bay
 
 
+### temperature: 4 C mean for Herring,   8, 12 C max for HABs
+
+
+
 deepThd <- 20   ## deep vs surface layer
 
 plotRAW <- FALSE
@@ -88,7 +92,11 @@ save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
 
 
-## long term mean / anomaly functions
+
+########################################
+## long term mean / anomaly functions ##
+########################################
+
 longM <- function (var, date, maO=31){  ## cyclical long-term mean -- move this to annualPlotFct.R ?
   ## calculate long term mean of var for use in anomaly calculation
   ## smooth using zoo moving average smoother
@@ -131,6 +139,25 @@ anoF <- function (varN, df=sDF){
   sapply (1:nrow (ctdAgg), FUN=function (i){
     sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]
   })
+}
+
+## daily anomaly function: supply measurements of vairable X
+## return: daily interpolated measurements over time series, and normals for those days
+dailyTS <- function (df, varN){
+  var <- df [,which (names (df) == varN)]
+  ## ensure that df has variable "timeStamp" (or isoDate?)
+  if ("isoDate" %in% names (df)){df$timeStamp <- df$isoDate}
+  if (!"Date" %in% names (df)){df$Date <- as.Date (df$timeStamp)}
+  varNorm <- longM (var, df$timeStamp)
+  if (class (df$timeStamp)[1] != 'POSIXct'){stop ("timeStamp needs to be POSIXct")}
+  dfD <- data.frame (timeStamp=seq (min (df$timeStamp), max (df$timeStamp), by=3600*24)) # daily values
+  dfD$Date <- as.character (as.Date (dfD$timeStamp))
+  dfD$jday <- as.numeric (format (dfD$timeStamp, "%j%"))  ## ok to have 2000-1-1 to be day 1, not 0
+  dfD$varS <- var [match (dfD$Date, df$Date)]  ## keep those to indicate dates of measurements
+  dfD$varSN <- na.approx (dfD$varS, x=dfD$timeStamp, na.rm=FALSE) ## interpolated measurements
+  dfD$var_norm < varNorm$MA [match (dfD$jday, varNorm$jday)]
+  names (dfD) <- gsub ("^var", varN, names (dfD))
+  dfD
 }
 
 
@@ -474,6 +501,10 @@ for (k in pickStn){
   clf <- aggregate (Fluorescence_mg_m3~Date, xC, FUN=sum, na.rm=TRUE)
   names (clf) <- c ("Date", "Fluorescence")
   clf$Date <- as.Date (clf$Date)
+
+
+
+
   clfnorm <- longM (clf$Fluorescence, clf$Date)
   T96f <- data.frame (timeStamp=seq (min (xC$isoTime), max (xC$isoTime), by=3600*24)) ## standardize timeStamp vs isoTime
   T96f$Date <- as.Date(T96f$timeStamp)
@@ -496,13 +527,16 @@ for (k in pickStn){
         , col=ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
         , ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
   lines (chl_norm~Date, T96f, col = "gray")
-  legend ("topright", lwd=5, col=c("darkgreen", "lightgreen"), legend=c("more", "less"), bty="n")
+  legend ("topright", lwd=c(5,5,1), col=c("darkgreen", "lightgreen", "gray")
+          , legend=c("more", "less", "mean"), bty="n")
   abline (v = min (physOc$year):max (physOc$year), col="gray", lty="dashed")
   dev.off()
   rm (T96f, clf)
 
 
-  ## buoyancy
+  ##############
+  ## buoyancy ##
+  ##############
 #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
   png (paste0 (mediaD, stnK, "-buoyancy-climatology.png"), height=11.5*pngR, width=8*pngR, res=pngR)
   par (mfrow=c(3,1))
@@ -713,10 +747,12 @@ T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
 require ("RColorBrewer")
 
-tL <- c ("Bottom", "Deep", "Surface", "Mean", "Max", "Min")
-for (i in 1:length (tL)){
-  T96$TempS <- with (T96, list (TempBottom, TempDeep, TempSurface, TempMean, TempMax, TempMin))[[i]]
-  tempName <- tL [i]
+# tL <- c ("Bottom", "Deep", "Surface", "Mean", "Max", "Min")
+tL <- c("Deep", "Max")
+for (iS in 1:length (tL)){
+#  T96$TempS <- with (T96, list (TempBottom, TempDeep, TempSurface, TempMean, TempMax, TempMin))[[i]]
+  T96$TempS <- with (T96, list (TempDeep,TempMax))[[iS]]
+  tempName <- tL [iS]
 
   tbnorm <- longM (T96$TempS, T96$timeStamp)
   # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
@@ -743,10 +779,10 @@ for (i in 1:length (tL)){
   TSaxis(T96f$timeStamp, verticals=FALSE)
   abline (h=4, lty="dashed") # mark 4 degrees C
   ## add lines, marking the anomaly in blue/red
-  for (i in 1:nrow (T96f)){
-    with (T96f, lines (x=rep (timeStamp [i], 2)
-                       ,y=c(TempS_norm [i], TempSN[i])
-                       , col=ifelse (TempSN [i] > TempS_norm [i], "red", "blue")
+  for (j in 1:nrow (T96f)){
+    with (T96f, lines (x=rep (timeStamp [j], 2)
+                       ,y=c(TempS_norm [j], TempSN[j])
+                       , col=ifelse (TempSN [j] > TempS_norm [j], "red", "blue")
                        , lwd=2
     ))
   }
@@ -760,8 +796,12 @@ for (i in 1:length (tL)){
   ## plot timing of 4 degrees C over year
   T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
-  thTempL <- seq (4, 8, by=0.5)
-#  thTempL <- c(4,5,6,8,12)
+  if (tempName == "Max"){
+    thTempL <- c(8, 12)
+  }else{
+  # thTempL <- seq (4, 8, by=0.5)
+   thTempL <- 4
+  }
   springM <- sapply (thTempL, function (y){
     aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
       lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
@@ -781,8 +821,8 @@ for (i in 1:length (tL)){
          , main=paste ("Timing of threshold", tempName, "temperature"))
   abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
   for (i in 1:length (thTempL)){
-    # points (springM [,i]~as.numeric (rownames (springM)), col=i, pch=19)
-    lines (springM [,i]~as.numeric (rownames (springM)), col=colr [i], lwd=3)
+    points (springM [,i]~as.numeric (rownames (springM)), col=colr [i], pch=19)
+    lines (springM [,i]~as.numeric (rownames (springM)), col=colr [i], lwd=3, type="s")
   }
   legend ("bottomright"
           , lwd=3 # , pch=19
