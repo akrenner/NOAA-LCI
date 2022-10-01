@@ -523,6 +523,7 @@ for (k in pickStn){
   #                      , lwd=2
   #   ))
   # }
+  par (mar=c(5,4,4,4.9)+0.1)  ## to align last plot with plots above in same panel
   plot (chlN~Date, T96f, pch=19
         , col=ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
         , ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
@@ -594,6 +595,7 @@ for (k in pickStn){
   T96f$TempSN <- na.approx (T96f$TempS, x=T96f$timeStamp, na.rm=FALSE)
   T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
 
+  par (mar=c(5,4,4,4.9)+0.1)  ## to align last plot with plots above in same panel
   plot (TempSN~timeStamp, T96f, type="n", main="Max buoyancy frequency"
         , ylab= "" #expression('Temperature'~'['*degree~'C'*']')
         , xlab="", axes=FALSE)
@@ -602,7 +604,7 @@ for (k in pickStn){
   lines (TempSN~timeStamp, T96f, col="black", lwd=2)
   lines (TempS_norm~timeStamp, T96f, col="blue", lwd=2)
   legend ("topright", lwd=2, col=c("black", "blue"), legend=c("max buoyancy", "seasonal mean"), bty="n")
-
+  box()
   dev.off()
   })
 }
