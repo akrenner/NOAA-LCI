@@ -16,16 +16,16 @@ maO <- 31
 qntl <- c (0.9) #, 0.8)
 ongoingYear=TRUE
 pastYear=FALSE
-require("RColorBrewer")
+Require("RColorBrewer")
 currentCol <- brewer.pal(3, "Blues")
 
 
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 source ("annualPlotFct.R")
 
-# require ("snotelr")
-# require ("plotly")
-# require ("shinydashboard")
+# Require ("snotelr")
+# Require ("plotly")
+# Require ("shinydashboard")
 # snotel_explorer()
 
 # snotel_info(path = ".")
@@ -43,7 +43,7 @@ source ("annualPlotFct.R")
 # sitePickNo <- 987
 ##
 
-require (snotelr)
+Require (snotelr)
 
 
 
@@ -62,7 +62,7 @@ for (sitePickNo in c(1003, 1062, 987)){
     xK <- x [grep ("Kenai", x$county),]
     xK [,c(3,9,11)]
 
-    # require ("leaflet")
+    # Require ("leaflet")
     # leaflet(data = xK) %>%
     #   addTiles() %>%
     #   addCircles()
@@ -201,9 +201,9 @@ snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
 
 ## impute somewhere here!
 # Dray & Josse 2015: ipca is best way:  library (missMDA)
-require ("missMDA")
+Require ("missMDA")
 iDF <- imputePCA (snowMc [,2:(length (sites)+1)], method = "EM", ncp =2)
-require ("FactoMineR")
+Require ("FactoMineR")
 pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
 snowPCA <- PCA (iDF$completeObs, graph = TRUE, ncp = 2)
 dev.off()

@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
-if (version$os != "mingw32"){
+if (.Platform$OS.type=="unix"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }else{
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
