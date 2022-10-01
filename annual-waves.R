@@ -204,7 +204,6 @@ alt.ax <- pretty (wFt)
 alt.at <- (alt.ax) * 0.3048
 axis (side = 4, at = alt.at, labels = alt.ax, srt = 90)
 mtext ("wave height [ft]", side = 4, line = 2.5)
-rm (wFt, alt.ax, alt.at)
 # for (i in 2011:2018){
 #   x <- try (lines (tDayW$jday
 #         , tDayW [,which (names (tDayW) == paste0 ("y_", i, "_wave_height"))]
@@ -213,7 +212,7 @@ rm (wFt, alt.ax, alt.at)
 # rm (x)
 # legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
 dev.off()
-rm (tDayW, wFt)
+rm (tDayW, wFt, alt.ax, alt.at)
 
 
 
@@ -635,6 +634,7 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2021-11-21 14:00" # 5 surfers
 , "2021-12-02 11:50" # 1 surfer, more coming
 , "2021-12-07 15:00" # 1+ m surf, no surfers
+, "2022-08-02 18:00" # 3 surfer in 0.8m surf (minimal, but some caught a wave)
 )
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))

@@ -23,14 +23,21 @@ meanCol <- "darkgray"
 # year2 <- TRUE   ## switch 1 vs. 2 years on/off -- where best to put this switch?
 
 
+if (!require("pacman")) install.packages("pacman"
+                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+Require <- pacman::p_load
+
+
+
+
 if (0){
-## using RColorBrewer:
-require ("RColorBrewer")
-bCol <- brewer.pal(12, "Paired")
-rangCol <- bCol [5:6]
-qantCol <- bCol [9]
-currentCol <- bCol [1:2]
-meanCol <- bCol [4]
+  ## using RColorBrewer:
+  Require ("RColorBrewer")
+  bCol <- brewer.pal(12, "Paired")
+  rangCol <- bCol [5:6]
+  qantCol <- bCol [9]
+  currentCol <- bCol [1:2]
+  meanCol <- bCol [4]
 }
 
 
@@ -55,7 +62,7 @@ plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
   axis (1, at=as.numeric (format (as.POSIXct (paste0 ("2019-", 1:6*2-1, "-15")), "%j"))
         , labels=month.abb[1:6*2-1], tick=FALSE) # center month-labels
   axis (1, at=c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
-                                       , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
+                                     , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
 }
 
 
@@ -174,16 +181,16 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
   }
   ySel <- which (c(pastYear, TRUE, ongoingYear))
   yT <- c (c(currentYear-1, currentYear, currentYear+1)[ySel], sYears)
-  bg <- c (rep (NA, length (yT)+1), qantCol [1])
-  lC <- c (meanCol, cYcol [ySel], sLcol, "black") # black=border of range
-  lW <- c (3, c(2,4,4)[ySel], sLwd, 1, 0) # last 4 or NA?
-  lT <- c (1, c (1,1,1)[ySel], sLty, 0)
-  pC <- c (NA, rep (NA, length (yT)), 22)
+  lT <- c (1, 0, c (1,1,1)[ySel], sLty)
+  lW <- c (3, 0, c(2,4,4)[ySel], sLwd, 1) # last 4 or NA?
+  pC <- c (NA, 22, rep (NA, length (yT)))
+  bg <- c(NA, qantCol [1], rep (NA, length (yT)))
+  lC <- c (meanCol, "black", cYcol [ySel], sLcol) # black=border of range
   rm (ySel)
   legend (..., bty = "n"
           , legend=c(paste0 ("mean [", mRange [1], "-", mRange [2], "]")
+                     , "10-90th percentile" #"10th-90th %ile"
                      , yT
-                     , "10th-90th percentile" #"10th-90th %ile"
           )
           , lty=lT
           , lwd=lW
@@ -206,9 +213,9 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
 
 
 prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
-                     , maO=31
-                     , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
-                     , qntl=c(0.8, 0.9)
+                    , maO=31
+                    , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
+                    , qntl=c(0.8, 0.9)
 ){
   if (! all (c("jday", "year", varName) %in% names (dat))){
     stop (paste ("Data frame must contain the variables jday, year, and", varName))
@@ -222,19 +229,19 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   xVar <- dat [,which (names (dat) == varName)]
   dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
 
-    ## moving average in here or supply as varName?
+  ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
-if (1){ # align at center
-  suppressMessages (require ("zoo"))
-#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
-#  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
-  dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
-                          , fill=c(NA, "extend", NA)
-                          , partial=FALSE # maO/2
-                          , align = "center")
-}else{
+  if (1){ # align at center
+    suppressPackageStartupMessages (Require ("zoo"))
+    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
+    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
+    dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
+                                 , fill=c(NA, "extend", NA)
+                                 , partial=FALSE # maO/2
+                                 , align = "center")
+  }else{
     ## bug in SWMPr smoothing function: last day=up-tick?
-    require ("SWMPr")
+    Require ("SWMPr")
     dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
     # dMeans$MA <- maT (dMeans$xVar, maO)
 
@@ -243,7 +250,7 @@ if (1){ # align at center
 
     # dMeans$XXX <- XX$varName [match (...)
     ## match ().... when length (varName) > 1
-}
+  }
 
   dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
   tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
@@ -269,7 +276,7 @@ if (1){ # align at center
 
   # is this critically needed?? -- N years of data per date
   tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN=sum
-                           , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
+                            , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
 
   ## previous year
   pcY <- subset (dMeans, year == (currentYear-1))
@@ -298,7 +305,7 @@ if (1){ # align at center
   tDay <- cbind (tDay, yr); rm (yr)
 
   ## fix names
-#  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
+  #  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
   names (tDay) <- gsub ("xVar", varName, names (tDay))
   names (tDay)[3:ncol (tDay)] <- paste0 (names (tDay)[3:ncol (tDay)], "_", varName)
 
@@ -312,7 +319,7 @@ addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
   df$jday <- as.integer (strftime (df$datetimestamp, "%j"))
   df$year <- as.integer (strftime (df$datetimestamp, "%Y"))
-  suppressMessages (require (lubridate))
+  suppressPackageStartupMessages (Require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
   return (df)
@@ -329,7 +336,7 @@ fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
   nD <- data.frame (datetimestamp=tR
                     , df [match (tR, df$datetimestamp), 2:ncol (df)])
   return (addTimehelpers (nD))
-  }
+}
 
 
 ## add Fahrenheit scale to temperature plot
@@ -356,32 +363,24 @@ iAxis <- function (mmL, side=4, line=3, lab = "", ...){
 
 
 ## load cached SWMP data and update it with the latest from CDMO
-getSWMP <- function (station, QAQC=TRUE){
+getSWMP <- function (station="kachdwq", QAQC=TRUE){
   ## load SWMP data from local zip file. Update to the most current data
   ## from CDMO and cache those updates for the next run.
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-  require ("SWMPr")
+  Require ("SWMPr")
+  Require ("R.utils")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
-  zipFile <- "~/GISdata/LCI/SWMP/current"      # "current" needs to be shortcut or symbolic link
-  # pointing to the most recent zip file. "current" has no extension.
-
   dir.create(cacheFolder, showWarnings=FALSE)
-  # if (version$os == "mingw32"){
-  #   # if (.Platform$OS.type == "windows"){
-    require ("R.utils")
-    SMPfile <- filePath (zipFile, expandLinks = "local") # works on all platforms?
-  # }else{ # MacOS or Linux
-  #   SMPfile <- zipFile
-  # }
 
+  zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names=TRUE)
+  if (length (zF) < 1){stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
+  SMPfile <- zF [which.max (file.info (zF)$ctime)] ## find most recent file
+  rm (zF)
 
-
-  ## need to delete cacheFolder if zip file is newer to avoid data gaps
-
-  ## cacheFolder should be deleted, when zip file was updated  -- automate that?
+  ## delete cacheFolder if zip file is newer
   if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){
     if (file.info (paste0 (cacheFolder, "/kachomet.RData"))$ctime <
         file.info (SMPfile)$ctime){
@@ -440,11 +439,13 @@ getSWMP <- function (station, QAQC=TRUE){
 
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-  require ("rnoaa")
+  Require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
+    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy", showWarnings=FALSE, recursive=TRUE)
   }
-  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")), silent=TRUE)
+  ## this is slow -- cache as .RData file?
+  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
     if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
   }else{
@@ -473,16 +474,13 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
         }
       }
     }
-    rm (i)
   }
-  rm (nw, endD)
 
   ## add most recent
   cD <- try (buoy (dataset=set, buoyid=buoyID, year=9999))  ## 9999=most up-to-date data
   if (class (cD) == "buoy"){
     wDB <- rbind (wDB, as.data.frame (cD$data))
   }
-  rm (cD)
   save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
 
   ## QAQC
@@ -497,7 +495,6 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   }
   ## ensure windspeed is m/s
   if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
-
   return (wDB)
 }
 
@@ -513,9 +510,9 @@ nEvents <- function (dat, varName, thrht){
                     , function (i){
                       agY <- aggregate (xvar~year
                                         , data=aggregate (xvar~jday+year
-                                                            , data=dat
-                                                            , FUN=function (x){
-                                                              any (x > thrht [i])}
+                                                          , data=dat
+                                                          , FUN=function (x){
+                                                            any (x > thrht [i])}
                                         )
                                         , FUN=sum)
 
@@ -560,12 +557,12 @@ cDir <- function (wd, nDir=8){
 merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
   ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
   #### Package Install ####
-  gridExists <- require ("grid")
+  gridExists <- Require ("grid")
   if ( !gridExists ) {
     install.packages ("grid")
     library ("grid")
   }
-  pngPackageExists <- require ("png")
+  pngPackageExists <- Require ("png")
   if ( !pngPackageExists ) {
     install.packages ("png")
     library ("png")
@@ -579,7 +576,7 @@ merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
     pngFile <- pngFiles[i]
     pngRaster <- readPNG(pngFile)
     grid.raster(pngRaster, width=unit(0.8, "npc"), height= unit(0.8, "npc"))
-#    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
+    #    grid.raster(pngRaster, width=unit(5.5, "inches"), height= unit(5.5, "inches"))
     if (i < n) plot.new()
   }
   dev.off()
