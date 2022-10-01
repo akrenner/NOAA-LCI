@@ -444,6 +444,7 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy", showWarnings=FALSE, recursive=TRUE)
   }
+  ## this is slow -- cache as .RData file?
   nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
     if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
@@ -473,16 +474,13 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
         }
       }
     }
-    rm (i)
   }
-  rm (nw, endD)
 
   ## add most recent
   cD <- try (buoy (dataset=set, buoyid=buoyID, year=9999))  ## 9999=most up-to-date data
   if (class (cD) == "buoy"){
     wDB <- rbind (wDB, as.data.frame (cD$data))
   }
-  rm (cD)
   save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
 
   ## QAQC
@@ -497,7 +495,6 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   }
   ## ensure windspeed is m/s
   if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
-
   return (wDB)
 }
 

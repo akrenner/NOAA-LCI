@@ -20,17 +20,22 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-               , "AMAA2" #, "HMSA2"
+wStations <- c("kachomet", "FILA2"
+               # , "AUGA2" #, "46105"
+               # , "AMAA2" #, "HMSA2"
                )
-rm (wStations)
-
-pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
-ongoingY <- TRUE
-pastYear <- FALSE  ## for winter/spring publication
-ongoingY <- TRUE
+# rm (wStations)
+autumnPub <- TRUE   ## quarterly report showing most current data or annual report (spring)
 
 
+
+if (autumnPub){
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
+}else{
+  pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
+  ongoingY <- TRUE
+}
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
@@ -40,9 +45,11 @@ galeT <- 34  # max wind speed for gale
 scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 # currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
 Require ("RColorBrewer")
-currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
-currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
-
+if (autumnPub){
+  currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
+}else{
+  currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
+}
 ## leave code below as-is
 ##########################################################
 
@@ -242,7 +249,12 @@ par (mar=c (4,5,1,1))
 barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
                   , col=gCols# [4:1]
          , ylab="High-wind days per year"
-)
+         )
+if (metstation=="kachomet"){
+  title (main="Homer Spit")
+}else if (metstation=="FILA2"){
+  title (main="Flat Island")
+}
 is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE  # to have means unbiased
 abline (h=mean (as.data.frame (t (sTab))$gale, na.rm=TRUE), lwd=3, lty="dashed") # gray would be invisible
 abline (h=mean (as.data.frame (t (sTab))$storm, na.rm=TRUE), lwd=3, lty="dotted", col="black")
@@ -251,7 +263,7 @@ abline (h=mean (as.data.frame (t (sTab))$storm, na.rm=TRUE), lwd=3, lty="dotted"
 #          , probs=c(0.05,0.95), na.rm=TRUE), lty="dashed", lwd=1)
 if (metstation == "FILA2"){lP <- "topleft"}else{lP <- "topright"}
 legend (lP, legend=c ("gale", "storm") # row.names(sTab)[1:2]
-        , fill=gCols[1:2], bty="n")
+        , fill=gCols[1:2], bty="n", ncol=1)
 dev.off()
 rm (cGale, yGale, gCols, sTab, lP)
 ## end of wind summary
@@ -560,7 +572,7 @@ if (1){
   ## gales
   yL <- 0.7; xL <- 250
   rasterImage (img, xleft=xL, xright=xL+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-    text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (", currentYear, ", >", galeT, " knots)")
+    text (xL+13, yL - 0.05, paste0 ("Gales with wind direction")  # "N,E,S,W  direction and timing\n of gales (", currentYear, ", >", galeT, " knots)")
         , pos=4, adj=c(0,1))
   # yL <- 2.7
   # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
@@ -782,7 +794,7 @@ if (metstation == "kachomet"){
 
 
   ## compare wind Flat Island with Homer Spit -- windroses
-  pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose_Locations2.pdf")
+  pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-windRose_Locations2.pdf")
        , width=6, height=4)
   windRose(hmrS, ws="wspd", wd="wdir"
            # , type="yClass"

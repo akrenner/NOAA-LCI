@@ -156,9 +156,10 @@ par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
        , pastYear=pastYear, ongoingYear=ongoingY
-       , ylim=c(0,10)  # to avoid clash of legend and plot
+       # , ylim=c(0,10)  # to avoid clash of legend and plot
+       , ylim=c(0, max (sL$maU1_chlfluor))
        )
-cLegend ("topleft", inset=0.01
+cLegend ("topleft", inset=0.05
          , mRange=c (min (homerS$year), currentYear -1)
          , currentYear=currentYear
          , cYcol=currentCol
