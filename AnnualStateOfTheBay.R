@@ -13,9 +13,11 @@ if (.Platform$OS.type=="unix"){
 # Wave height - remove 2019, put 2021 back in.
 
 rm (list = ls())
-
 print (sT <- Sys.time())
 
+
+quarterly <- TRUE
+quarterly <- FALSE
 
 ## State of the Bay Report 2019
 
@@ -24,9 +26,9 @@ source ("SeldoviaTemp.R")
 source ("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
-source ("annual-rainy.R")
 source ("annual-waterTempSal.R")
 source ("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
+source ("annual-rainy.R")
 
 source ("annual-snowpack.R")
 source ("annual-waves.R")

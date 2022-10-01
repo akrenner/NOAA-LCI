@@ -60,6 +60,25 @@ hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
                  ) %>%
   select (!ends_with ("_attributes"))
 }
+
+
+
+## may have to delete cache
+if (.Platform$OS.type=="windows"){
+  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/"
+}else{
+  cacheD <- "~/Library/Caches/R/noaa_ghcnd/"
+}
+cF <- list.files(cacheD, "dly", full.names=TRUE)
+rm (cacheD)
+## delete cache file if older than one month and computer is online
+if (max (file.info (cF)$ctime) < (Sys.time()-30*24*3600)){  # file is older than 1 month
+  Require (curl)
+  if (curl::has_internet()){  ## only flush cache if new data can be downloaded
+    unlink (cF)
+  }
+}
+
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               # , date_min = "2022-04-18"  # goes back to 1932-09-01
 #                              , date_min = "1933-01-01"  # goes back to 1932-09-01
