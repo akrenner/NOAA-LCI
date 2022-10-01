@@ -246,9 +246,18 @@ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".p
      , width=4, height=4)
 par (mar=c (4,5,1,1))
 # barplot (sTab [which (row.names(sTab)%in% c("galeS", "storm", "stormC", "galeC")),]  ## excluding SCA, storms to bottom
+
+if (metstation == "FILA2"){
+  lP <- "topleft"
+  yR <- c(0, 90)
+}else{
+  lP <- "topright"
+  yR <- NULL
+}
 barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
                   , col=gCols# [4:1]
          , ylab="High-wind days per year"
+         , ylim=yR
          )
 if (metstation=="kachomet"){
   title (main="Homer Spit")
@@ -261,9 +270,8 @@ abline (h=mean (as.data.frame (t (sTab))$storm, na.rm=TRUE), lwd=3, lty="dotted"
 ## add 90%tile for gales
 # abline (h=quantile(sTab [which (row.names(sTab)=="gale"),]
 #          , probs=c(0.05,0.95), na.rm=TRUE), lty="dashed", lwd=1)
-if (metstation == "FILA2"){lP <- "topleft"}else{lP <- "topright"}
 legend (lP, legend=c ("gale", "storm") # row.names(sTab)[1:2]
-        , fill=gCols[1:2], bty="n", ncol=1)
+        , fill=gCols[c(2,1)], bty="n", ncol=1)
 dev.off()
 rm (cGale, yGale, gCols, sTab, lP)
 ## end of wind summary
