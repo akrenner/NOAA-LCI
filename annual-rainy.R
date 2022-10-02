@@ -1,28 +1,34 @@
 
 ## precipitation -- standardized plot
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
-## what to show
-pastYear <- FALSE  ## for fall publication
-ongoingY <- TRUE
-
-pastYear <- FALSE  ## for winter/spring publication
-ongoingY <- TRUE
 
 
-maO <- 30  # 7 days certainly not working, 14 days not enough either
+maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
-currentCol <- c("lightblue", "blue", "black")  ## current and prev
 
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
+## what to show
+if (quarterly){
+  pastYear <- FALSE  ## for fall publication
+  ongoingY <- TRUE
+  currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+}else{
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
+  currentCol <- c("lightblue", "blue", "black")  ## current and prev
+}
 
 
+## load/download/update data
 source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
