@@ -801,8 +801,7 @@ for (iS in 1:length (tL)){
   if (tempName == "Max"){
     thTempL <- c(8, 12)
   }else{
-  # thTempL <- seq (4, 8, by=0.5)
-   thTempL <- 4
+    thTempL <- c (4,4) ## seq (4, 8, by=0.5)
   }
   springM <- sapply (thTempL, function (y){
     aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
@@ -815,22 +814,40 @@ for (iS in 1:length (tL)){
     })$TempSN
   })
   rownames(springM) <- levels (factor (T96f$Year))
-  springM <- as.Date (springM)
+  springM <- as.Date (springM) # this would turn matrix into vector if ncol=1
   colr <- 1:length (thTempL)
   colr <- brewer.pal(length (thTempL), "Accent")
 
-  plot  (range (T96f$Year), range (springM, na.rm=TRUE), type="n", xlab="", ylab=""
-         , main=paste ("Timing of threshold", tempName, "temperature"))
-  abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
-  for (i in 1:length (thTempL)){
-    points (springM [,i]~as.numeric (rownames (springM)), col=colr [i], pch=19)
-    lines (springM [,i]~as.numeric (rownames (springM)), col=colr [i], lwd=3, type="s")
+  ## version 1 -- year on x-axis
+  if (1){
+    yL <- as.numeric (rownames((springM)))
+    plot  (seq (min (yL), max(yL), length.out=nrow(springM)), springM [,1], type="n", xlab="", ylab=""
+           , main=paste ("Timing of threshold", tempName, "temperature")
+           , ylim=range (springM, na.rm=TRUE)
+           , axes=FALSE)
+    axis (2, labels = )
+    axis (1, tick=TRUE, labels=FALSE, at=yL)
+    axis (1, tick=FALSE, labels=yL, at=yL+0.5)
+    abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
+    if (tempName=="Max"){xi <-1:length (thTempL)}else{xi <- 1}
+    for (i in xi){
+      points (springM [,i]~I(yL+0.5), col=colr [i], pch=19)
+      lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
+    }
+    legend ("bottomright"
+            , lwd=3 # , pch=19
+            , col=colr, legend=thTempL [xi]
+            , title=expression(temperature~"["*degree~C*"]")
+            , bty="n", ncol=3)
+    rm (yL, xi)
+
+  }else{  ## version 2 -- year on y-axis
+    plot (springM [,1], levels (factor (T96f$Year)), ylab=""
+          , xlab=expression (First~day~with~temperature~at~4^o~C)
+    )
+    # paste0 ("First day with temperature at ", ))
+    abline (h=levels (factor (T96f$Year)), lty="dashed")
   }
-  legend ("bottomright"
-          , lwd=3 # , pch=19
-          , col=colr, legend=thTempL
-          , title=expression(temperature~"["*degree~C*"]")
-          , bty="n", ncol=3)
   dev.off()
 }
 rm (springM, thTempL, tempName, tL)
