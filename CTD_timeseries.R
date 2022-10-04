@@ -769,6 +769,12 @@ for (iS in 1:length (tL)){
   T96$TempS <- with (T96, list (TempDeep,TempMax))[[iS]]
   tempName <- tL [iS]
 
+  if (tempName == "Max"){
+    thTempL <- c(8, 12)
+  }else{
+    thTempL <- c (4,4) ## seq (4, 8, by=0.5)
+  }
+
   tbnorm <- longM (T96$TempS, T96$timeStamp)
   # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
   ## see annualPlotFct.R::fixGap -- all gaps, then interpolate NAs
@@ -787,8 +793,9 @@ for (iS in 1:length (tL)){
         , ylab=expression('Temperature'~'['*degree~'C'*']')
         , xlab="", axes=FALSE)
   axis (2)
+  abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
   TSaxis(T96f$timeStamp, verticals=FALSE)
-  abline (h=4, lty="dashed") # mark 4 degrees C
+  abline (h=thTempL, lty="dashed") # mark 4 degrees C
   ## add lines, marking the anomaly in blue/red
   for (j in 1:nrow (T96f)){
     with (T96f, lines (x=rep (timeStamp [j], 2)
@@ -797,31 +804,34 @@ for (iS in 1:length (tL)){
                        , lwd=2
     ))
   }
-  lines (TempSN~timeStamp, T96f, col="black", lwd=1)
-  lines (TempS_norm~timeStamp, T96f, col="gray", lwd=3)
-  legend ("bottomright", lwd=c (3,1, 3, 3), col=c ("gray", "black", "red", "blue"),
-          legend=c("normal", "30 d moving-average", "warm", "cold"), bty="n", ncol=2)
+  mLW <- 3
+  nLW <- 1
+  lines (TempS_norm~timeStamp, T96f, col="gray", lwd=nLW)
+  lines (TempSN~timeStamp, T96f, col="black", lwd=mLW)
+  legend ("bottomright", lwd=c (nLW,mLW, 3, 3), col=c ("gray", "black", "red", "blue")
+          , legend=c("normal", "30 d moving-average", "warmer", "colder"), bty="o", ncol=2
+          , bg="white", box.col="white")
   box()
 
 
   ## plot timing of 4 degrees C over year
   T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
-  if (tempName == "Max"){
-    thTempL <- c(8, 12)
-  }else{
-    thTempL <- c (4,4) ## seq (4, 8, by=0.5)
-  }
   springM <- sapply (thTempL, function (y){
     aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
       lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
       x <- c (-1, x)
-      x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+      if (tempName=="Max"){
+        x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
+      }else{
+        x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+      }
       lD <- ifelse (x4==1, NA, x4)
       as.Date("2000-01-01")+lD
       # last4
     })$TempSN
   })
+  springM [is.infinite((springM))] <- NA
   rownames(springM) <- levels (factor (T96f$Year))
   springM <- as.Date (springM) # this would turn matrix into vector if ncol=1
   if (length (thTempL) > 1){
@@ -851,18 +861,18 @@ for (iS in 1:length (tL)){
       # lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
       # lines (springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
     }
-    legend ("bottomright"
+    legend ("bottomright" ## needs to move below plot and needs to be smaller
             , lwd=3
-            , pch=19, cex=2
+            , pch=19, cex=1
             , col=colr, legend=thTempL [xi]
             , title=expression(temperature~"["*degree~C*"]")
-            , bty="n", ncol=3)
+            , bty="o", ncol=3, pt.cex=2, pt.lwd=3)
     rm (yL, xi)
 
   }else{  ## version 2 -- year on y-axis
     plot (springM [,1], levels (factor (T96f$Year)), ylab=""
           , xlab=expression (First~day~with~temperature~at~4^o~C)
-          , pch=19, col="black", cex=2
+          , pch=19, col="black", cex=3, lwd=3
     )
     # paste0 ("First day with temperature at ", ))
     abline (h=levels (factor (T96f$Year)), lty="dashed")
