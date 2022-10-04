@@ -51,20 +51,27 @@ pngR <- 300
 quantR <- 0.99  ## curtail data at this percentile
 
 
+fDim <- c(8.5, 11)
+# fDim <- c(16,9)   ## figure dimensions
 
-## nauseating rainbow
-temperatCol <- oceColorsTurbo(50) # oceColorsTemperature (11)
-## ODV colors
-salCol <- colorRampPalette (col=rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
-                            , bias=0.3)(50) #oceColorsSalinity(50)
+
+
+## gray scale -- honest
+tCol <- gray.colors(101)
+salCol <- gray.colors(101)
 
 ## modern colors -- overwrite
-if (1){
-  tCol <- oceColorsTemperature (11)
-  salCol <- oceColorsSalinity (11)
+tCol <- oceColorsTemperature (11)
+salCol <- oceColorsSalinity (11)
+
+## nauseating rainbow
+kr <- TRUE
+kr <- FALSE
+if (kr){
+  tCol <- oceColorsTurbo(1000)
+  salCol <- colorRampPalette (col=rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+                              , bias=0.3)(1000) ## ODV colors
 }
-
-
 
 
 
@@ -312,8 +319,8 @@ for (k in pickStn){
 
 
   require ("RColorBrewer")
-#  pdf (paste0 (mediaD, stnK, "-profile.pdf"), height = 11, width = 8.5)
-  png (paste0 (mediaD, stnK, "-profile.png"), height = 11*pngR, width = 8.5*pngR, res=pngR)
+#  pdf (paste0 (mediaD, stnK, "-TSprofile.pdf"), height = 11, width = 8.5)
+  png (paste0 (mediaD, "2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
     if (plotRAW){
     par (mfrow=c(5,1))
   }else{
@@ -398,7 +405,7 @@ for (k in pickStn){
   dev.off()
 
   save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
-#  # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 
 
   ## buoyancy
@@ -410,9 +417,9 @@ for (k in pickStn){
 
 
 
-  ######################
-  ## plot climatology ##
-  ######################
+  #########################
+  ## plot TS climatology ##
+  #########################
 
   prC <- ctdAgg; prC$monthI <- prC$monthI - 12
   poC <- ctdAgg; poC$monthI <- poC$monthI + 12
@@ -460,8 +467,8 @@ for (k in pickStn){
           , ...)
   }
 
-  # pdf (paste0 (mediaD, stnK, "-climatology.pdf"), height = 11.5, width = 8)
-  png (paste0 (mediaD, stnK, "-climatology.png"), height=11.5*pngR, width=8*pngR, res=pngR)
+  # pdf (paste0 (mediaD, stnK, "-TS_climatology.pdf"), height = 11.5, width = 8)
+  png (paste0 (mediaD, "1-", stnK, "-TS_climatology.png"), height=fDim[2]*pngR, width=fDim[2]*pngR, res=pngR)
   par (mfrow=c(2,1))
   clPlot (cT9, which = "temperature"
           , zcol=tCol
@@ -469,6 +476,7 @@ for (k in pickStn){
                            , max (ctdAgg$Temperature_ITS90_DegC), length.out = length (tCol)+1)
           # , zlim = c(4,12)
           )
+  title (main=expression (TEMPERATURE~CLIMATOLOGY~'['^o*C*']'))
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
   clPlot (cT9, which = "salinity"
@@ -477,12 +485,14 @@ for (k in pickStn){
           # , zlim = c(28,31.5)
   )
   anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
+  title (main=expression (SALINITY~CLIMATOLOGY~'['*PSU*']'))
   dev.off()
 
 
   ## fluorescence
   # pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
-  png (paste0 (mediaD, stnK, "-fluorescence-climatology.png"), res=pngR, height=11*pngR, width=8.5*pngR)
+  png (paste0 (mediaD, "3-", stnK, "-fluorescence-climatology.png"), res=pngR
+       , height=fDim[2]*pngR, width=fDim[1]*pngR)
   par (las = 1, mfrow=c(3,1))
   clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
 #  anAx(dAx = seq (0, 100, by = 20))
@@ -539,7 +549,7 @@ for (k in pickStn){
   ## buoyancy ##
   ##############
 #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-  png (paste0 (mediaD, stnK, "-buoyancy-climatology.png"), height=11.5*pngR, width=8*pngR, res=pngR)
+  png (paste0 (mediaD, "4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
   par (mfrow=c(3,1))
   ## raw buoyancy profile
   ## bvf climatology
@@ -587,16 +597,18 @@ for (k in pickStn){
 #  plot (stability~timeStamp, data=poSS, subset=poSS$Match_Name==stnK, type="l")  ## noisy -- errors?
 
   ## boyancy long-term mean
-  tbnorm <- longM (poSS$bvfMax, poSS$timeStamp)
+ # bVar <- poSS$bvfMax
+  bVar <- poSS$bvfMean
+  tbnorm <- longM (bVar, poSS$timeStamp)
   T96f <- data.frame (timeStamp=seq (min (poSS$timeStamp), max (poSS$timeStamp), by=3600*24))
   T96f$Date <- as.character (as.Date(T96f$timeStamp))
   T96f$jday <- as.numeric (format (T96f$timeStamp, "%j"))-1
-  T96f$TempS <- poSS$bvfMax [match (T96f$Date, poSS$Date)]
+  T96f$TempS <- bVar [match (T96f$Date, poSS$Date)]
   T96f$TempSN <- na.approx (T96f$TempS, x=T96f$timeStamp, na.rm=FALSE)
   T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
 
   par (mar=c(5,4,4,4.9)+0.1)  ## to align last plot with plots above in same panel
-  plot (TempSN~timeStamp, T96f, type="n", main="Max buoyancy frequency"
+  plot (TempSN~timeStamp, T96f, type="n", main="Mean buoyancy frequency"
         , ylab= "" #expression('Temperature'~'['*degree~'C'*']')
         , xlab="", axes=FALSE)
   axis (2)
@@ -655,7 +667,7 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 ## add freshwater -- deep
 
 # pdf (paste0 (mediaD, "T9S6_freshwatercontent.pdf"), height = 9, width = 6)
-png (paste0 (mediaD, "T9_freshwatercontent.png"), height=9*pngR, width=6*pngR, res=pngR)
+png (paste0 (mediaD, "T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
 par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1))
 ## time series
 plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
@@ -743,6 +755,7 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
 ## - superimposed anomalies/seasonal mean
 ## - marking first day >= threshold temperature in spring
 ## - timing of x degree C in spring
+## move up to plot for each station?
 
 T96 <- subset (poSS@data, Match_Name=="9_6")  ## migrate to sf
 T96 <- T96 [order (T96$timeStamp),]
@@ -767,12 +780,8 @@ for (iS in 1:length (tL)){
   T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
   rm (tbnorm)
 
-  if (0){
-    plot (TempDeep~TempBottom, T96)
-    abline(a=0,b=1)
-  }
 
-  png (paste0 (mediaD, "temp",tempName ,"TS.png"), res=pngR, height=8*pngR, width=8*pngR)
+  png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR, height=fDim [2]*pngR, width=fDim [1]*pngR)
   par (mfrow=c(2,1))
   plot (TempSN~timeStamp, T96f, type="n", main=paste (tempName, "temperature at T9-6")
         , ylab=expression('Temperature'~'['*degree~'C'*']')
@@ -815,24 +824,32 @@ for (iS in 1:length (tL)){
   })
   rownames(springM) <- levels (factor (T96f$Year))
   springM <- as.Date (springM) # this would turn matrix into vector if ncol=1
-  colr <- 1:length (thTempL)
-  colr <- brewer.pal(length (thTempL), "Accent")
+  if (length (thTempL) > 1){
+    suppressWarnings(colr <- brewer.pal(length (thTempL), "Accent"))
+  }else{colr <- "black"}
 
   ## version 1 -- year on x-axis
-  if (1){
+  if (!kr){
     yL <- as.numeric (rownames((springM)))
-    plot  (seq (min (yL), max(yL), length.out=nrow(springM)), springM [,1], type="n", xlab="", ylab=""
+    plot  (seq (min (yL), max(yL)+1, length.out=nrow(springM)), springM [,1], type="n", xlab="", ylab=""
            , main=paste ("Timing of threshold", tempName, "temperature")
            , ylim=range (springM, na.rm=TRUE)
            , axes=FALSE)
-    axis (2, labels = )
+    yD <- pretty (springM)
+    axis (2, tick=TRUE, labels=format (yD, "%e %b"), at=yD) # "%m-%d")
+    rm (yD)
     axis (1, tick=TRUE, labels=FALSE, at=yL)
     axis (1, tick=FALSE, labels=yL, at=yL+0.5)
+    box()
     abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
     if (tempName=="Max"){xi <-1:length (thTempL)}else{xi <- 1}
     for (i in xi){
-      points (springM [,i]~I(yL+0.5), col=colr [i], pch=19)
-      lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
+      points (springM [,i]~I(yL+0.5), col=colr [i], pch=19, cex=2)
+      for (j in 1:nrow (springM)){
+        lines (yL [c (j,j)], springM [c (j,j),i], col=colr [i], lwd=3)
+      }
+      # lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
+      # lines (springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
     }
     legend ("bottomright"
             , lwd=3 # , pch=19
@@ -844,6 +861,7 @@ for (iS in 1:length (tL)){
   }else{  ## version 2 -- year on y-axis
     plot (springM [,1], levels (factor (T96f$Year)), ylab=""
           , xlab=expression (First~day~with~temperature~at~4^o~C)
+          , pch=19, col="black", cex=2
     )
     # paste0 ("First day with temperature at ", ))
     abline (h=levels (factor (T96f$Year)), lty="dashed")
