@@ -846,13 +846,14 @@ for (iS in 1:length (tL)){
     for (i in xi){
       points (springM [,i]~I(yL+0.5), col=colr [i], pch=19, cex=2)
       for (j in 1:nrow (springM)){
-        lines (yL [c (j,j)], springM [c (j,j),i], col=colr [i], lwd=3)
+        lines (c(0.1,0.9)+yL [j], springM [c(j,j),i], col=colr [i], lwd=3)
       }
       # lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
       # lines (springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
     }
     legend ("bottomright"
-            , lwd=3 # , pch=19
+            , lwd=3
+            , pch=19, cex=2
             , col=colr, legend=thTempL [xi]
             , title=expression(temperature~"["*degree~C*"]")
             , bty="n", ncol=3)
