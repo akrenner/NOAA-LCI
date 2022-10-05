@@ -4,7 +4,8 @@
 ## use Lands End wind data from SWMP station
 
 
-if (exists ("metstation")){ rm (list=ls())}  # not if called from a script
+rm (list=ls())
+source ("annualPlotFct.R")
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
@@ -19,11 +20,22 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AMAA2"       # East Amatuli, Barren
 # metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
 
-wStations <- c("kachomet", "FILA2", "AUGA2" #, "46105"
-               , "AMAA2" #, "HMSA2"
+wStations <- c("kachomet", "FILA2"
+               # , "AUGA2" #, "46105"
+               # , "AMAA2" #, "HMSA2"
                )
+# rm (wStations)
+autumnPub <- TRUE   ## quarterly report showing most current data or annual report (spring)
 
 
+
+if (autumnPub){
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
+}else{
+  pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
+  ongoingY <- TRUE
+}
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
@@ -31,11 +43,13 @@ qntl <- 0.9 # % quantile
 stormT <- 48 # threshold for max wind speed to count as storm
 galeT <- 34  # max wind speed for gale
 scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
-currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
-require ("RColorBrewer")
-currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
-pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
+# currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
+Require ("RColorBrewer")
+if (autumnPub){
+  currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
+}else{
+  currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
+}
 ## leave code below as-is
 ##########################################################
 
@@ -44,8 +58,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 # rm (scAdvT, galeT, stormT)
 
 ## get up-to-date SWMP data
-source ("annualPlotFct.R")
-require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
+Require ("openair") # for windRose
 
 
 
@@ -95,7 +108,7 @@ if (metstation == "kachomet"){
 if (0){  # activate once it's working to get weather from alternative NOAA source: Augustine, Flat Island, etc.
   source ("noaaWeather.R")
   hmr <- noaa
-  require ("rnoaa")
+  Require ("rnoaa")
   ## list/map airport-like weather stations
   hStn <- meteo_nearby_stations(data.frame (id="Homer", latitude=59.63, longitude=-151.51)
                                 , radius=250)
@@ -224,7 +237,7 @@ sTab <- rbind (sTab
 # is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE
 sTab [1:(nrow (sTab)-2), ncol (sTab)] <- 0
 
-require ("RColorBrewer")
+Require ("RColorBrewer")
 gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
 # png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
@@ -233,19 +246,32 @@ pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".p
      , width=4, height=4)
 par (mar=c (4,5,1,1))
 # barplot (sTab [which (row.names(sTab)%in% c("galeS", "storm", "stormC", "galeC")),]  ## excluding SCA, storms to bottom
+
+if (metstation == "FILA2"){
+  lP <- "topleft"
+  yR <- c(0, 90)
+}else{
+  lP <- "topright"
+  yR <- NULL
+}
 barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
                   , col=gCols# [4:1]
          , ylab="High-wind days per year"
-)
+         , ylim=yR
+         )
+if (metstation=="kachomet"){
+  title (main="Homer Spit")
+}else if (metstation=="FILA2"){
+  title (main="Flat Island")
+}
 is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE  # to have means unbiased
 abline (h=mean (as.data.frame (t (sTab))$gale, na.rm=TRUE), lwd=3, lty="dashed") # gray would be invisible
 abline (h=mean (as.data.frame (t (sTab))$storm, na.rm=TRUE), lwd=3, lty="dotted", col="black")
 ## add 90%tile for gales
 # abline (h=quantile(sTab [which (row.names(sTab)=="gale"),]
 #          , probs=c(0.05,0.95), na.rm=TRUE), lty="dashed", lwd=1)
-if (metstation == "FILA2"){lP <- "topleft"}else{lP <- "topright"}
 legend (lP, legend=c ("gale", "storm") # row.names(sTab)[1:2]
-        , fill=gCols[1:2], bty="n")
+        , fill=gCols[c(2,1)], bty="n", ncol=1)
 dev.off()
 rm (cGale, yGale, gCols, sTab, lP)
 ## end of wind summary
@@ -253,7 +279,7 @@ rm (cGale, yGale, gCols, sTab, lP)
 
 
 if (0){ ## violin plot of frequency of storms/gales
-  require("vioplot")
+  Require("vioplot")
   vioplot (yGale$maxwspd, ylab="N gales")
   ## abline (h=yGale$maxwspd [yGale$year == currentYear])
   points (1, yGale$maxwspd [yGale$year == currentYear]
@@ -289,7 +315,7 @@ meanWind <- function (u,v){ # weatherclasses.com as above
 dMeans$wdir <- with (dMeans, meanWind (uw, vw))
 dMeans$windSpd <- with (dMeans, sqrt (uw^2+vw^2))
 dMeans$wdir <- with (dMeans, ifelse (wdir < 0, wdir + 360, wdir)) # needed??
-require ("circular")
+Require ("circular")
 circWind <- circular (hmr$wdir, type="directions", units="degrees", template="geographics")
 wDir2 <- aggregate (circWind~jday+year, hmr, FUN=function (x){
   as.numeric (mean (x, na.rm=TRUE)) ## this is NOT right -- need to apply weight by wind speed! XXX
@@ -300,12 +326,12 @@ rm (circWind, wDir2)
 ## MA of current/past year -- Moving Average
 ##--- this (and others should be handled with prepPDF) XXX
 
-# require (forecast)
+# Require (forecast)
 # load ("~/tmp/LCI_noaa/cache/MAfunction.RData") ## gets maT -- function -- backwards MA -- is that what we want? XXX
 # ma <- maT
 # dMeans$maW <- as.numeric (maT (dMeans$wspd, maO))
 # dMeans$galeMA <- as.numeric (maT (dMeans$gale, maO))
-require ("SWMPr")
+Require ("SWMPr")
 dMeans$maW <- unlist (smoother (dMeans$wspd, maO, sides=1))
 dMeans$galeMA <- unlist (smoother (dMeans$gale, maO, sides=1))
 
@@ -445,7 +471,7 @@ if (0){
   hmrS$date <- hmrS$datetimestamp
 
   windR <- function (df){  ## noisy. sink () does not suppress console output or warnings
-    require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
+    Require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
     wR <- windRose (df, ws="wspd", wd="wdir"
                     #, type="yClass"
                     , type=c("season") #, "yClass")
@@ -487,7 +513,7 @@ if (0){
   #  par (mar=c())
   windR (hmrS)
   dev.off()
-  require ("png")
+  Require ("png")
   img2 <- readPNG (paste0 (tF, "ltc.png"))
   unlink(tF, recursive=TRUE); rm (tF)
   ## calculate coordinates for raster-image, to avoid readjusting it each year
@@ -511,7 +537,7 @@ with (tDay, addGraphs (longMean=smoothWindMA, percL=lowPerMA, percU=uppPerMA
                        , current=cbind (pp365ma, p365ma, og365ma)
                        , jday=jday
                        , currentCol=currentCol
-                       , pastYear=pastYear, ongoingYear=FALSE,
+                       , pastYear=pastYear, ongoingYear=ongoingY,
 ))
 # lines (og365ma~jday, tDay, col="pink", lwd=3) # partial year -- temporary
 ## otherwise include in addGraphs with ongoingYear=TRUE
@@ -525,7 +551,7 @@ if (0){ # plot SCA days?
         text (jday, p365ma + 0.5, labels=p365wCar, srt=0, cex=0.8))
 }
 # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels=p365wCar))
-require ("png")
+Require ("png")
 ## plot gales or storms?
 galeS <- subset (tDay, p365galDay > 0)  ## should be storms!
 hgt <- 1.1; wdh <- 15
@@ -547,14 +573,14 @@ bP <- cLegend ("bottomleft", qntl=qntl [1], inset=0.02
                , mRange=c(min (hmr$year), currentYear - 1)
                , cYcol=currentCol
                , title=paste (maO, "day moving average")
-               , pastYear=pastYear, ongoingYear=FALSE,
+               , pastYear=pastYear, ongoingYear=ongoingY,
                )
 ## legend for gale clouds in other corner
 if (1){
   ## gales
   yL <- 0.7; xL <- 250
   rasterImage (img, xleft=xL, xright=xL+wdh, ybottom=yL-0.5, ytop=yL-0.5+hgt)
-  text (xL+13, yL - 0.05, paste0 ("N,E,S,W  direction and timing\n of gales (>", galeT, " knots)")
+    text (xL+13, yL - 0.05, paste0 ("Gales with wind direction")  # "N,E,S,W  direction and timing\n of gales (", currentYear, ", >", galeT, " knots)")
         , pos=4, adj=c(0,1))
   # yL <- 2.7
   # text (365, yL + 0.1, paste0 ("N,E,S,W  gale (>", galeT, " knots)"), pos=2)
@@ -577,8 +603,8 @@ rm(hgt, wdh, bP, img, yL, xL)
 ## start-over/add windrose
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
-# if (!require ("openair")){
-# require("devtools") ## needs Rtools -- which needs VPN
+# if (!Require ("openair")){
+# Require("devtools") ## needs Rtools -- which needs VPN
 # install_github('davidcarslaw/openair')
 # }
 
@@ -651,7 +677,7 @@ dev.off()
 # dM <- subset (dMeans, jday >= 335) # 1 Dec=335
 #
 # windR <- function (subsV, ...){
-#   require ("climatol")
+#   Require ("climatol")
 #   wndfr <- with (subset (dM, subsV)
 #                  , table (cut (wspd, breaks=c(0,3,6,9,60), include.lowest=TRUE)
 #                           , cDir (wdir, nDir=16)))
@@ -662,7 +688,7 @@ dev.off()
 #   names (wndfr) <- gsub ("Freq.", "", names (wndfr))
 #   rosavent (as.data.frame (wndfr), uni=vUnit, key=TRUE, flab=1)
 # }
-# # require("Hmisc") # subplot incompatible with layout() :(
+# # Require("Hmisc") # subplot incompatible with layout() :(
 # # spSi <- 1.7
 # # subplot (windR (dM$year < currentYear)
 # #          , x=160, y=12.8, vadj=1, size=c(spSi, spSi))
@@ -680,12 +706,12 @@ dev.off()
 
 # library(devtools)
 # install_github("tomhopper/windrose")   ## not that pretty -- looks like ggplot2
-# require ("windrose")
+# Require ("windrose")
 # data(wind_data)
 # wind_rose <- windrose(wind_data, spd=Wind_Speed_meter_per_second, dir=Wind_Direction_deg)
 # plot(wind_rose)
 
-# require ("clifro")  # builds on ggplot2
+# Require ("clifro")  # builds on ggplot2
 # example (windrose)
 
 
@@ -722,7 +748,7 @@ if (metstation == "kachomet"){
   pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
   ## alternative: wldiag in dgolicher/giscourse on github
   ## for same but with more customization, see library (iki.dataclim)
-  require ("climatol")
+  Require ("climatol")
   diagwl (climD (subset (hmr, year < currentYear))
           , est="Homer Spit"
           # , per=paste (range (subset (hmr, !is.na (totprcp))$year), collapse="-")  ## hmrC ?!?
@@ -776,7 +802,7 @@ if (metstation == "kachomet"){
 
 
   ## compare wind Flat Island with Homer Spit -- windroses
-  pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/windRose_Locations2.pdf")
+  pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-windRose_Locations2.pdf")
        , width=6, height=4)
   windRose(hmrS, ws="wspd", wd="wdir"
            # , type="yClass"

@@ -4,15 +4,20 @@ rm (list=ls())
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 ## what to show
-pastYear <- TRUE
-ongoingY <- FALSE
+pastYear <- FALSE  ## for fall publication
+ongoingY <- TRUE
+
+pastYear <- FALSE  ## for winter/spring publication
+ongoingY <- TRUE
 
 
 maO <- 30  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("lightblue", "blue", "black")
+currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+currentCol <- c("lightblue", "blue", "black")  ## current and prev
+
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
@@ -20,9 +25,9 @@ SWMP <- TRUE
 
 source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
+  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
-#  source ("noaaWeather.R")
+  source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
 
@@ -67,9 +72,9 @@ yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY)&(year < currentYear)
                   , FUN=sum, na.rm=TRUE)
 ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm=TRUE)
 
-## violin plot of annua rain
+## violin plot of annual rain
 if (0){
-  require ("vioplot")
+  Require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
                     , FUN=sum, na.rm=TRUE)
   x <- vioplot(yA2$totprcp, ylab="annual precipitation [mm]")
@@ -91,7 +96,9 @@ aPlot (tDay, "totprcp", ylab="daily precipitation [mm]"
        , currentCol=currentCol
        , MA=TRUE
        , pastYear=pastYear, ongoing=ongoingY)
-if (SWMP){title (main="Precipitation at Homer Spit")}
+if (SWMP){title (main="Precipitation at Homer Spit")}else{
+  title (main="Precipitation at Homer Airport")
+}
 ## add inch scale
 iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 
@@ -99,14 +106,19 @@ iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 cCex <- 2
 text (tDay$jday, ifelse (tDay$pY_totprcp > 10
                          #, tDay$pYMA_totprcp + 0.2
-                         , 0
-                         , NA)
+                         , 0, NA)
       , labels="*", col=currentCol [2], cex=cCex)
 if (pastYear){
   text (tDay$jday, ifelse (tDay$pcY_totprcp > 10
                            , 0.18
                            , NA)
         , labels="*", col=currentCol [1], cex=cCex)
+}
+if (ongoingY){
+  rD <- ifelse (is.na (tDay$ogY_totprcp), 0, tDay$ogY_totprcp) # or next line fails
+  text (tDay$jday, ifelse (rD > 10, 0.14, NA)
+        , labels="*", col=currentCol [3], cex=cCex)
+  rm (rD)
 }
 # require ("png")
 # img <- readPNG ("pictograms/rain-cloud.png")

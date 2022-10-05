@@ -196,6 +196,7 @@ for (i in 1:length (fNf)){
   ## vprr bin_cast / bin_calculate
   ## and/or oce::ctdDecimate
   # -- ctdDecimate seems to work but depth still a bit off
+  ## or use oce::binMean1D
 }
 }
 rm (bT, i, j, tLD)

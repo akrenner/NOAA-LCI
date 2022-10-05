@@ -11,16 +11,11 @@
 
 
 ## set-up parameters
+source ("annualPlotFct.R") # already loads SWMPr
+suppressPackageStartupMessages (Require ("R.utils"))
 
-# if (.Platform$OS.type == "windows"){
-#   require ("R.utils")
-#   SMPfile <- readWindowsShortcut ("~/GISdata/LCI/SWMP/current.lnk")$path
-# }else{ # MacOS or Linux
-#   SMPfile <- "~/GISdata/LCI/SWMP/current"
-# }
-suppressMessages (require ("R.utils"))
-SMPfile <- filePath ("~/GISdata/LCI/SWMP/current", expandLinks = "local") # works on all platforms?
-
+sF <- list.files("~/GISdata/LCI/SWMP/", pattern="*.zip", full.names=TRUE)
+SWMPfile <- sF [which.max (file.info(sF)$ctime)]; rm (sF)
 
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
@@ -29,11 +24,7 @@ dir.create ("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursiv
 
 
 ## load and process SWMP data
-source ("annualPlotFct.R") # already loads SWMPr
-## defines getSWMP () -- use this to replace import_local()
-# unlink ("~/tmp/LCI_noaa/cache/SWMP", recursive = TRUE) # remove cache if downloaded new zip file from CDNA SWMP
-
-require ("SWMPr")
+Require ("SWMPr")
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
 sldvia1 <- getSWMP ("kacsewq") # Seldovia deep -- early, no longer updated
 sldvia <- rbind (sldvia1, sldvia); rm (sldvia1)
@@ -158,12 +149,12 @@ tempDay$homerS <- tHom$Sal  [match (paste (tempDay$year, tempDay$jday), paste (t
 rm (tHom)
 
 sltFit <- function (varN){
-    require (stlplus)                       # use stlplus because it handles NAs gracefully
+    Require ("stlplus")                       # use stlplus because it handles NAs gracefully
     stlplus (ts (tempDay [,which (names (tempDay) == varN)], start = c (min (tempDay$year),1)
                , frequency = 365.25)
            , s.window = "periodic")
 }
-require (stlplus)                       # use stlplus because it handels NAs gracefully
+Require ("stlplus")                       # use stlplus because it handels NAs gracefully
 fit <- sltFit ("Temp")
 fitS <- sltFit ("Sal")
 fitSH <- sltFit ("homerS")
@@ -185,9 +176,9 @@ dev.off()
 ## rm (dayMean)
 
 # tempDay$seasonal <- fit$data$seasonal
-# require (zoo)
+# Require ("zoo")
 seaStd <- function (x, seasonC){ # subtract mean and standardize by range of season
-    require (zoo)
+    Require ("zoo")
     xM <- na.approx (x, na.rm = FALSE) - seasonC
     xM <- xM - mean (xM, na.rm = TRUE)
     xM <- xM / diff (range (seasonC))
@@ -214,7 +205,7 @@ rm (seaStd)
 #     return (winSum)
 # }
 # save (maT, file = "~/tmp/LCI_noaa/cache/MAfunction.RData")
-require ("SWMPr")
+Require ("SWMPr")
 maT <- function (df, maO){unlist (smoother (df, maO))}  # XXX move to annualPlotFct.R
 
 lagV <- c(1,7,30,60,90, 180, 365, 730)
@@ -394,7 +385,7 @@ sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
     box()
     abline (h = mean (sdT$tsVar), col = "gray", lty = "dashed")
     ## add circular smoothing spline
-    require (pbs)
+    Require ("pbs")
     splS <- glm (tsVar~pbs::pbs (jday, df = 4, Boundary.knots=c(1,366)), data = sdT)
     splP <- predict (splS, type = "response", newdata = data.frame (jday = 1:366), se.fit = TRUE)
     lines (sdT$jday, splP$fit, col = "blue", lwd = 2)
@@ -403,9 +394,9 @@ sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
 }
 
 
-## require ("colorspace")
+## Require ("colorspace")
 ## tsCol <- rep (rainbow_hcl (length (levels (tempDay$year))/2), 2)
-## require ("RColorBrewer")
+## Require ("RColorBrewer")
 ## tsCol <- rep (brewer.pal (length (levels (tempDay$year))/2, name = "Set3"), 2)
 tsCol <- rep (1:(length (levels (tempDay$year))/2), 2)
 
@@ -472,13 +463,13 @@ if (0){
 ## seasonal decomposition
 
 ## interpolate NAs
-require (zoo)
+Require ("zoo")
 ## na.locf
 # sldvia$Temp <- na.approx (sldvia$Temp,
 sldviaTS <- ts (sldvia$Temp, delta = 1/(4*24*365.25), start = min (sldvia$year))
 sldviaTS <- na.approx (sldviaTS)
 
-require (forecast)
+Require ("forecast")
 tempTS <- msts (sldviaTS, seasonal.periods = c(24*4,
                                                   12.4206 * 4, # M2 tide
                                                   24*4*365.25) # daily and annual signal
@@ -500,8 +491,7 @@ save.image ("~/tmp/LCI_noaa/cache/SeldTempx.RData")
 ## fourier transformation
 library (stats)
 tempFF <- fft (sldvia$Temp)             # doesn't seem productive -- may need tuning or dealing with NAs? Inf to -Inf
-
-
 }
 
+cat ("Finished SeldoviaTemp.R\n\n")
 ## EOF
