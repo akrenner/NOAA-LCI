@@ -4,7 +4,10 @@
 ## use Lands End wind data from SWMP station
 
 
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 source ("annualPlotFct.R")
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -25,11 +28,10 @@ wStations <- c("kachomet", "FILA2"
                # , "AMAA2" #, "HMSA2"
                )
 # rm (wStations)
-autumnPub <- TRUE   ## quarterly report showing most current data or annual report (spring)
 
 
 
-if (autumnPub){
+if (quarterly){
   pastYear <- FALSE  ## for winter/spring publication
   ongoingY <- TRUE
 }else{
@@ -45,7 +47,7 @@ galeT <- 34  # max wind speed for gale
 scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 # currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
 Require ("RColorBrewer")
-if (autumnPub){
+if (quarterly){
   currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
 }else{
   currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])

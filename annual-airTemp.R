@@ -8,7 +8,7 @@ if (!exists ("quarterly")){
 
 
 
-
+## may have to delete cache -- done now by functions
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
