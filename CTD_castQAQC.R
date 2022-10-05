@@ -56,11 +56,11 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
 }
 
 
-if (1){
 physOc$year <- as.factor (format (physOc$isoTime, "%Y"))
 physOc$month <- as.numeric (format (physOc$isoTime, "%m"))
 physOc$season <- Seasonal (physOc$month)
 
+if (1){
 ## Transects 3,6,5,6,9
 # physOc$Transect <- grep ("^[A:Z,a-b,0-9]+_", physOc$Match_Name, value = TRUE)            # overwrite
 plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
@@ -92,7 +92,9 @@ plotCTDprof <- function (i){
   if (i %% 7 == 0){cat ("\n")}
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
-    pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
+    # pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
+    png (paste0 (dirN, levels (physOc$File.Name)[i], ".png"), res=200, height=11*200, width=8.5*200)
+    par (mfrow=c(4,2))
     try ({
       ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
                                  , temperature = Temperature_ITS90_DegC
@@ -100,42 +102,44 @@ plotCTDprof <- function (i){
                                  , longitude = longitude_DD
                                  , latitude = latitude_DD
       ))
+<<<<<<< Updated upstream
       ## add fluorescence
+=======
+>>>>>>> Stashed changes
       ctdF <- oceSetData (ctdF, value = ctd$Fluorescence_mg_m3
                           , name = "fluorescence"
-                          #, label = "fluorescence"
                           , unit = "mg/m^3")
-      ## add PAR
       ctdF <- oceSetData (ctdF, value = ctd$PAR.Irradiance
                           , name = "PAR"
-                          #, label = "Irradiance"
                           , unit = "mg/m^3")
-      ## add O2
       ctdF <- oceSetData (ctdF, value = ctd$Oxygen_SBE.43..mg.l.
                           , name = "O2"
-                          #, label = "Oxygen"
                           , unit = "mg/l")
+<<<<<<< Updated upstream
+=======
+      ctdF <- oceSetData (ctdF, value = ctd$turbidity
+                          , name = "turbidity"
+                          , unit = "")
+      ## strength of stratification and depth of pycnocline
+      # hist (poSS$swN2)
+      ## add line, marking pycnocline -- if we can?
+>>>>>>> Stashed changes
 
-      plot (ctdF, span = 100) ## add above columns?  # , mar = c(2,1.5,4,1.5))
-      #           title (paste (ctd$File.Name)[1], outer = FALSE, line = 3)
+      ## make 8 plots
+      plot (ctdF, which="salinity+temperature", type="l")
+      plot (ctdF, which="density+N2", type="l")
+      plot (ctdF, which="TS", type="l")
+      plot (ctdF, which="map", span=100)
     })
-#    dev.off()
-    ## next page, plot:
-    ## O2 over depth
-    ## fluorescence
-    ## Irradiance
-    # pdf (paste0 (dirN
-    #              , levels (physOc$File.Name)[i]
-    #              , "_additions.pdf"))
     try({
-      par (mfrow = c(2,2))
-      plotProfile (ctdF, xtype = "O2", ytype = "depth")
-      plotProfile (ctdF, xtype = "fluorescence", ytype = "depth")
-      plotProfile (ctdF, xtype = "PAR", ytype = "depth")
-      # plot (ctdF, which = 1)
+      plotProfile (ctdF, xtype = "O2", ytype = "depth", type="l")
+      plotProfile (ctdF, xtype = "fluorescence", ytype = "depth", type="l")
+      plotProfile (ctdF, xtype = "PAR", ytype = "depth", type="l")
+      plot (ctdF, which="Rrho", type="l")
+   #   plotProfile (ctdF, xtype = "turbidity", ytype = "depth")  ## fails
     })
     dev.off()
-    if (0){
+    if (0){ ## combine all into one PDF
       system ("sleep 5", wait = TRUE)
       system (paste ("pdfunite ~/tmp/LCI_noaa/media/CTDprofiles/"
                      , levels (physOc$File.Name)[i]
@@ -157,7 +161,7 @@ if (.Platform$OS.type=="unix"){
   Require ("parallel")
   x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }else{
-x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
+  x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
 }
 # dev.off()
 
