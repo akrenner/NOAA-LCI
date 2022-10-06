@@ -185,7 +185,8 @@ rm (hmrD, rainSum)
 ##################################################################################################
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
+# rm (list=ls());
+load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 # load from NOAA ??
 
 maO <- 31
@@ -200,11 +201,16 @@ tDay <- prepDF (varName="rh", dat=hmr, maO=maO, qntl=qntl)
 
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width=9, height=6)
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.png", width=1800, height=1200, res=300)
-aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE)
+aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE
+       , pastYear=pastYear, ongoing=ongoingY
+)
 cLegend ("bottomright", qntl=qntl, title=paste (maO, "day moving average")
          , title.adj=NULL, currentYear=currentYear
          , mRange=c(min (hmr$year), currentYear - 1)
-         , cYcol=currentCol)
+         , cYcol=currentCol
+         , pastYear=pastYear
+         , ongoingYear=ongoingY
+)
 dev.off()
 
 

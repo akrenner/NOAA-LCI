@@ -35,7 +35,7 @@ source ("annual-waves.R")
 # source ("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
 
-cat ("all done\n")
+cat ("Finished AnnualStateOfTheBay.R\n")
 print (Sys.time())
 # print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because rm (list = ls())
 
