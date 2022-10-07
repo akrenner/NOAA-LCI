@@ -883,6 +883,64 @@ rm (springM, thTempL, tempName, tL)
 rm (T96, T96f)
 
 
+
+
+
+
+## GAK1 -- and compare deep-water salinity to T8-6
+## data on workspace: 1998-2017
+## depth: 20, 30, 60, 100, 150, 200, 250 m
+##
+## climatology of depth profiles (as above)
+## anomaly-like plot for each depth
+##
+
+if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far inshore, not reaching into ACC
+
+zL <- list.files("~/GISdata/LCI/GAK1mooring-data-improved/", "*.zip", full.names=TRUE)
+list.files (zL [1], "*.csv")
+fl <- unzip (zL [1], list=TRUE)
+
+x <- read.csv (paste (zL[1], fl$Name [1], sep="/"))
+
+
+
+fl <- unzip (zL [1], list=TRUE)
+require ("tidyverse")
+require ("oce")
+# tD <- tempdir()
+gak <- readr::read_csv (unzip (zL[1])) ## put unzip into temp dir!!
+names (gak) <- c("Station", "Type", "longitude"
+                 , "latitude", "bottomDepth", "DateTime"
+                 , "depth", "pressure", "temperature"
+                 , "conductivity", "salinity", "densSigma"
+                 , "instrument")
+gak <- subset (gak, !is.na (depth))
+gak$depthF <- ifelse (gak$depth < 40, 30, gak$depth)
+gak$depthF <- factor (gak$depthF)
+
+gakS <- lapply (1:length (levels (gak$depthF))
+                , function (i){
+                  gax <- subset (gak, depthF==levels (gak$depthF)[i])
+                  with (gax, as.ctd (salinity, temperature
+                                     , pressure
+                                     , time=DateTime
+                                     , longitude=-149.5
+                                     , latitude=59.84
+                                     , deploymentType="moored"))
+                }) %>%
+  as.section   # (waterDepth=250)
+}
+
+# u <- "http://erddap.aoos.org/erddap/tabledap/org_gulfwatchalaska_gak1"
+# require(ncdf4)
+# dataset <- nc_open (u)
+# names (dataset)
+# rm (u)
+
+
+
+
 ## TS-diagram
 # plot (Salinity_PSU~Temperature_ITS90_DegC, data=physOc, col=format (physOc$isoTime, "%m"))
 # use oce template for pretty plot
