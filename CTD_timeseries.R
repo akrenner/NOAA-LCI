@@ -915,6 +915,7 @@ names (gak) <- c("Station", "Type", "longitude"
                  , "depth", "pressure", "temperature"
                  , "conductivity", "salinity", "densSigma"
                  , "instrument")
+unlink ("UAK_GAK1_*.csv")  ## better to use tempdir()
 gak <- subset (gak, !is.na (depth))
 gak$depthF <- ifelse (gak$depth < 40, 30, gak$depth)
 gak$depthF <- factor (gak$depthF)
@@ -939,6 +940,9 @@ gakS <- lapply (1:length (levels (gak$depthF))
 # rm (u)
 
 
+## Cross-correlation of seldovia-deep and GAK1 20 m
+## Cross-correlation of T9-6 100 m and GAK1 100 m
+## Correlation-map of T9-6 100m and GAK-line 100m/surface
 
 
 ## TS-diagram
