@@ -292,7 +292,7 @@ for (j in 1: length (instSite)){
          , ylab=expression('Temperature'~'['*degree~'C'*']')
          , pastYear=pastYear, ongoingYear=ongoingY
   )
-  title (main=c("Seldovia SST", "Seldovia Harbor bottom water temperature", "Homer SST", "Homer bottom water temperature")[j])
+  title (main=c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
   fAxis(c (0, 15)) # from annualPlotFct.R
   bx <- legend ("bottom", inset=0.1, bty="n", legend= "")
   cLegend ("topleft", inset=0.01
