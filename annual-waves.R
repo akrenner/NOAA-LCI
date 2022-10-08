@@ -12,9 +12,20 @@ if (!exists ("quarterly")){
 }
 
 
+## order: current, present, previous
+require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+# maO <- 3 # 30
+maO <- 30
+qntl = 0.9
+
+
+
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 if (quarterly){
   mediaD <- paste0 (mediaD, "update/")
+  currentCol <- currentCol [c(1,3,2)]
 }else{
 
 }
@@ -167,17 +178,6 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 source ("annualPlotFct.R")
 
 
-## order: current, present, previous
-# currentCol <- c("darkblue", "blue", "lightblue")
-currentCol <- c("black", "blue", "lightblue")
-require ("RColorBrewer")
-currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
-
-
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-# maO <- 3 # 30
-maO <- 30
-qntl = 0.9
 
 
 # tDay <- fixGap (tDay)

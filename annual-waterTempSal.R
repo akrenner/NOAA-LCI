@@ -21,12 +21,15 @@ qntl=c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c ("lightblue", "blue", "magenta")
+Require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
 if (quarterly){
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
   mediaD <- paste0 (mediaD, "update/")
+  currentCol <- currentCol [c(3,1,2)]
 }else{
   pastYear <- TRUE  ## winter/spring publication schedule
   ongoingY <- FALSE
@@ -271,7 +274,9 @@ dev.off()
 #############################
 
 currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
-
+if (quarterly){
+  currentCol <- currentCol [c(3,1,2)]
+}
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
 for (j in 1: length (instSite)){
   tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]

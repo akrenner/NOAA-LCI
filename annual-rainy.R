@@ -12,20 +12,21 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+currentCol <- c("lightblue", "blue", "black")  ## current and prev
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
+
 ## what to show
 if (quarterly){
   pastYear <- FALSE  ## for fall publication
   ongoingY <- TRUE
-  currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+  currentCol <- currentCol [3,1,2]  ## current and ongoing
   mediaD <- paste0 (mediaD, "update/")
 }else{
   pastYear <- FALSE  ## for winter/spring publication
   ongoingY <- TRUE
-  currentCol <- c("lightblue", "blue", "black")  ## current and prev
 }
 
 
