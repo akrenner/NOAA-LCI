@@ -31,13 +31,6 @@ wStations <- c("kachomet", "FILA2"
 
 
 
-if (quarterly){
-  pastYear <- FALSE  ## for winter/spring publication
-  ongoingY <- TRUE
-}else{
-  pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
-  ongoingY <- TRUE
-}
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) -1 # year before present
 maO <- 31   # moving average window
 vUnit <- "knots" # or comment out to default to m/s
@@ -46,14 +39,18 @@ stormT <- 48 # threshold for max wind speed to count as storm
 galeT <- 34  # max wind speed for gale
 scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 # currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
+
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
+
 Require ("RColorBrewer")
-<<<<<<< HEAD
-if (autumnPub){
-=======
 if (quarterly){
->>>>>>> StateOfBayQuarter
-  currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
+  currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")[c(3, 1, 2)]
+  mediaD <- paste0 (mediaD, "update/")
 }else{
+  pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
+  ongoingY <- TRUE
   currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
 }
 ## leave code below as-is
@@ -65,7 +62,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 
 ## get up-to-date SWMP data
 Require ("openair") # for windRose
-
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 ## cycle through all wStations
@@ -430,8 +427,7 @@ if (metstation == "kachomet"){ # don't cache non-SWMP site because they don't ha
 ################
 
 x <- dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE); rm (x)
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wind_", metstation,".pdf")
-     , width=9, height=6)
+pdf (paste0 (mediaD, "sa-wind_", metstation,".pdf"), width=9, height=6)
 # png ("~/tmp/LCI_noaa/media/wind-MA.png"), width=9*100, height=7*100)
 
 

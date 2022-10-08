@@ -12,7 +12,7 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
@@ -21,6 +21,7 @@ if (quarterly){
   pastYear <- FALSE  ## for fall publication
   ongoingY <- TRUE
   currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+  mediaD <- paste0 (mediaD, "update/")
 }else{
   pastYear <- FALSE  ## for winter/spring publication
   ongoingY <- TRUE
@@ -36,7 +37,7 @@ if (SWMP){                                   # use SWMP data or NOAA homer airpo
   source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
-
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 # plot (subset (hmr$totprcp, hmr$year < 2005), type="l")
@@ -94,7 +95,7 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
+pdf (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
 # png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png")
 #      , width=1800, height=1200, res=300)
 par (mar=c (3,4,2,4)+0.1)
