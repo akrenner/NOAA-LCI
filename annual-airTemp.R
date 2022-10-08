@@ -1,21 +1,14 @@
 
 ## air temperature -- standardized plot
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 
-pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
-pastYear <- TRUE  # for winter/fall publication schedule
-ongoingY <- FALSE
-
-
-## may have to delete cache
-if (.Platform$OS.type=="windows"){
-  unlink ("C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/", recursive=TRUE)
-}
-
+## may have to delete cache -- done now by functions
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
@@ -31,14 +24,25 @@ SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
 
 
+## setup automated parameter and pull data
 source ("annualPlotFct.R")
 
+if (quarterly){
+  pastYear <- FALSE  # plot currentYear-1 ?
+  ongoingY <- TRUE
+}else{
+  pastYear <- TRUE  # for winter/fall publication schedule
+  ongoingY <- FALSE
+}
+
+## get data from cache or download
 if (SWMP){
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
   source ("noaaWeather.R")
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
+
 
 
 # plot (subset (hmr$totprcp, hmr$year < 2005), type="l")

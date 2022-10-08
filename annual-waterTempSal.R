@@ -7,16 +7,13 @@ if (.Platform$OS.type == "unix"){
 }else{
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 
-
-
-pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
-pastYear <- TRUE  ## winter/spring publication schedule
-ongoingY <- FALSE
 
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either
@@ -25,6 +22,13 @@ pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c ("lightblue", "blue", "magenta")
 
+if (quarterly){
+  pastYear <- FALSE  # plot currentYear-1 ?
+  ongoingY <- TRUE
+}else{
+  pastYear <- TRUE  ## winter/spring publication schedule
+  ongoingY <- FALSE
+}
 
 source ("annualPlotFct.R")
 

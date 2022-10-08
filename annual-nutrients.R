@@ -2,7 +2,10 @@
 ## plotting framework. Consider custom approach. Worth the pain=?
 
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-# rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 
 
 

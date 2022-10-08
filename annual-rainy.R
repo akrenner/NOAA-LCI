@@ -1,28 +1,34 @@
 
 ## precipitation -- standardized plot
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
-## what to show
-pastYear <- FALSE  ## for fall publication
-ongoingY <- TRUE
-
-pastYear <- FALSE  ## for winter/spring publication
-ongoingY <- TRUE
 
 
-maO <- 30  # 7 days certainly not working, 14 days not enough either
+maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
-currentCol <- c("lightblue", "blue", "black")  ## current and prev
 
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
+## what to show
+if (quarterly){
+  pastYear <- FALSE  ## for fall publication
+  ongoingY <- TRUE
+  currentCol <- c("black", "blue", "lightblue")  ## current and ongoing
+}else{
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
+  currentCol <- c("lightblue", "blue", "black")  ## current and prev
+}
 
 
+## load/download/update data
 source ("annualPlotFct.R") # important to call after defining currentCol!
 if (SWMP){                                   # use SWMP data or NOAA homer airport
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
@@ -178,7 +184,8 @@ rm (hmrD, rainSum)
 ##################################################################################################
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
+# rm (list=ls());
+load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 # load from NOAA ??
 
 maO <- 31
@@ -193,11 +200,16 @@ tDay <- prepDF (varName="rh", dat=hmr, maO=maO, qntl=qntl)
 
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width=9, height=6)
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.png", width=1800, height=1200, res=300)
-aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE)
+aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE
+       , pastYear=pastYear, ongoing=ongoingY
+)
 cLegend ("bottomright", qntl=qntl, title=paste (maO, "day moving average")
          , title.adj=NULL, currentYear=currentYear
          , mRange=c(min (hmr$year), currentYear - 1)
-         , cYcol=currentCol)
+         , cYcol=currentCol
+         , pastYear=pastYear
+         , ongoingYear=ongoingY
+)
 dev.off()
 
 
