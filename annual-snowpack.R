@@ -9,6 +9,8 @@ if (.Platform$OS.type == "unix"){
 }else{
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
+source ("annualPlotFct.R")
+
 
 fetchNew <- TRUE  # get fresh data from server? takes longer
 # fetchNew <- FALSE  # get fresh data from server? takes longer
@@ -18,10 +20,7 @@ ongoingYear=TRUE
 pastYear=FALSE
 Require("RColorBrewer")
 currentCol <- brewer.pal(3, "Blues")
-
-
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-source ("annualPlotFct.R")
 
 # Require ("snotelr")
 # Require ("plotly")
@@ -197,18 +196,17 @@ snowMc$month <- as.numeric (format (snowMc$datetimestamp, "%M"))
 
 # 1991 seems to be missing, with only one year before that
 snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
-
-
 ## impute somewhere here!
 # Dray & Josse 2015: ipca is best way:  library (missMDA)
 Require ("missMDA")
 iDF <- imputePCA (snowMc [,2:(length (sites)+1)], method = "EM", ncp =2)
 Require ("FactoMineR")
-pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
 snowPCA <- PCA (iDF$completeObs, graph = TRUE, ncp = 2)
-dev.off()
-snowMc$PCA1 <- predict (snowPCA, iDF$completeObs)$coord [,1]
 
+# pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
+snowMc$PCA1 <- predict (snowPCA, iDF$completeObs)$coord [,1]
+dev.off()
+unlink ("Rplots*.pdf")
 
 rm (snowPCA, iDF)
 
