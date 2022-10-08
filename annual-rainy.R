@@ -22,7 +22,7 @@ SWMP <- TRUE
 if (quarterly){
   pastYear <- FALSE  ## for fall publication
   ongoingY <- TRUE
-  currentCol <- currentCol [3,1,2]  ## current and ongoing
+  currentCol <- currentCol [c (3,1,2)]  ## current and ongoing
   mediaD <- paste0 (mediaD, "update/")
 }else{
   pastYear <- FALSE  ## for winter/spring publication
