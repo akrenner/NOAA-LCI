@@ -96,9 +96,8 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-pdf (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png")
-#      , width=1800, height=1200, res=300)
+# pdf (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
+png (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".png"), width=9*300, height=6*300, res=300)
 par (mar=c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab="daily precipitation [mm]"
        , currentCol=currentCol

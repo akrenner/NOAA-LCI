@@ -160,7 +160,8 @@ hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, 
 sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
 # summary (sL)
 
-pdf (paste0 (mediaD, "sa-Fluorescence.pdf"), height=4, width=6)
+# pdf (paste0 (mediaD, "sa-Fluorescence.pdf"), height=4, width=6)
+png (paste0 (mediaD, "sa-Fluorescence.png"), height=4*300, width=6*300, res=300)
 par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
@@ -236,9 +237,8 @@ tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO)
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
 
 ## plot
-pdf (paste0 (mediaD, "sa-salinity", maO, "-d.pdf"), width=9, height=9)
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
-#      , width=1800, height=2400, res=300)
+# pdf (paste0 (mediaD, "sa-salinity", maO, "-d.pdf"), width=9, height=9)
+png (paste0 (mediaD, "sa-salinity", maO, "-d.png"), width=9*300, height=9*300, res=300)
 par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )

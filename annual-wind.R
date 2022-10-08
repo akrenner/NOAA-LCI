@@ -427,8 +427,8 @@ if (metstation == "kachomet"){ # don't cache non-SWMP site because they don't ha
 ################
 
 x <- dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE); rm (x)
-pdf (paste0 (mediaD, "sa-wind_", metstation,".pdf"), width=9, height=6)
-# png ("~/tmp/LCI_noaa/media/wind-MA.png"), width=9*100, height=7*100)
+# pdf (paste0 (mediaD, "sa-wind_", metstation,".pdf"), width=9, height=6)
+png (paste0 (mediaD, "sa-wind_", metstation,".png"), width=9*300, height=6*300, res=300)
 
 
 if (0){  ## farewell my good friend ##
