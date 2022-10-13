@@ -211,8 +211,23 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
   nA [match (refDF$jday, nA$jday),]
 }
 
+seasonalMA <- function (var, jday, width=maO){
+  ## work in progress -- not yet functioning
+  df <- cbind (var=rep (var, 3), jds=c(jday-366, jday, jday+366))
+  suppressPackageStartupMessages(Require ("zoo"))
+  ## aggregate over days first to ensure width is appropriate
+  dfA <- saggregate (var~jds, df, mean, na.rm=FALSE, refDF=df) ## NAs are lost -- gap-fill?
+  dfA <- aggregate (var~jds, df, mean, na.rm=FALSE) # ## NAs are lost -- gap-fill?
+  sMA <- zoo::rollapply (dfA$var, width=width, FUN=mean
+                         , fill=c(NA, NA, NA)
+                         , align="center"
+                         , na.rm=TRUE # better to set false?? effect?
+                         )
+  sMAy <- subset (sMA, dfA$jds%in%1:366)
+}
 
-prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
+
+prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
                     , maO=31
                     , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
                     , qntl=c(0.8, 0.9)
