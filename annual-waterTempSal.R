@@ -278,6 +278,10 @@ if (quarterly){
   currentCol <- currentCol [c(3,1,2)]
 }
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
+#
+save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
+# load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
+#
 for (j in 1: length (instSite)){
   tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]
                   , qntl=qntl, maO=maO)

@@ -96,10 +96,12 @@ phytoOut <- with (bOut, data.frame (station=Sampling.location, Date
                                     , StationN=msl$Station [mslR]
                                     , bOut [,3:ncol (bOut)]
 ))
+rm (mslR, bOut, bigP, dT, i, msl, phyt, pWout, tax)
 
 ## concatenate and output merged table
 write ("Collected as part of GulfWatch on predefined stations in Kachemak Bay concurrent with zooplankton and CTD"
        , file="~/tmp/LCI_noaa/data-products/phytoplankton.csv")
 write.table (phytoOut, file="~/tmp/LCI_noaa/data-products/phytoplankton.csv"
            , row.names=FALSE, append=TRUE, quote=FALSE, sep=",", col.names=TRUE)
+
 ## EOF
