@@ -529,11 +529,12 @@ save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 ## phytoplankton ##
 ###################
 
-phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton.csv")
+phyp <- read.csv ("~/GISdata/LCI/phytoplankton/phytoplankton.csv"
+                  , skip=1)
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2017-02.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2018-10-sorted.csv")
 ## current 2018 version does not have date
-phyp <- cbind (Match_Name = trimws (phyp$Sampling.location), phyp)
+phyp <- cbind (Match_Name = trimws (phyp$station), phyp)
 phyp$Match_Name <- gsub ("Transect\\s([1-9]),\\sStation\\s([0-9]+)", "\\1_\\2", phyp$Match_Name)
 # phyp$Match_Name <- gsub ("\\s([A-D])$", "_\\1", phyp$Match_Name) # space to underscore
 phyp$Match_Name <- gsub ("\\sBay", "", phyp$Match_Name) # del Cove
@@ -542,6 +543,12 @@ phyp$Match_Name <- gsub ("\\sLab", "", phyp$Match_Name) # del Lab
 phyp$Match_Name <- gsub ("^Kachemak\\s", "AlongBay_", phyp$Match_Name)
 phyp$Match_Name <- gsub ("^China\\sPoot", "ChinaPoot", phyp$Match_Name)
 phyp$Match_Name <- gsub ("\\s", "_", phyp$Match_Name) # space to underscore
+
+
+## any way to recover 'unknown 2021'??
+levels (factor (phyp$Date))
+phyp <- subset (phyp, Date != "unknown 2021")
+phyp <- subset (phyp, Date != "")
 
 
 levels (factor (phyp$Match_Name [which (is.na (match (phyp$Match_Name, stn$Match_Name)))]))
@@ -572,7 +579,7 @@ phyp <- cbind (SampleID = paste (phyp$Match_Name
                , phyp)
 rm (trnsct)
 phyCenv <- phyp
-phyCenv <- phyp [,c(1:which (names (phyCenv) == "Sampling.location")
+phyCenv <- phyp [,c(1:which (names (phyCenv) == "station") # or use Match_Name? difference?
                     , which (names (phyp) == "Total.cell.count"))]
 phyC <- phyp [,which (names (phyp) == "Alexandrium.spp.") :
                      which (names (phyp) == "unknown.pennate.diatom")]
