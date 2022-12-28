@@ -211,8 +211,27 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
   nA [match (refDF$jday, nA$jday),]
 }
 
+seasonalMA <- function (var, jday, width=maO){
+  ## work in progress -- not yet functioning
+  df <- cbind (var=rep (var, 3), jds=c(jday-366, jday, jday+366))
+  suppressPackageStartupMessages(Require ("zoo"))
+  ## aggregate over days first to ensure width is appropriate
+  if (length (var) > 366){
+    df <- aggregate (var~jds+year, df, mean, na.rm=FALSE) # ## NAs are lost -- gap-fill?
+  }
+  dfAng <- data.frame (jds=seq (-366, 2*366))
+  dfAng$var <- dfA$var [dfA$jds, dfAng$jds]
+  sMA <- zoo::rollapply (dfAng$var, width=width, FUN=mean
+                         , fill=c(NA, NA, NA)
+                         , align="center"
+                         , na.rm=FALSE # better to set false?? effect?
+                         )
+  sMAy <- subset (sMA, dfAng$jds%in%1:366)
+  sMay
+}
 
-prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
+
+prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
                     , maO=31
                     , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
                     , qntl=c(0.8, 0.9)
@@ -227,35 +246,55 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
 
   ## current/past year
   xVar <- dat [,which (names (dat) == varName)]
+  ## aggregate to dailys: - standardize to a common time interval across datasets
   dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
 
   ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
-  if (1){ # align at center
+
+  # align at center
+    ## not clear how this function is working, but output is odd when there are missing values
+    ## not sure how/whether these missing values are honored. Some results don't seem right/as expected.
+    ## SWMPr::smoother function seems to have the same issue.
+    ## in c(1,2,4,NA,NA,NA,5,6,7):  4 and 5 are averaged across the NAs. NAs are kept in output, but
+    ## dangling ends take them into account --- but shouldn't. Have to write my own rolling mean?
+
+    ## try package roll:roll_mean
+    ## or   dateutils::rollmean
+    if (0){
+      x <- c(NA, NA, 3,3,3,3,3,3,3,4,4,4,4,4,4,4,NA,NA,NA, NA, NA, NA,5,5,5,5,5, NA,NA)
+      y <- rollmean (x, k=3, align="center", fill=c(NA, "extend", NA))  ## oddly, this looks right
+      y <- rollmean (x, k=3, align="center", fill=c(NA, NA, NA))  ## oddly, this looks right
+      cbind (x,y)
+
+
+      xh <- subset (homerS$temp, homerS$year==2021)
+      # plot (xh)
+      xR <- rollmean (xh, k=31, align="center")
+
+    }
     suppressPackageStartupMessages (Require ("zoo"))
-    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "center")
-    #  dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
-    dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean, na.rm=TRUE
-                                 , fill=c(NA, "extend", NA)
-                                 , partial=FALSE # maO/2
+    # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align = "center", fill=c(NA, "extend", NA), na.rm=FALSE) ## looks like rollapply wth this fill
+    # dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
+    # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align="center")
+    dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean
+                      #           , na.rm=FALSE  ## no apparent affect
+                                 , fill= c(NA, NA, NA)
+                                 #, partial=FALSE # maO/2
                                  , align = "center")
-  }else{
-    ## bug in SWMPr smoothing function: last day=up-tick?
-    Require ("SWMPr")
-    dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
-    # dMeans$MA <- maT (dMeans$xVar, maO)
+    # Require ("roll")
+    # dMeans$MA <-roll::roll_mean (dMeans$xVar, width=maO, na_restore=FALSE, online=TRUE) #align="right")
 
-    ## alternative to smoother?!  this uses moving-AVERAGE, rather than moving sumFct XXX
-    ## sides=2 or sides=1?
+    # Require ("SWMPr")
+   #  dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
 
-    # dMeans$XXX <- XX$varName [match (...)
-    ## match ().... when length (varName) > 1
-  }
+# Require ("dateutils") ## not working
+# dMeans$MA <- dateutils::rollmean (dMeans$xVar, maO)
+    dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
+    tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
+    tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
+    tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
-  dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
-  tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
-  tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   #  for (j in c (varName, MA)){
   for (i in 1:length (qntl)){
@@ -311,6 +350,9 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
 
   return (tDay)
 }
+
+
+## instead of first MA and then aggregate that, first aggregate/CI, then MA. Better handle on NAs?
 
 
 

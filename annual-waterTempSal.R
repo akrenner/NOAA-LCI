@@ -7,16 +7,13 @@ if (.Platform$OS.type == "unix"){
 }else{
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 
-
-
-pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
-pastYear <- TRUE  ## winter/spring publication schedule
-ongoingY <- FALSE
 
 
 maO <- 31  # 7 days certainly not working, 14 days not enough either
@@ -24,10 +21,22 @@ qntl=c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 currentCol <- c ("lightblue", "blue", "magenta")
+Require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
+if (quarterly){
+  pastYear <- FALSE  # plot currentYear-1 ?
+  ongoingY <- TRUE
+  mediaD <- paste0 (mediaD, "update/")
+  currentCol <- currentCol [c(3,1,2)]
+}else{
+  pastYear <- TRUE  ## winter/spring publication schedule
+  ongoingY <- FALSE
+}
 
 source ("annualPlotFct.R")
-
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 ####################
@@ -151,7 +160,8 @@ hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, 
 sL <- prepDF (dat=sldviaS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
 # summary (sL)
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Fluorescence.pdf", height=4, width=6)
+# pdf (paste0 (mediaD, "sa-Fluorescence.pdf"), height=4, width=6)
+png (paste0 (mediaD, "sa-Fluorescence.png"), height=4*300, width=6*300, res=300)
 par (mar=c(3,4,3,1))
 aPlot (sL, "chlfluor", currentCol=currentCol, ylab="Chlorophyll [mg/l]", main="Seldovia"
        #, ylim=c(1, 1.3)
@@ -227,9 +237,8 @@ tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO)
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
 
 ## plot
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.pdf"), width=9, height=9)
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-salinity", maO, "-d.png")
-#      , width=1800, height=2400, res=300)
+# pdf (paste0 (mediaD, "sa-salinity", maO, "-d.pdf"), width=9, height=9)
+png (paste0 (mediaD, "sa-salinity", maO, "-d.png"), width=9*300, height=9*300, res=300)
 par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )
@@ -265,15 +274,21 @@ dev.off()
 #############################
 
 currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
-
+if (quarterly){
+  currentCol <- currentCol [c(3,1,2)]
+}
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
+#
+save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
+# load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
+#
 for (j in 1: length (instSite)){
   tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]
                   , qntl=qntl, maO=maO)
   # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
   #                                                           "Temp-Deep-Homer")[j]
   #              , ".pdf"), width=9, height=6)
-  png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
+  png (paste0 (mediaD, "sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
                                                             "Temp-Deep-Homer")[j]
                , ".png"), width=1800, height=1200, res=300)
   par (mar=c(3,4,2,4))
@@ -281,7 +296,7 @@ for (j in 1: length (instSite)){
          , ylab=expression('Temperature'~'['*degree~'C'*']')
          , pastYear=pastYear, ongoingYear=ongoingY
   )
-  title (main=c("Seldovia SST", "Seldovia Harbor bottom water temperature", "Homer SST", "Homer bottom water temperature")[j])
+  title (main=c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
   fAxis(c (0, 15)) # from annualPlotFct.R
   bx <- legend ("bottom", inset=0.1, bty="n", legend= "")
   cLegend ("topleft", inset=0.01
