@@ -1,31 +1,44 @@
 
 ## precipitation -- standardized plot
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
-## what to show
-pastYear <- TRUE
-ongoingY <- FALSE
 
 
-maO <- 30  # 7 days certainly not working, 14 days not enough either
+maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-currentCol <- c("lightblue", "blue", "black")
+currentCol <- c("lightblue", "blue", "black")  ## current and prev
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 # currentCol <- "blue"
 SWMP <- FALSE
 SWMP <- TRUE
 
-
-source ("annualPlotFct.R") # important to call after defining currentCol!
-if (SWMP){                                   # use SWMP data or NOAA homer airport
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R -- SWMP
+## what to show
+if (quarterly){
+  pastYear <- FALSE  ## for fall publication
+  ongoingY <- TRUE
+  currentCol <- currentCol [c (3,1,2)]  ## current and ongoing
+  mediaD <- paste0 (mediaD, "update/")
 }else{
-#  source ("noaaWeather.R")
-  load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
+  pastYear <- FALSE  ## for winter/spring publication
+  ongoingY <- TRUE
 }
 
+
+## load/download/update data
+source ("annualPlotFct.R") # important to call after defining currentCol!
+if (SWMP){                                   # use SWMP data or NOAA homer airport
+  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
+}else{
+  source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
+  load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
+}
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 # plot (subset (hmr$totprcp, hmr$year < 2005), type="l")
@@ -67,9 +80,9 @@ yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY)&(year < currentYear)
                   , FUN=sum, na.rm=TRUE)
 ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm=TRUE)
 
-## violin plot of annua rain
+## violin plot of annual rain
 if (0){
-  require ("vioplot")
+  Require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
                     , FUN=sum, na.rm=TRUE)
   x <- vioplot(yA2$totprcp, ylab="annual precipitation [mm]")
@@ -83,15 +96,16 @@ rm (aF, yA2, cOffY)
 
 
 ## plot
-pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
-# png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-precip-", ifelse (SWMP, "LE", "AP"), ".png")
-#      , width=1800, height=1200, res=300)
+# pdf (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
+png (paste0 (mediaD, "sa-precip-", ifelse (SWMP, "LE", "AP"), ".png"), width=9*300, height=6*300, res=300)
 par (mar=c (3,4,2,4)+0.1)
 aPlot (tDay, "totprcp", ylab="daily precipitation [mm]"
        , currentCol=currentCol
        , MA=TRUE
        , pastYear=pastYear, ongoing=ongoingY)
-if (SWMP){title (main="Precipitation at Homer Spit")}
+if (SWMP){title (main="Precipitation at Homer Spit")}else{
+  title (main="Precipitation at Homer Airport")
+}
 ## add inch scale
 iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 
@@ -99,14 +113,19 @@ iAxis (tDay$totprcp, lab="daily precipitation [inch]")
 cCex <- 2
 text (tDay$jday, ifelse (tDay$pY_totprcp > 10
                          #, tDay$pYMA_totprcp + 0.2
-                         , 0
-                         , NA)
+                         , 0, NA)
       , labels="*", col=currentCol [2], cex=cCex)
 if (pastYear){
   text (tDay$jday, ifelse (tDay$pcY_totprcp > 10
                            , 0.18
                            , NA)
         , labels="*", col=currentCol [1], cex=cCex)
+}
+if (ongoingY){
+  rD <- ifelse (is.na (tDay$ogY_totprcp), 0, tDay$ogY_totprcp) # or next line fails
+  text (tDay$jday, ifelse (rD > 10, 0.14, NA)
+        , labels="*", col=currentCol [3], cex=cCex)
+  rm (rD)
 }
 # require ("png")
 # img <- readPNG ("pictograms/rain-cloud.png")
@@ -166,7 +185,8 @@ rm (hmrD, rainSum)
 ##################################################################################################
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
+# rm (list=ls());
+load ("~/tmp/LCI_noaa/cache/metDat.RData") # from windTrend.R
 # load from NOAA ??
 
 maO <- 31
@@ -181,11 +201,16 @@ tDay <- prepDF (varName="rh", dat=hmr, maO=maO, qntl=qntl)
 
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width=9, height=6)
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.png", width=1800, height=1200, res=300)
-aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE)
+aPlot (tDay, "rh", ylab="% relative humidity", currentCol=currentCol, MA=TRUE
+       , pastYear=pastYear, ongoing=ongoingY
+)
 cLegend ("bottomright", qntl=qntl, title=paste (maO, "day moving average")
          , title.adj=NULL, currentYear=currentYear
          , mRange=c(min (hmr$year), currentYear - 1)
-         , cYcol=currentCol)
+         , cYcol=currentCol
+         , pastYear=pastYear
+         , ongoingYear=ongoingY
+)
 dev.off()
 
 

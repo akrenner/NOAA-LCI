@@ -1,11 +1,29 @@
 #! /usr/bin/env Rscript
 
 ## execute all Kachemak Bay/Cook Inlet scripts, 2020
-setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-rm (list = ls())
+## if this is a new installation, it may be necessary to disconnect from VPN
+## to avoid timeouts
+## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
 
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}else{
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}
+rm (list = ls())
+sink (file="StateOfBay-runlog.txt", append=FALSE)
 sT <- Sys.time()
 
+
+
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE
+
+
+
+# setRepositories(graphics=FALSE, ind=76)
+# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
+# chooseCRANmirror(graphics=FALSE, ind=76)
 
 if (0){ ## 2017 contract
   ## BUGS:
@@ -39,25 +57,27 @@ if (0){ # Dec 2019 seasonality
 }
 
 
-## State of the Bay Report 2019
+## set up required work environment and external files/data
+source ("EnvironmentSetup.R")
 
-## plot SWMP weather data for annual state of the bay report
-source ("SeldoviaTemp.R")
-source ("annual-wind.R")
+if (0){
+## The Wall
+source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
+}
 
-# source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
-source ("annual-rainy.R")
-source ("annual-salinity.R")
-source ("annual-airTemp.R")
+## State of the Bay Report
+source ("AnnualStateOfTheBay.R")
 
-source ("annual-snowpack.R")
-source ("annual-stratification.R")
-source ("annual-waves.R")  ## pull-out waves and surf?
+
+
+source ("CTDsyncGDwall.R")
 
 
 cat ("all done\n")
 print (Sys.time())
 print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+sink()
 
 ## EOF
+
 

@@ -6,8 +6,6 @@
 
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-# pacman::p_load(package1, package2, package_n)
-# pacman::p_load ("parallel")
 Require <- pacman::p_load
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
@@ -44,7 +42,6 @@ if (0){
     dplyr::rename(datetimestamp = date, location = id)
   ## yes, daily data! could work with that?!
 
-
   # homerRain <-  ncdc (datasetid = "PRECIP_HLY"  # or GHCND -- also not working -- no data found
   #         , stationid = "USW00025507"
   #         , datatypeid = "HPCP"#, limit = 5
@@ -53,20 +50,43 @@ if (0){
 
 Require ("dplyr")
 source ("annualPlotFct.R")
-## meteo_pull_monitors appears to be incomplete. Start with data from manual download.
-hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport2959063.csv") %>%
+## meteo_pull_monitors appears to be incomplete. Start with data from manual download
+## from https://www.ncei.noaa.gov/cdo-web/
+if (0){
+# hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport2959063.csv") %>%  ## old version to 2022-04
+hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
   dplyr::rename_with (tolower) %>%
   dplyr::rename (datetimestamp = date, location = station
                  ) %>%
   select (!ends_with ("_attributes"))
+}
+
+
+
+## may have to delete cache
+if (.Platform$OS.type=="windows"){
+  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/"
+}else{
+  cacheD <- "~/Library/Caches/R/noaa_ghcnd/"
+}
+cF <- list.files(cacheD, "dly", full.names=TRUE)
+rm (cacheD)
+## delete cache file if older than one month and computer is online
+if (max (file.info (cF)$ctime) < (Sys.time()-30*24*3600)){  # file is older than 1 month
+  Require (curl)
+  if (curl::has_internet()){  ## only flush cache if new data can be downloaded
+    unlink (cF)
+  }
+}
 
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               # , date_min = "2022-04-18"  # goes back to 1932-09-01
-                              , date_min = "1933-01-01"  # goes back to 1932-09-01
-                              , date_max = as.character (Sys.Date())) %>%
-  dplyr::rename (datetimestamp = date, location = id # wdfg and awnd now missing
-                 )
-## merge hmr1 and hmrL
+#                              , date_min = "1933-01-01"  # goes back to 1932-09-01
+#                              , date_max = as.character (Sys.Date())
+                               ) %>%
+  dplyr::rename (datetimestamp = date, location = id) # wdfg and awnd now missing
+
+  ## merge hmr1 and hmrL
 # hmr <- rbind (with (hmr1, data.frame (datetimestamp = as.POSIXct(datetimestamp)
 #                                        , location, tavg, tmax, tmin
 #                                        , prcp, wdf5, wsf5, wsf2, wdf2))
@@ -74,9 +94,9 @@ hmrL <-  meteo_pull_monitors ("USW00025507"
 #                                          , location, tavg, tmax, tmin
 #                        , prcp, wdf5, wsf5, wsf2, wdf2))) %>%
 hmr <- rbind (hmrL) %>%
-  addTimehelpers()
-
-rm (hmr1, hmrL)
+    addTimehelpers()
+rm (hmrL)
+# rm (hmr1)
 
 ## adjust units to mm/day and degrees C
 hmr$totprcp <- hmr$prcp * 0.1 # PRCP = Precipitation (tenths of mm)

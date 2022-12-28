@@ -1,31 +1,49 @@
 
 ## air temperature -- standardized plot
-rm (list=ls())
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
+
+## may have to delete cache -- done now by functions
 maO <- 31  # 7 days certainly not working, 14 days not enough either
 # maO <- 1
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
-currentCol <- c("red" , "magenta"
-                , "purple")
 require ("RColorBrewer")
 currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
+# currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
 SWMP <- TRUE
-SWMP <- FALSE  ## for 2021, but maybe from here on onwards
+SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
 
 
+## setup automated parameter and pull data
 source ("annualPlotFct.R")
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
+if (quarterly){
+  pastYear <- FALSE  # plot currentYear-1 ?
+  ongoingY <- TRUE
+  currentCol <- currentCol [c(3,1,2)]
+  mediaD <- paste0 (mediaD, "update/")
+}else{
+  pastYear <- TRUE  # for winter/fall publication schedule
+  ongoingY <- FALSE
+  currentCol <- rev (currentCol)
+}
+
+## get data from cache or download
 if (SWMP){
   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 }else{
   source ("noaaWeather.R")
   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 }
+
 
 
 # plot (subset (hmr$totprcp, hmr$year < 2005), type="l")
@@ -61,18 +79,17 @@ tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl)
 #
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width=9, height=6)
-dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE
-           , recursive=TRUE)
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
 #              , ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
+png (paste0 (mediaD, "sa-airTemp-"
              , ifelse (SWMP, "LE", "AP"), ".png"), width=1800, height=1200, res=300)
 
 par (mar=c(4,4,2,4))
 aPlot (tDay, "atemp"
        , ylab=expression ('air'~'temperature '~'['*degree~'C'*']')
        , currentCol=currentCol, MA=TRUE
-       , pastYear=TRUE, ongoingYear=FALSE
+       , pastYear=pastYear, ongoingYear=ongoingY
        )
 if (SWMP){title (main="Air Temperature at Homer Spit")}else{title (main="Air Temperature at Homer Airport")}
 # for (i in 1:length (levels (factor (hmr$year)))){
@@ -86,7 +103,7 @@ cLegend ("bottom", inset=0.05
          , cYcol=currentCol
          , title=paste (maO, "day moving average")
          , qntl=qntl
-         , pastYear=TRUE, ongoingYear=FALSE
+         , pastYear=pastYear, ongoingYear=ongoingY
 )
 dev.off()
 

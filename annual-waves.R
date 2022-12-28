@@ -4,7 +4,33 @@
 ################################
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
-rm (list = ls())
+
+
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
+
+
+## order: current, present, previous
+require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+# maO <- 3 # 30
+maO <- 30
+qntl = 0.9
+
+
+
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
+if (quarterly){
+  mediaD <- paste0 (mediaD, "update/")
+  currentCol <- currentCol [c(1,3,2)]
+}else{
+
+}
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
+
 
 ## also wave direction?
 if (0){
@@ -152,17 +178,6 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 source ("annualPlotFct.R")
 
 
-## order: current, present, previous
-# currentCol <- c("darkblue", "blue", "lightblue")
-currentCol <- c("black", "blue", "lightblue")
-require ("RColorBrewer")
-currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
-
-
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-# maO <- 3 # 30
-maO <- 30
-qntl = 0.9
 
 
 # tDay <- fixGap (tDay)
@@ -176,9 +191,8 @@ tDayW <- prepDF (dat = tDay, varName = "wave_height"
 )
 
 
-dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", recursive = TRUE, showWarnings = FALSE)
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.png"), width = 1800, height = 1200, res = 300)
+png (paste0 (mediaD, "sa-waves.png"), width = 1800, height = 1200, res = 300)
 par (mar = c(3,4,1,4)) # space for 2nd y-axis (feet)
 
 aPlot (tDayW, "wave_height", ylab = "wave height [m]"
@@ -204,7 +218,6 @@ alt.ax <- pretty (wFt)
 alt.at <- (alt.ax) * 0.3048
 axis (side = 4, at = alt.at, labels = alt.ax, srt = 90)
 mtext ("wave height [ft]", side = 4, line = 2.5)
-rm (wFt, alt.ax, alt.at)
 # for (i in 2011:2018){
 #   x <- try (lines (tDayW$jday
 #         , tDayW [,which (names (tDayW) == paste0 ("y_", i, "_wave_height"))]
@@ -213,7 +226,7 @@ rm (wFt, alt.ax, alt.at)
 # rm (x)
 # legend ("bottomleft", bty = "n", legend = 2011:2018, col = 2011:2018, lwd = 0.5)
 dev.off()
-rm (tDayW, wFt)
+rm (tDayW, wFt, alt.ax, alt.at)
 
 
 
@@ -476,8 +489,7 @@ print (sEvent)
 ## try to do it all in R
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
 #      , width = 8, height = 6)
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.png"
-     , width = 1600, height = 1200, res = 200)
+png (paste0 (mediaD, "sa-surf.png"), width = 1600, height = 1200, res = 200)
 ## import image, use ggplot to set background
 ## see https://guangchuangyu.github.io/2018/04/setting-ggplot2-background-with-ggbackground/
 # require(magick)
@@ -635,6 +647,7 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2021-11-21 14:00" # 5 surfers
 , "2021-12-02 11:50" # 1 surfer, more coming
 , "2021-12-07 15:00" # 1+ m surf, no surfers
+, "2022-08-02 18:00" # 3 surfer in 0.8m surf (minimal, but some caught a wave)
 )
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))
