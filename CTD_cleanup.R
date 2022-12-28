@@ -706,7 +706,7 @@ if (0){  # if (.Platform$OS.type=="windows"){
   rm (zFiles)
   setwd (wD); rm (wD)
 }
-rm (showBad, oldMatch, ctdA, yr, i, j)
+rm (showBad, oldMatch, yr, i, j)
 # ls()
 
 
