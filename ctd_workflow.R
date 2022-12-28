@@ -51,20 +51,20 @@ source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 
+## plot of seasonal-yearly matrix when samples were taken
+source ("CTD_DataAvailability.R")
+# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source ("datasetup.R")
+# source ("datasetupSF.R")
 ## separate out CTD-specific stuff??
 #; bathymetry
 #; coastline
 #; CTD data
 
-
-## plot of seasonal-yearly matrix when samples were taken
-source ("CTD_DataAvailability.R")
-# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 
 ## the Wall
