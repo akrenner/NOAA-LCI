@@ -82,6 +82,10 @@ source ("CTD_timeseries.R")   # sections and univariate summaries over time and 
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
 
+## send email that run is completed
+source ("CTD_finishnotification.R")
+
+
 ## save snapshot of current package versions
 # renv::snapshot()
 

@@ -4,7 +4,33 @@
 ################################
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
-rm (list = ls())
+
+
+if (!exists ("quarterly")){
+  rm (list=ls())
+  quarterly <- TRUE
+}
+
+
+## order: current, present, previous
+require ("RColorBrewer")
+currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+# maO <- 3 # 30
+maO <- 30
+qntl = 0.9
+
+
+
+mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
+if (quarterly){
+  mediaD <- paste0 (mediaD, "update/")
+  currentCol <- currentCol [c(1,3,2)]
+}else{
+
+}
+dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
+
 
 ## also wave direction?
 if (0){
@@ -152,17 +178,6 @@ save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
 source ("annualPlotFct.R")
 
 
-## order: current, present, previous
-# currentCol <- c("darkblue", "blue", "lightblue")
-currentCol <- c("black", "blue", "lightblue")
-require ("RColorBrewer")
-currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
-
-
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
-# maO <- 3 # 30
-maO <- 30
-qntl = 0.9
 
 
 # tDay <- fixGap (tDay)
@@ -176,9 +191,8 @@ tDayW <- prepDF (dat = tDay, varName = "wave_height"
 )
 
 
-dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", recursive = TRUE, showWarnings = FALSE)
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
-png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.png"), width = 1800, height = 1200, res = 300)
+png (paste0 (mediaD, "sa-waves.png"), width = 1800, height = 1200, res = 300)
 par (mar = c(3,4,1,4)) # space for 2nd y-axis (feet)
 
 aPlot (tDayW, "wave_height", ylab = "wave height [m]"
@@ -475,8 +489,7 @@ print (sEvent)
 ## try to do it all in R
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.pdf"
 #      , width = 8, height = 6)
-png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-surf.png"
-     , width = 1600, height = 1200, res = 200)
+png (paste0 (mediaD, "sa-surf.png"), width = 1600, height = 1200, res = 200)
 ## import image, use ggplot to set background
 ## see https://guangchuangyu.github.io/2018/04/setting-ggplot2-background-with-ggbackground/
 # require(magick)
