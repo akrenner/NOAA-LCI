@@ -352,10 +352,10 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
 }
 
 
-## instead of first MA and then aggregate that, first aggregate/CI, then MA. Better handle on NAs?
-
-
-
+if (1){## instead of first MA and then aggregate that, first aggregate/CI, then MA. Better handle on NAs?
+  rm (prepDF)
+  source ("prepDF.R") # see whether this fixes artifacts
+}
 
 addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
