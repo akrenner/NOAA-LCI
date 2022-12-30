@@ -7,7 +7,7 @@
 
 ## load data
 ## start with file from dataSetup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # contains physOc -- raw CTD profiles
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
 require ("oce")
 # source("CTDsectionFcts.R")
 
@@ -63,6 +63,13 @@ salCol <- gray.colors(101)
 ## modern colors -- overwrite
 tCol <- oceColorsTemperature (11)
 salCol <- oceColorsSalinity (11)
+
+## from https://www.esri.com/arcgis-blog/products/arcgis-pro/mapping/a-meaningful-temperature-palette/
+tCol <- rgb (c (230, 157, 49, 62, 123, 177, 170, 155, 145, 64)
+             , c (238, 176, 77, 115, 146, 146, 123, 81, 45, 20)
+             , c (253, 211, 123, 143, 136, 102, 89, 79, 75, 37)
+             , maxColorValue=255)
+
 
 ## nauseating rainbow
 kr <- TRUE
