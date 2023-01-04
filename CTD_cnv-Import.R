@@ -288,8 +288,10 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 if (isWin){
   ## need to call 32-bit version of R to use ODBC -- until 64-bit Access ODBC driver installed
   ## windows-version of mdb-export?
-  system("cmd.exe"
-        , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+  if (0){
+    system("cmd.exe"
+           , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
+  }
 }else{
   system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
   system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
