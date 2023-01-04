@@ -9,6 +9,8 @@
 ## start with file from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
 require ("oce")
+require ("RColorBrewer")
+
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -69,8 +71,11 @@ salCol <- oceColorsSalinity (11)
 #              , c (238, 176, 77, 115, 146, 146, 123, 81, 45, 20)
 #              , c (253, 211, 123, 143, 136, 102, 89, 79, 75, 37)
 #              , maxColorValue=255)
-# tCol <- rev (c ("#de5842", "#fcd059", "#ededea", "#bfe1bf", "#a2d7d8"))
+# tCol <- rev (c ("#de5842", "#fcd059", "#ededea"
+#                 , "#bfe1bf", "#a2d7d8"))
+tCol <- rev (brewer.pal (length (salCol), "RdBu"))
 # tCol <- colorRampPalette (tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
+
 
 ## nauseating rainbow
 kr <- TRUE
@@ -179,8 +184,8 @@ dailyTS <- function (df, varN){
 
 pickStn <- which (levels (physOc$Match_Name) %in%
                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
-pickStn <- 1:length (levels (physOc$Match_Name))
-pickStn <- 87 # 9-6
+# pickStn <- 1:length (levels (physOc$Match_Name))
+# pickStn <- 87 # 9-6
 
 for (k in pickStn){
   try ({
@@ -230,7 +235,6 @@ for (k in pickStn){
   ctdAgg$sloess <- anoF ("Salinity_PSU")
   ctdAgg$floess <- anoF ("Fluorescence_mg_m3")
   ctdAgg$bvfloess <- anoF ("bvf")
-  rm (anoF)
 
   ## model normals instead
   # mDF <- rbind (xC, xC, xC)
@@ -326,7 +330,6 @@ for (k in pickStn){
   }
 
 
-  require ("RColorBrewer")
 #  pdf (paste0 (mediaD, stnK, "-TSprofile.pdf"), height = 11, width = 8.5)
   png (paste0 (mediaD, "2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
     if (plotRAW){
@@ -371,10 +374,12 @@ for (k in pickStn){
   }
 
   ## time series of anomalies
-  zB <- sF (xC$anTem)
+ # zB <- sF (xC$anTem), n=9)  XXX fix this
   plot.station (xCS, which = "anTem"
-                , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
-                , zbreaks = zB
+                , zcol = colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
+                                                  "#bfe1bf", "#a2d7d8")))(9)
+                # , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
+                # , zbreaks = zB
                 , legend.loc="" #legend.text="temperature anomaly [°C]"
   )
   TSaxis (xC$isoTime)
@@ -629,6 +634,7 @@ for (k in pickStn){
   })
 }
 ## alternative display of this data:
+rm (anoF)
 
 
 save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
@@ -768,7 +774,6 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
 T96 <- subset (poSS@data, Match_Name=="9_6")  ## migrate to sf
 T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
-require ("RColorBrewer")
 
 # tL <- c ("Bottom", "Deep", "Surface", "Mean", "Max", "Min")
 tL <- c("Deep", "Max")
