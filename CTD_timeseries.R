@@ -181,6 +181,71 @@ dailyTS <- function (df, varN){
 }
 
 
+mkSection <- function (xC){  ## use CTDfunctions insted?!
+  require (oce)
+  xC <- xC [order (xC$isoTime),]
+  xC$Date <- factor (xC$DateISO)
+  cL <- lapply (1:length (levels (xC$Date))
+                , FUN = function (i){
+                  sCTD <- subset (xC, xC$Date == levels (xC$Date)[i])
+                  ocOb <- with (sCTD,
+                                as.ctd (salinity = Salinity_PSU
+                                        , temperature = Temperature_ITS90_DegC
+                                        , pressure = Pressure..Strain.Gauge..db.
+                                        , longitude = as.numeric (longitude_DD)
+                                        , latitude = as.numeric (latitude_DD)
+                                        #, sectionId = transDate
+                                        # , startTime = isoTime
+                                ))
+                  ocOb@metadata$station <- xC$Match_Name [1]
+                  ocOb@metadata$startTime <- sCTD$isoTime [1]
+                  ocOb@metadata$waterDepth <- 103
+
+                  ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
+                  ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
+                  ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
+                  ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
+                  ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
+                  ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+                  ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
+                  ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
+                  ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
+                  ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
+                  ocOb <- oceSetData (ocOb, "anBvf", sCTD$anBvf)
+
+                  ocOb
+                }
+  )
+  cL <- as.section (cL)
+  cL <- sectionSort (cL, by="time")
+  cL
+}
+
+
+TSaxis <- function (isoTime, axes=TRUE, verticals=TRUE){
+  tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-01-01")))
+  lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-07-01")))
+  if (verticals){
+    abline (v = tAx, lty="dashed")
+  }
+  if (axes == TRUE){
+    axis (1, at = tAx, label = FALSE)
+    axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
+  }
+}
+
+plot.station <- function (section, axes = TRUE, ...){
+  plot (section, showBottom = FALSE, xtype = "time", ztype = "image"
+        #, at = FALSE
+        # , stationTicks = TRUE
+        , grid = FALSE
+        , axes = FALSE, ...
+        , xlab="", ylab="")
+  axis (2, at = c(0, 20, 40, 60, 80, 100))
+}
+
+
+
 
 pickStn <- which (levels (physOc$Match_Name) %in%
                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
@@ -266,68 +331,6 @@ for (k in pickStn){
                                  , FUN=mean, na.rm=TRUE)$stability
 
 
-  mkSection <- function (xC){  ## use CTDfunctions insted?!
-    require (oce)
-    xC <- xC [order (xC$isoTime),]
-    xC$Date <- factor (xC$DateISO)
-    cL <- lapply (1:length (levels (xC$Date))
-                  , FUN = function (i){
-                    sCTD <- subset (xC, xC$Date == levels (xC$Date)[i])
-                    ocOb <- with (sCTD,
-                                  as.ctd (salinity = Salinity_PSU
-                                          , temperature = Temperature_ITS90_DegC
-                                          , pressure = Pressure..Strain.Gauge..db.
-                                          , longitude = as.numeric (longitude_DD)
-                                          , latitude = as.numeric (latitude_DD)
-                                          #, sectionId = transDate
-                                          # , startTime = isoTime
-                                  ))
-                    ocOb@metadata$station <- xC$Match_Name [1]
-                    ocOb@metadata$startTime <- sCTD$isoTime [1]
-                    ocOb@metadata$waterDepth <- 103
-
-                    ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
-                    ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
-                    ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
-                    ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
-                    ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
-                    ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
-                    ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
-                    ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
-                    ocOb <- oceSetData (ocOb, "anTem", sCTD$anTem)
-                    ocOb <- oceSetData (ocOb, "anSal", sCTD$anSal)
-                    ocOb <- oceSetData (ocOb, "anBvf", sCTD$anBvf)
-
-                    ocOb
-                  }
-    )
-    cL <- as.section (cL)
-    cL <- sectionSort (cL, by="time")
-    cL
-  }
-
-
-  TSaxis <- function (isoTime, axes=TRUE, verticals=TRUE){
-    tAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-01-01")))
-    lAx <- as.POSIXct (as.Date (paste0 (2012:max (as.numeric (format (isoTime, "%Y"))), "-07-01")))
-    if (verticals){
-      abline (v = tAx, lty="dashed")
-    }
-    if (axes == TRUE){
-      axis (1, at = tAx, label = FALSE)
-      axis (1, at = lAx, label = format (lAx, "%Y"), tick = FALSE)
-    }
-  }
-
-  plot.station <- function (section, axes = TRUE, ...){
-    plot (section, showBottom = FALSE, xtype = "time", ztype = "image"
-          #, at = FALSE
-          # , stationTicks = TRUE
-          , grid = FALSE
-          , axes = FALSE, ...
-          , xlab="", ylab="")
-    axis (2, at = c(0, 20, 40, 60, 80, 100))
-  }
 
 
 #  pdf (paste0 (mediaD, stnK, "-TSprofile.pdf"), height = 11, width = 8.5)
