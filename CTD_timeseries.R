@@ -69,7 +69,8 @@ salCol <- oceColorsSalinity (11)
 #              , c (238, 176, 77, 115, 146, 146, 123, 81, 45, 20)
 #              , c (253, 211, 123, 143, 136, 102, 89, 79, 75, 37)
 #              , maxColorValue=255)
-
+# tCol <- rev (c ("#de5842", "#fcd059", "#ededea", "#bfe1bf", "#a2d7d8"))
+# tCol <- colorRampPalette (tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
 
 ## nauseating rainbow
 kr <- TRUE
