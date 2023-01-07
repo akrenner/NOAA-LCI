@@ -4,10 +4,13 @@
 ## checking on instrument integrity
 ## also location of station??
 
+## from datasetup.R   ## somehow not updated since 2020 -- fix this eventually. use CNV1.RData in the meantime
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function
+
 ## start with file from CTD_cleanup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV1.RData")
-## from datasetup.R
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData")
+# rm (list = ls());
+load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## have latest version of physOc from CTD_cleanup.R, but also have functions from datasetup.R
+
 
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/CTDsummarieplots", recursive = TRUE, showWarnings = FALSE)
 
