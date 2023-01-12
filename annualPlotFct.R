@@ -233,7 +233,7 @@ seasonalMA <- function (var, jday, width=maO){
 
 prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
                     , maO=31
-                    , currentYear=as.integer (format (Sys.Date(), "%Y"))-1
+                    , currentYear # =as.integer (format (Sys.Date(), "%Y"))-1  ## force this to be stated explicitly (for troubleshooting)
                     , qntl=c(0.8, 0.9)
 ){
   if (! all (c("jday", "year", varName) %in% names (dat))){
@@ -248,6 +248,8 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
   xVar <- dat [,which (names (dat) == varName)]
   ## aggregate to dailys: - standardize to a common time interval across datasets
   dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
+  ## change this to saggregate?? would need a motification of saggregate -- don't!
+
 
   ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
@@ -282,6 +284,8 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
                                  , fill= c(NA, NA, NA)
                                  #, partial=FALSE # maO/2
                                  , align = "center")
+    ## need to insert zeros here?? XXX
+
     # Require ("roll")
     # dMeans$MA <-roll::roll_mean (dMeans$xVar, width=maO, na_restore=FALSE, online=TRUE) #align="right")
 
