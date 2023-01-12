@@ -387,7 +387,7 @@ fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
 
 ## add Fahrenheit scale to temperature plot
 fAxis <- function (cGrad, side=4, line=3
-                   , mT = expression('Temperature '~'['*degree~'F'*']')
+                   , mT = "Temperature [°F]"  #expression('Temperature '~'['*degree~'F'*']')
                    , ...){
   slope <- 9/5
   offset <- 32
