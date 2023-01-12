@@ -248,8 +248,12 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
   xVar <- dat [,which (names (dat) == varName)]
   ## aggregate to dailys: - standardize to a common time interval across datasets
   dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
-  ## change this to saggregate?? would need a motification of saggregate -- don't!
-
+  ## need to fill in zeros before applying moving average, or things get messed up farther down
+  ## equivalent to saggregate or gapFill
+  nY <- max (dMeans$year)-min (dMeans$year)+1
+  dRef <- data.frame (jday = rep (1:366, nY), year=rep (min(dMeans$year):max(dMeans$year), each=366))
+  dMeans <- dMeans [paste (dRef$year, dRef$jday),paste (dMeans$year, dMeans$jday)]
+  rm (dRef)
 
   ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
@@ -279,12 +283,12 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align = "center", fill=c(NA, "extend", NA), na.rm=FALSE) ## looks like rollapply wth this fill
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align="center")
+
     dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean
                       #           , na.rm=FALSE  ## no apparent affect
                                  , fill= c(NA, NA, NA)
                                  #, partial=FALSE # maO/2
                                  , align = "center")
-    ## need to insert zeros here?? XXX
 
     # Require ("roll")
     # dMeans$MA <-roll::roll_mean (dMeans$xVar, width=maO, na_restore=FALSE, online=TRUE) #align="right")
@@ -340,8 +344,9 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
   rm (ogY)
 
   ## all years
-  yr <- sapply (levels (factor (dMeans$year)), function (x){
-    pY <- subset (dMeans, year == x)
+  dMeans$year <- factor (dMeans$year)
+  yr <- sapply (1:length (levels (dMeans$year)), function (x){
+    pY <- subset (dMeans, dMeans$year == levels (dMeans$year)[x])
     pY$MA [match (tDay$jday, pY$jday)]
   })
   colnames(yr) <- paste0 ("y_", colnames(yr))
