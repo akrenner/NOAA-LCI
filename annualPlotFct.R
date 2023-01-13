@@ -245,15 +245,25 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
   ## flexible for varName to be a vector!!  -- XXX extra feature
 
   ## current/past year
-  xVar <- dat [,which (names (dat) == varName)]
   ## aggregate to dailys: - standardize to a common time interval across datasets
-  dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
+
+  ## fill gaps in dat!
+  dYs <- min (dat$year):max(dat$year)
+  datR <- data.frame (year=rep (dYs, each=366)
+                      , jday=rep (1:366, length (dYs)))
+  datR$xVar <- dat [match (paste(datR$year, datR$jday), paste(dat$year, dat$jday))
+                 , which (names (dat)==varName)]
+#        xVar <- dat [,which (names (dat) == varName)]
+  dMeans <- aggregate (xVar~jday+year, datR, FUN=sumFct) # daily means -- needed for MA and CI
+  rm (datR, dYs)
+  if (0){
   ## need to fill in zeros before applying moving average, or things get messed up farther down
   ## equivalent to saggregate or gapFill
   nY <- max (dMeans$year)-min (dMeans$year)+1
   dRef <- data.frame (jday = rep (1:366, nY), year=rep (min(dMeans$year):max(dMeans$year), each=366))
-  dMeans <- dMeans [paste (dRef$year, dRef$jday),paste (dMeans$year, dMeans$jday)]
+  dMeans <- dMeans [match (paste (dRef$year, dRef$jday),paste (dMeans$year, dMeans$jday)),]
   rm (dRef)
+  }
 
   ## moving average in here or supply as varName?
   ## ma to be replaced by backwards ma
@@ -279,29 +289,43 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
       xR <- rollmean (xh, k=31, align="center")
 
     }
-    suppressPackageStartupMessages (Require ("zoo"))
+    # suppressPackageStartupMessages (Require ("zoo"))
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align = "center", fill=c(NA, "extend", NA), na.rm=FALSE) ## looks like rollapply wth this fill
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
     # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align="center")
 
-    dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean
-                      #           , na.rm=FALSE  ## no apparent affect
-                                 , fill= c(NA, NA, NA)
-                                 #, partial=FALSE # maO/2
-                                 , align = "center")
+    # dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean  ### interpolates across NAs -- bad
+    #                             , na.rm=FALSE  ## no apparent affect
+    #                              , fill= c(NA, NA, NA)
+    #                              , partial=FALSE # maO/2
+    #                              , align = "center")
 
-    # Require ("roll")
-    # dMeans$MA <-roll::roll_mean (dMeans$xVar, width=maO, na_restore=FALSE, online=TRUE) #align="right")
+    ## this may be the best -- just have to align=center manually?
+    Require ("roll")   ## still got the issue of interpolating across data gap
+    dMeans$MA <-roll::roll_mean (dMeans$xVar, width=maO, na_restore=TRUE
+                                 , online=TRUE, min_obs=floor (maO/2)) #align="right")
 
-    # Require ("SWMPr")
-   #  dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
+     # Require ("SWMPr")
+     # dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
 
 # Require ("dateutils") ## not working
 # dMeans$MA <- dateutils::rollmean (dMeans$xVar, maO)
+
+
     dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
     tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
     tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
     tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
+
+    ## testing
+    if (0){
+      pY <- subset (dMeans, year == currentYear)
+      tDay$pY <- pY$xVar [match (tDay$jday, pY$jday)]
+      tDay$pYMA <- pY$MA [match (tDay$jday, pY$jday)]
+      plot (pY~jday, tDay)
+      lines (pYMA~jday, tDay, lwd=2, col="blue")
+    }
+
 
 
   #  for (j in c (varName, MA)){
@@ -349,8 +373,9 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
     pY <- subset (dMeans, dMeans$year == levels (dMeans$year)[x])
     pY$MA [match (tDay$jday, pY$jday)]
   })
-  colnames(yr) <- paste0 ("y_", colnames(yr))
+  colnames(yr) <- paste0 ("y_", levels (dMeans$year))
   tDay <- cbind (tDay, yr); rm (yr)
+
 
   ## fix names
   #  names (tDay) <- gsub ("xVar", paste0 (varName, "_"), names (tDay))
@@ -361,10 +386,10 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
 }
 
 
-if (1){## instead of first MA and then aggregate that, first aggregate/CI, then MA. Better handle on NAs?
-  rm (prepDF)
-  source ("prepDF.R") # see whether this fixes artifacts
-}
+# if (1){## instead of first MA and then aggregate that, first aggregate/CI, then MA. Better handle on NAs?
+#   rm (prepDF)
+#   source ("prepDF.R") # see whether this fixes artifacts
+# }
 
 addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
