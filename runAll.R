@@ -51,6 +51,10 @@ if (0){ # Dec 2019 seasonality
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
 
+  ## missing parts for EVOS 2023 final report
+  source ("Nutrients_seasonality.R")
+
+
   source ("physOcean.R")
   q()
   source ("consensusTree.R")
@@ -61,7 +65,7 @@ if (0){ # Dec 2019 seasonality
 source ("EnvironmentSetup.R")
 
 if (0){
-## The Wall
+## The Wall -- this may have to move up XXX
 source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
 }
 
