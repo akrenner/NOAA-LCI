@@ -159,6 +159,20 @@ nusw$depth <- factor (c (rep ("deep", nrow (Hd)), rep ("shallow", nrow (Hs))
 ndL <- list (Hd, Hs, Sd, Ss)
 names (ndL) <- c ("Homer deep", "Homer shallow", "Seldovia deep", "Seldovia shallow")
 
+
+
+pdf ("~/tmp/LCI_noaa/media/EVOS/nutSWMP_historgrams.pdf")
+for (i in 1:length (nL)){
+  nusw$var <- nusw [,which (names (nusw)==nL[i])]
+  hist (nusw$var, main=nL[i])
+  abline (v=mean (nusw$var, na.rm=TRUE))
+  # abline (v=mean (nusw$var, na.rm=TRUE)+1*sd (nusw$var, na.rm=TRUE), lty="dashed")
+  # abline (v=mean (nusw$var, na.rm=TRUE)+2*sd (nusw$var, na.rm=TRUE), lty="dashed", lwd=2)
+  abline (v=mean (nusw$var, na.rm=TRUE)+3*sd (nusw$var, na.rm=TRUE), lty="dotted", lwd=3)
+}
+dev.off()
+
+
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutrients.pdf")
 par (mfrow=c(2,2))
 for (j in 1:length (ndL)){
@@ -199,14 +213,47 @@ for (i in 1:length (levels (nusw$station))){
 dev.off()
 
 
-
+nusw <- nusw [order (nusw$datetimestamp),]
 ## seasonal -- move Homer and Seldovia onto one plot
+pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonal3.pdf"
+     , width=8, height=6)
+par (mfrow = c(2,2))
+for (j in 1:length (nL)){
+  nusw$var <- nusw [,which (names (nusw)==nL[j])]
+  n1 <- nusw
+  ## QC
+  if (j==1){n1 <- subset (nusw, var < 0.05)
+  }else if (j==2){n1 <- subset (nusw, var < 0.1)
+  }else{n1 <- nusw}
+  n1 <- aggregate (var~month+year+depth, data=n1, FUN=mean, na.rm=TRUE)
+  plot (var~month, n1, type="n", main=nL[j], axes=FALSE, xlab="", ylab="")
+  axis (1)
+  axis (2)
+  box()
+  for (k in 1:length (levels (nusw$year))){
+    n2 <- subset (n1, year==levels (nusw$year)[k])
+    for (l in 1:length (levels (n2$depth))){
+      n3 <- subset (n2, depth==levels (n2$depth)[l])
+      for (m in 1:length (levels (n3$station))){
+        lines (var~month, n3, lty=l, col=k)
+      }
+    }
+  }
+  if (j==1){
+    legend ("top", lty=1:length (levels (n1$depth)), legend=levels (n2$depth), bty="n")
+  }
+}
+dev.off()
+
+
+if (1){
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalAve2.pdf"
      , width=8, height=6)
 par (mfrow = c(2,2))
 for (j in 1:length (nL)){
   nusw$var <- nusw [,which (names (nusw)==nL[j])]
   nSeason <- aggregate (var~month+depth+station, nusw, mean, na.rm=TRUE)
+
   plot (var~month, nSeason, type="n", main="", axes=FALSE
         , ylab="", xlab="")
   if (j %in% c(1,3)){
@@ -235,8 +282,8 @@ for (j in 1:length (nL)){
             , ncol=2)
   }
 }
-
 dev.off()
+}
 
 
 ## anomaly time series

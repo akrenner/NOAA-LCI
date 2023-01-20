@@ -13,6 +13,38 @@ PDF <- function (fN, ...){
   pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoop/", fN, ".pdf"), ...)
 }
 
+
+
+#########################################
+### seasonality of zoop data, total N ###
+#########################################
+
+zooCenv$totalZN <- rowSums (zooC)
+zooCenv$totalDens <- with (as.data.frame (zooCenv), totalZN/volSample)
+
+T9 <- subset (zooCenv, Transect=="9")
+T9$jday <- format (T9$isoDate, "%j")
+T9$Year <- factor (T9$Year)
+T9 <- T9 [order (T9$isoDate),]
+T9 <- aggregate (totalDens~jday+Year, T9, FUN=mean, na.rm=TRUE)
+
+pdf ("~/tmp/LCI_noaa/media/EVOS/zoopAbundSeason.pdf")
+par (mar=c(4,5,3,1))
+plot (totalDens~jday, T9, type="n", xlab="", axes=FALSE
+      , ylab=expression("zooplanktondensity ["~1~m^-3~"]"))
+axis (2)
+axis (1, at=format (as.Date (paste0 ("2000-", 1:12, "-1")), "%j"), tick=TRUE, labels=FALSE)
+axis (1, at=format (as.Date(paste0 ("2000-", 1:12, "-15")), "%j"), tick=FALSE, labels=month.abb)
+box()
+for (i in 1:length (levels (T9$Year))){
+  Ty <- subset (T9, T9$Year==levels (T9$Year)[i])
+  lines (totalDens~jday, Ty, col=i, lwd=2)
+}
+legend ("topright", legend=levels(T9$Year), lwd=2, col=1:length (levels (T9$Year)), bty="n")
+dev.off()
+rm (T9, Ty)
+
+
 ### standardize survey effort and distribution!!
 ## pick out stations that were present in each year-season combination
 year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))
