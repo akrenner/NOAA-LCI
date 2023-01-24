@@ -7,7 +7,7 @@ rm (list=ls())
 ## -- seasonality
 ## -- add to signature data: time series?
 
-nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
+nut <- read.csv ("~/GISdata/LCI/Nutrients/CookInletKachemakBay_Nutrients_2021.csv")
 
 ## cleanup
 nut$Date <- as.Date(nut$Date)
@@ -27,10 +27,10 @@ summary (nut$Depth_m > 10)
 summary (nut$Date)
 
 dir.create("~/tmp/LCI_noaa/media/EVOS/", recursive=TRUE, showWarnings=FALSE)
-pdf ("~/tmp/LCI_noaa/media/EVOS/depthHisto.pdf")
-hist (subset (nut, Depth_m > 10) $Depth_m, main="Depth distribution of deep samples"
-      , xlab="depth [m]")
-dev.off()
+# pdf ("~/tmp/LCI_noaa/media/EVOS/depthHisto.pdf")
+# hist (subset (nut, Depth_m > 10) $Depth_m, main="Depth distribution of deep samples"
+#       , xlab="depth [m]")
+# dev.off()
 
 summary (subset (nut$Station, nut$Depth_m > 10))
 summary (subset (nut$Station, nut$Depth_m < 10))
@@ -51,11 +51,15 @@ if (1){
   nutL <- c(nutL, names (nut)[13])
   nutE <- c (nutE, expression (Chl~a))
 }
+nutE <- c ("Ammonia", "Nitrate/Nitrite", "Phosphate", "Silicate", "Chlorophyll")
+
 
 pdf ("~/tmp/LCI_noaa/media/EVOS/nutrientsSeason.pdf", width=8, height=5)
 ## one color per station (3)
 ## one panel per nutrient (4)
-par (mfrow=c(2,2), mar=c(3, 4.5, 3, 1))
+# par (mfrow=c(2,2), mar=c(3, 4.5, 3, 1))
+par (mar=c(3, 4.5, 3, 1))
+
 
 for (i in 1:length (nutL)){
   nut$x <- nut [,which (names (nut)==nutL[i])]
@@ -77,23 +81,25 @@ for (i in 1:length (nutL)){
   axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=month.abb, tick=FALSE)
   box()
   if (i %% 2 == 1){
-    title (ylab=expression (mg~l^-1))
-}
+    title (ylab=expression ("Concentration ["~mg~l^-1~"]"))
+  }
+  abline (h=nut [1,which (names (nut)==nutL[i])+1], lty="dotted", lwd=2) # show detection limit
   for (j in 1:length (stations)){
     lines (x~Date, nutS, subset=Station==stations [j], lwd=3, col=brewer.pal(length (stations), "Set2")[j])
     lines (x~Date, nutD, subset=Station==stations [j], lwd=3, col=brewer.pal(length (stations), "Set2")[j]
            , lty="dashed")
     if (i==1){
-      legend ("topright", lwd=3, col=c(brewer.pal (length (stations), "Set2"), rep ("gray",2))
-              , legend=c(stations, "surface", "near bottom")
-              , lty=c(rep ("solid", length (stations)+1), "dashed")
+      legend ("topright", lwd=c (rep (3,5), 2)
+              , col=c(brewer.pal (length (stations), "Set2"), rep ("gray",2), "black")
+              , legend=c(stations, "surface", "near bottom", "detection limit")
+              , lty=c(rep ("solid", length (stations)+1), "dashed", "dotted")
               , seg.len=3
               , bty="n", ncol=2)
     }
   }
 }
 dev.off()
-
+rm (nutS, nutD, nutA)
 
 
 ## QAQC
@@ -116,7 +122,7 @@ source ("annualPlotFct.R") # already loads SWMPr
 suppressPackageStartupMessages (Require ("R.utils"))
 
 sF <- list.files("~/GISdata/LCI/SWMP/", pattern="*.zip", full.names=TRUE)
-SWMPfile <- sF [which.max (file.info(sF)$ctime)]; rm (sF)
+SWMPfile <- sF [which.max (file.info(sF)$ctime)]
 
 ## load and process SWMP data
 Require ("SWMPr")
@@ -135,6 +141,13 @@ Hs <- gS ("kachsnut") # Homer shallow
 Sd <- gS ("kacsdnut") # Seldovia deep
 Ss <- gS ("kacssnut") # Seldovia shallow
 
+nusw <- as.data.frame (rbind (Hd, Hs, Sd, Ss))
+nusw$station <- factor (c (rep ("Homer", nrow (Hd)+nrow (Hs))
+                           , rep ("Seldovia", nrow (Sd)+nrow (Ss))))
+nusw$depth <- factor (c (rep ("deep", nrow (Hd)), rep ("shallow", nrow (Hs))
+                         , rep ("deep", nrow (Sd)), rep ("shallow", nrow (Ss))))
+nusw$station.depth <- factor (paste (nusw$station, nusw$depth, sep="-"))
+rm (Hd, Hs, Sd, Ss, gS, SWMPfile, sF, i, j)
 save.image ("~/tmp/LCI_noaa/cache/nutrients1.RData")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/nutrients1.RData")
 
@@ -150,15 +163,7 @@ plot (chla_n~datetimestamp, Hd, type="l")
 
 ## seasonality
 nL <- c ("po4f", "nh4f", "no23f", "chla_n")
-nusw <- as.data.frame (rbind (Hd, Hs, Sd, Ss))
-nusw$station <- factor (c (rep ("Homer", nrow (Hd)+nrow (Hs))
-                   , rep ("Seldovia", nrow (Sd)+nrow (Ss))))
-nusw$depth <- factor (c (rep ("deep", nrow (Hd)), rep ("shallow", nrow (Hs))
-                   , rep ("deep", nrow (Sd)), rep ("shallow", nrow (Ss))))
-
-ndL <- list (Hd, Hs, Sd, Ss)
-names (ndL) <- c ("Homer deep", "Homer shallow", "Seldovia deep", "Seldovia shallow")
-
+nutL <- c ("Phosphate", "Ammonia", "Nitrate/Nitrite", "Chlorophyll")
 
 
 pdf ("~/tmp/LCI_noaa/media/EVOS/nutSWMP_historgrams.pdf")
@@ -173,49 +178,28 @@ for (i in 1:length (nL)){
 dev.off()
 
 
-pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutrients.pdf")
+pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutrients.pdf") ## keep it for QAQC
 par (mfrow=c(2,2))
-for (j in 1:length (ndL)){
-  nda <- ndL [[j]]
-for (i in 1:length (nL)){
-  nda$var <- nda [,which (names (nda)==nL[i])]
-  plot (var~jday, nda, type="n", main="")
-  title (main = paste (nL[i], names (ndL)[j]))
-  for (k in 1:length (levels (nda$year))){
-    yD <- subset (as.data.frame (nda), nda$year==levels (nda$year)[k])
-    lines (var~jday, yD, col=k)
-  #  lines (var~jday, subset (as.data.frame (nda), nda$year==levels (nda$year)[k]))
-  }
-}
-}
-dev.off()
-rm (ndL)
-
-
-## seasonal averages
-pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalAve.pdf")
-par (mfrow = c(2,2))
-for (i in 1:length (levels (nusw$station))){
-  nda <- subset (nusw, station == levels (nusw$station)[i])
-  for (j in 1:length (nL)){
-    nda$var <- nda [,which (names (nda)==nL[j])]
-    nSeason <- aggregate (var~month+depth, nda, mean, na.rm=TRUE)
-    plot (var~month, nSeason, type="n", main="")
-    title (main=paste (levels (nusw$station)[i], nL[j]))
-    lines (var~month, subset (nSeason, depth=="deep"), lty = "dashed", lwd=2)
-    lines (var~month, subset (nSeason, depth=="shallow"), lty = "solid", lwd=2)
-    if (j == 1){
-      legend ("top", lty = c("solid", "dashed"), legend=c("shallow", "deep")
-              , bty="n", lwd=2)
+for (j in 1:length (levels (nusw$station.depth))){
+  nda <- subset (nusw, nusw$station.depth==levels (nusw$station.depth)[j])
+  for (i in 1:length (nL)){
+    nda$var <- nda [,which (names (nda)==nL[i])]
+    plot (var~jday, nda, type="n", main="")
+    title (main = paste (nutL[i], levels (nusw$station.depth)[j]))
+    for (k in 1:length (levels (nda$year))){
+      yD <- subset (as.data.frame (nda), nda$year==levels (nda$year)[k])
+      lines (var~jday, yD, col=k)
+      #  lines (var~jday, subset (as.data.frame (nda), nda$year==levels (nda$year)[k]))
     }
   }
 }
 dev.off()
 
 
+
 nusw <- nusw [order (nusw$datetimestamp),]
 ## seasonal -- move Homer and Seldovia onto one plot
-pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonal3.pdf"
+pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalSpagetti.pdf"
      , width=8, height=6)
 par (mfrow = c(2,2))
 for (j in 1:length (nL)){
@@ -226,7 +210,7 @@ for (j in 1:length (nL)){
   }else if (j==2){n1 <- subset (nusw, var < 0.1)
   }else{n1 <- nusw}
   n1 <- aggregate (var~month+year+depth, data=n1, FUN=mean, na.rm=TRUE)
-  plot (var~month, n1, type="n", main=nL[j], axes=FALSE, xlab="", ylab="")
+  plot (var~month, n1, type="n", main=nutL[j], axes=FALSE, xlab="", ylab="")
   axis (1)
   axis (2)
   box()
@@ -246,23 +230,29 @@ for (j in 1:length (nL)){
 dev.off()
 
 
-if (1){
-pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalAve2.pdf"
+
+## averages -- do not include detection limits here, because y-axis range
+## would have to be expanded to display those.
+
+pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalMeans.pdf"
      , width=8, height=6)
-par (mfrow = c(2,2))
+# par (mfrow = c(2,2))  ## -- make individual plots
 for (j in 1:length (nL)){
   nusw$var <- nusw [,which (names (nusw)==nL[j])]
   nSeason <- aggregate (var~month+depth+station, nusw, mean, na.rm=TRUE)
 
   plot (var~month, nSeason, type="n", main="", axes=FALSE
         , ylab="", xlab="")
-  if (j %in% c(1,3)){
-    title (ylab=expression (mg~l^-1), xlab="", line=2.5)
-  }
+  # if (j %in% c(1,3)){
+    title (ylab=expression ("Concentration ["~mg~l^-1~"]"), xlab="", line=2.5)
+    title (main=paste0 ("monthly mean ", nutL[j], " ("
+            , paste (range (as.numeric (levels (nusw$year)[nusw$year]))
+                                        , collapse="-"), ")"))
+    # }
   axis (1)
   axis (2)
   box()
-  title (main=nL[j])
+  abline (h=nut [1, which (names (nut)==nutL[j])+1], lty="dotted")
   for (k in 1:length (levels (nusw$station))){
     lines (var~month, subset (nSeason, depth=="deep" & station==levels (station)[k])
            , lty = "dashed", lwd=2, col=k)
@@ -275,15 +265,25 @@ for (j in 1:length (nL)){
   # }else if (j == 2){
   #   legend ("top", col=c(1,2), legend=levels (nusw$station), bty="n", lwd=2)
   # }
-  if (j==1){
-    legend ("top", lty=c("solid", "dashed", "solid", "solid"), lwd=2, bty="n"
-            , legend=c(rev (levels (nusw$depth)), levels (nusw$station))
+#  if (j==1){
+    legend (list ("top" #c(4.5,0.045)
+                  , "topright"
+                  , "top"
+                  , "topright")[[j]]
+            , lty=c("solid", "dashed"# , "dotted"
+                             , "solid", "solid")
+            , lwd=2, bty="n"
+            , legend=c(rev (levels (nusw$depth)) #, "detection limit"
+                       , levels (nusw$station))
             , col=c(1,1,1,2)
             , ncol=2)
-  }
+ # }
 }
 dev.off()
-}
+
 
 
 ## anomaly time series
+
+
+## EOF
