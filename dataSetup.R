@@ -776,6 +776,25 @@ save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 
 
+#############
+# Nutrients #
+#############
+
+## pelagic stations (so far, 2021 only)
+nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
+
+## shore stations (SWMP: Seldovia and Homer, monthly. Still needs QAQC!)
+
+
+
+#######################
+# Ocean Acidification #
+#######################
+
+## exploratory analysis did not yield much, other than noise -- abandone.
+
+
+
 ##############
 ## seabirds ##
 ##############

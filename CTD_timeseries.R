@@ -807,6 +807,7 @@ for (iS in 1:length (tL)){
   par (mfrow=c(2,1))
   plot (TempSN~timeStamp, T96f, type="n", main=paste (tempName, "temperature at T9-6")
         , ylab=expression('Temperature'~'['*degree~'C'*']')
+        # , ylab="Temperature [°C]"
         , xlab="", axes=FALSE)
   axis (2)
   abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
@@ -881,7 +882,7 @@ for (iS in 1:length (tL)){
             , lwd=3
             , pch=19, cex=1
             , col=colr, legend=thTempL [xi]
-            , title=expression(temperature~"["*degree~C*"]")
+            , title="temperature [°C]" #expression(temperature~"["*degree~C*"]")
             , bty="o", ncol=3, pt.cex=2, pt.lwd=3)
     rm (yL, xi)
 
