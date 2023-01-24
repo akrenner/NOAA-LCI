@@ -248,7 +248,7 @@ plot.station <- function (section, axes = TRUE, ...){
 
 
 pickStn <- which (levels (physOc$Match_Name) %in%
-                    c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11", "3_10", "3_1", "AlongBay_10"))
+                    c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- 1:length (levels (physOc$Match_Name))
 # pickStn <- 87 # 9-6
 

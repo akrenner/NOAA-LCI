@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## phytoplankton -- based on zoop script "zoopCommunity.R"  
+## phytoplankton -- based on zoop script "zoopCommunity.R"
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 set.seed (8)
@@ -8,12 +8,16 @@ Require (sp)
 Require (vegan)
 dir.create ("~/tmp/LCI_noaa/media/2019/", recursive = TRUE, showWarnings = FALSE)
 
-
+#####################
+### THIS is CRITICAL -- switch dataset from zoo to phytoplankton -- now use most of the
+### same code. I did change names of plot files, however, to avoid confusion.
 zooC <- phyC
 zooCenv <- phyCenv
 rm (phyC, phyCenv)
+######################
 
-### standardize survey effort and distribution!! 
+
+### standardize survey effort and distribution!!
 ## pick out stations that were present in each year-season combination
 year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))
 # sttn <- with (zooCenv@data, paste (Transect, Station, sep = "-"))
@@ -41,7 +45,7 @@ if (1){                                          # remove stations sampled only 
     ## also remove empty stations
     zooCenv <- subset (zooCenv, rowSums (zooC) > 0)
     zooC <- subset (zooC, rowSums (zooC) > 0)
-    
+
     ## XXX tmp XXX!!!
     # remove outlier
     zooCenv <- zooCenv [-68,]
@@ -80,6 +84,7 @@ save.image("~/tmp/LCI_noaa/cache/phyto1stop.RData")
 # load ("~/tmp/LCI_noaa/cache/tempAnomalyMonth.RData") # gets tempM
 load ("~/tmp/LCI_noaa/cache/dailyTempAnomalies.RData") # gets tempDay from SeldoviaTemp.R
 zooCenv$month <- as.numeric (strftime (zooCenv$timeStamp, format = "%m"))
+zooCenv$Date <- format (zooCenv$timeStamp, "%Y-%m-%d")
 
 # tempDATE <- with (tempDay, paste (Day, month.abb [month], year-2000, sep = "-")) # somewhat dirty! clean up
 ## phyCenv has better date format than zooCenv
@@ -90,7 +95,10 @@ tempMatch <- match (zooCenv$Date, tempDATE); rm (tempDATE)
 
 zooCenv$TempAnom <- tempDay$days90 [tempMatch]
 tempDay$warmCat <- with (tempDay, cut (days90
-                                     , breaks = c(-100, mean (days90)+c(-1,1)*(sd (days90)/4), 100)
+                                     , breaks = c(-100
+                                                  , mean (days90,na.rm=TRUE)+c(-1,1)*
+                                                    (sd (days90, na.rm=TRUE)/4)
+                                                  , 100)
                                      , labels = c("cold", "neutral", "warm")))
 zooCenv@data$warmCat <- tempDay$warmCat [tempMatch]
 
@@ -128,10 +136,10 @@ print (names (zooCenv@data))
 # poDay <- with (tempDay, as.POSIXct (paste (year, month, Day, sep = "-")))
 # tempDay$AJ <- tempDay$days90 - mean (zooCenv$TempAnom) # set zero to mean of samples
 #  tempDay$AJ <- tempDay$days90
-# 
+#
 # nRange <- sd (tempDay$AJ)/4
-# 
-# 
+#
+#
 # barplot (tempDay$AJ~poDay
 #        , space = 0
 #        , col = ifelse (tempDay$AJ < (mean (tempDay$AJ)-nRange), "blue"
@@ -169,7 +177,7 @@ print (names (zooCenv@data))
 sampleWC <- aggregate (warmCat~season+Year, data = zooCenv, FUN = summary)
 ## table for methods
 sampleWC <- cbind (sampleWC [,2:1], as.data.frame (sampleWC [,3]))
-write.csv (sampleWC, file = "~/tmp/LCI_noaa/media/2019/zoopTempsamplingSummary.csv", row.names = FALSE)
+write.csv (sampleWC, file = "~/tmp/LCI_noaa/media/2019/phytoTempsamplingSummary.csv", row.names = FALSE)
 rm (sampleWC)
 
 
@@ -250,7 +258,7 @@ cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
 
 
 ## plot T9 only, by month, using nMDS as calculated above -> find best seasonal cut-offs
-## delete that part here -- no extensive phytoplankton samples for T9 
+## delete that part here -- no extensive phytoplankton samples for T9
 ## (or at the very least, would need to break-out Transect)
 
 
@@ -272,14 +280,14 @@ fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 
 
 # PDF ("2019/Zoop_nMDS_seasonal")
-png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
+png ("~/tmp/LCI_noaa/media/2019/phyto_nMDS_seasonal.png")
 pSym <- c(25,1,17)
 plot (nMScores [,1:2], type = "n")
 legend ("topleft", legend = levels (nMCol)
         ##, col = 1:length (levels (nMCol))
       , col = fCol, pch = 19, bty = "n")
 text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
-### -- ERROR -- variable length differ 
+### -- ERROR -- variable length differ
 ### other issue: NMDS-1 has bad outlier
 #########
 identify (nMScores [,1:2])
@@ -364,7 +372,7 @@ plotInSeason <- function (pdfN, plotCat = "warmCat"
 
 
 ## warm/cold
-plotInSeason (pdfN = "Zoop_intraseasonal-nMDS_warm-cold"
+plotInSeason (pdfN = "phyto_intraseasonal-nMDS_warm-cold"
             , plotCat = "warmCat"
             , colP = c ("blue", "gray", "red")
             , hull = TRUE, legLoc = "bottomleft")
@@ -374,17 +382,17 @@ Require ("RColorBrewer")
 # plotInSeason ("Zoop_intraseasonal-nMDS_location"
 #             , plotCat = "Transect"
 #             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
-#                                         # brewer.pal (length (levels (zooCenv$Transect)), name = "Set3")  
+#                                         # brewer.pal (length (levels (zooCenv$Transect)), name = "Set3")
 #             , hull = TRUE, legLoc = "bottomleft")
 
 Require ("colorspace")
-plotInSeason ("Zoop_intraseasonal-nMDS_years"
+plotInSeason ("phyto_intraseasonal-nMDS_years"
             , plotCat = "Year"
-            , colP =  rainbow_hcl (length (levels (zooCenv$Year)))  
+            , colP =  rainbow_hcl (length (levels (zooCenv$Year)))
             , hull = TRUE, legLoc = "bottomleft")
 
 # print (summary (zooCenv$SalCat))
-plotInSeason ("Zoop_intraseasonal-nMDS_Sal"
+plotInSeason ("phyto_intraseasonal-nMDS_Sal"
             , plotCat = "SalCat"
             , colP = brewer.pal (length (levels (zooCenv$SalCat)), name = "Dark2")
             , hull = TRUE, legLoc = "bottomleft")
@@ -395,9 +403,9 @@ plotInSeason ("Zoop_intraseasonal-nMDS_Sal"
 #             , hull = TRUE, legLoc = "bottomleft"
 #             , reScale = TRUE
 #               )
-plotInSeason ("Zoop_intraseasonal-reScalenMDS_years"
+plotInSeason ("phyto_intraseasonal-reScalenMDS_years"
             , plotCat = "Year"
-            , colP = rainbow_hcl (length (levels (zooCenv$Year)))  
+            , colP = rainbow_hcl (length (levels (zooCenv$Year)))
             , hull = TRUE #, legLoc = "bottomleft"
             , reScale = TRUE
               )
@@ -480,8 +488,8 @@ rm (aicTb, bM, aicTx, mdlL)
 if (0){## quantify variability within seasons, comparing warm/cold (why??)
 sDz <- aggregate (nMScores [,1:3]~season+warmCat, data = zooCenv, FUN = sd)
 Require (lattice)
-# bargraph 
-PDF ("2019/Zoop_seasonal-SD")
+# bargraph
+PDF ("2019/phyto_seasonal-SD")
 for (i in 1:3){
     barchart (sDz [,2+i]~warmCat|season, data = sDz, ylab = paste ("SD nMDS", i))
 }
@@ -501,7 +509,7 @@ aggregate (Match_Name~season+warmCat, data = zooCenv, FUN = function (x){
     length (levels (factor (x)))})
 
 if (0){
-PDF ("2019/Zoop_intraseasonal-nMDS-boxplots")
+PDF ("2019/phyto_intraseasonal-nMDS-boxplots")
 for (j in 1:3){
     par (mfrow = c(2,2))
     for (i in 1:length (levels (zooCenv$season))){
@@ -511,7 +519,7 @@ for (j in 1:3){
                , xlab = levels (zooCenv$season)[i]
                , ylab = ""
                  ##, horizontal = TRUE
-               , notch = TRUE, varwidth = TRUE            
+               , notch = TRUE, varwidth = TRUE
                  )
     }
     mtext (paste ("nMDS axis", j), outer = TRUE)
@@ -537,7 +545,7 @@ print (sort (scores (nM, "species")[,2]))
 
 if (0){            # plot not ready yet
 ## canonical correspondence analysis WITHIN seasons
-PDF ("2019/Zoop_intraseasonal-CCA")
+PDF ("2019/phyto_intraseasonal-CCA")
 par (mfrow = c(2,2))
 for (i in 1:length (levels (zooCenv$season))){
     ccaZ <- cca (zooC~zooCenv$TempAnom, subset = zooCenv$season == levels (zooCenv$season)[i])
@@ -555,14 +563,14 @@ zooY <- zooY [,2:ncol (zooY)]
 row.names (zooY) <- zY
 rm (zY)
 
-## remove rare species? 
+## remove rare species?
 # zooY <- zooY [,which (apply (zooY, 2, max) > 1)
 
 
 Require (vegan)
 nm <- metaMDS (zooY, try = 20, trymax = 100, parallel = 12)
 
-PDF ("2019/Zoop_YearsNMDS")
+PDF ("2019/phyto_YearsNMDS")
 plot (nm, display = "sites", shrink = TRUE, type = "t" ) #, labels = zY)
 dev.off()
 
