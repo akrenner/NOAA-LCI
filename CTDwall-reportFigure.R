@@ -10,32 +10,17 @@ load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 
 
 test <- TRUE
-test <- FALSE
+## EVOS final GulfWatch Report
+## plot 2017-2021, March, July, October, December
 
 
-## problems:
-## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
-## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
+startDate <- "2000-01-01" # default; all data
+stopatDate <- Sys.time()
+startDate <- "2017-01-01"
+stopatDate <- "2022-01-01"
 
-## PAR: flag night; mark 1% light level contour
-## fix distancescale to full transect
-## Kris: check on surface PAR and salinity measurements
-
-## 2021-08-03 -- issues
-# x fix color scale across all graphs (across Transects as well?)
-
-## 9-10 2012-5:  double cast?
-## T-3 2012-winter: stations mislabled/out of order? 3_4 should be 3_7?
-
-## color scales: make custom breaks to show more details
-
-
-## decisions made:
-# if more than 1 survey per survey-window, plot the longest section
-
-
-stopatDate <- "2022-07-31"
-# stopatDate <- Sys.time()
+month.select <- c (3,7,10,12)
+year.select <- 2017:2021
 
 
 ## add AlongBay-short transect as a new virtual transect
@@ -45,10 +30,10 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 if (test){
   oceanvarC <- 1:length (oVarsF) #
   oceanvarC <- 8
- # oceanvarC <- c (4,8)
-  oceanvarC <- 1:length (oVarsF)
+  oceanvarC <- c (1,2)
+ # oceanvarC <- 1:length (oVarsF)
   transectC <- 1:length (levels (poAll$Transect))
-  transectC <- 6
+  transectC <- 6 # AlongBay
 }else{
   oceanvarC <- 1:length (oVarsF)
   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
@@ -62,12 +47,14 @@ if (test){
 ## enf of user configurations ##
 ################################
 
-if (class (stopatDate)[1]=="character"){stopatDate <- as.POSIXct(stopatDate)}
+if (class (stopatDate)[1]=="character"){stopatDate <-as.Date(stopatDate)}
+if (class (startDate)[1]=="character"){startDate <- as.Date(startDate)}
 source ("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 
 if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
 mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
+mnthly <- c("9", "4") ## here, only sample select months
 
 
 if (0){ ## tests
@@ -82,6 +69,12 @@ if (0){ ## tests
 }
 
 
+
+####################################
+##                                ##
+## start of the big plotting loop ##
+##                                ##
+####################################
 
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in transectC){  # tn: transect
@@ -151,6 +144,14 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     physOcY$year <- factor  (physOcY$year)
     physOcY$month <- factor (format (physOcY$DateISO, "%m"))
     physOcY$season <- seasonize (physOcY$month)
+    physOcY$DateISO <- as.Date (physOcY$DateISO)
+    pStash <- physOcY
+    physOcY <- pStash
+    physOcY <- subset (physOcY, (startDate < DateISO)&(DateISO < stopatDate))
+    if (exists ("month.select")){
+      physOcY <- subset (physOcY, as.numeric (levels (physOcY$month)[physOcY$month]) %in% month.select)
+      physOcY$month <- factor (physOcY$month)
+    }
 
 
     ## set-up page size for large poster-PDF
@@ -167,15 +168,22 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       Require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
-      nY <- as.numeric (format (stopatDate, "%Y")) - min (as.integer (levels (poAll$year))) + 1
+      nY <- as.numeric (format (stopatDate, "%Y")) - as.numeric (format (startDate, "%Y")) + 1
       nY <- yearPP
       layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
       omText <- month.name
       rm (nY)
+    }else if (exists ("year.select")){
+      pH <- 10; pW <- 7
+      yearPP <- length (year.select)
+      omcex <- 1
+      sampleTimes <- length (month.select)
+      physOcY$smplIntvl <- physOcY$month
+      layoutM <- matrix (1:8, 4, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
     }else{
       ## quarterly
       pH <- 8.5; pW <- 14    # legal size
-      yearPP <- 4
+      yearPP <- 5
       omcex <- 1
       sampleTimes <- levels (physOcY$season)
       physOcY$smplIntvl <- physOcY$season
