@@ -80,7 +80,7 @@ for (i in 1:length (nutL)){
 #  axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=1:12, tick=FALSE)
   axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=month.abb, tick=FALSE)
   box()
-  if (i %% 2 == 1){
+  if (1){  #i %% 2 == 1){
     title (ylab=expression ("Concentration ["~mg~l^-1~"]"))
   }
   abline (h=nut [1,which (names (nut)==nutL[i])+1], lty="dotted", lwd=2) # show detection limit

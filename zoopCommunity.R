@@ -32,7 +32,7 @@ T9a <- aggregate (totalDens~jday+Year, T9, FUN=mean, na.rm=TRUE)
 pdf ("~/tmp/LCI_noaa/media/EVOS/zoopAbundSeason.pdf")
 par (mar=c(4,5,3,1))
 plot (totalDens~jday, T9a, type="n", xlab="", axes=FALSE
-      , ylab=expression("Zooplankton Density ["~Counts~10^-3~m^-3~"]")) # convert liter to m^3
+      , ylab=expression("Zooplankton Density ["~Counts~~l^-1~"]")) # convert liter to m^3
 axis (2)
 axis (1, at=format (as.Date (paste0 ("2000-", 1:12, "-1")), "%j"), tick=TRUE, labels=FALSE)
 axis (1, at=format (as.Date(paste0 ("2000-", 1:12, "-15")), "%j"), tick=FALSE, labels=month.abb)
