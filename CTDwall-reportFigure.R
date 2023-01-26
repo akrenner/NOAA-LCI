@@ -19,7 +19,9 @@ stopatDate <- Sys.time()
 startDate <- "2017-01-01"
 stopatDate <- "2022-01-01"
 
-month.select <- c (3,7,10,12)
+month.select <- c (3,7)
+month.select <- c (10,12)
+year.select <- levels (poAll$year)
 year.select <- 2017:2021
 
 
@@ -54,7 +56,6 @@ dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, re
 
 if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
 mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
-mnthly <- c("9", "4") ## here, only sample select months
 
 
 if (0){ ## tests
@@ -156,7 +157,30 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
-    if (levels (poAll$Transect)[tn] %in% mnthly){
+    if (exists ("year.select")){
+      pH <- 10; pW <- 7
+      yearPP <- length (year.select)
+      omcex <- 1
+      Require ("stringr")
+      sampleTimes <- str_pad (month.select, 2, pad = "0")
+      physOcY$smplIntvl <- physOcY$month
+      layoutM <- matrix (1:10, 5, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
+      omText <- month.name [month.select]
+      # rescale colors to cover only this figure
+      oRange <- t (sapply (c ("Temperature_ITS90_DegC"
+                              , "Salinity_PSU"
+                              , "Density_sigma.theta.kg.m.3"
+                              , "turbidity" # , "logTurbidity"
+                              , "Fluorescence_mg_m3"
+                              , "logPAR"
+                              , "Oxygen_umol_kg"
+                              , "bvf"
+      )
+      , FUN = function(vn){range (physOcY [,which (names (physOcY) == vn)], na.rm = TRUE)
+      }))
+
+
+    }else if (levels (poAll$Transect)[tn] %in% mnthly){
       ## monthly
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
@@ -173,13 +197,6 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
       omText <- month.name
       rm (nY)
-    }else if (exists ("year.select")){
-      pH <- 10; pW <- 7
-      yearPP <- length (year.select)
-      omcex <- 1
-      sampleTimes <- length (month.select)
-      physOcY$smplIntvl <- physOcY$month
-      layoutM <- matrix (1:8, 4, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
     }else{
       ## quarterly
       pH <- 8.5; pW <- 14    # legal size
@@ -212,12 +229,12 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       )
     }
     ## test-option
-    yearC <- 1:length (levels (physOcY$year))  ## or fix subset below
+    yearC <- 1:length (year.select)  ## or fix subset below
     for (iY in yearC){
       ## for testing:
       # iY <- 7 # pick 2018
       # iY <- 2
-      physOc <- subset (physOcY, year == levels (physOcY$year)[iY])
+      physOc <- subset (physOcY, year == year.select [iY])
 
 
       ## replace transDate from above!
@@ -233,10 +250,11 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
-      if (test){sL <- 1:5}else{sL <-  1:length (levels (physOc$transDate))}
+#      if (test){sL <- 1:5}else{sL <-  1:length (levels (factor (physOc$transDate)))}
+      sL <-  1:length (levels (factor (physOc$transDate)))
       # sL <-  1:length (levels (physOc$transDate))
       for (iS in sL){              # cycle through individual survey
-        # iS <- 2  # for testing
+        # iS <- 1  # for testing
         cat (iS, " ")
         xC <- subset (physOc, transDate == levels (physOc$transDate)[iS])
         if (length (levels (factor (xC$Match_Name))) < 2){
@@ -373,15 +391,15 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
           rm (tgray)
-          if (test){   ## for QAQC: add station labels to x-axis
-            dist <- unique (xCo[['distance']])
-            stnID <- sapply (1:length (xCo@data$station), function (m){
-              xCo@data$station[[m]]@metadata$stationId
-              #              xCo@data$station[[m]]@metadata$filename
-            })
-            try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2))
-            rm (dist, stnID)
-          }
+          # if (test){   ## for QAQC: add station labels to x-axis
+          #   dist <- unique (xCo[['distance']])
+          #   stnID <- sapply (1:length (xCo@data$station), function (m){
+          #     xCo@data$station[[m]]@metadata$stationId
+          #     #              xCo@data$station[[m]]@metadata$filename
+          #   })
+          #   try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2))
+          #   rm (dist, stnID)
+          # }
 
           if (nSurv > 1){
             title (main = paste (levels (physOc$transDate)[iS], "* -", nSurv), col.main = "red")
@@ -391,9 +409,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                   , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
           }
           if (iY==1){ ## big title on top
-            mtext (text = oVars [ov], side=3, cex=4, outer=TRUE, line=3)  ## always?
-          }
-          ## addBorder (xCo, TD[ov]-1)
+            if (!test){
+              mtext (text = oVars [ov], side=3, cex=4, outer=TRUE, line=3)  ## always?
+            }
+          }          ## addBorder (xCo, TD[ov]-1)
 
           # keep longest section for map
           if (!exists ("xMap")){xMap <- xCo}
@@ -404,7 +423,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
         }
       }
       ## covering yearPP years per page. Write out at end of each year
-      mtext (text=levels (physOcY$year)[iY]
+      mtext (text=year.select[iY]
              , side=2, line=1.0,outer=TRUE,cex=omcex
              , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
       )
@@ -420,79 +439,81 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ##############################################################
 
     ## maps
-    xLim <- c(-154, -151)
-    yLim <- c(57.5, 60.1)
-    plot (xMap
-          , which = 99
-          , coastline = "coastlineWorldFine" ## or a coastline object (from gshhg, removing dependency on ocedata)
-          , showStations = TRUE
-          , gird = TRUE
-          , map.xlim = c(-154, -151)
-          , map.ylim = c(57.5, 60.1)
-          , clatitude = 59.4
-          , clongitude = -152
-          , span = 250
-    )
-    ## add eye for perspective;  save eye to eye.ps with Inkscape
     if (1){
-      if (levels (poAll$Transect)[tn] == "3"){
-        xU <- -152.5; yU <- 59.4; rU <- 60
-      }else if (levels (poAll$Transect)[tn] == "4"){
-        xU <- -152.8; yU <- 59.4; rU <- 0
-      }else if (levels (poAll$Transect)[tn] == "6"){
-        xU <- -151.5; yU <- 58.4; rU <- 115
-      }else  if (levels (poAll$Transect)[tn] == "7"){
-        xU <- -152.5; yU <- 58.7; rU <- 85
-      }else if (levels (poAll$Transect)[tn] == "9"){
-        xU <- -152.8; yU <- 59.0; rU <- 20
-      }else{                         # AlongBay
-        xU <- -150.5; yU <- 59.1; rU <- 130
-      }
+      xLim <- c(-154, -151)
+      yLim <- c(57.5, 60.1)
+      plot (xMap
+            , which = 99
+            , coastline = "coastlineWorldFine" ## or a coastline object (from gshhg, removing dependency on ocedata)
+            , showStations = TRUE
+            , gird = TRUE
+            , map.xlim = c(-154, -151)
+            , map.ylim = c(57.5, 60.1)
+            , clatitude = 59.4
+            , clongitude = -152
+            , span = 250
+      )
+      ## add eye for perspective;  save eye to eye.ps with Inkscape
+      if (1){
+        if (levels (poAll$Transect)[tn] == "3"){
+          xU <- -152.5; yU <- 59.4; rU <- 60
+        }else if (levels (poAll$Transect)[tn] == "4"){
+          xU <- -152.8; yU <- 59.4; rU <- 0
+        }else if (levels (poAll$Transect)[tn] == "6"){
+          xU <- -151.5; yU <- 58.4; rU <- 115
+        }else  if (levels (poAll$Transect)[tn] == "7"){
+          xU <- -152.5; yU <- 58.7; rU <- 85
+        }else if (levels (poAll$Transect)[tn] == "9"){
+          xU <- -152.8; yU <- 59.0; rU <- 20
+        }else{                         # AlongBay
+          xU <- -150.5; yU <- 59.1; rU <- 130
+        }
 
-      if (0){  ## vector based -- not windows compatible and doesn't rotate
-        Require ("grImport")  ## requires installation of GS -- go raster after all
-        grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-        p <- readPicture("pictograms/eye.ps.xml")
-        unlink ("pictograms/eye.ps.xml")
-        grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
-                      , x=unit (xU, "npc"), y=unit (yU, "npc")
-                      # , angle=rU
-                      , width=unit (0.07, "npc"), height=unit (0.07, "npc")
-        )
-        ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
-        # if (.Platform$OS.type=="unix"){
-        #   if (!require ("grConvert")){
-        #     devtools::install_github("sjp/grConvert")
-        #     library (grConvert)}
-        #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
-        # }
-        # Require ("grImport2")
-        # p <- grImport2::readPicture ("pictograms/eye2.svg")
-        # g <- grImport2::pictureGrob(p)
-        # grid.picture(g)
+        if (0){  ## vector based -- not windows compatible and doesn't rotate
+          Require ("grImport")  ## requires installation of GS -- go raster after all
+          grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
+          p <- readPicture("pictograms/eye.ps.xml")
+          unlink ("pictograms/eye.ps.xml")
+          grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
+                        , x=unit (xU, "npc"), y=unit (yU, "npc")
+                        # , angle=rU
+                        , width=unit (0.07, "npc"), height=unit (0.07, "npc")
+          )
+          ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
+          # if (.Platform$OS.type=="unix"){
+          #   if (!require ("grConvert")){
+          #     devtools::install_github("sjp/grConvert")
+          #     library (grConvert)}
+          #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
+          # }
+          # Require ("grImport2")
+          # p <- grImport2::readPicture ("pictograms/eye2.svg")
+          # g <- grImport2::pictureGrob(p)
+          # grid.picture(g)
+        }
+        if (.Platform$OS.type=="unix"){
+          system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+        }
+        Require ("png")
+        p <- readPNG ("pictograms/eye.png")
+        # Require ("OpenImageR")
+        # p <- rotateImage (p, angle=rU, method="nearest")
+        rasterImage(p
+                    , xleft=xU       # -152       +3*1*(xU-0.5)
+                    , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
+                    , ybottom=yU     # 59.4     +1*1*(yU-0.5)
+                    , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
+                    , angle=rU)
+        rm (p, xU, yU, rU)
+        # ## fine-scale map -- no longer needed?
+        # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
+        #       , which = 99
+        #       , coastline = "coastlineWorldFine"
+        #       , showStations = TRUE
+        #       , gird = TRUE
+        #       # , span=50
+        # )
       }
-      if (.Platform$OS.type=="unix"){
-        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
-      }
-      Require ("png")
-      p <- readPNG ("pictograms/eye.png")
-      # Require ("OpenImageR")
-      # p <- rotateImage (p, angle=rU, method="nearest")
-      rasterImage(p
-                  , xleft=xU       # -152       +3*1*(xU-0.5)
-                  , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
-                  , ybottom=yU     # 59.4     +1*1*(yU-0.5)
-                  , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
-                  , angle=rU)
-      rm (p, xU, yU, rU)
-      # ## fine-scale map -- no longer needed?
-      # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
-      #       , which = 99
-      #       , coastline = "coastlineWorldFine"
-      #       , showStations = TRUE
-      #       , gird = TRUE
-      #       # , span=50
-      # )
     }
     rm (xMap, bottom)
 
@@ -507,7 +528,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       par (mar=c(14, 1,3,1))
     }else{
       yL <-1.2
-      par (mar=c(10, 1,3,1))
+      par (mar=c(5, 1,3,1))
     }
     bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
                    , ylim=c(0,yL)  # ylim to make bar narrower, less high
