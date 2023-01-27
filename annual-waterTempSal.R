@@ -157,6 +157,9 @@ for (i in 1:length (waterL)){
 dev.off()
 rm (waterL, hM, i)
 
+## for troubleshooting annualPlotFct.R::prepDF
+# save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
 hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
