@@ -13,6 +13,59 @@ PDF <- function (fN, ...){
   pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoop/", fN, ".pdf"), ...)
 }
 
+
+
+#########################################
+### seasonality of zoop data, total N ###
+#########################################
+
+zooCenv$totalZN <- rowSums (zooC)
+zooCenv$totalDens <- with (as.data.frame (zooCenv), totalZN/volSample)
+
+T9 <- subset (zooCenv, (Transect=="9") & (Station=="6"), )
+T9$jday <- format (T9$isoDate, "%j")
+T9$Year <- factor (T9$Year)
+T9 <- T9 [order (T9$isoDate),]
+T9a <- aggregate (totalDens~jday+Year, T9, FUN=mean, na.rm=TRUE)
+
+
+pdf ("~/tmp/LCI_noaa/media/EVOS/zoopAbundSeason.pdf")
+par (mar=c(4,5,3,1))
+plot (totalDens~jday, T9a, type="n", xlab="", axes=FALSE
+      , ylab=expression("Zooplankton Density ["~Counts~10^-3~m^-3~"]")) # convert liter to m^3
+axis (2)
+axis (1, at=format (as.Date (paste0 ("2000-", 1:12, "-1")), "%j"), tick=TRUE, labels=FALSE)
+axis (1, at=format (as.Date(paste0 ("2000-", 1:12, "-15")), "%j"), tick=FALSE, labels=month.abb)
+box()
+for (i in 1:length (levels (T9$Year))){
+  Ty <- subset (T9a, T9a$Year==levels (T9$Year)[i])
+  lines (totalDens~jday, Ty, col=i, lwd=2, type="b"
+         , lty=c(rep ("solid", 8), rep ("dashed", 2))[i]
+  )
+}
+legend (as.numeric (format (as.Date ("2000-08-15"), "%j")), 99
+        , legend=levels(T9a$Year), lwd=2, col=1:length (levels (T9$Year))
+        , lty=c (rep ("solid", 8), rep ("dashed", 2)), bty="n")
+dev.off()
+
+
+## Species composition of high values
+T9C <- subset (zooC, (zooCenv$Transect=="9") & (zooCenv$Station=="6"))
+# Tm <- T9C [which.max (T9$totalDens),]
+# Tm <- T9c [T9$isoDate == ]
+# Tm <- subset (T9C, T9$Year==2019)
+Tm <- T9C [rownames(T9C)=="9_6 2019-12-11_12",]
+head (t (Tm [,order (as.numeric (Tm [1,]), decreasing=TRUE)]), n=10)
+data.frame (totals=head (sort (colSums(T9C, na.rm=TRUE), decreasing=TRUE), 10))
+# Tm <- T9C [which (T9$totalDens>80),]
+# head (t (Tm [,order (as.numeric (Tm [1,]), decreasing=TRUE)]), n=10)
+
+rm (Tm, T9C, T9, Ty)
+
+
+
+
+
 ### standardize survey effort and distribution!!
 ## pick out stations that were present in each year-season combination
 year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))

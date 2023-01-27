@@ -16,6 +16,9 @@ rm (list = ls())
 print (Sys.time())
 
 
+deepThd <- 15 ## bottom threshold -- everything above considered surface,
+                ## everything below bottom water
+
 ## file structure:
 ## source files in ~/GISdata/LCI/
 GISF <- "~/GISdata/LCI/"
@@ -64,7 +67,7 @@ if (!require("pacman")) install.packages("pacman"
   , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 Require <- pacman::p_load
 
-Require ("sp")
+Require ("sp")  ## move to sf
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -132,6 +135,36 @@ physOc <- with (physOcT, data.frame (Match_Name=Station
 ))
 rm (physOcT)
 
+
+
+## add new derived variable: slope of density gradient
+## best to do this here = ??
+## plan A: calculate slope for each step
+## plan B: fit smoothing spline and produce derivative
+# cast <- factor (paste0 (physOc$Match_Name, physOc$isoTime))
+# physOc$densityGradient <- sapply (1:length (levels (cast))
+#                                   , function (i){
+#                                     cst <- subset (physOc, cast == levels (cast)[i])
+#                                     slp <- (lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
+#                                       (lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
+#                                     #slp <- data.frame (gradient=slp)
+#                                     slp
+#                                   }) %>%
+#   unlist
+physOc$bvf <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
+                                  , function (i){
+                                    require ("oce")
+                                    cast <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
+                                    bvf <- oce::swN2 (pressure=cast$Pressure..Strain.Gauge..db.
+                                                       , sigmaTheta=cast$Density_sigma.theta.kg.m.3
+                                                       , derivs="smoothing" # "simple" ## or "smoothing"
+                                                       # , df="simple"
+                                                       )
+                                    bvf
+                                  }) %>%
+  unlist
+physOc$bvf <- ifelse (is.na (physOc$bvf), 0, physOc$bvf)
+
 stn <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset (stn, !is.na (Lon_decDegree))
 stn <- subset (stn, !is.na (Lat_decDegree))
@@ -140,7 +173,7 @@ stn$Plankton <- stn$Plankton == "Y"
 
 
 ## Kris:
-## - presistance of mixing across seasons and tides
+## - persistence of mixing across seasons and tides
 ## fluorescence in total water column?
 
 
@@ -149,8 +182,8 @@ stn$Plankton <- stn$Plankton == "Y"
 ############################################
 
 
+## set-up headers of poSS
 poSS <- with (physOc, data.frame (File.Name = levels (File.Name)))
-
 poM <- match (poSS$File.Name, physOc$File.Name)
 
 poSS$Match_Name <- physOc$Match_Name [poM]
@@ -168,7 +201,7 @@ poSS$SampleID <- with (poSS, paste (Match_Name
                                    ))   # no need to spec by H
 poSS$SampleID_H = with (poSS, paste (Match_Name # some days >1 sample (tide cycle)
                                    , format (timeStamp, format = "%Y-%m-%d_%H", usetz = FALSE)
-                                     ))
+                                     )) ## in case there are 1 samples per day -- include hour
 ## XXX
 ## should not need this -- fix in CTD processing!!
 poSS <- subset (poSS, !is.na (poM))
@@ -181,17 +214,7 @@ rm (poM)
 ## x <- summary (factor (poSS$SampleID), maxsum = 10000)
 ## sort (poSS$File.Name [poSS$SampleID %in% names (which (x>1))])
 
-# poSS$maxDepth <- aggregate (Depth.saltwater..m.~File.Name ## fails -- needed??
-#                  , data = physOc, FUN = max)$Depth.saltwater..m.
-## not sure where NAs are coming from, but this fixes it.
-## Better to take maxDepth from station master list
-poSS$maxDepth <- rep (NA, nrow (poSS))
-mD <- aggregate (Depth.saltwater..m.~File.Name
-                          , data = physOc, FUN = max)
-poSS$maxDepth <- mD$Depth.saltwater..m. [match (poSS$File.Name, mD$File.Name)]
-rm (mD)
-
-dMean <- function (fn, fldn){
+dMean <- function (fn, fldn){  ## bottom Mean
     ## calculate mean of field for the last 10 m above the bottom
     cast <- subset (physOc, File.Name == fn)
     lLay <- c (-10, 0) + max (cast$Depth.saltwater..m.)
@@ -201,6 +224,15 @@ dMean <- function (fn, fldn){
     return (outM)
 }
 
+agg <- function (var, ..., refDF){ # more robust in case of NA
+  agDF <- aggregate (var~File.Name, data = physOc, ...)
+  agDF [match (refDF$File.Name, agDF [,1]),2]
+}
+poSS$maxDepth <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS)
+
+
+
+## date/time-based conditions: daylight and tidal cycle
 Require ("rtide")
 tRange <- function (tstmp){
     ## uses NOAA tide table data
@@ -215,7 +247,7 @@ tRange <- function (tstmp){
     return (diff (range (tid$TideHeight)))
 }
 ## this step takes a while! [approx 5 min, depending on computer]
-poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores = nCPUs))
+poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores=nCPUs))
 ## rerun tideRange
 if (0){ # keep in case mclapply fails
   poSS$tideRange <- as.numeric (poSS$tideRange)
@@ -234,13 +266,14 @@ if (0){ # keep in case mclapply fails
 }
 rm (tRange)
 ## tidal phase
-tPhase <- function (tstmp, lat, lon){
+tPhase <- function (tstmp, lat, lon){  ## REVIEW THIS!
   ## return radians degree of tidal phase during cast
   Require ("suncalc")
   poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
   ## Require (oce)
   ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
+# POss$tidePhase <- unlist (mclapply (poSS$timeStamp, mc.cores=nCPUs))
 rm (tPhase)
 
 
@@ -256,32 +289,135 @@ daylight <- function (dt){
 poSS$dayLight <- daylight (poSS$timeStamp)
 rm (daylight)
 
-agg <- function (var, ..., refDF){ # more robust in case of NA
-  agDF <- aggregate (var~File.Name, data = physOc, ...)
-  agDF [match (refDF$File.Name, agDF [,1]),2]
-}
 
-poSS$aveTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
+
+
+## temperature derivaties
+
+poSS$TempMean <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
                            , FUN = mean)$Temperature_ITS90_DegC
 
-poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset = physOc$Depth.saltwater..m. <= 3
-                       , FUN = mean, na.rm=TRUE, refDF=poSS)
-poSS$minTemp <- aggregate (Temperature_ITS90_DegC~File.Name, data = physOc
-                           , FUN = min)$Temperature_ITS90_DegC
-poSS$deepTemp <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Temperature_ITS90_DegC"
-                                   , mc.cores = nCPUs))
-poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm = TRUE, refDF=poSS)
-poSS$aveSalinity <- aggregate (Salinity_PSU~File.Name, data = physOc
-                               , FUN = mean)$Salinity_PSU
-poSS$deepSal <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Salinity_PSU"
-                                  , mc.cores = nCPUs))
-poSS$aveDens <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
-                                  , mc.cores = nCPUs))
+poSS$SST <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. <= 3
+                       , FUN = median, na.rm=TRUE, refDF=poSS)
+poSS$TempSurface <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. <= deepThd
+                 , FUN = mean, na.rm=TRUE, refDF=poSS)
+poSS$TempDeep <- agg (physOc$Temperature_ITS90_DegC, subset=physOc$Depth.saltwater..m. > deepThd
+                      , FUN = mean, na.rm=TRUE, refDF=poSS)
+poSS$TempMin <- agg (physOc$Temperature_ITS90_DegC, FUN=min, refDF=poSS)
+poSS$TempBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Temperature_ITS90_DegC"
+                                   , mc.cores=nCPUs))
+poSS$TempMax <- agg (physOc$Temperature_ITS90_DegC, FUN=max, refDF=poSS)
 
+## salinity derivatives
+poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
+poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
+                       , FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$SalDeep <- -agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+                      , FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
+                                  , mc.cores=nCPUs))
+
+## density and other seawater properties
+poSS$DensMean <- agg (physOc$Density_sigma.theta.kg.m.3, FUN=mean, na.rm=TRUE, refDF=poSS)
+poSS$DensBottom <- unlist (mclapply (poSS$File.Name, FUN = dMean, fldn = "Density_sigma.theta.kg.m.3"
+                                  , mc.cores = nCPUs))
 rm (dMean, agg)
 ## poSS$aveSpice <- aggregate (Spice~File.Name, data = physOc, FUN = mean)$Spice
 ## almost the same als salinity. skip it
 
+## derived seawater summary statistics
+Require ("parallel")
+wcStab <- function (fn){
+    ## calculate water column stability for a given File.Name as difference density between upper and lower water layer
+    ## any reference to this??
+    uLay <- c (0,3)
+    lLay <- c (30,35)
+    cast <- subset (physOc, File.Name == fn)
+    lLay <- c (-5, 0) + max (cast$Depth.saltwater..m.) # lowest 5 m instead of fixed depth
+                                        # some casts only 2 or 5 m deep -- then what?
+    uDens <- mean (subset (cast, (uLay [1] < Depth.saltwater..m.) &
+                                 (Depth.saltwater..m. < uLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
+    lDens <- mean (subset (cast, (lLay [1] < Depth.saltwater..m.) &
+                                 (Depth.saltwater..m. < lLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
+    stabIdx <- (lDens - uDens) - (mean (lLay) - mean (uLay))
+    stabIdx <- ifelse (is.infinite (stabIdx), NA, stabIdx)
+    return (stabIdx)
+#    return ((lDens - uDens)/(mean (lLay) - mean (uLay)))
+#     return (lDens - uDens)
+}
+poSS$stability <- unlist (mclapply (poSS$File.Name, FUN = wcStab, mc.cores = nCPUs))
+rm (wcStab)
+
+## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
+## good indicator of presence of deep-water salinity gradient
+# XXX replace mclapply with agg, wherever possible! XXX
+poSS$bvfMean <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  mean (cast$bvf, na.rm=TRUE)
+}))
+
+poSS$bvfMax <- unlist (mclapply (poSS$File.Name, mc.cores = nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  max (cast$bvf, na.rm=TRUE)
+}))
+
+poSS$pclDepth <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  cast <- subset (physOc, File.Name==fn)
+  cast$Depth.saltwater..m. [which.max (cast$bvf)]
+}))
+## freshwater content
+poSS$FreshWaterCont <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, (File.Name==fn) & (Depth.saltwater..m. <= deepThd))  ## surface layer only  use deepThd XXX
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
+poSS$FreshWaterContDeep <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, (File.Name==fn) & (Depth.saltwater..m. > deepThd))
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
+poSS$FreshWaterContDeep2 <- unlist (mclapply (poSS$File.Name, mc.cores=nCPUs, FUN=function (fn){
+  require ("readr")
+  fW <- subset (physOc, File.Name==fn) %>%
+    subset (Depth.saltwater..m. > 40)
+  sum (33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
+}))
+
+
+
+## which depth-cutoff?
+if (1){
+  png ("~/tmp/LCI_noaa/media/FreshWate20-40.png", height=11*200, width=8*200, res=200)
+  par (mfrow=c(3,1))
+  plot (FreshWaterContDeep~timeStamp, poSS, type="l")
+  plot (FreshWaterContDeep2~timeStamp, poSS, type="l")
+  # plot (FreshWaterCont~timeStamp, poSS)
+  # lines (FreshWaterCont30~timeStamp, poSS, col="red")
+  plot (FreshWaterContDeep~FreshWaterContDeep2, poSS)
+  dev.off()
+}
+
+## plant stuff
+sAgg <- function (varN, data = physOc, FUN = sum, ...){
+  aDF <- aggregate (formula (paste (varN, "File.Name", sep = "~"))
+                    , data, FUN, ...)
+  return (aDF [match (poSS$File.Name, aDF$File.Name),2])
+}
+
+poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
+poSS$minO2 <- sAgg ("Oxygen_umol_kg", FUN=min)
+poSS$O2perc <- sAgg ("Oxygen_sat.perc.", FUN=mean)
+if ("turbidity" %in% names (physOc)){
+    ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
+    ## print (summary (poSS$turbidity))
+    poSS$logTurb <- sAgg ("turbidity", FUN = function (x){mean(log10(x))}
+                        , subset = physOc$Depth.saltwater..m. < 20)
+}else{
+    cat ("\nno turbidity here\n")
+}
+rm (sAgg)
+## PAR going nowhere?
 minPAR <- function (fn){
   cast <- subset (physOc, File.Name == fn)
   PARscl <- cast$PAR.Irradiance / max (cast$PAR.Irradiance, na.rm = TRUE)
@@ -303,105 +439,18 @@ thresPAR <- function (fn){
             return (thresDepth)
     }
 }
+
 poSS$PARdepth5p<- unlist (mclapply (poSS$File.Name, FUN = thresPAR, mc.cores = nCPUs))
 rm (thresPAR, minPAR)
-sAgg <- function (varN, data = physOc, FUN = sum, ...){
-    aDF <- aggregate (formula (paste (varN, "File.Name", sep = "~"))
-                    , data, FUN, ...)
-    return (aDF [match (poSS$File.Name, aDF$File.Name),2])
-}
-poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
-# poSS$minO2 <- sAgg ("Oxygen_SBE.43..mg.l.")
-poSS$minO2 <- sAgg ("Oxygen_umol_kg")
-# poSS$O2perc <- sAgg ("Oxygen.Saturation.Garcia.Gordon.umol_kg")
-poSS$O2perc <- sAgg ("Oxygen_sat.perc.")
-if ("turbidity" %in% names (physOc)){
-    ## poSS$turbidity <- sAgg ("turbidity", FUN = mean)
-    ## print (summary (poSS$turbidity))
-    poSS$logTurb <- sAgg ("turbidity", FUN = function (x){mean(log10(x))}
-                        , subset = physOc$Depth.saltwater..m. < 20)
-}else{
-    cat ("\nno turbidity here\n")
-}
-rm (sAgg)
+is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
+
 save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 
 
-## derived summary statistics
-Require ("parallel")
-wcStab <- function (fn){
-    ## calculate water column stability for a given File.Name
-    uLay <- c (0,3)
-   # lLay <- c (30,35)
-    cast <- subset (physOc, File.Name == fn)
-    lLay <- c (-5, 0) + max (cast$Depth.saltwater..m.) # lowest 5 m instead of fixed depth
-                                        # some casts only 2 or 5 m deep -- then what?
-    uDens <- mean (subset (cast, (uLay [1] < Depth.saltwater..m.) &
-                                 (Depth.saltwater..m. < uLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
-    lDens <- mean (subset (cast, (lLay [1] < Depth.saltwater..m.) &
-                                 (Depth.saltwater..m. < lLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
-    stabIdx <- (lDens - uDens)/(mean (lLay) - mean (uLay))
-    stabIdx <- ifelse (is.infinite (stabIdx), NA, stabIdx)
-    return (stabIdx)
-#    return ((lDens - uDens)/(mean (lLay) - mean (uLay)))
-#     return (lDens - uDens)
-}
-poSS$stability <- unlist (mclapply (poSS$File.Name, FUN = wcStab, mc.cores = nCPUs))
-rm (wcStab)
-## summary (poSS$stability)
-wcStab2 <- function (fn){
-  Require ("oce")
-  ## similar to http://www.sciencedirect.com/science/article/pii/S0967063711000884 !
-    ## \citep{Bourgain:2011}
-    cast <- subset (physOc, File.Name == fn)
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-    N2 <- swN2 (ctd, derivs = "smoothing")
-    return (mean (N2))
-}
-poSS$stability2 <- unlist (mclapply (poSS$File.Name, FUN = wcStab2, mc.cores = nCPUs))
-rm (wcStab2)
-## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
-## good indicator of presence of deep-water salinity gradient
-deepPyc <- function (fn){
-  Require ("oce")
-  cast <- subset (physOc, File.Name == fn)
-    dThres <- 30
-    if (max (cast$Depth.saltwater..m.) < dThres){
-        return (NA)
-    }else{
-        ## midDens<-mean(subset(cast,40<Depth.saltwater..m.)&(Depth.saltwater..m.<50))
-        ## depDens<-mean(subset(cast,80<Depth.saltwater..m.)&(Depth.saltwater..m.<200))
-        ## return (depDens - midDens)
-        ## use max N2 of smoothed CTD object
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-        N2 <- swN2 (ctd, derivs = "smoothing")
-        dPC <- max (subset (N2, cast$Depth.saltwater..m. < dThres), na.rm = TRUE)
-        dPC <- ifelse (is.na (dPC), 0, dPC) # shouldn't need that? [unless sensor bad]
-        return (dPC)
-    }
-}
-poSS$deepPyc <- unlist (mclapply (poSS$File.Name, FUN = deepPyc, mc.cores = nCPUs))
-rm (deepPyc)
-pcDepth <- function (fn){
-    ## also see https://saltydrip.wordpress.com/tag/halocline/  (derivative of spline)
-    ## same code here? http://dankelley.github.io/r/2014/01/11/inferring-halocline-depth.html
-  # error of some form here!
-    cast <- subset (physOc, File.Name == fn)
-        ctd <- with (cast, as.ctd (Salinity_PSU, Temperature_ITS90_DegC
-                                 , Pressure..Strain.Gauge..db.))
-    N2 <- swN2 (ctd, derivs = "smoothing")
-    return (cast$Depth.saltwater..m. [which.max (N2)])
-}
-poSS$pcDepth <- unlist (mclapply (poSS$File.Name, FUN = pcDepth, mc.cores = nCPUs))
-rm (pcDepth)
-# is.na (poSS$PARdepth1p) <- poSS$sunAlt < 0
-is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
-print (summary (poSS))
 
+## QAQC --- should go elsewhere!!!
 
 #######################
 ## troubleshoot poSS ##
@@ -522,6 +571,10 @@ poSS <- poID
 
 save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/sampleTable.RData")
+
+
+
+
 
 
 
@@ -723,6 +776,25 @@ save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 
 
+#############
+# Nutrients #
+#############
+
+## pelagic stations (so far, 2021 only)
+nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
+
+## shore stations (SWMP: Seldovia and Homer, monthly. Still needs QAQC!)
+
+
+
+#######################
+# Ocean Acidification #
+#######################
+
+## exploratory analysis did not yield much, other than noise -- abandone.
+
+
+
 ##############
 ## seabirds ##
 ##############
@@ -740,7 +812,8 @@ latL <- c(58.8,60.6)
 
 
 # Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp") ; Require ("sf")
+Require ("sp")
+Require ("sf")
 
 
 spTran <- function (x, p4){
@@ -883,6 +956,12 @@ if (.Platform$OS.type == "windows"){
 }else{
   bath <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
+## move to stars
+Require ("stars")
+bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+
+
+
 bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
 
 
@@ -891,13 +970,16 @@ chCoor <- coordinates (NPPSD2)[c(ch, ch[1]), ]  # closed polygon
 sp_poly <- SpatialPolygons(list(Polygons(list(Polygon(chCoor)), ID=1))
                          , proj4string = slot (NPPSD2, "proj4string"))
 grd <- spsample (sp_poly, n = 100^2, "regular") # ok, but grid size somewhat mysterious -- move to sf?
+                     # Warning: CRS object has comment...
+
 ## grd <- makegrid (sp_poly, cellsize = 1e3)
 ## coordinates (grd) <- ~x1+x2
 ## proj4string (grd) <- CRS (proj4string (NPPSD2))
 ## gridded (grd) <- TRUE
 rm (ch, chCoor, sp_poly)
 
-pr <- proj4string (bath)
+pr <- proj4string(bath)
+# pr <- slot (bath, "crs") ## no slot proj4string in raster object. spTran fails if pr is from crs-slot
 
 stnP <- spTran (stnP, pr)
 poSS <- spTran (poSS, pr)

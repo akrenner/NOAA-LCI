@@ -233,23 +233,25 @@ if (0){
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- c ("temperature"
-            , "salinity"
-            , "sigmaTheta"
+oVars <- expression (temperature~"["*""^o~C*"]"
+            , salinity~"["*PSU*"]"
+            , density~"["*sigma[theta]*"]"  #"sigmaTheta"  ## spell in Greek?
             , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-            , "fluorescence-chl [mg/m^3]" #, "chlorophyll" #, "logFluorescence"
+            , chlorophyll~"["*mg~m^-3*"]" #, "chlorophyll" #, "logFluorescence"
             # , "PAR"
-            , "logPAR"
-            , "Oxygen [umol/kg]"  # , "O2perc"
+            , log~(PAR)
+            , Oxygen~"["*mu*mol~kg^-1*"]"  # , "O2perc"  ## use bquote ?
+           , buoyancy~frequency~N^2~"["*s^-2*"]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
              , "salinity"
              , "sigmaTheta"
              , "turbidity" # , "logTurbidity"
              , "fluorescence" #, "chlorophyll" #, "logFluorescence"
-#             , "PAR.Irradiance" #, "logPAR"
-            , "logPAR"
+             # , "PAR.Irradiance"
+             , "logPAR"
              , "Oxygen_umol_kg"  # , "O2perc"
+             , "bvf"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -268,19 +270,19 @@ odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", 
 
 Require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+
+## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
 oCol3 <- list (  ## fix versions?
    # colorRampPalette(oceColorsTurbo(8), bias=0.5)
   oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
   , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
   , colorRampPalette (cmocean ("dense")(5), bias=0.3)
-  , cmocean ("turbid") #, cmocean ("matter")  # or turbid
-  , cmocean ("algae")
+  , colorRampPalette (cmocean ("turbid")(5), bias=3) #, cmocean ("matter")  # or turbid
+  , colorRampPalette (cmocean ("algae")(5), bias=3)
   #, oceColorsTurbo # cmocean ("solar")
-  , function (n){
-    Require ("viridis")
-    turbo (n, begin=0.25, end=0.8)
-  }
+  , function (n){Require ("viridis"); turbo (n, begin=0.25, end=0.8)}
   , cmocean ("oxy")
+  , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
 )
 rm (odv)
@@ -297,6 +299,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
                         , "logPAR"
                         # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
                         , "Oxygen_umol_kg"
+                        , "bvf"
                         )
                      , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
                        # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
@@ -314,6 +317,7 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
 ## umol/l = 31.2512* cO2 mg/l
 # oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
+oRange [which (row.names(oRange)=="bvf"),] <- quantile (poAll$bvf, probs=c(0.01,0.99), na.rm=TRUE)
 ###########################################################################
 
 if (0){

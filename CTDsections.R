@@ -50,7 +50,7 @@ for (sv in iX){
       ## extended AlongBay Transect
       # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
       fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
-      nS <- -3:0
+      # nS <- -3:0
       for (k in 1:length (fS)){
         s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
       }
@@ -103,8 +103,8 @@ for (sv in iX){
       xCo <- sectionize (xC)
 
 
-      for (ov in 1:length (oVars)){
-        if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR
+      for (ov in 1:length (oVarsF)){
+        if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov,]
         }else{
           cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
@@ -113,6 +113,7 @@ for (sv in iX){
                                        , Fluorescence_mg_m3, logPAR
                                        , Oxygen_umol_kg
                                        # , Oxygen_sat.perc.
+                                        , bvf
           ))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
           # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
@@ -157,14 +158,16 @@ for (sv in iX){
             , span = 200
             # , showSpine = TRUE
       )
-      plot (xCo
-            , which = 99
-            , coastline = "coastlineWorldFine"  ## add hi-res topography?
-            , showStations = TRUE
-            , showStart = TRUE
-            , gird = TRUE
-            # , col = "red"
-      )
+      if (0){  ## omit this map -- need the space
+        plot (xCo
+              , which = 99
+              , coastline = "coastlineWorldFine"  ## add hi-res topography?
+              , showStations = TRUE
+              , showStart = TRUE
+              , gird = TRUE
+              # , col = "red"
+        )
+      }
       dev.off()
     }
   }

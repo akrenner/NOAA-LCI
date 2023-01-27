@@ -20,6 +20,9 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl=c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+#################
+currentYear <- 2021   ## temp!! XXX
+#################
 currentCol <- c ("lightblue", "blue", "magenta")
 Require ("RColorBrewer")
 currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
@@ -154,6 +157,9 @@ for (i in 1:length (waterL)){
 dev.off()
 rm (waterL, hM, i)
 
+## for troubleshooting annualPlotFct.R::prepDF
+# save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
 hM <- prepDF (dat=homerS, varName="chlfluor", maO=maO, currentYear=currentYear, qntl=qntl)
@@ -233,8 +239,8 @@ dev.off()
 ##############
 currentCol <- c ("lightblue", "darkblue", "hotpink")
 
-tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO)
-tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO)
+tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
+tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
 
 ## plot
 # pdf (paste0 (mediaD, "sa-salinity", maO, "-d.pdf"), width=9, height=9)
@@ -281,10 +287,12 @@ instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
 #
 save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
 # load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
-#
+# dat=list (sldviaS, sldvia, homerS, homer)[[j]] ; varName="temp"; sumFct=function (x){mean (x, na.rm=FALSE)}
+
 for (j in 1: length (instSite)){
   tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]
-                  , qntl=qntl, maO=maO)
+                  , qntl=qntl, maO=maO
+                  , currentYear=currentYear)
   # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-", c ("Temp-SST-Seldovia", "Temp-Deep-Seldovia", "Temp-SST-Homer",
   #                                                           "Temp-Deep-Homer")[j]
   #              , ".pdf"), width=9, height=6)
@@ -293,7 +301,7 @@ for (j in 1: length (instSite)){
                , ".png"), width=1800, height=1200, res=300)
   par (mar=c(3,4,2,4))
   aPlot (tDay, "temp", currentCol=currentCol
-         , ylab=expression('Temperature'~'['*degree~'C'*']')
+         , ylab="Temperature [°C]" #expression('Temperature'~'['*degree~'C'*']')
          , pastYear=pastYear, ongoingYear=ongoingY
   )
   title (main=c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
