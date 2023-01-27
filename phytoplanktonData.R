@@ -6,7 +6,7 @@
 ## reshape to wide
 ## merge with existing table
 ## translate stations to match_name
-## merge with master station list
+## merge with reference station list
 ## output data product to share
 
 rm (list=ls())
@@ -36,6 +36,10 @@ pW <- reshape (ph2, direction="wide", timevar="Taxon.1", idvar="StatDate")
 ## clean-up wide data frame
 names (pW) <- gsub ("Abundance..cells.L.", "", names (pW))
 names (pW) <- gsub ("^\\.", "", names (pW))
+## all NAs are implied 0s
+for (i in 2:ncol (pW)){
+  pW [,i] <- ifelse (is.na (pW [,i]), 0, pW [,i])
+}
 dT <- strsplit (pW$StatDate, split="_", fixed=TRUE)
 dT <- do.call (rbind, dT)
 pWout <- data.frame (Date=format (as.Date (dT [,2], "%m/%d/%Y"), "%Y-%m-%d")
@@ -88,8 +92,8 @@ msl <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 
 ## look up Transect, station, geographic coordinates
 mslR <- match (bOut$Sampling.location, msl$Match_Name)
-phytoOut <- with (bOut, data.frame (station=Sampling.location, Date
-                                    , time=rep ("", nrow (bOut))
+phytoOut <- with (bOut, data.frame (Station=Sampling.location, Date
+                                    , Time=rep ("", nrow (bOut))
                                     , Latitude_DD=msl$Lat_decDegree [mslR]
                                     , Longitude_DD=msl$Lon_decDegree [mslR]
                                     , Transect=msl$Line [mslR]
