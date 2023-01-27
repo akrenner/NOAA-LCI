@@ -707,16 +707,16 @@ save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
 
 ## export zooplankton data to standardized file (matching first columns as in CTD aggregates)
-zoopOut <- with (zoop, data.frame (Station = Match_Name), Date = isoDate, Time
+zoopOut <- with (zoop, data.frame (Station = Match_Name, Date = isoDate, Time
                  , Latitude_DD = Lat_decDegree
                  , Longitude_DD = Lon_decDegree
                  , Transect
                  , StationN=Station
-                 , Mesh, Flow, Water.Sampled_m3 = Water.Sampled_..m3.
+                 , Mesh, Flow, Water.Sampled_m3=Water.Sampled..m3.
                  , SampleID = SampleID_H
                  , Split
                  , Species
-                 , Count = RTotal)
+                 , Count = RTotal))
 zoopOut$StationN <- ifelse (zoopOut$StationN %in% 1:100
                             , paste0 ("S_", zoopOut$Station), zoopOut$Station)
 tF <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv"
@@ -760,7 +760,7 @@ zooC <- zooC [order (row.names (zooC)),] # not naturally ordered; but harmless?
 
 ## csv file of zooC community matrix to Kim
 ## print (row.names (zooC))
-write.csv (zooC, "~/tmp/LCI_noaa/media/community.csv")
+write.csv (zooC, "~/tmp/LCI_noaa/media/ZoopCommunity.csv")
 ## print (summary (zooC))
 
 
