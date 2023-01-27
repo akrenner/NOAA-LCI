@@ -25,6 +25,12 @@ ongoingY <- TRUE
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
+if (0){
+## The Wall
+source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
+  # this also calls dataSetup.R -- could cause problems this early??
+}
+
 if (0){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
@@ -64,10 +70,6 @@ if (0){ # Dec 2019 seasonality
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
 
-if (0){
-## The Wall -- this may have to move up XXX
-source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
-}
 
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")

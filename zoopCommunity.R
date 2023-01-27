@@ -300,8 +300,6 @@ for (i in TransN){
   # legend ("topleft", legend = month.abb, pch = 19, col = mCol)
   text (aggregate (T9~T9env$month, FUN = mean)[,2:3], month.abb)
 #  dev.off()
-  # write.csv (data.frame (T9, T9env, subset (zooC, zooCenv$Transect == 9))
-  #          , file = "~/tmp/LCI_noaa/cache/zoopT9monthly.csv", row.names = FALSE)
   rm (T9, T9env)
 }
 dev.off()
@@ -788,6 +786,7 @@ dev.off()
 
 unlink (paste0 (dirL[3], "/2019-zoop"), recursive = TRUE, force = TRUE)
 file.rename(paste0 (dirL[3], "/2019"), paste0 (dirL[3], "/2019-zoop"))
+cat ("end of zoopCommunity,R at \n")
 print (Sys.time())
 
 ## EOF

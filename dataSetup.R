@@ -7,6 +7,9 @@
 ## read in plankton and oceanographic data
 ## geographically link with seabird data
 ## interannual comparison in relation to SST
+##
+## re-arrange data columns, add a metadata-line and produce CSV files for
+## data publication (zooplankton, phytoplankton. CTD done elsewhere)
 
 
 rm (list = ls())
@@ -668,9 +671,11 @@ zoop$Match_Name <- gsub ("^KB_", "AlongBay_", zoop$Match_Name)
 zoop$Match_Name <- gsub ("Peterson Bay_", "Peterson_", zoop$Match_Name, fixed = TRUE)
 zoop$Match_Name <- gsub ("^_$", "Halibut_B", zoop$Match_Name) # or A,C?
                                         # no matching CTD data on that date
+zoop$Match_Name <- gsub ("^_", "", zoop$Match_Name)
 refN <- match (zoop$Match_Name, stn$Match_Name)
 ## zoop$Match_Name [is.na (refN)]    # bad zoop stations that don't match master list
 # add geographic coordinates from stn
+if (any (is.na (refN))){stop ("zooplankton station does not match reference list")}
 zoop <- cbind (stn[refN, match (c ("Lon_decDegree", "Lat_decDegree"), names (stn))]
                , isoDate = strptime (zoop$Date, format = "%d-%b-%y") # output with tz?
              , zoop)
@@ -681,16 +686,14 @@ zoop <- cbind (SampleID= paste (zoop$Match_Name
              , SampleID_H= paste (zoop$Match_Name, format (zoop$timeStamp, format = "%Y-%m-%d_%H", usetz = FALSE))
              , season = Seasonal (format (zoop$timeStamp, "%m"))
              , zoop)
-if (any (is.na (zoop$Lon_decDegree))){
-    zoop <- zoop [!is.na (zoop$Lon_decDegree),] # cut out samples without coordinates
-}
-
+zoop <- subset (zoop, !is.na (zoop$isoDate))
 #### zoop <- zoop [,match (zoop$SampleID, poSS$SampleID)]
 
 
 ### fix species names
 ## fix Mueller's larvae in source!
 zoop$Species <- ifelse (zoop$Species == "M\xfcller's larvae", "Mullers larvae", zoop$Species)
+zoop$Species <- ifelse (zoop$Species == "Müller's larvae", "Mullers larvae", zoop$Species)
 zoop$Species <- tolower (as.character (zoop$Species))
 if (length (grep ("plastic", zoop$Species)) > 0){
   zoop <- zoop [-grep ("plastic", zoop$Species),]
@@ -705,15 +708,24 @@ save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 
 ## export zooplankton data to standardized file (matching first columns as in CTD aggregates)
 zoopOut <- with (zoop, data.frame (Station = Match_Name), Date = isoDate, Time
-                 , SampleID = SampleID_H
                  , Latitude_DD = Lat_decDegree
-                 , Longitude_DD = Lon_decDegree, Mesh, Flow, Water.Sampled_m3 = Water.Sampled_..m3.
+                 , Longitude_DD = Lon_decDegree
+                 , Transect
+                 , StationN=Station
+                 , Mesh, Flow, Water.Sampled_m3 = Water.Sampled_..m3.
+                 , SampleID = SampleID_H
                  , Split
                  , Species
                  , Count = RTotal)
-write.csv(zoopOut, row.names = FALSE
-          , file = "~/tmp/LCI_noaa/data-products/CookInletKachemakBay_Zooplankton.csv")
-rm (zoopOut)
+zoopOut$StationN <- ifelse (zoopOut$StationN %in% 1:100
+                            , paste0 ("S_", zoopOut$Station), zoopOut$Station)
+tF <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv"
+write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent CTD and phytoplankton on select stations. 2012-2021.")
+        , file=tF, append=FALSE, ncolumns=1)
+suppressWarnings(write.table(zoopOut, file=tF, append=TRUE, quote=FALSE, sep=","
+                              , na="", row.names=FALSE, col.names=TRUE))
+rm (zoopOut, tF)
+
 
 allZoo <- aggregate (RTotal ~ SampleID, data = zoop, FUN = sum) # ouch -- sample ID!!
 # samp <- unique (data.frame (zoop [,1:7]))
@@ -781,10 +793,30 @@ save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 #############
 
 ## pelagic stations (so far, 2021 only)
-nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
+nut <- read.csv ("~/GISdata/LCI/Nutrients/CookInletKachemakBay_Nutrients_2021.csv")
+nutC <- nut [,1:3]
 
-## shore stations (SWMP: Seldovia and Homer, monthly. Still needs QAQC!)
 
+## match to stn reference
+if (!all (levels (factor (nut$Station)) %in% stn$Match_Name)){ ## error trap
+  stop ("A station in nutrient table does not match reference station name\n\n")
+}
+sx <- match (nut$Station, stn$Match_Name)
+nutO <- with (nut, data.frame (Station, Date, Time
+                               , Latitude_DD=stn$Lon_decDegree [sx]
+                               , Longitude_DD=stn$Lat_decDegree [sx]
+                               , Transect=stn$Line [sx]
+                               , StationN=stn$Station [sx]
+))
+nutO$StationN <- ifelse (nutO$StationN %in% 1:100, paste0 ("S_", nutO$Station), nutO$Station)
+nutO <- cbind (nutO, nut [,3:ncol (nut)])
+tF <- "~/tmp/LCI_noaa/data-products/nutrients_KachemakBay_pelagic2021.csv"
+write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent CTD zoo- and phytoplankton on select stations. 2021 only.")
+       , file=tF, append=FALSE, ncolumns=1)
+suppressWarnings(write.table(nutO, file=tF, append=TRUE, quote=FALSE, sep=","
+                             , na="", row.names=FALSE, col.names=TRUE))
+# write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+rm (tF, nutO, sx)
 
 
 #######################
