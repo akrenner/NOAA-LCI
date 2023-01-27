@@ -22,6 +22,7 @@ meanCol <- "darkgray"
 
 # year2 <- TRUE   ## switch 1 vs. 2 years on/off -- where best to put this switch?
 
+# 365 <- 365 ## standardize a year to have 365 days for convenience
 
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
@@ -46,9 +47,9 @@ if (0){
 
 plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
                       , ...){
-  plot (1:366
+  plot (1:365
         , seq (min (c(longMean, current), na.rm=TRUE)
-               , max (c(longMean, current), na.rm=TRUE), length.out=366)
+               , max (c(longMean, current), na.rm=TRUE), length.out=365)
         , type = "n", axes=FALSE
         , xlim=c(5,355)
         , xlab = ""
@@ -62,7 +63,7 @@ plotSetup <- function(longMean, current, ylab=NULL# , xlim=c(5,355)
   axis (1, at=as.numeric (format (as.POSIXct (paste0 ("2019-", 1:6*2-1, "-15")), "%j"))
         , labels=month.abb[1:6*2-1], tick=FALSE) # center month-labels
   axis (1, at=c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
-                                     , "%j")), 366), labels=FALSE) # add 366 to mark end of Dec
+                                     , "%j")), 365), labels=FALSE) # add 365 to mark end of Dec
 }
 
 
@@ -113,7 +114,7 @@ annualPlot <- function (longMean, percL, percU, current  ## current may be a N x
   plotSetup (longMean, current, ylab=ylab, ...)
   addGraphs (longMean, percL, percU, current, jday, perc2L=NA, perc2U=NA, maxV=NA, minV=NA
              , currentCol, pastYear=pastYear, ongoingYear=ongoingYear)
-  # axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
+  # axis (1, at=c(1, 365), labels=NA) # redraw in case polygon went over axis
   return()
 }
 
@@ -163,7 +164,7 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
   if (ongoingYear){
     lines (current [,3]~jday, col=currentCol [3], lwd=4)
   }
-  axis (1, at=c(1, 366), labels=NA) # redraw in case polygon went over axis
+  axis (1, at=c(1, 365), labels=NA) # redraw in case polygon went over axis
   return()
 }
 
@@ -213,13 +214,12 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
 
 seasonalMA <- function (var, jday, width=maO){
   ## work in progress -- not yet functioning
-  df <- cbind (var=rep (var, 3), jds=c(jday-366, jday, jday+366))
+  df <- cbind (var=rep (var, 3), jds=c(jday-365, jday, jday+365))
   suppressPackageStartupMessages(Require ("zoo"))
-  ## aggregate over days first to ensure width is appropriate
-  if (length (var) > 366){
+  if (length (var) > 365){
     df <- aggregate (var~jds+year, df, mean, na.rm=FALSE) # ## NAs are lost -- gap-fill?
   }
-  dfAng <- data.frame (jds=seq (-366, 2*366))
+  dfAng <- data.frame (jds=seq (-365, 2*365))
   dfAng$var <- dfA$var [dfA$jds, dfAng$jds]
   sMA <- zoo::rollapply (dfAng$var, width=width, FUN=mean
                          , fill=c(NA, NA, NA)
@@ -227,13 +227,13 @@ seasonalMA <- function (var, jday, width=maO){
                          , na.rm=FALSE # better to set false?? effect?
   )
   stop ("need to change rollapply to roll_meanr")
-  sMAy <- subset (sMA, dfAng$jds%in%1:366)
+  sMAy <- subset (sMA, dfAng$jds%in%1:365)
   sMay
 }
 
 
 
-prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
+prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
                     , maO=31
                     , currentYear # =as.integer (format (Sys.Date(), "%Y"))-1  ## force this to be stated explicitly (for troubleshooting)
                     , qntl=c(0.8, 0.9)
@@ -243,88 +243,40 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=FALSE)}
   }
   if (length (varName) > 1){stop ("so far can only process one variable at a time")}
 
-
   ## flexible for varName to be a vector!!  -- XXX extra feature
-
-  ## current/past year
-  ## aggregate to dailys: - standardize to a common time interval across datasets
-
-  ## fill gaps in dat!
   dat$xVar <- dat [,which (names (dat) == varName)]
 
-  dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct) # daily means -- needed for MA and CI
-  ## need to fill in zeros before applying moving average, or things get messed up farther down
-  ## equivalent to saggregate or gapFill
-  ## need to do this after aggregate (like saggregate!)
+  suppressPackageStartupMessages(Require ("zoo"))
+  dat <- dat [order (dat$datetimestamp),] # just to be sure
 
-  dYs <- min (dat$year):max(dat$year)
-  datR <- data.frame (year=rep (dYs, each=366), jday=rep (1:366, length (dYs)))
-  datR$xVar <- dMeans$xVar [match (paste(datR$year, datR$jday), paste(dat$year, dat$jday))]
-  dMeans <- datR
+  ## necessary to use dMeans to pad missiing values as NA!
+  dMeans <- aggregate (xVar~jday+year, dat, FUN=sumFct)
+  dRef <- with (dMeans, data.frame(year=rep (min (year):max(year), each=365)))
+  dRef$jday <- rep (1:365, nrow (dRef)/365)
+  dRef$xVar <- dMeans$xVar [match (paste (dRef$year, dRef$jday, sep="-")
+                                   , paste (dMeans$year, dMeans$jday, sep="-"))]  ## XXXX things break here!! XXX
+  dMeans <- dRef; rm (dRef)
+  dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, partial=TRUE
+                               , align="center"
+                               # , fill=c(NA,"extend",NA)
+                               , FUN=function (x){
+                                 if (maO-sum (is.na (x)) > maO/4){  ## allow up to 1/2 of window NA
+                                   out <- sumFct(x)
+                                 }else{
+                                   out <- NA
+                                 }
+                                 return (out)
+                               }
+  )  # tweak THIS one!
+###########
+# dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
+############
 
-
-  ## moving average in here or supply as varName?
-  ## ma to be replaced by backwards ma
-
-  # align at center
-  ## not clear how this function is working, but output is odd when there are missing values
-  ## not sure how/whether these missing values are honored. Some results don't seem right/as expected.
-  ## SWMPr::smoother function seems to have the same issue.
-  ## in c(1,2,4,NA,NA,NA,5,6,7):  4 and 5 are averaged across the NAs. NAs are kept in output, but
-  ## dangling ends take them into account --- but shouldn't. Have to write my own rolling mean?
-
-  ## try package roll:roll_mean
-  ## or   dateutils::rollmean
-  if (0){
-    x <- c(NA, NA, 3,3,3,3,3,3,3,4,4,4,4,4,4,4,NA,NA,NA, NA, NA, NA,5,5,5,5,5, NA,NA)
-    y <- rollmean (x, k=3, align="center", fill=c(NA, "extend", NA))  ## oddly, this looks right
-    y <- rollmean (x, k=3, align="center", fill=c(NA, NA, NA))  ## oddly, this looks right
-    cbind (x,y)
-
-
-    xh <- subset (homerS$temp, homerS$year==2021)
-    # plot (xh)
-    xR <- rollmean (xh, k=31, align="center")
-
-  }
-  suppressPackageStartupMessages (Require ("zoo"))
-  # dMeans$MA <- rollmean (dMeans$xVar, k=maO, align = "center", fill=c(NA, "extend", NA), na.rm=FALSE) ## looks like rollapply wth this fill
-  # dMeans$MA <- rollmean (dMeans$xVar, k=maO, fill=FALSE, align = "right")
-  dMeans$MA <- rollmean (dMeans$xVar, k=maO, align="center")
-
-  # dMeans$MA <- zoo::rollapply (dMeans$xVar, width=maO, FUN=mean  ### interpolates across NAs -- bad
-  #                             , na.rm=FALSE  ## no apparent affect
-  #                              , fill= c(NA, NA, NA)
-  #                              , partial=FALSE # maO/2
-  #                              , align = "center")
-
-  if (0){
-    ## this may be the best -- just have to align=center manually?
-    Require ("roll")   ## still got the issue of interpolating across data gap
-    roll_meanr <- function (x, width, weights = rep(1, width), min_obs = width,
-                            complete_obs = FALSE, na_restore = FALSE, online = TRUE){  #}, align="right"){
-      # meanr = align at center, not right
-      require ("roll")
-      x <- roll::roll_mean (x, width, weights, min_obs, complete_obs, na_restore, online)
-      hwids <- floor (width/2)
-      x2 <- c (x [(hwids+1):length (x)], rep (NA, hwids))
-      return (x2)
-    }
-    dMeans$MA <-roll_meanr (dMeans$xVar, width=maO, na_restore=TRUE
-                            , online=TRUE, min_obs=floor (maO/2)) #align="right")
-  }
-
-  # Require ("SWMPr")
-  # dMeans$MA <- unlist (smoother(dMeans$xVar, window=maO, sides=2)) # sides=2 for centered
-
-  # Require ("dateutils") ## not working
-  # dMeans$MA <- dateutils::rollmean (dMeans$xVar, maO)
-
-
-  dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
-  tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
-  tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
+## construct long-term climatology, using data excluding the present year
+dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
+tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
+tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
+tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
   if (0){
@@ -669,6 +621,7 @@ merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
     unlink(pngFiles)
   }
 }
+
 
 
 #EOF
