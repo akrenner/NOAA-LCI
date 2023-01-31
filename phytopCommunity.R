@@ -265,8 +265,10 @@ cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
 
 Seasonal <- function (month){
     month <- as.numeric (month)
-    cut (month, breaks = c(-13,0,2,4,8,10, 25)
-            , labels = c ("fall", "winter", "spring", "summer", "fall", "winter"))
+    # cut (month , breaks = c(-13,0,2,4,8,10, 25)  ## based on zooplankton clusters
+    #      , labels = c ("fall", "winter", "spring", "summer", "fall", "winter"))
+    cut (month, breaks = c(-13,4.5, 5.5, 6.5, 8.5, 13)  ## based on phytoplankton clusters
+         , labels = c ("winter", "spring", "summer", "fall", "winter"))
 }
 cbind (month.abb, as.character (Seasonal (1:12)))
 
@@ -277,6 +279,9 @@ fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 # fCol <- adjustcolor (fCol, alpha.f = 0.4)
 ## annual zooplankton cycle
 
+
+save.image ("~/tmp/LCI_noaa/cache/phytoComm4.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/phytoComm4.RData"); require ("vegan")
 
 # PDF ("2019/Zoop_nMDS_seasonal")
 png ("~/tmp/LCI_noaa/media/2019/phyto_nMDS_seasonal.png")
