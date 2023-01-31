@@ -789,6 +789,8 @@ T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
 
 tL <- c("Deep", "Max", "SalDeep")
+titleL <- c ("Deep-water temperature", "Maximum temperature", "Deep-water Salinity")
+## deep-water: mean at depth > 15 m
 for (iS in 1:length (tL)){
   #  T96$TempS <- with (T96, list (TempBottom, TempDeep, TempSurface, TempMean, TempMax, TempMin))[[i]]
   T96$TempS <- with (T96, list (TempDeep,TempMax, SalDeep))[[iS]]
@@ -810,40 +812,40 @@ for (iS in 1:length (tL)){
   T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
   rm (tbnorm)
 
-
-  png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
-       , height=fDim [2]*pngR, width=fDim [1]*pngR)
-   if (tempName=="SalDeep"){
-    anomCol <- c("green", "yellow"); anomL <- c("saline", "fresh")
+  if (tempName=="SalDeep"){
+    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+         , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
+    anomCol <- c("yellow", "green"); anomL <- c("saline", "fresh")
     yLabt <- "Salinity [PSU]"
   }else{
+    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+         , height=fDim [2]*pngR, width=fDim [1]*pngR)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- expression('Temperature'~'['*degree~'C'*']')
     # , ylab="Temperature [°C]"
   }
-  plot (TempSN~timeStamp, T96f, type="n", main=paste (tempName, "temperature at T9-6")
-        , ylab=yLabt
-        , xlab="", axes=FALSE)
+  plot (TempSN~timeStamp, T96f, type="n", main=paste (titleL [iS], "at T9-6")
+        , ylab=yLabt, xlab="", axes=FALSE)
   axis (2)
   abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
   TSaxis(T96f$timeStamp, verticals=FALSE)
   abline (h=thTempL, lty="dashed") # mark 4 degrees C
+  mLW <- 2
+  nLW <- 2
+  legend ("bottomright", lwd=c (nLW,mLW, 3, 3), col=c ("gray", "black", anomCol)
+          , legend=c("normal", "30 d moving-average", anomL), bty="o", ncol=2
+          , bg="white", box.col="white")
   ## add lines, marking the anomaly in blue/red
-  for (j in 1:nrow (T96f)){
+   for (j in 1:nrow (T96f)){
     with (T96f, lines (x=rep (timeStamp [j], 2)
                        ,y=c(TempS_norm [j], TempSN[j])
                        , col=ifelse (TempSN [j] > TempS_norm [j], anomCol [1], anomCol [2])
                        , lwd=2
     ))
   }
-  mLW <- 3
-  nLW <- 1
   lines (TempS_norm~timeStamp, T96f, col="gray", lwd=nLW)
   lines (TempSN~timeStamp, T96f, col="black", lwd=mLW)
-  legend ("bottomright", lwd=c (nLW,mLW, 3, 3), col=c ("gray", "black", anomCol)
-          , legend=c("normal", "30 d moving-average", anomL), bty="o", ncol=2
-          , bg="white", box.col="white")
   box()
 rm (anomCol, anomL, yLabt)
 

@@ -316,7 +316,7 @@ poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
 poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
                        , FUN=mean, na.rm=TRUE, refDF=poSS)
-poSS$SalDeep <- -agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
                       , FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
                                   , mc.cores=nCPUs))
@@ -802,7 +802,7 @@ if (!all (levels (factor (nut$Station)) %in% stn$Match_Name)){ ## error trap
   stop ("A station in nutrient table does not match reference station name\n\n")
 }
 sx <- match (nut$Station, stn$Match_Name)
-nutO <- with (nut, data.frame (Station, Date, Time
+nutO <- with (nut, data.frame (Station, Date #, Time=NA
                                , Latitude_DD=stn$Lon_decDegree [sx]
                                , Longitude_DD=stn$Lat_decDegree [sx]
                                , Transect=stn$Line [sx]
