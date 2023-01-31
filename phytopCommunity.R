@@ -292,7 +292,6 @@ text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
 ### -- ERROR -- variable length differ
 ### other issue: NMDS-1 has bad outlier
 #########
-identify (nMScores [,1:2])
 badD <- c(68, 70, 262)
 zooC [badD,]
 ## legend ("bottomleft", legend = levels (factor (zooCenv$warmCat))
@@ -307,7 +306,10 @@ for (i in 1:length (levels (nMCol))){
 points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
       , pch = 19 # ifelse (zooCenv$Transect == 9, 1, 19)
         )
+identify (nMScores [,1:2])
 dev.off()
+## outlier 312: Oct 2012, only diatoms
+
 ## system ("convertHQ ~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.pdf ~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
 
 
@@ -378,7 +380,7 @@ plotInSeason (pdfN = "phyto_intraseasonal-nMDS_warm-cold"
             , plotCat = "warmCat"
             , colP = c ("blue", "gray", "red")
             , hull = TRUE, legLoc = "bottomleft")
-
+if (0){
 ## compare location (Transects; Stations)
 Require ("RColorBrewer")
 # plotInSeason ("Zoop_intraseasonal-nMDS_location"
@@ -411,7 +413,7 @@ plotInSeason ("phyto_intraseasonal-reScalenMDS_years"
             , hull = TRUE #, legLoc = "bottomleft"
             , reScale = TRUE
               )
-
+}
 rm (plotInSeason)
 ###
 
