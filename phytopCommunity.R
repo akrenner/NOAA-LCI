@@ -56,17 +56,16 @@ rm (year_season, sttn, xT, stCount, keepSt)
 
 
 
-# require (vegan)
-if (.Platform$OS.type == "windows"){
-  # Require ("parallel")
-  # cl <- makeCluster("PSOCK", )
-  #     clusterEvalQ (cl, library (vegan))
+if (.Platform$OS.type != "windows"){
+  Require ("parallel")
+  cl <- makeCluster("PSOCK", )
+  clusterEvalQ (cl, library (vegan))
 }
 
 nM <- metaMDS (zooC, distance = "bray", k = 3, try = 200, trymax = 500, parallel = nCPUs)
 
-if (.Platform$OS.type == "windows"){
-#  rm (cl)
+if (.Platform$OS.type != "windows"){
+  rm (cl)
 }
 
 ## tmp addition
@@ -221,7 +220,7 @@ fviz_dend(zoo.hc, k = 4, # Cut in four groups
 dev.off()
 save (phyto.hc = zoo.hc, file = paste0 (dirL [4], "phytoClust.RData"))
 rm (zoo.hc, mT9, T9, T9env, nMCol)
-
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/phytoClust.RData")
 
 
 
