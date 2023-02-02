@@ -316,7 +316,7 @@ poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
 poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
                        , FUN=mean, na.rm=TRUE, refDF=poSS)
-poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > 30 # deepThd
                       , FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
                                   , mc.cores=nCPUs))
