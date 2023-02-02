@@ -644,7 +644,17 @@ sort (apply (phyC, 2, function (x){
   sum (x %% 1)
 }))
 rm (phyp)
-
+## quick overview of sampling ##
+cat ("\n\nPhytoplankton sampling dates\n")
+pT <- subset (phyCenv, Year > 2020)
+pT$Transect <- factor (pT$Transect)
+for (i in 1:length (levels (pT$Transect))){
+  cat ("\n\n", levels (pT$Transect)[i], "\n")
+  print (sort (levels (factor (
+    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+                         ))))
+}
+rm (pT, i)
 
 
 #################
@@ -778,6 +788,18 @@ rm (zoop)
 summary (zooC$SampleID %in% poSS$SampleID)
 summary (zooC$SampleID_H %in% poSS$SampleID_H)
 
+## quick overview of sampling ##
+cat ("\n\nZooplankton sampling dates\n")
+pT <- subset (zooCenv, Year > 2020)
+pT$Transect <- factor (pT$Transect)
+for (i in 1:length (levels (pT$Transect))){
+  cat ("\n\n", levels (pT$Transect)[i], "\n")
+  print (sort (levels (factor (
+    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+  ))))
+}
+rm (pT, i)
+
 ##  spplot (zoop, "RTotal")
 ## cluster analysis and/or DCA of along-bay vs transect 9
 
@@ -824,6 +846,25 @@ rm (tF, nutO, sx)
 #######################
 
 ## exploratory analysis did not yield much, other than noise -- abandone.
+oa <- read.csv ("~/GISdata/LCI/Ocean_Acidification_OA/OA2015-2018.csv")
+oa <- read.csv ("~/GISdata/LCI/Ocean_Acidification_OA/OA2017-2021.csv")
+oa$timeStamp <- as.POSIXct(oa$sample.date)
+oa$Year <- format (oa$timeStamp, "%Y")
+oa$MatchName <- substr (oa$sample.ID, 1, 5)
+oa$Transect <- substr (oa$sample.ID, 1,3)
+oa$Transect <- gsub ("^KB", "AB", oa$Transect)
+oa$Transect <- gsub ("_$", "", oa$Transect)
+
+## quick overview of sampling ##
+cat ("\n\nOA sampling dates\n")
+pT <- subset (oa, Year > 2020)
+pT$Transect <- factor (pT$Transect)
+for (i in 1:length (levels (pT$Transect))){
+  cat ("\n\n", levels (pT$Transect)[i], "\n")
+  print (sort (levels (factor (
+    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+  ))))
+}
 
 
 
