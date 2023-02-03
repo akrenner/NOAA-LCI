@@ -451,6 +451,23 @@ save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 
 
+pT <- poSS
+pT$Year <- as.numeric (format (pT$timeStamp, "%Y"))
+
+## quick overview of sampling ##
+cat ("\n\nCTD sampling dates\n")
+pT <- subset (pT, Year > 2016)
+length (levels (factor (pT$Match_Name)))
+
+pT$Transect <- factor (pT$Transect)
+for (i in 1:length (levels (pT$Transect))){
+  cat ("\n\n", levels (pT$Transect)[i], "\n")
+  print (sort (levels (factor (
+    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+  ))))
+}
+rm (pT)
+
 
 
 ## QAQC --- should go elsewhere!!!
@@ -790,7 +807,7 @@ summary (zooC$SampleID_H %in% poSS$SampleID_H)
 
 ## quick overview of sampling ##
 cat ("\n\nZooplankton sampling dates\n")
-pT <- subset (zooCenv, Year > 2020)
+pT <- subset (zooCenv, Year > 2016)
 pT$Transect <- factor (pT$Transect)
 for (i in 1:length (levels (pT$Transect))){
   cat ("\n\n", levels (pT$Transect)[i], "\n")
@@ -798,7 +815,10 @@ for (i in 1:length (levels (pT$Transect))){
     subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
   ))))
 }
-rm (pT, i)
+
+z <- subset (zooC, zooCenv$Year > 2016)
+
+rm (pT, i, z)
 
 ##  spplot (zoop, "RTotal")
 ## cluster analysis and/or DCA of along-bay vs transect 9

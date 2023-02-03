@@ -822,7 +822,8 @@ for (iS in 1:length (tL)){
          , height=fDim [2]*pngR, width=fDim [1]*pngR)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
-    yLabt <- expression('Temperature'~'['*degree~'C'*']')
+    yLabt <- "Temperature [°C]"
+    # expression('Temperature'~'['*degree~'C'*']')
     # , ylab="Temperature [°C]"
   }
   plot (TempSN~timeStamp, T96f, type="n", main=paste (titleL [iS], "at T9-6")
