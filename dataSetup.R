@@ -20,7 +20,13 @@ print (Sys.time())
 
 
 deepThd <- 15 ## bottom threshold -- everything above considered surface,
-                ## everything below bottom water
+              ## everything below bottom water
+              ## use 30 m as cut-off for deep-water, sure to be below pycnocline
+
+## for GWA report
+printSampleDates <- TRUE
+printSampleDates <- FALSE
+
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -190,6 +196,8 @@ poSS <- with (physOc, data.frame (File.Name = levels (File.Name)))
 poM <- match (poSS$File.Name, physOc$File.Name)
 
 poSS$Match_Name <- physOc$Match_Name [poM]
+poSS$Transect <- physOc$Transect [poM]
+
 poSS$latitude_DD <- physOc$latitude_DD [poM]
 poSS$longitude_DD <- physOc$longitude_DD [poM]
 poSS$timeStamp <- physOc$isoTime [poM]
@@ -455,19 +463,20 @@ pT <- poSS
 pT$Year <- as.numeric (format (pT$timeStamp, "%Y"))
 
 ## quick overview of sampling ##
-cat ("\n\nCTD sampling dates\n")
-pT <- subset (pT, Year > 2016)
-length (levels (factor (pT$Match_Name)))
+if (printSampleDates){
+  cat ("\n\nCTD sampling dates\n")
+  pT <- subset (pT, Year > 2016)
+  length (levels (factor (pT$Match_Name)))
 
-pT$Transect <- factor (pT$Transect)
-for (i in 1:length (levels (pT$Transect))){
-  cat ("\n\n", levels (pT$Transect)[i], "\n")
-  print (sort (levels (factor (
-    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
-  ))))
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  rm (pT)
 }
-rm (pT)
-
 
 
 ## QAQC --- should go elsewhere!!!
@@ -661,18 +670,20 @@ sort (apply (phyC, 2, function (x){
   sum (x %% 1)
 }))
 rm (phyp)
-## quick overview of sampling ##
-cat ("\n\nPhytoplankton sampling dates\n")
-pT <- subset (phyCenv, Year > 2020)
-pT$Transect <- factor (pT$Transect)
-for (i in 1:length (levels (pT$Transect))){
-  cat ("\n\n", levels (pT$Transect)[i], "\n")
-  print (sort (levels (factor (
-    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
-                         ))))
-}
-rm (pT, i)
 
+## quick overview of sampling ##
+if (printSampleDates){
+  cat ("\n\nPhytoplankton sampling dates\n")
+  pT <- subset (phyCenv, Year > 2020)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  rm (pT, i)
+}
 
 #################
 ## zooplankton ##
@@ -793,11 +804,12 @@ write.csv (zooC, "~/tmp/LCI_noaa/media/ZoopCommunity.csv")
 
 ## corrected water volume to use as off-set
 ## density = count * split / volume
-zoop$volSample <- with (zoop, Split * Water.Sampled..m3.)
+zoop$volSample <- with (zoop, Water.Sampled..m3. / Split) ## remove when safe to do so
+zoop$volSampleM3 <- with (zoop, Flow *0.283 / Split )  ## 0.283 -- used throughout in Excel file
 ## merge zoop with poSS
 ## zooCenv <- zoop [!duplicated (zoop$SampleID_H), c(1:12, which (names (zoop) == "volSample"))]
 zooCenv <- zoop [match (row.names (zooC), zoop$SampleID_H)
-                ,c (1:12, which (names (zoop) == "volSample"))]
+                ,c (1:12, which (names (zoop) == "volSampleM3"))]
 # zooCenv$zoopDensity <-
 zooCenv$Year <- as.numeric (format (zooCenv$timeStamp, "%Y"))
 rm (zoop)
@@ -805,21 +817,21 @@ rm (zoop)
 summary (zooC$SampleID %in% poSS$SampleID)
 summary (zooC$SampleID_H %in% poSS$SampleID_H)
 
-## quick overview of sampling ##
-cat ("\n\nZooplankton sampling dates\n")
-pT <- subset (zooCenv, Year > 2016)
-pT$Transect <- factor (pT$Transect)
-for (i in 1:length (levels (pT$Transect))){
-  cat ("\n\n", levels (pT$Transect)[i], "\n")
-  print (sort (levels (factor (
-    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
-  ))))
+if (printSampleDates){
+  ## quick overview of sampling ##
+  cat ("\n\nZooplankton sampling dates\n")
+  pT <- subset (zooCenv, Year > 2016)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  z <- subset (zooC, zooCenv$Year > 2016)
+
+  rm (pT, i, z)
 }
-
-z <- subset (zooC, zooCenv$Year > 2016)
-
-rm (pT, i, z)
-
 ##  spplot (zoop, "RTotal")
 ## cluster analysis and/or DCA of along-bay vs transect 9
 
@@ -876,16 +888,17 @@ oa$Transect <- gsub ("^KB", "AB", oa$Transect)
 oa$Transect <- gsub ("_$", "", oa$Transect)
 
 ## quick overview of sampling ##
-cat ("\n\nOA sampling dates\n")
-pT <- subset (oa, Year > 2020)
-pT$Transect <- factor (pT$Transect)
-for (i in 1:length (levels (pT$Transect))){
-  cat ("\n\n", levels (pT$Transect)[i], "\n")
-  print (sort (levels (factor (
-    subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
-  ))))
+if (printSampleDates){
+  cat ("\n\nOA sampling dates\n")
+  pT <- subset (oa, Year > 2020)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
 }
-
 
 
 ##############
