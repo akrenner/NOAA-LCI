@@ -20,33 +20,54 @@ PDF <- function (fN, ...){
 #########################################
 
 zooCenv$totalZN <- rowSums (zooC)
-zooCenv$totalDens <- with (as.data.frame (zooCenv), totalZN/volSample)
+zooCenv$totalDens <- with (as.data.frame (zooCenv), totalZN/volSampleM3)
 
-T9 <- subset (zooCenv, (Transect=="9") & (Station=="6"), )
-T9$jday <- format (T9$isoDate, "%j")
-T9$Year <- factor (T9$Year)
-T9 <- T9 [order (T9$isoDate),]
-T9a <- aggregate (totalDens~jday+Year, T9, FUN=mean, na.rm=TRUE)
+zooCenv$jday <- format (zooCenv$isoDate, "%j")
+# zooCenv$Year <- factor (zooCenv$Year)
+
+zA <- aggregate (totalDens~jday+factor (Year)+Match_Name, zooCenv
+                , FUN=mean, na.rm=TRUE)
+## only use T9-6 to keep it clean
+zA <- aggregate (totalDens~jday+factor (Year), zooCenv, subset=Match_Name=="9_6"
+                 , FUN=mean, na.rm=TRUE)
+names (zA)[2] <- "Year"
+zA <- zA [order (zA$Year),]
 
 
-pdf ("~/tmp/LCI_noaa/media/EVOS/zoopAbundSeason.pdf")
-par (mar=c(4,5,3,1))
-plot (totalDens~jday, T9a, type="n", xlab="", axes=FALSE
-      , ylab=expression("Zooplankton Density ["~Counts~~l^-1~"]")) # convert liter to m^3
+# pdf ("~/tmp/LCI_noaa/media/EVOS/zoopDensSeasonT9-6.pdf")
+png ("~/tmp/LCI_noaa/media/EVOS/zoopDensSeasonT9-6.png"
+     , width=300*6,height=300*6, res=300)
+par (mar=c(4,5,3,1)
+     , ylog=TRUE)
+plot (totalDens~jday, zA, type="n", xlab="", axes=FALSE, log="y"
+      , ylab=expression("Zooplankton Density ["~Counts~~m^-3~"]")) # yes, flow is in m^3
 axis (2)
 axis (1, at=format (as.Date (paste0 ("2000-", 1:12, "-1")), "%j"), tick=TRUE, labels=FALSE)
-axis (1, at=format (as.Date(paste0 ("2000-", 1:12, "-15")), "%j"), tick=FALSE, labels=month.abb)
+axis (1, at=format (as.Date(paste0 ("2000-", seq (1,12,by=2), "-15")), "%j")
+      , tick=FALSE, labels=month.abb[seq (1,12, by=2)])
 box()
-for (i in 1:length (levels (T9$Year))){
-  Ty <- subset (T9a, T9a$Year==levels (T9$Year)[i])
+for (i in 1:length (levels (zA$Year))){
+  Ty <- subset (zA, zA$Year==levels (zA$Year)[i])
   lines (totalDens~jday, Ty, col=i, lwd=2, type="b"
          , lty=c(rep ("solid", 8), rep ("dashed", 2))[i]
   )
 }
-legend (as.numeric (format (as.Date ("2000-08-15"), "%j")), 99
-        , legend=levels(T9a$Year), lwd=2, col=1:length (levels (T9$Year))
-        , lty=c (rep ("solid", 8), rep ("dashed", 2)), bty="n")
+legend ("topleft" # as.numeric (format (as.Date ("2000-08-15"), "%j")), 99
+        , legend=levels(zA$Year), lwd=2, col=1:length (levels (zA$Year))
+        , lty=c (rep ("solid", 8), rep ("dashed", 2)), bty="n"
+#        , ncol=2
+        )
 dev.off()
+
+
+## inter-annual variation
+
+
+
+## spatial variation
+## 9-6, 4-4, 4-2, Along-10, Along-3, 7-20
+
+
 
 
 ## Species composition of high values
