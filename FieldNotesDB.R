@@ -145,7 +145,6 @@ for (i in 1:length (levels (sam$Type))){
 }
 
 
-
 ## --- Jim's layout: ---------------------
 ##
 ## y-axis: year and month
