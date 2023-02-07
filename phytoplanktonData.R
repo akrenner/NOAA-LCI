@@ -15,6 +15,10 @@ phyt <- read.csv("~/GISdata/LCI/phytoplankton/2019-2021 phyto xiuning.csv")
 tax <- read.csv ("~/GISdata/LCI/phytoplankton/phytoTaxonomy.csv")
 phyt$newTax <- tax$lowresTax [match (phyt$Taxon, tax$hiresTax)]
 
+## QAQC
+summary (duplicated (phyt))
+
+
 if (0){
   ## one-off -- make translation table
   levels (factor (phyt$Taxon))
@@ -53,6 +57,10 @@ bigP <- read.csv ("~/GISdata/LCI/phytoplankton/phytodata-kbl-Oct2022.csv")
 ## QAQC -- any new taxa?
 levels (factor (tax$lowresTax)) [is.na (match (gsub ("[\ \\(\\)-]", ".", levels (factor (tax$lowresTax)))
                                                , names (bigP)))]
+## duplicate records
+summary (duplicated (bigP))
+bigP <- subset (bigP, !duplicated (bigP))
+
 
 ## merge both DFs
 require ("plyr")
@@ -88,11 +96,13 @@ msl <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 # msl$Match_Name
 # match (levels (factor (bOut$Sampling.location)), msl$Match_Name)
 # 1 non-match: "unknown"
+# bOut <- subset (bOut, Date != "unknown 2021")
 
 
 ## look up Transect, station, geographic coordinates
 mslR <- match (bOut$Sampling.location, msl$Match_Name)
-phytoOut <- with (bOut, data.frame (Station=Sampling.location, Date
+phytoOut <- with (bOut, data.frame (Station=Sampling.location
+                                    , Date
                                     , Time=rep ("", nrow (bOut))
                                     , Latitude_DD=msl$Lat_decDegree [mslR]
                                     , Longitude_DD=msl$Lon_decDegree [mslR]
@@ -102,10 +112,44 @@ phytoOut <- with (bOut, data.frame (Station=Sampling.location, Date
 ))
 rm (mslR, bOut, bigP, dT, i, msl, phyt, pWout, tax)
 
+## find duplicate records
+StnDate <- with (phytoOut, paste (Station, Date))
+summary (duplicated(StnDate))
+summary (duplicated (phytoOut))
+rm (StnDate)
+# phytoOut <- phytoOut [order (phytoOut$Date),]
+
+
+## -------------------
+##    look up times from CTD data
+## -------------------
+
+## assume that ctd data has already been processed and dataSetup.R has run
+load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+pSID <- with (phytoOut, paste (Station, Date))
+phytoOut$Time <- poSS$Time [match (pSID, poSS$SampleID)]
+
+
+outF <- "~/tmp/LCI_noaa/data-products/phytoplankton.csv"
 ## concatenate and output merged table
-write ("Collected as part of GulfWatch on predefined stations in Kachemak Bay concurrent with zooplankton and CTD"
-       , file="~/tmp/LCI_noaa/data-products/phytoplankton.csv")
-write.table (phytoOut, file="~/tmp/LCI_noaa/data-products/phytoplankton.csv"
-           , row.names=FALSE, append=TRUE, quote=FALSE, sep=",", col.names=TRUE)
+write (paste0 ("Collected as part of GulfWatch on predefined stations in Kachemak Bay ",
+               "and lower Cook Inlet concurrent with zooplankton and CTD. "
+               , paste (range (format (as.Date (phytoOut$Date), "%Y"), na.rm=TRUE), collapse="-")
+)
+, file=outF)
+write.table (phytoOut, outF, row.names=FALSE, append=TRUE, quote=FALSE
+             , sep=",", col.names=TRUE, na="")
+
+
+## for GWA final data
+outF <- "~/tmp/LCI_noaa/media/EVOS/phytoplankton.csv"
+phytoOut <- subset (phytoOut, !Transect %in% c ("subbay", "land"))
+write (paste0 ("Collected as part of GulfWatch on predefined stations in Kachemak Bay ",
+               "and lower Cook Inlet concurrent with zooplankton and CTD. "
+               , paste (range (format (as.Date (phytoOut$Date), "%Y"), na.rm=TRUE), collapse="-")
+)
+, file=outF)
+write.table (phytoOut, outF, row.names=FALSE, append=TRUE, quote=FALSE
+             , sep=",", col.names=TRUE, na="")
 
 ## EOF
