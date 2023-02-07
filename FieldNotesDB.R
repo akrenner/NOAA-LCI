@@ -49,15 +49,14 @@ if (length (badD) > 0){
 }
 rm (badD, i, x)
 
-sam$month <- format (as.POSIXct(sam$dateF), "%m")
-sam$year <- format (as.POSIXct(sam$dateF), "%Y")
+sam$month <- as.integer (format (as.POSIXct(sam$dateF), "%m"))
+sam$year <- as.integer (format (as.POSIXct(sam$dateF), "%Y"))
 
 
 ## --- summarize sampling schedule -----
-sam <- subset (sam, year > 2016)
+# sam <- subset (sam, year > 2016)
 sType <- c("CTD","NUTRIENTS","OA","PHYTOPLANKTON","ZOOPLANKTON")
 sam <- subset (sam, Type %in% sType)
-
 
 if (0){
 ## reshape sam to wide
@@ -73,28 +72,40 @@ require ("tidyr")
 }
 
 
-sampleDF <- data.frame (expand.grid(month=1:12, year=2015:format (Sys.time(), "%Y")))
-sampleDF <- data.frame (expand.grid(Transect=levels (factor (sam$Transect))
-                                    , month=1:12, year=2017:2021))  ## manual set range!
-sampleDF <- cbind (sampleDF, matrix (0, nrow=nrow (sampleDF)
-                                     , ncol=length (sType)
-                                     , dimnames = list (1:nrow (sampleDF)
-                                                        , sType)))
+# -----------------------------------
+# Build and populate sampling matrix
+# -----------------------------------
+
+require ("tidyr")
+# sampleDF <- data.frame (expand.grid(month=1:12, year=2015:format (Sys.time(), "%Y")))
+sampleDF <- data.frame (expand.grid(month=1:12, year=2017:2021))  ## for GWA report
+row.names (sampleDF) <- apply (sampleDF, 2, as.character) %>%
+  apply (MARGIN=1, FUN=paste, collapse="-")
+
+colN <- expand.grid (transect=levels (factor (sam$Transect)), type=sType) %>%
+  as.data.frame ()
+row.names (colN) <- apply(colN, 2,as.character) %>%
+  as.data.frame %>%
+  mutate (across(everything(), gsub, pattern="^AlongBay", replacement="AB")) %>%
+  apply (MARGIN=1, FUN=paste, collapse="-")
+
+sampleM <- matrix (0, nrow=nrow (sampleDF), ncol=nrow (colN)
+                   , dimname=list (row.names(sampleDF), row.names(colN)))
+# rm (colN, sampleDF)
 
 ## populate sampleDF with db records
-for (i in 1:nrow (sampleDF)){
-  for (j in 1:length (sType)){
-    sC <- subset (sam, Transect==sampleDF$Transect [i]) %>%
-                  subset (year==sampleDF$year[i]) %>%
-      subset (month==sampleDF$month[i]) %>%
-      subset (Type == sType [j]) %>%
+## XXX fails when nrow < 1 XXX -- better to revert to reshape?
+for (i in 1:nrow (sampleM)){
+  for (j in 1:ncol (sampleM)){
+    sC <- subset (sam, year==sampleDF$year [i]) %>%
+      subset (month==sampleDF$month [i]) %>%
+      subset (Transect==colN$transect [j]) %>%
+      subset (Type==colN$type [j])
       nrow()
-    sampleDF [i,j+3] <- sC
+    sampleM [i,j] <- sC
   }
 }
-xT <- as.matrix (sampleDF [,4:ncol (sampleDF)])
-rownames (xT) <- apply (sampleDF[,1:3], 1, paste, collapse="-")
-
+xT <- sampleM
 
 xAxis <- function (side=3, Cx=1,...){
   axis (side=side, at = ((1:ncol (xT))-1)/(ncol (xT)-1)
@@ -109,10 +120,13 @@ yAxis <- function (lab, mx, CA=1, ...){
 }
 
 png ("~/tmp/LCI_noaa/media/sampleTable.png", height=11*100, width=5*100, res=100)
-par (las=1, mar=c(1,8,4,1))
+par (las=2, mar=c(1,8,8,1))
 image (t (ifelse (xT>0, 1,0)), axes=FALSE)
 xAxis ()
 yAxis (rownames(xT), xT)
+# axis (1); axis (4)
+abline (v=1:ncol(xT)/ncol(xT))
+# abline (h=1:nrow (xT)/nrow(xT))
 dev.off()
 
 
@@ -125,5 +139,11 @@ for (i in 1:length (levels (sam$Type))){
   sT <- subset (sam, Type == levels (sam$Type)[i])
   print (aggregate(StationEvent~month+year+Transect, sT, FUN=length))
 }
+
+
+## --- Jim's layout: ---------------------
+##
+## y-axis: year and month
+## x-axis: transect x measure (e.g. CTD for transect 3-AB, then OA for transects)
 
 

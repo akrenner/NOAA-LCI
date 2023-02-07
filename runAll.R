@@ -25,13 +25,13 @@ ongoingY <- TRUE
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
-if (0){
+if (1){
 ## The Wall
 source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
   # this also calls dataSetup.R -- could cause problems this early??
 }
 
-if (0){ ## 2017 contract
+if (1){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
   ## Breaking this reference would be desirable, although it would increase file size of all temporary
@@ -48,11 +48,12 @@ if (0){ ## 2017 contract
   source ("plotMaps.R")
   source ("commMap.R")
 
+  source ("CTD_timeseries.R")
   source ("CTDwall.R")
 }
 
 
-if (0){ # Dec 2019 seasonality
+if (1){ # Dec 2019 seasonality
   source ("dataSetup.R")
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
