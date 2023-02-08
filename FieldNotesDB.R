@@ -1,6 +1,8 @@
 ## query acess DB
 rm (list=ls())
 
+require ("dplyr")
+
 # if (.Platform$OS.type == "unix"){
 #   require (tidyr)
 #   adb <- list()
@@ -70,7 +72,7 @@ reshape (samC, idvar=c ("year", "month", "Transect"), timevar="Type", direction=
 reshape (samC, idvar=c ("Transect"), timevar="Type", direction="wide")
 
 
-require ("tidyr")
+# require ("tidyr")
 # spread (samC, key=Type, value=Depth)
 # samC %>% pivot_wider(names_from=c(month,year,Transect) ,values_from=Depth)
 }
@@ -79,6 +81,9 @@ require ("tidyr")
 # -----------------------------------
 # Build and populate sampling matrix
 # -----------------------------------
+
+sam <- subset (sam, Type %in% sType)
+sam$Type <- factor (sam$Type)
 
 require ("tidyr")
 # sampleDF <- data.frame (expand.grid(month=1:12, year=2015:format (Sys.time(), "%Y")))
@@ -104,7 +109,7 @@ for (i in 1:nrow (sampleM)){
     sC <- subset (sam, year==sampleDF$year [i]) %>%
       subset (month==sampleDF$month [i]) %>%
       subset (Transect==colN$transect [j]) %>%
-      subset (Type==colN$type [j])
+      subset (Type==colN$type [j]) %>%
       nrow()
     sampleM [i,j] <- sC
   }
