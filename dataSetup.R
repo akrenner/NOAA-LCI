@@ -740,6 +740,10 @@ if (length (grep ("plastic", zoop$Species)) > 0){
 zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
 
+## lookup deepth from field notes
+load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
+zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
+zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
 save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
@@ -750,11 +754,13 @@ zoopOut <- with (zoop, data.frame (Station = Match_Name, Date = isoDate, Time
                  , Longitude_DD = Lon_decDegree
                  , Transect
                  , StationN=Station
+                 , Depth
                  , Mesh, Flow, Water.Sampled_m3=Water.Sampled..m3.
                  , SampleID = SampleID_H
                  , Split
                  , Species
                  , Count = RTotal))
+
 zoopOut$StationN <- ifelse (zoopOut$StationN %in% 1:100
                             , paste0 ("S_", zoopOut$Station), zoopOut$Station)
 tF <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv"

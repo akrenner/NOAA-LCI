@@ -31,26 +31,30 @@ summary (sam$Type)
 ##
 sta$Transect <- tra$Transect [match (sta$TransectEvent, tra$TransectEvent)]
 sam$Transect <- sta$Transect  [match (sam$StationEvent, sta$StationEvent)]
+sam$Station <- sta$Station [match (sam$StationEvent, sta$StationEvent)]
 
-sam$dateF <- sam$Date
-# sam$dateF <- sam$DateTimeStamp
+## ----- QAQC -----
+sam <- subset (sam, !is.na (Transect)) %>%
+  subset (nchar (Date) > 3)  ## StationEvent and SampleEvent may have dates in here?? broken?
 
-samx <- sam
-## sam <- samx
-sam <- subset (sam, nchar (dateF) > 3)
-badD <- numeric()
-for (i in 1:nrow (sam)){
-  x <- try (as.POSIXct(sam$dateF[i]))
-  if (class (x)[1]=="try-error"){badD <- c (badD, i)}
-}
-sam$dateF [badD]
-if (length (badD) > 0){
-  sam <- subset (sam, 1:nrow (sam) != badD)
-}
-rm (badD, i, x)
+ax <- strsplit(sam$Date, " ", fixed=TRUE)
+ax <- do.call(rbind, ax)[,1]
+ay <- strsplit(sam$Time, " ", fixed=TRUE)
+ay <- do.call (rbind, ay)[,2]
+sam$DateTimeStamp <- as.POSIXct(paste (ax,ay))
+rm (ax, ay)
 
-sam$month <- as.integer (format (as.POSIXct(sam$dateF), "%m"))
-sam$year <- as.integer (format (as.POSIXct(sam$dateF), "%Y"))
+
+sam$month <- as.integer (format (sam$DateTimeStamp, "%m"))
+sam$year <- as.integer (format (sam$DateTimeStamp, "%Y"))
+sam$SampleID <- with (sam, paste0 (Transect, "_", Station, " "
+                                   , format (DateTimeStamp, format="%Y-%m-%d")))
+
+
+save (sam, file="~/tmp/LCI_noaa/cache/FieldNotes.RData")
+##
+# z <- subset(sam, Type=="ZOOPLANKTON")
+
 
 
 ## --- summarize sampling schedule -----
@@ -139,6 +143,7 @@ for (i in 1:length (levels (sam$Type))){
   sT <- subset (sam, Type == levels (sam$Type)[i])
   print (aggregate(StationEvent~month+year+Transect, sT, FUN=length))
 }
+
 
 
 ## --- Jim's layout: ---------------------
