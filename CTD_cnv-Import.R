@@ -285,6 +285,8 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 
 ## update Access tables from Notebook database
 ## may need to adapt this to make this portable
+## ---  move all this to FieldNotesDB.R?
+
 if (isWin){
   ## need to call 32-bit version of R to use ODBC -- until 64-bit Access ODBC driver installed
   ## windows-version of mdb-export?
@@ -298,10 +300,18 @@ if (isWin){
   system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
 }
 
+## which set of tables is best to import? -- MDBTools vs ODBC
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/"  ## ODBC via 32-bit R-4.1.3
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/manualExport/" ## manual export from Access
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/mdbtools/"  ## mdbtools
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
+
 stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
 transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
 #  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+
+stationEv <- read.csv(paste0 (tblDir, "tblStationEvent.txt"))
+transectEV <- read.csv (paste0 (tblDir, "tblTransectEvent.txt"))
 
 ## temporary fix of transects names -- fix this in Access DB!!
 transectEv$Transect <- ifelse (transectEv$Transect == 1, "AlongBay"
@@ -326,8 +336,14 @@ stationEv [is.na (stationEv$timeStamp), c (8, 10, 5, 6)]  ## 40 notebook records
 ## make relational DB links within notebook DB
 tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
 if (any (is.na (tM))){
-  print (stationEv [which (is.na (tM)), c (21, 8, 9, 10)])
-  stop ("no missing transectEvents allowed")
+  print (stationEv [which (is.na (tM)), c (5, 6, 21, 8, 9, 10, 21)])
+#  stop ("no missing transectEvents allowed")  ## not an issue until January 2023 -- Access DB missing transect entries?
+  warning ("no missing transectEvents allowed")
+  ## trouble-shooting
+  x <- stationEv [which (is.na (tM)),]
+  x$Date <- as.POSIXct(x$Date); x$Time <- as.POSIXct(x$Time)
+  x$timeStamp <- as.POSIXct (paste (format (x$Date, "%Y-%m-%d"), format(x$Time, "%H:%M"), sep=" "))
+  summary (factor (x$timeStamp))
 }
 
 ## this may be the only needed field from TransectEvent

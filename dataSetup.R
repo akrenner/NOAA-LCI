@@ -616,7 +616,7 @@ phyp <- read.csv ("~/GISdata/LCI/phytoplankton/phytoplankton.csv"
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2017-02.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2018-10-sorted.csv")
 ## current 2018 version does not have date
-phyp <- cbind (Match_Name = trimws (phyp$station), phyp)
+phyp <- cbind (Match_Name = trimws (phyp$Station), phyp)
 phyp$Match_Name <- gsub ("Transect\\s([1-9]),\\sStation\\s([0-9]+)", "\\1_\\2", phyp$Match_Name)
 # phyp$Match_Name <- gsub ("\\s([A-D])$", "_\\1", phyp$Match_Name) # space to underscore
 phyp$Match_Name <- gsub ("\\sBay", "", phyp$Match_Name) # del Cove
@@ -661,7 +661,7 @@ phyp <- cbind (SampleID = paste (phyp$Match_Name
                , phyp)
 rm (trnsct)
 phyCenv <- phyp
-phyCenv <- phyp [,c(1:which (names (phyCenv) == "station") # or use Match_Name? difference?
+phyCenv <- phyp [,c(1:which (names (phyCenv) == "Station") # or use Match_Name? difference?
                     , which (names (phyp) == "Total.cell.count"))]
 phyC <- phyp [,which (names (phyp) == "Alexandrium.spp.") :
                      which (names (phyp) == "unknown.pennate.diatom")]
@@ -740,6 +740,10 @@ if (length (grep ("plastic", zoop$Species)) > 0){
 zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
 
+## lookup deepth from field notes
+load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
+zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
+zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
 save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
@@ -750,11 +754,13 @@ zoopOut <- with (zoop, data.frame (Station = Match_Name, Date = isoDate, Time
                  , Longitude_DD = Lon_decDegree
                  , Transect
                  , StationN=Station
+                 , Depth
                  , Mesh, Flow, Water.Sampled_m3=Water.Sampled..m3.
                  , SampleID = SampleID_H
                  , Split
                  , Species
                  , Count = RTotal))
+
 zoopOut$StationN <- ifelse (zoopOut$StationN %in% 1:100
                             , paste0 ("S_", zoopOut$Station), zoopOut$Station)
 tF <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv"
@@ -908,6 +914,7 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
+Require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
 
