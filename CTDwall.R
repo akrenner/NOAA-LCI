@@ -184,6 +184,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     }
 
 
+    ## calculate climatology and anomaly
+
+
+
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
                  , " T-", levels (poAll$Transect)[tn]
                  , ".pdf")

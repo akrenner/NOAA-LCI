@@ -49,8 +49,11 @@ hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 
 source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
 source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
+cat ("## Finished hex conversion of CTD files\n\n")
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
+cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
+cat ("## Finished CTD_cleanup.R\n\n")
 
 
 
