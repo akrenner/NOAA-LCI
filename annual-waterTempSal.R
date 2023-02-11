@@ -21,7 +21,7 @@ qntl=c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 #################
-currentYear <- 2021   ## temp!! XXX
+# currentYear <- 2021   ## temp!! XXX
 #################
 currentCol <- c ("lightblue", "blue", "magenta")
 Require ("RColorBrewer")

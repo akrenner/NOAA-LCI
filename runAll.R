@@ -26,11 +26,18 @@ ongoingY <- TRUE
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
+source ("SeldoviaTemp.R")
 if (1){
-## The Wall
-source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
+  ## The Wall
+  source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
   # this also calls dataSetup.R -- could cause problems this early??
+  # CTDwall, CTD-timeseries -- no need to call these here!
+}else{
+  source ("dataSetup.R")
+  source ("CTD_timeseries.R")
+  source ("CTDwall.R")
 }
+
 
 if (1){ ## 2017 contract
   ## BUGS:
@@ -42,15 +49,11 @@ if (1){ ## 2017 contract
   # rm -r ~/tmp/LCI_noaa/
 
   # source ("metaExtraction.R")
-  source ("SeldoviaTemp.R")
-  source ("dataSetup.R")
   source ("anaCTD.R")
   source ("ecoAn.R")
   source ("plotMaps.R")
   source ("commMap.R")
 
-  source ("CTD_timeseries.R")
-  source ("CTDwall.R")
 }
 
 

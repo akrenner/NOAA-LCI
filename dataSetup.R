@@ -904,6 +904,7 @@ if (printSampleDates){
       subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
     ))))
   }
+  rm (pT)
 }
 
 
