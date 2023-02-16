@@ -643,6 +643,59 @@ for (k in pickStn){
     legend ("topright", lwd=2, col=c("black", "blue"), legend=c("max buoyancy", "seasonal mean"), bty="n")
     box()
     dev.off()
+
+
+
+    ## --------- emulate Figure 4 from GWA report -- in ODV colors, because Kris want's it
+    ## three panels, 1 page: Temperature, Salinity, Chlorophyll
+
+    ODV_colours <- colorRampPalette(c("#feb483", "#d31f2a", "#ffc000", "#27ab19"
+                                      , "#0db5e6", "#7139fe", "#d16cfa"))(50) %>%
+      rev()
+    png ("~/tmp/LCI_noaa/media/EVOS/Figure4-TSC-panel.png", width=6.5*150,height=8.0*150, res=150)
+    par (mfrow=c(3,1))
+    Mr <- c(3,3.5,2.5,1.2)
+
+    ## time series of raw data
+    plot.station (xCS, which="temperature"
+                  , zcol=ODV_colours
+                  # , zbreaks=sF (xC$Temperature_ITS90_DecC)
+                  , legend.loc="" #legend.text="temperature anomaly [°C]"
+                  , mar=Mr
+                  #              , mar=c(2.5,4,2.3,1.2)  ## default:  3.0 3.5 1.7 1.2
+    )
+    TSaxis (xC$isoTime)
+    title (main="temperature [°C]", line=1.2)
+    axis (3, at=xC$isoTime, labels=FALSE)
+
+
+    #zB <- seq (26, ceiling(max (xC$Salinity_PSU, na.rm=TRUE)),length.out=length (salCol)+1)
+    plot.station (xCS, which="salinity"
+                  , zcol=ODV_colours
+                  #              , zbreaks=zB
+                  , legend.loc="" #legend.text="temperature anomaly [°C]"
+                  , mar=Mr
+    )
+    TSaxis (xC$isoTime)
+    title (main="salinity [PSU]")
+
+
+    plot.station (xCS, which="fluorescence"
+                  , zcol=ODV_colours
+                  #              , zbreaks=zB
+                  , legend.loc="" #legend.text="temperature anomaly [°C]"
+                  , mar=Mr
+    )
+    TSaxis (xC$isoTime)
+
+    require (latex2exp)
+    eX <- TeX ("Chlorophyll [$mg~m^{-3}$]")
+    #    eX <- expression ("Chlorophyll ["~mg~m^-3~"]")
+    #    plot (1:2, main=eX)
+    title (main=eX)
+    dev.off()
+    rm (eX, ODV_colours)
+    ## --------------- end of visual assault --------
   })
 }
 ## alternative display of this data:
