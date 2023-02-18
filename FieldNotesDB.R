@@ -1,25 +1,43 @@
 ## query acess DB
 rm (list=ls())
 
-# if (.Platform$OS.type == "unix"){
-#   require (tidyr)
-#   adb <- list()
-#   AT <- system ("mdb-tables ~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb",intern=TRUE) %>%
-#     strsplit(" +") %>%
-#     unlist()
-#   for (i in 1:length (AT)){
-#     adb [[i]] <-
-#       system (paste0 ("mdb-export ~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb ", AT [i])) %>%
-#       read.csv(file=stdin())
-#   }
-# }else{
-# }
+require ("dplyr")
 
-atra <- read.csv("~/GISdata/LCI/EVOS_LTM_tables/manualExport/tblAllTransectsCTD.txt")
-tra <- read.csv("~/GISdata/LCI/EVOS_LTM_tables/manualExport/tblTransectEvent.txt") ## trans
-sta <- read.csv("~/GISdata/LCI/EVOS_LTM_tables/manualExport/tblStationEvent.txt") ## station and trans
-sam <- read.csv("~/GISdata/LCI/EVOS_LTM_tables/manualExport/tblSampleEvent.txt")  ## station and sample
-# ctd <- read.csv("~/GISdata/LCI/EVOS_LTM_tables/manualExport/tblCTDall.txt") ## sampleEv
+
+if (.Platform$OS.type == "unix"){
+  if (1){
+    tableDir <-"~/GISdata/LCI/EVOS_LTM_tables/mdbtools/"
+    dir.create(tableDir, showWarnings=FALSE)
+
+    require (tidyr)
+    AT <- system ("mdb-tables ~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb", intern=TRUE) %>%
+      strsplit(" +") %>%
+      unlist()
+    for (i in 1:length (AT)){
+      system (paste0 ("mdb-export -T '%Y-%m-%d %H:%M' "
+                      , "~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb ", AT [i]
+                      , " > ", tableDir, AT [i], ".txt"))  ## see whether MS Access can export CSV instead of TXT
+      ##  export all in one line:   mdb-tables -1 database.mdb | xargs -I{} bash -c 'mdb-export database.mdb "$1" >"$1".csv' -- {}
+      ## --date-format,  --date-time-format=...   --null-char="NA"
+    }
+  }
+}else{
+  ## manually export tables from within ACCESS
+  ## or revive ODBC somehow -- see dataSetup.R?
+#  tableDir <- "~/GISdata/LCI/EVOS_LTM_tables/Accesstbls/"
+}
+
+tableDir <- "~/GISdata/LCI/EVOS_LTM_tables/"
+tableDir <- "~/GISdata/LCI/EVOS_LTM_tables/manualExport/"
+tableDir <- "~/GISdata/LCI/EVOS_LTM_tables/mdbtools/"
+
+
+atra <- read.csv(paste0 (tableDir, "tblAllTransectsCTD.txt"))
+tra <- read.csv(paste0 (tableDir, "tblTransectEvent.txt")) ## trans
+sta <- read.csv(paste0 (tableDir, "tblStationEvent.txt")) ## station and trans
+sam <- read.csv(paste0 (tableDir, "tblSampleEvent.txt"))  ## station and sample
+# ctd <- read.csv(paste0 (tableDir, "tblCTDall.txt")) ## sampleEv
+
 
 
 sam$Type <- toupper (sam$Type)
@@ -36,6 +54,13 @@ sam$Station <- sta$Station [match (sam$StationEvent, sta$StationEvent)]
 ## ----- QAQC -----
 sam <- subset (sam, !is.na (Transect)) %>%
   subset (nchar (Date) > 3)  ## StationEvent and SampleEvent may have dates in here?? broken?
+
+## sta$Transectevent is messed up
+x <- levels (factor (sta$TransectEvent))
+x [grep ("^ *[a-z,A-Z]", x)]
+
+
+
 
 ax <- strsplit(sam$Date, " ", fixed=TRUE)
 ax <- do.call(rbind, ax)[,1]
@@ -70,7 +95,7 @@ reshape (samC, idvar=c ("year", "month", "Transect"), timevar="Type", direction=
 reshape (samC, idvar=c ("Transect"), timevar="Type", direction="wide")
 
 
-require ("tidyr")
+# require ("tidyr")
 # spread (samC, key=Type, value=Depth)
 # samC %>% pivot_wider(names_from=c(month,year,Transect) ,values_from=Depth)
 }
@@ -79,6 +104,9 @@ require ("tidyr")
 # -----------------------------------
 # Build and populate sampling matrix
 # -----------------------------------
+
+sam <- subset (sam, Type %in% sType)
+sam$Type <- factor (sam$Type)
 
 require ("tidyr")
 # sampleDF <- data.frame (expand.grid(month=1:12, year=2015:format (Sys.time(), "%Y")))
@@ -104,7 +132,7 @@ for (i in 1:nrow (sampleM)){
     sC <- subset (sam, year==sampleDF$year [i]) %>%
       subset (month==sampleDF$month [i]) %>%
       subset (Transect==colN$transect [j]) %>%
-      subset (Type==colN$type [j])
+      subset (Type==colN$type [j]) %>%
       nrow()
     sampleM [i,j] <- sC
   }
@@ -143,6 +171,7 @@ for (i in 1:length (levels (sam$Type))){
   sT <- subset (sam, Type == levels (sam$Type)[i])
   print (aggregate(StationEvent~month+year+Transect, sT, FUN=length))
 }
+
 
 
 ## --- Jim's layout: ---------------------

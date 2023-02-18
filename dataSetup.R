@@ -616,7 +616,7 @@ phyp <- read.csv ("~/GISdata/LCI/phytoplankton/phytoplankton.csv"
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2017-02.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2018-10-sorted.csv")
 ## current 2018 version does not have date
-phyp <- cbind (Match_Name = trimws (phyp$station), phyp)
+phyp <- cbind (Match_Name = trimws (phyp$Station), phyp)
 phyp$Match_Name <- gsub ("Transect\\s([1-9]),\\sStation\\s([0-9]+)", "\\1_\\2", phyp$Match_Name)
 # phyp$Match_Name <- gsub ("\\s([A-D])$", "_\\1", phyp$Match_Name) # space to underscore
 phyp$Match_Name <- gsub ("\\sBay", "", phyp$Match_Name) # del Cove
@@ -661,7 +661,7 @@ phyp <- cbind (SampleID = paste (phyp$Match_Name
                , phyp)
 rm (trnsct)
 phyCenv <- phyp
-phyCenv <- phyp [,c(1:which (names (phyCenv) == "station") # or use Match_Name? difference?
+phyCenv <- phyp [,c(1:which (names (phyCenv) == "Station") # or use Match_Name? difference?
                     , which (names (phyp) == "Total.cell.count"))]
 phyC <- phyp [,which (names (phyp) == "Alexandrium.spp.") :
                      which (names (phyp) == "unknown.pennate.diatom")]
@@ -914,6 +914,7 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
+Require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
 
