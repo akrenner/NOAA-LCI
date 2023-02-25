@@ -69,7 +69,8 @@ pdf ("~/tmp/LCI_noaa/media/EVOS/nutrientsSeason.pdf", width=8, height=5)
 par (mar=c(3, 4.5, 3, 1))
 
 
-for (i in 1:length (nutL)){
+# for (i in 1:length (nutL)){
+for (i in c(2,1,3,4)){  ## nicer arrangement
   nut$x <- nut [,which (names (nut)==nutL[i])]
 
   # summary (with (nut, factor (paste (Station, Date, Depth_m))))
@@ -88,7 +89,8 @@ for (i in 1:length (nutL)){
   axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=month.abb, tick=FALSE)
   box()
 #  if (1){
-  if (i %% 2 == 1){
+#  if (i %% 2 == 1){
+  if (i %in% c(2, 3)){
     title (ylab=expression ("Concentration ["~mg~l^-1~"]"))
   }
   abline (h=nut [1,which (names (nut)==nutL[i])+1], lty="dotted", lwd=2) # show detection limit

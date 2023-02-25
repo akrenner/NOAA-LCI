@@ -841,12 +841,12 @@ T96 <- subset (poSS@data, Match_Name=="9_6")  ## migrate to sf
 T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
 
-tL <- c("Deep", "Max", "SalDeep")
-titleL <- c ("Deep-water temperature", "Maximum temperature", "Deep-water Salinity")
+tL <- c("Deep", "Max", "SalDeep", "TempSurface", "SalSurface")
+titleL <- c ("Deep-Water Temperature", "Maximum Temperature", "Deep-Water Salinity"
+             , "Surface Temperature", "Surface Salinity")
 ## deep-water: mean at depth > 15 m
 for (iS in 1:length (tL)){
-  #  T96$TempS <- with (T96, list (TempBottom, TempDeep, TempSurface, TempMean, TempMax, TempMin))[[i]]
-  T96$TempS <- with (T96, list (TempDeep,TempMax, SalDeep))[[iS]]
+  T96$TempS <- with (T96, list (TempDeep,TempMax, SalDeep, TempSurface, SalSurface))[[iS]]
   tempName <- tL [iS]
 
   if (tempName == "Max"){
@@ -865,26 +865,32 @@ for (iS in 1:length (tL)){
   T96f$TempS_norm <- tbnorm$MA [match (T96f$jday, tbnorm$jday)]
   rm (tbnorm)
 
-  if (tempName=="SalDeep"){
-    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
-         , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
-    anomCol <- c("yellow", "green"); anomL <- c("saline", "fresh")
-    yLabt <- "Salinity [PSU]"
-  }else{
+  if (tempName == ("Deep")){
     png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR, width=fDim [1]*pngR)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
-    # expression('Temperature'~'['*degree~'C'*']')
-    # , ylab="Temperature [°C]"
+  }else{
+    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+         , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
+    if (tempName=="TempSurface"){
+      anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
+      # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
+      yLabt <- "Temperature [°C]"
+    }else{
+      anomCol <- c("yellow", "green"); anomL <- c("saline", "fresh")
+      yLabt <- "Salinity [PSU]"
+    }
   }
   plot (TempSN~timeStamp, T96f, type="n", main=paste (titleL [iS], "at T9-6")
         , ylab=yLabt, xlab="", axes=FALSE)
   axis (2)
   abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
   TSaxis(T96f$timeStamp, verticals=FALSE)
-  abline (h=thTempL, lty="dashed") # mark 4 degrees C
+  if (tempName=="Deep"){
+    abline (h=thTempL, lty="dashed") # mark 4 degrees C
+  }
   mLW <- 2
   nLW <- 2
   legend ("bottomright", lwd=c (nLW,mLW, 3, 3), col=c ("gray", "black", anomCol)
@@ -904,7 +910,7 @@ for (iS in 1:length (tL)){
 rm (anomCol, anomL, yLabt)
 
   ## plot timing of 4 degrees C over year
-  if (tempName!="SalDeep"){
+  if (tempName=="Deep"){
     T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
     springM <- sapply (thTempL, function (y){

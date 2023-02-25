@@ -71,6 +71,8 @@ source ("datasetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
+
+    ## throws a lot of errors -- needs work! -- hide or resolve errors
 # source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 

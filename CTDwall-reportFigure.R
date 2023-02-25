@@ -21,6 +21,8 @@ stopatDate <- "2022-01-01"
 
 month.select <- c (3,7)
 month.select <- c (10,12)
+# month.select <- c(3,7,10,12)  ## have to run this manually, one at a time, for now
+cat ("\n\n\n##\n##\n## Manually switch over to other set of months! XXX \n##\n##\n##\n##")
 year.select <- levels (poAll$year)
 year.select <- 2017:2021
 
@@ -55,6 +57,7 @@ source ("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 
 if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
+# useSF <- TRUE
 mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
@@ -158,7 +161,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (exists ("year.select")){
-      pH <- 10; pW <- 7
+      pH <- 9.0; pW <- 7
       yearPP <- length (year.select)
       omcex <- 1
       Require ("stringr")
@@ -208,26 +211,26 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       omText <- sampleTimes
     }
 
-
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-                 , " T-", levels (poAll$Transect)[tn]
-                 , ".pdf")
-         , height = pH, width = pW)
+dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+           , showWarnings=FALSE, recursive=TRUE)
+    # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+    #              , oVarsF [ov], " T-", levels (poAll$Transect)[tn], ".pdf")
+    #      , height = pH, width = pW)
+res=300
+    png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+                 , oVarsF [ov], " T-", levels (poAll$Transect)[tn], "%01d.png")
+         , height = pH*res, width = pW*res, res=res); rm (res)
     layout (layoutM); rm (layoutM)
-    if (pH > 14){
-    par (oma=c(3,5,12,2)
-         , mar=c(4,4,3,0.1)
-    )
-    }else {
-      par (oma=c(3,5,8,2)
-           , mar=c(4,4,3,0.1)
+    # if (pH > 14){
+    # par (oma=c(3,5,12,2)
+    #      , mar=c(4,4,3,0.1)
+    # )
+    # }else {
+      par (oma=c(3,4,3,1)
+           # , mar=c(0.1,4,0.0,0)
       )
-}
-    if (0){ # test){
-      par (oma=c(3,5,15,2)
-           , mar=c(4,4,16,0.1)
-      )
-    }
+    # }
+
     ## test-option
     yearC <- 1:length (year.select)  ## or fix subset below
     for (iY in yearC){
@@ -377,6 +380,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           ## if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
           if (oVarsF [ov]=="bvf"){cCont <- NULL}else{cCont<- pretty (oRange [ov,], 20)}
           pSec (xCo, N = oVarsF [ov]
+                , xlab="", ylab=""
                 , zCol = oCol3 [[ov]]
                 , zlim = oRange [ov,] # fixes colors to global range of that variable
                 # , zbreaks=zB # better?, slower interpolation
@@ -385,34 +389,16 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                 , showBottom=FALSE
                 , drawPalette=FALSE
                 , custcont=cCont
+                , mar=c(1,3,2,0)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
                                 , c(10000, -depthHR, 10000)
                                 , col=tgray))
           rm (tgray)
-          # if (test){   ## for QAQC: add station labels to x-axis
-          #   dist <- unique (xCo[['distance']])
-          #   stnID <- sapply (1:length (xCo@data$station), function (m){
-          #     xCo@data$station[[m]]@metadata$stationId
-          #     #              xCo@data$station[[m]]@metadata$filename
-          #   })
-          #   try (axis (side=3, at=dist, labels=stnID, cex=0.2, las=2))
-          #   rm (dist, stnID)
-          # }
 
-          if (nSurv > 1){
-            title (main = paste (levels (physOc$transDate)[iS], "* -", nSurv), col.main = "red")
-          }else{
-            # title (main = paste (levels (physOc$transDate)[iS]))
-            title (main = paste0 (levels (physOc$transDate)[iS], "-"
-                                  , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
-          }
-          if (iY==1){ ## big title on top
-            if (!test){
-              mtext (text = oVars [ov], side=3, cex=4, outer=TRUE, line=3)  ## always?
-            }
-          }          ## addBorder (xCo, TD[ov]-1)
+
+
 
           # keep longest section for map
           if (!exists ("xMap")){xMap <- xCo}
@@ -423,99 +409,28 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
         }
       }
       ## covering yearPP years per page. Write out at end of each year
+      if (iY==1){ ## big title on top
+        # mtext (text = oVars [ov], side=3, cex=4, outer=TRUE, line=3)  ## always?
+        ## unified caption at the bottom
+        mtext (text="Along-track Distance [km]", outer=TRUE, line=1.4, side=1)
+        mtext (text="Depth [m]", side=2, line=-0.6, outer=TRUE)
+      }          ## addBorder (xCo, TD[ov]-1)
+
       mtext (text=year.select[iY]
-             , side=2, line=1.0,outer=TRUE,cex=omcex
+             , side=2, line=1.4,outer=TRUE,cex=omcex
              , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
       )
       for (n in 1:length (omText)){
-        mtext (text=omText [n], side=3, line=1.0, outer=TRUE,cex=omcex
+        mtext (text=omText [n], side=3, line=-0.5, outer=TRUE,cex=omcex
                , at=(n-1)/length(omText)+0.5/length(omText))
       }
+      mtext (text=oVars [ov], side=3, line=1.2, outer=TRUE, cex=omcex)
       cat ("\n")
     }
 
     ##############################################################
     ## add color scale and map after all section plots are done ##
     ##############################################################
-
-    ## maps
-    if (1){
-      xLim <- c(-154, -151)
-      yLim <- c(57.5, 60.1)
-      plot (xMap
-            , which = 99
-            , coastline = "coastlineWorldFine" ## or a coastline object (from gshhg, removing dependency on ocedata)
-            , showStations = TRUE
-            , gird = TRUE
-            , map.xlim = c(-154, -151)
-            , map.ylim = c(57.5, 60.1)
-            , clatitude = 59.4
-            , clongitude = -152
-            , span = 250
-      )
-      ## add eye for perspective;  save eye to eye.ps with Inkscape
-      if (1){
-        if (levels (poAll$Transect)[tn] == "3"){
-          xU <- -152.5; yU <- 59.4; rU <- 60
-        }else if (levels (poAll$Transect)[tn] == "4"){
-          xU <- -152.8; yU <- 59.4; rU <- 0
-        }else if (levels (poAll$Transect)[tn] == "6"){
-          xU <- -151.5; yU <- 58.4; rU <- 115
-        }else  if (levels (poAll$Transect)[tn] == "7"){
-          xU <- -152.5; yU <- 58.7; rU <- 85
-        }else if (levels (poAll$Transect)[tn] == "9"){
-          xU <- -152.8; yU <- 59.0; rU <- 20
-        }else{                         # AlongBay
-          xU <- -150.5; yU <- 59.1; rU <- 130
-        }
-
-        if (0){  ## vector based -- not windows compatible and doesn't rotate
-          Require ("grImport")  ## requires installation of GS -- go raster after all
-          grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-          p <- readPicture("pictograms/eye.ps.xml")
-          unlink ("pictograms/eye.ps.xml")
-          grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
-                        , x=unit (xU, "npc"), y=unit (yU, "npc")
-                        # , angle=rU
-                        , width=unit (0.07, "npc"), height=unit (0.07, "npc")
-          )
-          ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
-          # if (.Platform$OS.type=="unix"){
-          #   if (!require ("grConvert")){
-          #     devtools::install_github("sjp/grConvert")
-          #     library (grConvert)}
-          #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
-          # }
-          # Require ("grImport2")
-          # p <- grImport2::readPicture ("pictograms/eye2.svg")
-          # g <- grImport2::pictureGrob(p)
-          # grid.picture(g)
-        }
-        if (.Platform$OS.type=="unix"){
-          system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
-        }
-        Require ("png")
-        p <- readPNG ("pictograms/eye.png")
-        # Require ("OpenImageR")
-        # p <- rotateImage (p, angle=rU, method="nearest")
-        rasterImage(p
-                    , xleft=xU       # -152       +3*1*(xU-0.5)
-                    , xright=xU+0.3  # -152+0.3  +3*1*(xU-0.5)
-                    , ybottom=yU     # 59.4     +1*1*(yU-0.5)
-                    , ytop=   yU+0.3 # 59.4+0.3 +1*1*(yU-0.5)
-                    , angle=rU)
-        rm (p, xU, yU, rU)
-        # ## fine-scale map -- no longer needed?
-        # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
-        #       , which = 99
-        #       , coastline = "coastlineWorldFine"
-        #       , showStations = TRUE
-        #       , gird = TRUE
-        #       # , span=50
-        # )
-      }
-    }
-    rm (xMap, bottom)
 
     ###############################################
     ## draw palette, color scale into next panel ##
@@ -527,8 +442,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       yL <- 1.8
       par (mar=c(14, 1,3,1))
     }else{
-      yL <-1.2
-      par (mar=c(5, 1,3,1))
+      yL <- 5.0  # 0.8: too tall/broad
+      par (mar=c(5, 1,3,12))
     }
     bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
                    , ylim=c(0,yL)  # ylim to make bar narrower, less high
@@ -540,8 +455,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     rm (bp, lVal, nCol, yL)
 
     ## add date and logos for reference
-    mtext (text=paste ("NOAA Kasitsna Bay Lab and KBNERR\n", Sys.Date())
-           , side=1, line=6, outer=FALSE, cex=0.7, adj=1)
+    # mtext (text=paste ("NOAA Kasitsna Bay Lab and KBNERR\n", Sys.Date())
+    #        , side=1, line=6, outer=FALSE, cex=0.7, adj=1)
     ## add NCCOS and KBNERR logos
 
     ### end of wall poster
@@ -563,37 +478,6 @@ rm (swMN)
 ## for error checking: map of every transect
 # double-used plots may appear out-of-line in chronology
 ## this should come at the end of CTDwall-setup.R
-if (0){
-  xC <- xC [order (xC$isoTime),]
-  xC$survey <- factor (xC$survey)
-  pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
-  for (i in 1:length (levels (xC$survey)))
-    xCx <- subset (xC, survey == levels (xC$survey)[i])
-  ## cat (xC$File.Name[i], "\n")
-  xCx <- sectionize(xCx)
-  plot (xCx
-        , which = 99
-        , coastline = "coastlineWorldFine"
-        , showStations = TRUE
-        , gird = TRUE
-        , map.xlim = c(-154, -151)
-        , map.ylim = c(57.5, 60.1)
-        , clatitude = 59.4
-        , clongitude = -152
-        , span = 250
-  )
-  dev.off()
-
-  ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-  Require (ocedata) #for the coastlineWorldFine data
-  data(coastlineWorldFine)
-
-  mp <- function() {
-    mapPlot(coastlineWorldFine, #projection=proj4string (bR),
-            longitudelim = c(-154.2, -150.5),
-            latitudelim = c(58.5, 60.5), col='grey')
-  }
-}
 
 cat ("\n# END CTDwall.R #\n")
 # EOF

@@ -1066,13 +1066,13 @@ Require ("rgdal")
 ## need to supply absolute path because raster object is just a pointer.
 ## still needs uncompressed raster file accessible.
 if (.Platform$OS.type == "windows"){
-  bath <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
-  bath <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
 ## move to stars
 Require ("stars")
-bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 
 
 

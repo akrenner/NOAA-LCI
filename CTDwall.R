@@ -185,7 +185,27 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
     ## calculate climatology and anomaly
+    ## ------------- climatology -------------
+    fixt <- function (txt){substr (tolower (as.character (txt)), 1,3)}
 
+    x <- physOcY [,which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
+    station <- factor (physOcY$Match_Name)
+    physOcC <- aggregate (x~smplIntvl+station+Depth.saltwater..m.
+                          , physOcY, FUN=mean, na.rm=TRUE)
+    rm (x,fixt, station)
+
+    poClimat <- climatologyCTD (physOcY, timeVar="smplIntvl")
+
+    poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
+    poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
+
+    ### may need to make separate functions!
+
+
+    ## --------------- anomaly ---------------
+
+
+    ## ---- end of climatology and anomaly ---
 
 
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]

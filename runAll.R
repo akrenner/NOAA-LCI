@@ -35,11 +35,13 @@ if (1){
 }else{
   source ("dataSetup.R")
   source ("CTD_timeseries.R")
+  source ("CTDwall-setup.R")
   source ("CTDwall.R")
+  source ("CTDwall-reportFigure.R")
 }
 
 
-if (1){ ## 2017 contract
+if (0){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
   ## Breaking this reference would be desirable, although it would increase file size of all temporary
@@ -57,7 +59,7 @@ if (1){ ## 2017 contract
 }
 
 
-if (1){ # Dec 2019 seasonality
+if (0){ # Dec 2019 seasonality
   source ("dataSetup.R")
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
@@ -75,14 +77,10 @@ if (1){ # Dec 2019 seasonality
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
 
-
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")
 
-
-
 source ("CTDsyncGDwall.R")
-
 
 cat ("all done\n")
 print (Sys.time())

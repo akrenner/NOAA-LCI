@@ -240,6 +240,53 @@ isNightsection <- function (ctdsection){
 
 
 
+## climatology of ctd casts -- from SEABIRD data-frame
+## process all variables
+climatologyCTDcast <- function (cast, timeVar){
+  ## set-up data-frame first!
+  ## return climatology for individual station? transect?
+
+  ## simple approach: one station at a time
+  if (length (levels (factor (cast$Match_Name))) > 1){
+    stop ("submit only one cast at a time")
+  }
+  timeL <- levels (factor (timeVar))
+  ctd$Depth.saltwater..m. <- factor (cast$Depth.saltwater..m.)
+  agCTD <- with (ctd, expand.grid (timeL, Depth.saltwater..m.))
+
+  for (j in which (names (ctd)=="Temperature_ITS90_DegC"):
+       which (names (ctd)=="logTurbidity")){
+    x <- ctd [,i]
+    agCTD$x <- aggregate (x~tV+Depth.saltwater..m.
+                          , data=ctd, FUN=mean, na.rm=TRUE)$x
+    names (agCTD)[ncol (agCTD)] <- names (pDF)[i]
+  }
+}
+#
+#   if (is.character(timeVar)){
+#     physOcY$tV <- factor (physOcY [,which (names (physOcY)==timeVar)])
+#   }else{physOcY$tV <- factor (timeVar)}
+#
+#   physOcY$Match_Name <- factor (physOcY$Match_Name)
+#   physOcY$Depth.saltwater..m. <- factor (physOcY$Depth.saltwater..m.)
+#   agCTD <- with (physOcY, expand.grid())
+#
+#   for (j in 1:length (levels (physOcY$Match_Name))){ ## otherwise size blows up?!
+#     pDF <- subset (physOcY, Match_Name == levels (physOcY$Match_Name)[j])
+#     pDF$tV <- factor (pDF$tV); pDF$Depth.saltwater..m. <- factor (pDF$Depth.saltwater..m.)
+#     agCTD <- with (pDF, expand.grid (tV, Depth.saltwater..m.))
+#     names (agCTD) <- c ("tV", "Depth")
+#
+#     for (i in which (names (pDF)=="Temperature_ITS90_DegC"):
+#          which (names (pDF)=="logTurbidity")){
+#       x <- pDF [,i]
+#       agCTD$x <- aggregate (x~tV+Depth.saltwater..m.
+#                             , data=pDF, FUN=mean, na.rm=TRUE)$x
+#       names (agCTD)[ncol (agCTD)] <- names (pDF)[i]
+#     }
+#     agCTD ## still need to assamble XXX !!!
+#   }
+# }
 
 
 #' Clone CTD-cast, resulting in a new cast, but with all measurement fields left empty.
