@@ -89,11 +89,6 @@ fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/", p=".hex"))
 rm (rL)
 
 
-## check for duplicates? how = ? (identical hex-block?).
-## Automatic way to avoid files in both unedited and edited??
-## (if so, would not have to zip-up unedited versions)
-
-
 ## bad files out
 bF <- grep ("Troubleshooting", fL)
 if (length (bF) > 0){
@@ -101,9 +96,6 @@ if (length (bF) > 0){
   fL <- fL [-bF]
 }
 rm (bF)
-## remove zipped-up unedited files (duplicates) from >= 2023 batch downloads
-bF <- grep (".csv$|.zip$", fL)
-fL <- fL [-bF]; rm (bF)
 
 
 ## build file database
