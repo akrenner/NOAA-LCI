@@ -73,4 +73,9 @@ for (i in 1:length (newSurvey)){
                , col.names=FALSE)
 }
 
+
+cat ("\n############################################################################")
+cat ("\n##\n##\n##\n## After successful run and inspection: zip-up unedited .hex files! ## \n##\n##\n##\n")
+cat ("\n############################################################################")
+
 ## EOF

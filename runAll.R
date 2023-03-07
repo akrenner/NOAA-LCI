@@ -32,13 +32,34 @@ if (1){
   source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
   # this also calls dataSetup.R -- could cause problems this early??
   # CTDwall, CTD-timeseries -- no need to call these here!
-}else{
-  source ("dataSetup.R")
-  source ("CTD_timeseries.R")
-  source ("CTDwall-setup.R")
-  source ("CTDwall.R")
-  source ("CTDwall-reportFigure.R")
 }
+
+
+
+## pull together CTD and biological data.
+## Also pull in external GIS data and produce data summaries
+source ("datasetup.R")
+## separate out CTD-specific stuff??
+#; bathymetry
+#; coastline
+#; CTD data
+source ("dataSetup.R")
+## plot of seasonal-yearly matrix when samples were taken
+source ("CTD_DataAvailability.R")
+
+## throws a lot of errors -- needs work! -- hide or resolve errors
+# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
+
+
+## the Wall
+source ("CTDwall-setup.R")
+source ("CTDwall_anomalies.R")
+source ("CTDwall.R")
+source ("CTDwall-reportFigure.R")
+
+# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
+
 
 
 if (0){ ## 2017 contract
@@ -80,7 +101,12 @@ source ("EnvironmentSetup.R")
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")
 
+## push to GoogleDrive
+## requires rclone
+## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")
+## send email that run is completed
+source ("CTD_finishnotification.R")
 
 cat ("all done\n")
 print (Sys.time())

@@ -1,8 +1,10 @@
 #!/usr/bin/env Rscript
 
 ##
-## missing features: consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
-
+## missing features:
+## - consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
+## - cross-platform hex-file processing
+##
 
 rm (list = ls())
 
@@ -54,43 +56,6 @@ source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
 cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 cat ("## Finished CTD_cleanup.R\n\n")
-
-
-
-
-
-
-## pull together CTD and biological data.
-## Also pull in external GIS data and produce data summaries
-source ("datasetup.R")
-## separate out CTD-specific stuff??
-#; bathymetry
-#; coastline
-#; CTD data
-
-
-## plot of seasonal-yearly matrix when samples were taken
-source ("CTD_DataAvailability.R")
-
-    ## throws a lot of errors -- needs work! -- hide or resolve errors
-# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
-
-
-## the Wall
-source ("CTDwall-setup.R")
-source ("CTDsections.R")
-source ("CTDwall.R")
-
-# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
-source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
-
-## push to GoogleDrive
-## requires rclone
-## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
-source ("CTDsyncGDwall.R")  # sync to GoogleDrive -- requires rclone
-
-## send email that run is completed
-source ("CTD_finishnotification.R")
 
 
 ## save snapshot of current package versions
