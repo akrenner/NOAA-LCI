@@ -82,8 +82,6 @@ Seasonal <- function (month){           # now using breaks from zoop analysis --
     month <- as.numeric (month)
     cut (month, breaks = c(-13,0,2,4,8,10, 25)
             , labels = c ("fall", "winter", "spring", "summer", "fall", "winter"))
-    ## cut (month, breaks = c(-13,3,6,9,12, 25)-0
-    ##         , labels = c ("winter", "spring", "summer", "fall", "winter"))
 }
 
 
@@ -1073,6 +1071,7 @@ if (.Platform$OS.type == "windows"){
 ## move to stars
 Require ("stars")
 bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_BATHY.nc")
 
 
 

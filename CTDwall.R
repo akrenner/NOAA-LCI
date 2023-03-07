@@ -7,6 +7,7 @@
 rm (list = ls())
 ## get bathymetry, standard colors, and data ranges
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+load ("~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwall_anomalies.R
 
 
 test <- TRUE

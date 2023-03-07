@@ -26,7 +26,6 @@ ongoingY <- TRUE
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
-source ("SeldoviaTemp.R")
 if (1){
   ## The Wall
   source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
@@ -35,6 +34,7 @@ if (1){
 }
 
 
+source ("SeldoviaTemp.R")
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
