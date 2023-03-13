@@ -14,8 +14,8 @@ uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Une
 
 newSurvey <- list.files(uneditedD, pattern=".hex", full.names=TRUE, recursive=TRUE)
 notes <- list.files(uneditedD, pattern=".csv", full.names=TRUE,recursive=TRUE)
-dir.create(gsub ("1_Unedited .hex files", "tmp_2_edited .hex files", uneditedD)
-           , showWarnings=FALSE, recursive=FALSE)
+# dir.create(gsub ("1_Unedited .hex files", "tmp_2_edited .hex files", uneditedD)
+#            , showWarnings=FALSE, recursive=FALSE)
 noteT <- read.csv (notes)
 
 require ("tidyr")
@@ -72,5 +72,5 @@ for (i in 1:length (newSurvey)){
   write.table (eHex, file=paste0 (nD, nFN), append=FALSE, quote=FALSE, row.names=FALSE
                , col.names=FALSE)
 }
-
+cat ("\n\n##\n## Edited files are now in \n", nD, "\n\n")
 ## EOF

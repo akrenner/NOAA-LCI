@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 ##
 ## missing features: consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
 
@@ -7,17 +9,17 @@ rm (list = ls())
 print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
+  # MR personal setup
   if (.Platform$OS.type != "windows"){
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
   }else{
     setwd ("~/myDocs/amyfiles/NOAA-LCI/")
   }
 }else{
-  # setwd("~/GISdata/LCI/CTDprocessing/")
+  # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 
-# sink (file = "~/tmp/LCI_noaa/cache/ctdprocessinglog.txt", split = TRUE) # show output and write to file
 sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
 
 ## load missing packages

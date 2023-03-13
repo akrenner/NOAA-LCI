@@ -78,11 +78,11 @@ rL <- function (f, p = NULL){ # recursive listing of files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt")) ## not ALL duplicates (also air casts??)
-fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
+fL <- c(fL, rL ("YSI-2016", p=".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
 fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
-fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/", p=".hex"))
 # print (length (fL))
 rm (rL)
 
@@ -113,10 +113,29 @@ cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
 fDB <- subset (fDB, !dF)
 rm (dF)
 ##
+## remove duplicate hex-block (in case of both unedited and edited versions being present)
+## making the above redundant?
+fDB$hexStart <- character(nrow (fDB))
+# fDB$nHex <- numeric(nrow (fDB)) ## length of HEX-block
+for (i in 1:nrow (fDB)){
+  hF <- file (fDB$file [i], open = "r", raw = TRUE)
+  hx <- readLines(hF, n = 100)
+  close (hF)
 
-
-
-
+  ## weed out unedited/edited duplicates
+  fHL <- grep ("*END*", hx, value=FALSE)+(1:20)  ## 1:50 eliminates many actual duplicates (edited vs unedited)
+  #  2: 126 dup
+  # 20: 126 dup
+  # 40:  64 dup
+  #100:  64 dup
+  # fDB$nHex [i] <- length (hx) - fHL
+  fDB$hexStart [i] <- paste (hx [fHL], collapse = " ")
+  rm (hx)
+}
+summary (duplicated (fDB$hexStart))
+cat ("##\nRemoving", sum (duplicated (fDB$hexStart)), "duplicated files:\n")
+print (fDB$fN [which (duplicated(fDB$hexStart))])
+fDB <- subset (fDB, !duplicated(fDB$hexStart))
 
 ##################################################################
 ## move files into new folder structure -- the main action item ##
@@ -127,7 +146,7 @@ fDB$file <- as.character (fDB$file)
 
 for (i in 1:nrow (fDB)){
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
-  hx <- readLines(hF, n = 10)
+  hx <- readLines(hF, n = 100)
   close (hF)
 
   hx <- gsub ("^.* ", "", grep ("Conductivity SN", hx, value = TRUE))
@@ -371,16 +390,16 @@ fDB$shortFN <- gsub ("^.*/", "", fDB$file)
 fDB$metDate <- as.POSIXct(rep (NA, nrow (fDB)))
 fDB$instN <- character (nrow (fDB))
 
-
-
 ## filename-dates
 x <- substr (fDB$shortFN, 1, 10)  ## extract dates
 x <- gsub ("_+", "-", x)          ## fix up messes
 x <- gsub ("-+", "-", x)
 # x <- gsub ("-$", "", x)
-fDB$fnDate <- as.POSIXct(x)
+fDB$fnDate <- as.Date(x)
 if (any (is.na (fDB$fnDate))){
-  cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  print (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  print (subset (fDB$file, is.na (fDB$fnDate)))
+  #cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
   stop ("are bad file names")
 }
 rm (x)
