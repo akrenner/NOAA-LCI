@@ -50,6 +50,7 @@ save (poNorm, poSNorm, file="~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # f
 source ("CTDsectionFcts.R")
 dir.create ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/", showWarnings=FALSE, recursive=TRUE)
 
+if (0){  ## not ready yet! XXX
 
 poNorm$Transect <- factor (stn$Line [match (poNorm$Match_Name, stn$Match_Name)])
 for (tn in 1:length (levels (poNorm$Transect))){
@@ -77,6 +78,7 @@ sect <- subset (stn, subse)
   }
   dev.off()
 }
+}
 
-
+cat ("#\n#end of CTDwall_normals.R\n\n")
 # EOF

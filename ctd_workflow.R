@@ -1,16 +1,10 @@
-<<<<<<< HEAD
 #!/usr/bin/env Rscript
 
-## missing features:
-## - consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
-## - cross-platform hex-file processing
-=======
 ##
 ## missing features:
 ## - consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
 ## - cross-platform hex-file processing
 ##
->>>>>>> deb2348 (Streamlining overall workflow (avoid duplication). ctd_workflow.R to do processing of hex files, but nothing further.)
 
 rm (list = ls())
 

@@ -91,9 +91,11 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## ov <- 1; tn <- 2
     cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
-    ## doubly-used stations:
+    ## doubly-used stations:  XXX bug here!
     stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
+    lvl <- levels(poAll$Transect)
     poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
+    poAll$Transect <- factor (poAll$Transect, levels = lvl); rm (lvl)
 
 
     ## to use as a reference for partial stations
@@ -176,18 +178,19 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## calculate climatology and anomaly
     ## ------------- climatology -------------
     fixt <- function (txt){substr (tolower (as.character (txt)), 1,3)}
+    if (0){  ## -- not yet ready
 
-    x <- physOcY [,which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
-    station <- factor (physOcY$Match_Name)
-    physOcC <- aggregate (x~smplIntvl+station+Depth.saltwater..m.
-                          , physOcY, FUN=mean, na.rm=TRUE)
-    rm (x,fixt, station)
+      x <- physOcY [,which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
+      station <- factor (physOcY$Match_Name)
+      physOcC <- aggregate (x~smplIntvl+station+Depth.saltwater..m.
+                            , physOcY, FUN=mean, na.rm=TRUE)
+      rm (x,fixt, station)
 
-    poClimat <- climatologyCTD (physOcY, timeVar="smplIntvl")
+      poClimat <- climatologyCTDcast (physOcY, timeVar="smplIntvl")
 
-    poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
-    poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
-
+      poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
+      poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
+    }
     ### may need to make separate functions!
 
 

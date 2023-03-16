@@ -6,6 +6,6 @@
 
 
 if (Sys.getenv ("USERNAME") %in% c("Martin.Renner", "martin")){
-  require ("gmailR")
+  Require ("gmailR")
   ## send mail that CTD processing has finished.
 }

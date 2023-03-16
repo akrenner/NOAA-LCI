@@ -11,7 +11,8 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 rm (list = ls())
-sink (file="StateOfBay-runlog.txt", append=FALSE)
+
+
 sT <- Sys.time()
 
 
@@ -26,7 +27,6 @@ ongoingY <- TRUE
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
-source ("SeldoviaTemp.R")
 if (1){
   ## hex conversion and QAQC plots
   source ("ctd_workflow.R")
@@ -34,7 +34,8 @@ if (1){
 }
 
 
-source ("SeldoviaTemp.R")
+
+sink (file="StateOfBay-runlog.txt", append=FALSE)
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
@@ -46,6 +47,8 @@ source ("datasetup.R")
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 
+## only for SoB? -- mv down?
+source ("SeldoviaTemp.R")
 
 
 ## the Wall
@@ -101,10 +104,11 @@ source ("AnnualStateOfTheBay.R")
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
-source ("CTDsyncGDwall.R")
-## send email that run is completed
-source ("CTD_finishnotification.R")
-
+if (grep ("[M|m]artin", getwd())){
+  source ("CTDsyncGDwall.R")
+  ## send email that run is completed
+  source ("CTD_finishnotification.R")
+}
 cat ("all done\n")
 print (Sys.time())
 print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
