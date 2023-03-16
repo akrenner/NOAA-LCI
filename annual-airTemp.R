@@ -74,7 +74,7 @@ if (0){  ## plot all years -- rainbow spaghetti
 }
 
 ## aggregate data
-tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl)
+tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl, currentYear=currentYear)
 
 #
 ## plot

@@ -184,11 +184,12 @@ source ("annualPlotFct.R")
 tDay <- addTimehelpers (wDB)
 tDayW <- prepDF (dat = tDay, varName = "wave_height"
                 #, maO = maO, qntl = qntl
-               , sumFct = mean
+              , sumFct = mean
    #             , sumFct = max
-                , maO = maO
-                , qntl = qntl
-)
+              , maO = maO
+              , qntl = qntl
+              , currentYear=currentYear
+   )
 
 
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
@@ -233,7 +234,7 @@ rm (tDayW, wFt, alt.ax, alt.at)
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wavesPD.pdf", width = 9, height = 6)
 # maO <- 30
-tDayP <- prepDF (dat = tDay, varName = "dominant_wpd", maO = maO)
+tDayP <- prepDF (dat = tDay, varName = "dominant_wpd", maO = maO, currentYear=currentYear)
 aPlot (tDayP, "dominant_wpd", ylab = "dominant wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
@@ -250,7 +251,7 @@ cLegend ("bottomleft"
          , cYcol = currentCol
          , pastYear = FALSE, ongoingYear = TRUE
 )
-tDayP <- prepDF (dat = tDay, varName = "average_wpd") #, maO = 1)
+tDayP <- prepDF (dat = tDay, varName = "average_wpd", currentYear=currentYear) #, maO = 1)
 aPlot (tDayP, "average_wpd", ylab = "average wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
@@ -406,6 +407,7 @@ legend ("top", bty = "n", pch = 19, col = c("red", "blue", "black"),
 wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
               , sumFct = function (x){mean (x >= 1)}
+              , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "propotion of surfable time"
        , currentCol = currentCol, MA = TRUE, main = paste ("Daily surf"))
@@ -423,6 +425,7 @@ sTday <- prepDF(wDB, "surfs"
                 #                , sumFct = function (x){mean (x, na.rm = TRUE)}
                 # , sumFct = function (x){sum (x >= 1) > 1 }
                 , sumFct = function (x){maO * any (x >= 1)}
+                , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE
@@ -437,7 +440,9 @@ cLegend ("top"
 
 ## proportion of GREAT days
 wDB$surfs <- ifelse (wDB$surf >= 2, 1, 0) # use maO so that mean over MA windows = N days
-sTday <- prepDF(wDB, "surfs", sumFct = function (x){maO * any (x > 0)})
+sTday <- prepDF(wDB, "surfs", sumFct = function (x){maO * any (x > 0)}
+                , currentYear=currentYear
+)
 aPlot (sTday, "surfs", ylab = "days with GREAT surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days"))
 cLegend ("top"
@@ -447,7 +452,7 @@ cLegend ("top"
          , cYcol = currentCol
 )
 ## mean score per day
-sTday <- prepDF(wDB, "surf")
+sTday <- prepDF(wDB, "surf", currentYear=currentYear)
 aPlot (sTday, "surf", ylab = "mean surf score"
        , currentCol = currentCol, MA = TRUE #, main = "Mean surf score"
        )
@@ -568,6 +573,7 @@ if (0){  ## use the one above
   wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
   sTday <- prepDF(wDB, "surfs"
                   , sumFct = function (x){maO * any (x >= 1)}
+                  , currentYear=currentYear
   )
   aPlot (sTday, "surfs", ylab = "days with surf"
          , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
