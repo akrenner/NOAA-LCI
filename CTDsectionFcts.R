@@ -404,6 +404,30 @@ sectionPad <- function (sect, transect, ...){
 }
 
 
+
+## multi-use stations, used for overlapping transects
+flexTransect <- function (transect, stn){
+  if (transect=="ABext"){
+    swMN <- c ("4_3", "9_6", "6_2", "7_22", paste ("AlongBay", 1:13, sep="_"))
+  }else if (transect=="4"){
+    swMN <- "4_3"
+  }else if (transect=="9"){
+    swMN <- "9_6"
+  }else if (transect=="AlongBay"){
+    swMN <- c (paste ("AlongBay", 1:13, sep="_"), "4_3", "9_6")
+  }else {
+    swMN <- stn$Match_Name [match (transect, stn$Line)][1]  ## think this over XXX !!!
+  }
+  stn$Line [stn$Match_Name %in% swMN] <- transect
+  return (stn$Line)
+}
+## to be used like this
+# stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)
+# poAll$Transect <- stn$Line [poAll$Match_Name, stn$Match_Name]
+
+
+
+
 # ## execute for each run rather than pull from .RData (which gets messed up)
 # Require ("cmocean")
 # oCol3 <- list (

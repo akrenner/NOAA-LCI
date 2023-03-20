@@ -92,27 +92,9 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:
-    ## make this a function?
-    if (levels (poAll$Transect)[tn] == "ABext"){
-      swMN <- c ("4_3", "9_6", "6_2", "7_22")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "ABext"
-      stn$Line [stn$Match_Name %in% swMN] <- "ABext"
-    }
-    if (levels (poAll$Transect)[tn] == "4"){
-      swMN <- c("4_3")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "4"
-      stn$Line [stn$Match_Name %in% swMN] <- "4"
-    }
-    if (levels (poAll$Transect)[tn] == "9"){
-      swMN <- c("9_6")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "9"
-      stn$Line [stn$Match_Name %in% swMN] <- "9"
-    }
-    if (levels (poAll$Transect)[tn] == "AlongBay"){
-      swMN <- c (paste ("AlongBay", 1:13, sep="_"), "4_3", "9_6")
-      poAll$Transect [poAll$Match_Name %in% swMN] <- "AlongBay"
-      stn$Line [stn$Match_Name %in% swMN] <- "AlongBay"
-    }
+    stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
+    poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
+
 
     ## to use as a reference for partial stations
     ## and for bathymetry profile
@@ -549,7 +531,6 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 physOc <- poAll
 rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
-rm (swMN)
 
 
 
