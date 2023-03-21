@@ -1,10 +1,8 @@
 #!/usr/bin/env Rscript
 
-##
 ## missing features:
 ## - consider library (renv) -- see https://rstudio.github.io/renv/articles/renv.html
 ## - cross-platform hex-file processing
-##
 
 rm (list = ls())
 
@@ -21,7 +19,6 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
   # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
-
 sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
 
 ## load missing packages
@@ -57,10 +54,8 @@ cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 cat ("## Finished CTD_cleanup.R\n\n")
 
-
 ## save snapshot of current package versions
 # renv::snapshot()
-
 
 sink() # end console logging
 cat ("open log file to examine output")

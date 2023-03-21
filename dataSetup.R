@@ -1020,8 +1020,9 @@ save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 
 
-slot (coast, "proj4string") <- slot (poSS, "proj4string")
-badPO <- !is.na (over (poSS, coast)$id)
+
+slot (coast, "proj4string") <- slot (poSS, "proj4string")   ## migrate to sf
+badPO <- !is.na (over (poSS, coast)$id)                     ## migrate to sf
 PDF ("testSamplesites")
 plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
 # plot (NPPSD2, pch = 1, add = TRUE)
@@ -1057,25 +1058,23 @@ rm (badPO)
 
 
 ## bathymetry from AOOS, Zimmerman
-# need to clean up source files -- get rid of obsolete/redundant data sets
 Require ("raster")
 Require ("rgdal")
-
-## need to supply absolute path because raster object is just a pointer.
-## still needs uncompressed raster file accessible.
 if (.Platform$OS.type == "windows"){
   bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
   bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
-## move to stars
+
 Require ("stars")
+## NC4 version -- gives trouble with projection?
+## st_mosaic not working for this. Try nc4 files again?
+# bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+#                      , read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CGOA_BATHY.nc4"))
 bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_BATHY.nc")
-
-
 
 bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
+# bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))
 
 
 ch <- chull(coordinates (NPPSD2))
@@ -1091,8 +1090,8 @@ grd <- spsample (sp_poly, n = 100^2, "regular") # ok, but grid size somewhat mys
 ## gridded (grd) <- TRUE
 rm (ch, chCoor, sp_poly)
 
-pr <- proj4string(bath)
-# pr <- slot (bath, "crs") ## no slot proj4string in raster object. spTran fails if pr is from crs-slot
+pr <- proj4string(bath)  ## fails when using slot (bath, "crs")
+# pr <- sf::st_crs (bathyZ)
 
 stnP <- spTran (stnP, pr)
 poSS <- spTran (poSS, pr)
@@ -1102,6 +1101,7 @@ grd <- spTran (grd, pr)
 coast <- spTran (coast, pr)
 bathCont <- spTran (bathCont, pr)
 rm (spTran, pr)
+
 
 ## AOOS model data:
 ## - Tidal current speed

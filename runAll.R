@@ -53,7 +53,7 @@ source ("CTD_DataAvailability.R")
 
 ## the Wall
 source ("CTDwall-setup.R")
-source ("CTDwall_anomalies.R")
+source ("CTDwall_normals.R")
 source ("CTDwall.R")
 source ("CTDwall-reportFigure.R")
 

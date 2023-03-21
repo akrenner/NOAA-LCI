@@ -11,6 +11,38 @@ Require <- pacman::p_load
 
 
 
+getBathy <- function (transect, stn){
+  ## get Zimmerman bathymetry for a given transect
+  ## "transect" is any one factor in stn$Line
+  ## stn is the master list of stations used in Kachemak Bay/lower Cook Inlet
+  Require ("oce")  # for geoDist
+  Require ("sf")
+
+  stnT <- subset (stn, stn$Line==transect)
+  lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
+  loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
+  dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
+  sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
+
+  sect <- st_as_sf(sect, coords=c("loni", "lati"))
+  sf::st_crs(sect) <- 4326  ## WGS84 definition
+  Require ("stars")
+  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  sectP <- sf::st_transform(sect, st_crs (bathyZ))
+  sectP$bottom <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
+  # st_mosaic does not seem to work here -- no worth the trouble at this place
+  if (any (is.na (sectP$bottom))){
+    bCI <- read_stars("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
+    sectP$bottom <- ifelse (is.na (sectP$bottom)
+                            , stars::st_extract (bCI, at=sectP)$w001001.adf
+                            , sectP$bottom)
+  }
+  bProf <- with (sectP, data.frame (dist, bottom))
+  bProf
+}
+
+
+
 pSec <- function (xsec, N, cont = TRUE, zCol
                   , showBottom=TRUE, custcont = NULL, labcex=1.0,  ...){
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
@@ -426,8 +458,6 @@ flexTransect <- function (transect, stn){
 # poAll$Transect <- stn$Line [poAll$Match_Name, stn$Match_Name]
 
 
-
-
 # ## execute for each run rather than pull from .RData (which gets messed up)
 # Require ("cmocean")
 # oCol3 <- list (
@@ -439,3 +469,4 @@ flexTransect <- function (transect, stn){
 #   , cmocean ("oxy")
 # )
 
+# EOF

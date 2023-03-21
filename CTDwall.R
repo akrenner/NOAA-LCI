@@ -99,6 +99,12 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## to use as a reference for partial stations
     ## and for bathymetry profile
     ## turn this into a function?
+
+    getBathy <- function (transect){
+      require ("oce")
+      require ("sf")
+
+    }
     stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
