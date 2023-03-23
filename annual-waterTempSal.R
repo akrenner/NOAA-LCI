@@ -125,10 +125,7 @@ rm (hM, sL, hY)
 
 currentCol <- c ("lightgreen", "green", "brown")
 require ("RColorBrewer")
-currentCol <- brewer.pal (3, "Greens")
-currentCol [2] <- "#55e619" # 25% desaturated Chlorophyll green (#4AFF00 too harsh)
-
-
+currentCol <-rev(brewer.pal (3, "Greens"))
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")

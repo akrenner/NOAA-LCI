@@ -10,6 +10,7 @@ if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
 }
+# quarterly <- FALSE
 
 
 ## order: current, present, previous
@@ -504,6 +505,7 @@ png (paste0 (mediaD, "sa-surf.png"), width = 1600, height = 1200, res = 200)
 wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
                 , sumFct = function (x){maO * any (x >= 1)}
+                , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
