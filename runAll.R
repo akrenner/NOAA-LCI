@@ -27,10 +27,9 @@ ongoingY <- TRUE
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
-  ## The Wall
-  source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
-  # this also calls dataSetup.R -- could cause problems this early??
-  # CTDwall, CTD-timeseries -- no need to call these here!
+  ## hex conversion and QAQC plots
+  source ("ctd_workflow.R")
+  source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 }
 
 
@@ -43,12 +42,9 @@ source ("datasetup.R")
 #; bathymetry
 #; coastline
 #; CTD data
-source ("dataSetup.R")
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 
-## throws a lot of errors -- needs work! -- hide or resolve errors
-# source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
 
 
 ## the Wall

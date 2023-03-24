@@ -23,6 +23,14 @@ print (summary (physOc))
 ## define conditions to flag questionable values
 
 
+### QAQC inspections
+if (0){
+  x <- subset (physOc, isoTime > as.POSIXct("2023-01-31 00:01"))
+  names (x)[24:25] <- c("fluorescence", "turbidity")
+  aggregate (.~x$File.Name, data=x[,24:25], FUN=min)
+  aggregate (.~x$File.Name, data=x[,24:25], FUN=max)
+  aggregate (.~x$File.Name, data=x[,24:25], FUN=mean)
+}
 
 
 ###########################
@@ -63,7 +71,7 @@ physOc$year <- as.factor (format (physOc$isoTime, "%Y"))
 physOc$month <- as.numeric (format (physOc$isoTime, "%m"))
 physOc$season <- Seasonal (physOc$month)
 
-if (1){
+if (0){
 ## Transects 3,6,5,6,9
 # physOc$Transect <- grep ("^[A:Z,a-b,0-9]+_", physOc$Match_Name, value = TRUE)            # overwrite
 plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
@@ -96,8 +104,11 @@ plotCTDprof <- function (i){
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
     # pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
-    png (paste0 (dirN, levels (physOc$File.Name)[i], ".png"), res=200, height=11*200, width=8.5*200)
-    par (mfrow=c(4,2))
+    nR <- 4
+    png (paste0 (dirN, levels (physOc$File.Name)[i], ".png")
+         , res=200, height=2.75*nR*200, width=8.5*200)
+    par (mfrow=c(nR,2))
+    rm (nR)
     try ({
       ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
                                  , temperature = Temperature_ITS90_DegC
@@ -131,14 +142,15 @@ plotCTDprof <- function (i){
       plot (ctdF, which="density+N2", type="l")
       plot (ctdF, which="TS", type="l")
       plot (ctdF, which="map", span=100)
-    })
+    }, silent=TRUE)
     try({
-      plotProfile (ctdF, xtype = "O2", ytype = "depth", type="l")
-      plotProfile (ctdF, xtype = "fluorescence", ytype = "depth", type="l")
-      plotProfile (ctdF, xtype = "PAR", ytype = "depth", type="l")
-      plot (ctdF, which="Rrho", type="l")
-   #   plotProfile (ctdF, xtype = "turbidity", ytype = "depth")  ## fails
-    })
+      oce::plotProfile (ctdF, xtype = "O2", ytype = "depth", type="l")
+      oce::plotProfile (ctdF, xtype = "fluorescence", ytype = "depth", type="l")
+      oce::plotProfile (ctdF, xtype = "PAR", ytype = "depth", type="l")
+#      oce::plot (ctdF, which="Rrho", type="l")
+      plotProfile (ctdF, xtype = "turbidity", ytype = "depth")  ## fails
+    }, silent=TRUE)
+    mtext (levels (physOc$File.Name)[i],side=3, line=-1.25, outer=TRUE)
     dev.off()
     if (0){ ## combine all into one PDF
       system ("sleep 5", wait = TRUE)
@@ -154,7 +166,7 @@ plotCTDprof <- function (i){
               , wait = FALSE)
     }
   }else{
-    warning (paste (levels (physOc$File.Name)[i]), "comes up short\n\n")
+    warning (paste (levels (physOc$File.Name)[i]), " has less than 4 records\n\n")
   }
 }
 
@@ -162,6 +174,7 @@ if (.Platform$OS.type=="unix"){
   Require ("parallel")
   x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }else{
+  ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
   x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
 }
 # dev.off()
