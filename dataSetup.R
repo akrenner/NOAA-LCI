@@ -1071,7 +1071,8 @@ Require ("stars")
 ## st_mosaic not working for this. Try nc4 files again?
 # bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 #                      , read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CGOA_BATHY.nc4"))
-bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+# bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4")
+bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/")
 
 bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
 # bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))

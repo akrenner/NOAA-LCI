@@ -13,9 +13,10 @@ if (.Platform$OS.type=="windows"){
 rm (list = ls())
 sink (file="StateOfBay-runlog.txt", append=FALSE)
 sT <- Sys.time()
+cat("\nStarting processing at: ",Sys.time(), "\n")
+## as of 2023-03-23 expect about XXX hours
 
-
-
+## for SOB report -- quarterly vs annual -- clarify XXX
 pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
 

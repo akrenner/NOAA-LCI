@@ -84,59 +84,36 @@ if (0){ ## tests
 
 
 
+transectS <- levels (poAll$Transect)
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
-  for (tn in transectC){  # tn: transect
+  for (transectN in transectS){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
-    cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
+#   transectN <- levels (poAll$Transect)[tn]
+    # transectN <- "ABext"
+    cat ("\n\n", oVarsF [ov], " T-", transectN, "\n")
+
 
     ## doubly-used stations:
-    stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
-    poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
+    stn$Line <- flexTransect (transectN, stn)  ## function from CTDsectionFcts.R
+    poAll$Transect <- factor (stn$Line [match (poAll$Match_Name, stn$Match_Name)])  ## dangerous
 
 
     ## to use as a reference for partial stations
     ## and for bathymetry profile
     ## turn this into a function?
 
-    getBathy <- function (transect){
-      require ("oce")
-      require ("sf")
-
-    }
-    stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
-
-    lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
-    loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
-    Require ("oce")
-    dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
-    sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
-
-    ## extract from bathyZ. then fill-in the missing values from get.depth
-    if (useSF){
-      Require ("sf")
-      sect <- st_as_sf(sect, coords=c("loni", "lati"))
-      sf::st_crs(sect) <- 4326  ## WGS84 definition
-      Require ("stars")
-      sectP <- sf::st_transform(sect, st_crs (bathyZ))
-      bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
-    }else{
-      Require ("sp")
-      Require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
-      coordinates (sect) <- ~loni+lati
-      proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
-      sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
-      bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
-    }
-    Require ("marmap")
-    ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
-    bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
-    bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
-    rm (sect, sectP, bottomZ)
+    # getBathy <- function (transect){
+    #   require ("oce")
+    #   require ("sf")
+    #
+    # }
+    stnT <- subset (stn, stn$Line == transectN)
+    bottom <- getBathy(stnT)
 
     ## select transect, year, classify monthly/seasonal survey
-    physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
+    physOcY <- subset (poAll, Transect == transectN)
     physOcY$year <- factor  (physOcY$year)
     physOcY$month <- factor (format (physOcY$DateISO, "%m"))
     physOcY$season <- seasonize (physOcY$month)
@@ -144,7 +121,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
-    if (levels (poAll$Transect)[tn] %in% mnthly){
+    if (transectN %in% mnthly){
       ## monthly
       pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
       ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
@@ -173,20 +150,21 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     }
 
 
-    ## calculate climatology and anomaly
-    ## ------------- climatology -------------
-    fixt <- function (txt){substr (tolower (as.character (txt)), 1,3)}
+    if (0){
+      ## calculate climatology and anomaly
+      ## ------------- climatology -------------
+      fixt <- function (txt){substr (tolower (as.character (txt)), 1,3)}
 
-    x <- physOcY [,which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
-    station <- factor (physOcY$Match_Name)
-    physOcC <- aggregate (x~smplIntvl+station+Depth.saltwater..m.
-                          , physOcY, FUN=mean, na.rm=TRUE)
-    rm (x,fixt, station)
+      x <- physOcY [,which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
+      station <- factor (physOcY$Match_Name)
+      physOcC <- aggregate (x~smplIntvl+station+Depth.saltwater..m.
+                            , physOcY, FUN=mean, na.rm=TRUE)
+      rm (x,fixt, station)
+    }
+    # poClimat <- climatologyCTD (physOcY, timeVar="smplIntvl")
 
-    poClimat <- climatologyCTD (physOcY, timeVar="smplIntvl")
-
-    poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
-    poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
+    #poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
+    #poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
 
     ### may need to make separate functions!
 
@@ -198,7 +176,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
     pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-                 , " T-", levels (poAll$Transect)[tn]
+                 , " T-", transectN
                  , ".pdf")
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
@@ -375,7 +353,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
-                                , c(10000, -depthHR, 10000)
+                                , c(10000, -depth, 10000)
                                 , col=tgray))
           rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
@@ -440,15 +418,15 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     )
     ## add eye for perspective;  save eye to eye.ps with Inkscape
     if (1){
-      if (levels (poAll$Transect)[tn] == "3"){
+      if (transectN == "3"){
         xU <- -152.5; yU <- 59.4; rU <- 60
-      }else if (levels (poAll$Transect)[tn] == "4"){
+      }else if (transectN == "4"){
         xU <- -152.8; yU <- 59.4; rU <- 0
-      }else if (levels (poAll$Transect)[tn] == "6"){
+      }else if (transectN == "6"){
         xU <- -151.5; yU <- 58.4; rU <- 115
-      }else  if (levels (poAll$Transect)[tn] == "7"){
+      }else  if (transectN == "7"){
         xU <- -152.5; yU <- 58.7; rU <- 85
-      }else if (levels (poAll$Transect)[tn] == "9"){
+      }else if (transectN == "9"){
         xU <- -152.8; yU <- 59.0; rU <- 20
       }else{                         # AlongBay
         xU <- -150.5; yU <- 59.1; rU <- 130

@@ -3,11 +3,12 @@
 ## CTD anomaly
 ## for each station location, calculate averages for all
 ## oceanographic parameters
-
 rm (list=ls())
+
+normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/"
+
+
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-
-
 ## copied from dataSetup.R (should have a package)
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
   month <- as.numeric (month)
@@ -42,33 +43,30 @@ poSNorm$logitude_DD <- stn$Lon_decDegree [sidx]
 rm (sidx)
 rm (oM)
 
-
-
 save (poNorm, poSNorm, file="~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwallSetup.R
+
+
+
 
 ## plot normals
 source ("CTDsectionFcts.R")
-dir.create ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/", showWarnings=FALSE, recursive=TRUE)
-
+dir.create (normDir, showWarnings=FALSE, recursive=TRUE)
 
 poNorm$Transect <- factor (stn$Line [match (poNorm$Match_Name, stn$Match_Name)])
+levels (poNorm$Transect) <- c (levels (poNorm$Transect), "ABext")
+
 for (tn in 1:length (levels (poNorm$Transect))){
+  tranN <- levels (poNorm$Transect)[tn]
   ## doubly-used stations:
-  stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
-  poNorm$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
-sect <- subset (stn, subse)
+  stn$Line <- flexTransect (tranN, stn)  ## function from CTDsectionFcts.R
+  Transect <- stn$Line [match (poNorm$Match_Name, stn$Match_Name)]
+#  sect <- subset (stn, subse)
   ## get bathymetry
-  Require ("sf")
-  sect <- st_as_sf(sect, coords=c("loni", "lati"))
-  sf::st_crs(sect) <- 4326  ## WGS84 definition
-  Require ("stars")
-  sectP <- sf::st_transform(sect, st_crs (bathyZ))
-  bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
+  # bottom <- getBathy(tranN, stn)
+bottom <- getBathy (subset (stn, Line==tranL))
 
-
-
-  pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/"
-              , levels (poNorm$Transect)[tn], ".pdf"), width=10, height=7.5)
+  pdf (paste0 (normDir, levels (poNorm$Transect)[tn], ".pdf")
+       , width=10, height=7.5)
   for (mo in 1:12){
       ## construct oce-object
     require ("oce")

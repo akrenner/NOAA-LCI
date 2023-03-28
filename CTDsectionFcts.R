@@ -11,33 +11,34 @@ Require <- pacman::p_load
 
 
 
-getBathy <- function (transect, stn){
+# getBathy <- function (transect, stn){
+getBathy <- function (stnT){
   ## get Zimmerman bathymetry for a given transect
   ## "transect" is any one factor in stn$Line
   ## stn is the master list of stations used in Kachemak Bay/lower Cook Inlet
   Require ("oce")  # for geoDist
   Require ("sf")
 
-  stnT <- subset (stn, stn$Line==transect)
+  # stnT <- subset (stn, stn$Line==transect)
   lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
   loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
   dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
   sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
-  sect <- st_as_sf(sect, coords=c("loni", "lati"))
-  sf::st_crs(sect) <- 4326  ## WGS84 definition
+  sectS <- st_as_sf(sect, coords=c("loni", "lati"))
+  sf::st_crs(sectS) <- 4326  ## WGS84 definition
   Require ("stars")
-  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  sectP <- sf::st_transform(sect, st_crs (bathyZ))
-  sectP$bottom <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
+  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid")
+  sectP <- sf::st_transform(sectS, st_crs (bathyZ))
+  sect$bottom <- stars::st_extract(bathyZ, at=sectP)$ci_bathy_grid
   # st_mosaic does not seem to work here -- no worth the trouble at this place
   if (any (is.na (sectP$bottom))){
-    bCI <- read_stars("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
-    sectP$bottom <- ifelse (is.na (sectP$bottom)
-                            , stars::st_extract (bCI, at=sectP)$w001001.adf
+    bCI <- read_stars("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/")
+    sect$bottom <- ifelse (is.na (sectP$bottom)
+                            , stars::st_extract (bCI, at=sectP)$ci_bathy_grid
                             , sectP$bottom)
   }
-  bProf <- with (sectP, data.frame (dist, bottom))
+  bProf <- with (sect, data.frame (lon=loni, lat=lati, depth=bottom, distance=dist))
   bProf
 }
 
