@@ -63,7 +63,7 @@ for (tn in 1:length (levels (poNorm$Transect))){
 #  sect <- subset (stn, subse)
   ## get bathymetry
   # bottom <- getBathy(tranN, stn)
-bottom <- getBathy (subset (stn, Line==tranL))
+bottom <- getBathy (subset (stn, Line==tranN))
 
   pdf (paste0 (normDir, levels (poNorm$Transect)[tn], ".pdf")
        , width=10, height=7.5)

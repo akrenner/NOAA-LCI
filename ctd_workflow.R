@@ -52,7 +52,7 @@ cat ("## Finished hex conversion of CTD files\n\n")
 source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
 cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
-cat ("## Finished CTD_cleanup.R\n\n")
+cat ("## Finished CTD_cleanup.R at ", Sys.time(), "\n\n")
 
 ## save snapshot of current package versions
 # renv::snapshot()
