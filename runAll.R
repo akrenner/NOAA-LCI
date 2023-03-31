@@ -26,6 +26,7 @@ ongoingY <- TRUE
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
+source ("SeldoviaTemp.R")
 if (1){
   ## hex conversion and QAQC plots
   source ("ctd_workflow.R")
