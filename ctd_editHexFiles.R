@@ -9,11 +9,16 @@
 rm (list=ls())
 
 ## interactively find folder of new survey
-uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-02"
+uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited\ .hex files/"
 
 
-newSurvey <- list.files(uneditedD, pattern=".hex", full.names=TRUE, recursive=TRUE)
-notes <- list.files(uneditedD, pattern=".csv", full.names=TRUE,recursive=TRUE)
+## find latest survey folder and copy notebook file into it
+lastSurvey <- sort (list.dirs(uneditedD), decreasing = TRUE)[2]  # [1] is "Troubleshooting" -- should delete that
+file.copy("~/GISdata/LCI/EVOS_LTM_tables/notebookTable.csv", lastSurvey, overwrite=TRUE)
+
+newSurvey <- list.files(lastSurvey, pattern=".hex", full.names=TRUE, recursive=TRUE)
+# notes <- list.files(uneditedD, pattern=".csv", full.names=TRUE,recursive=TRUE)
+notes <- paste0 (lastSurvey, "/notebookTable.csv")
 dir.create(gsub ("1_Unedited .hex files", "tmp_2_edited .hex files", uneditedD)
            , showWarnings=FALSE, recursive=FALSE)
 noteT <- read.csv (notes)
@@ -45,7 +50,9 @@ for (i in 1:length (newSurvey)){
   deltaT <- difftime (as.POSIXct(paste (notR$Date_isotxt, notR$Time))
                       , ctdTime, units="min") %>%
     abs()
-  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", newSurvey [i])}
+  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", newSurvey [i]
+                        ,"\n notes:", paste (notR$Date_isotxt, notR$Time)
+                        , "\n CTD:", ctdTime)}
   ## end of checks
 
   ## add geographic coordinates, station match_name, etc. to hex-header
