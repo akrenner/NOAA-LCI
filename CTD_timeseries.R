@@ -488,7 +488,7 @@ for (k in pickStn){
     clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11), ...){
       plot (cT, which = which, xtype = "time", ztype = "image", zcol = zcol
             , xlim = c(as.POSIXct (as.Date (c("2000-01-01", "2000-12-31"))))
-            , axes = FALSE
+            , axes = FALSE, xlab=""
             , ...)
     }
 
@@ -646,6 +646,33 @@ for (k in pickStn){
 
 
 
+
+    #########################################
+    ## chlorophyll and pycnocline patterns ##
+    #########################################
+    png (paste0 (mediaD, "6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
+         , height=6*pngR, width=8*pngR)
+    par (las = 1, mfrow=c(2,1))
+    ## chlorophyll
+    clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll(12)
+            , ylim=c(0,25)) ## add contour
+    anAx(pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+    title (main=expression (Chlorophyll~concentration~"["*mg~m^-3*"]"))
+
+    ## buoyancy-frequency
+    clPlot (cT9, which="sBvf"
+            , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(8))))(12)
+            , ylim=c(0,25)
+    )
+    anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+    title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+
+    ## PAR
+    ## turbidity
+    dev.off()
+
+
+
     ## --------- emulate Figure 4 from GWA report -- in ODV colors, because Kris want's it
     ## three panels, 1 page: Temperature, Salinity, Chlorophyll
 
@@ -704,6 +731,16 @@ rm (anoF)
 
 save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
+
+
+
+
+
+
+
+
+
+
 
 
 
