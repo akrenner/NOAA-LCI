@@ -44,10 +44,12 @@ require ("RColorBrewer")
 
 
 ## select which stations to plot -- all or only named stations
+physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
-                    c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
-# pickStn <- 1:length (levels (physOc$Match_Name))
-pickStn <- 87 # 9-6
+#                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
+  c("9_6", "AlongBay_3", "AlongBay_9"))
+# pickStn <- 87 # 9-6
+# pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is
 
 
 deepThd <- 20   ## deep vs surface layer
@@ -600,7 +602,7 @@ for (k in pickStn){
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
                   , ylim=c(0,deepThd)
     )
-    title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+    title (main=expression (Brunt-Väisälä~buoyancy~frequency~"["*s^-2*"]"))
     TSaxis (xCS@metadata$time)
 
     ### XXX anAx (pre)
@@ -665,7 +667,7 @@ for (k in pickStn){
             , ylim=c(0,25)
     )
     anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
-    title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+    title (main=expression (Brunt-Väisälä~buoyancy~frequency~"["*s^-2*"]"))
 
     ## PAR
     ## turbidity
