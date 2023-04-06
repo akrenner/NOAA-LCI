@@ -12,15 +12,59 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Kachhemak Bay Ecological Sampling Protocols
 
-NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 2012. This document is based on previous versions compiled by Kim Schuster and James Schloemer. Please direct question to Martin Renner [martin.renner\@noaa.gov](mailto:martin.renner@noaa.gov){.email} or Kris Holderied [kris.holderied\@noaa.gov](mailto:kris.holderied@noaa.gov){.email}.
+NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, 
+has been conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 
+2012. This document is based on previous versions compiled by Kim Schuster and James Schloemer. 
+Please direct question to Martin Renner [martin.renner\@noaa.gov](mailto:martin.renner@noaa.gov){.email} 
+or Kris Holderied [kris.holderied\@noaa.gov](mailto:kris.holderied@noaa.gov){.email}.
+
+## TOC
+## checked Jim's printed pages
+## incorporated Kim's manual
+
 
 ## Sampling preparations
+Ensure that CTD battery power is > X V. Lithium battery: > X V XXX
+set time and date -- adjust
+**code** adjust time and date in seaterm: 
+
+FileMaker database: sync to iPad. Write-down last ctd-cast number. 
+
 
 ## Monthly and quarterly sampling
+Monthly samplinng covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do 
+an eBird point count. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and 
+phytoplankton. Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT 
+and adds Transect 4. Additional water samples: XXX 
+
+### CTD sampling
+Verbalize turning on the CTD at the beginning of each cast. Lower the instrument to about 3m, raise it up to the
+surface (leaving the water intake port well submerged) and let it soak for at least 1 minute. The lower it to 
+about 5 m above the sounded depth (avoid touching the bottom). On retrieving the instrument, verbalize switching 
+it off. 
+
+### Water sampling
+Niskin bottle water samples as well as bucket surface water samples are taken at pre-determined stations. 
+XXX details? 
+
+### Notes
+Pay attention to times (local time) and station names. 
+
+Open FileMakerMoblile on iPad, then open LTMdatabase
+At each station, press "new station". 
+
 
 ## Sample processing
+Watersamples need to be processed and frozen within XX hours of collecting. XXX 
+
+Processing: 
 
 ## Data QAQC, analysis, and archiving
+
+Download CTD.
+FileMaker database: sync iPad database back to desktop (iCloud?). Share database with collaborators. 
+Enter cast name into database (in lab or in field?)
+Produce edited files. 
 
 ### Setup of local environment
 
@@ -34,17 +78,36 @@ Estimated time:
 
 #### macOS or gnu/linux
 
-Most code used here is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well, proceeding here is only recommended for advanced users. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. The following approach has worked for me (macOS 13.3, Ventura).
+Most code used here is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well, 
+proceeding here is only recommended for advanced users. The main stumbling block is processing hex-files using seabird, Inc. 
+software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, 
+either within a virtual environment, like VirtualDesktop, or using wine. The following approach has worked for me (macOS 13.3, 
+Ventura, x86). Your mileage may vary, especially if running Apple silicone. 
+
+# following https://github.com/Gcenx/wine-on-mac
+# also check out https://www.sysnettechsolutions.com/en/install-wine-macos/
 
 If not present already, install homebrew: https://brew.sh/
 Install wine, using homebrew: 
 ** code in terminal **
-brew tap homebrew/cask-versions
-brew install --cask --no-quarantine wine-staging
+brew install --no-quarantine gcenx/wine/wine-crossover
 
 Configure wine setup in your user account: provide access to the relevant folders.  
+To create a new pure 32-bit prefix, you can run:
+  $ WINEARCH=win32 WINEPREFIX=~/.wine32 winecfg
+
 
 Copy seabird executables. 
+
+
+
+## Data processing
+git checkout main
+git update
+
+Open runAll.R in RStudio. Press "Source". 
+Batch processing everything should take about 3 hours. XXX
+
 
 
 ## old R markdown stub/examples
