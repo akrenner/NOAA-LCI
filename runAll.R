@@ -7,6 +7,8 @@
 
 if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+  # set environment variable to avoid "no such file or directory errors"
+  Sys.setenv(TMPDIR = "C:\tmp")
 }else{
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
@@ -44,14 +46,15 @@ source ("datasetup.R")
 #; CTD data
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
-
+graphics.off()
+cat ("\n## \n## finished with basic CTD processing\n##\n##\n")
 
 
 ## the Wall
 source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
-source ("CTDwall-reportFigure.R")
+
 
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
@@ -74,6 +77,10 @@ if (0){ ## 2017 contract
   source ("commMap.R")
 }
 
+if (0){ ## one-off projects
+  source ("archive/CTDwall-reportFigure.R")
+  source ("archive/OA-temps.R")
+}
 
 if (0){ # Dec 2019 seasonality
   source ("dataSetup.R")
@@ -84,7 +91,6 @@ if (0){ # Dec 2019 seasonality
   source ("Nutrients_seasonality.R")
 
   source ("physOcean.R")
-  q()
   source ("consensusTree.R")
 }
 
