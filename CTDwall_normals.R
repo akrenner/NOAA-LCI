@@ -44,7 +44,7 @@ rm (sidx)
 rm (oM)
 
 save (poNorm, poSNorm, file="~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwallSetup.R
-
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")
 
 
 
@@ -57,20 +57,33 @@ levels (poNorm$Transect) <- c (levels (poNorm$Transect), "ABext")
 
 for (tn in 1:length (levels (poNorm$Transect))){
   tranN <- levels (poNorm$Transect)[tn]
+
+  monthly <- TRUE
+
   ## doubly-used stations:
   stn$Line <- flexTransect (tranN, stn)  ## function from CTDsectionFcts.R
-  Transect <- stn$Line [match (poNorm$Match_Name, stn$Match_Name)]
-#  sect <- subset (stn, subse)
+  transect <- stn$Line [match (poNorm$Match_Name, stn$Match_Name)]
+  #  sect <- subset (stn, subse)
   ## get bathymetry
   # bottom <- getBathy(tranN, stn)
-bottom <- getBathy (subset (stn, Line==tranN))
+  bottom <- getBathy (subset (stn, Line==tranN))
+  poNormT <- subset (poNorm, Transect==transect)
+
+
+  ## build CTD object
+  require ("oce")
 
   pdf (paste0 (normDir, levels (poNorm$Transect)[tn], ".pdf")
        , width=10, height=7.5)
-  for (mo in 1:12){
+  if (monthly){
+    layoutM <- matrix (1:12, 1, byrow=TRUE)
+    omText <- month.name
+  }
+  for (mo in nrow (layoutM)){
       ## construct oce-object
     require ("oce")
 
+    ## plotting code
 
   }
   dev.off()
