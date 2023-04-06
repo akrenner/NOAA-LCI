@@ -11,10 +11,9 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 rm (list = ls())
-sink (file="StateOfBay-runlog.txt", append=FALSE)
 sT <- Sys.time()
 cat("\nStarting processing at: ", as.character (Sys.time()), "\n")
-## as of 2023-03-23 expect about XXX hours
+## as of 2023-03-23 expect about 1:25 hours for CTD processing
 
 ## for SOB report -- quarterly vs annual -- clarify XXX
 pastYear <- FALSE  # plot currentYear-1 ?
@@ -73,7 +72,6 @@ if (0){ ## 2017 contract
   source ("ecoAn.R")
   source ("plotMaps.R")
   source ("commMap.R")
-
 }
 
 
@@ -85,12 +83,14 @@ if (0){ # Dec 2019 seasonality
   ## missing parts for EVOS 2023 final report
   source ("Nutrients_seasonality.R")
 
-
   source ("physOcean.R")
   q()
   source ("consensusTree.R")
 }
 
+
+
+sink (file="StateOfBay-runlog.txt", append=FALSE)
 
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
