@@ -8,11 +8,10 @@ keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrien
 
 ## Kachhemak Bay Ecological Sampling Protocols
 
-NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 2012. This document is based on previous versions compiled by Kim Schuster and James Schloemer. Please direct question to Martin Renner [martin.renner\@noaa.gov](mailto:martin.renner@noaa.gov){.email} or Kris Holderied [kris.holderied\@noaa.gov](mailto:kris.holderied@noaa.gov){.email}.
+NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 2012. This document is based on previous versions compiled by Kim Schuster and James Schloemer. Please direct question to Martin Renner martin.renner@noaa.gov or Kris Holderied  kris.holderied@noaa.gov.
 
-```{r}
 "Printed on `r format(Sys.time(), '%d %B, %Y')`"
-```
+
 Previous versions included zooplankton, and OA sampling, projects that have been suspended for now.
 
 ## TOC
@@ -26,7 +25,7 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 
 Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159, then click 'Connect", then 'Status'. Check that date and time are correct. [//]: # if not, correct like this...XXX **code** adjust time and date in seaterm: 
 - vbatt: battery must be greater than 12 V. If lower, change batteries. 
-- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate. mode: MUST be 'profile'. Ensure that CTD battery power is \> X V. Lithium battery: \> X V 
+- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate. mode: MUST be 'profile'. Ensure that CTD battery power is > X V. Lithium battery: > X V 
 [//]: # XXX set time and date -- adjust XXX insert screenshot
 
 ### iPad
@@ -115,7 +114,7 @@ Generate NoteBook pdf from FileMaker and upload to:
 
 If working manually: scan handwritten notes to pdf.
 
-<https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing> Environmental Drivers: Oceanographic monitoring in Cook Inlet and Kachemak Bay \> Data, 2017-ongoing \> Fiel notes \> "year"
+https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Environmental Drivers: Oceanographic monitoring in Cook Inlet and Kachemak Bay > Data, 2017-ongoing > Fiel notes > "year"
 
 
 #### R
@@ -132,6 +131,7 @@ Produce a section plot from an individual survey and transect. [//]: #XXX fill i
 # Appendix: 
 
 ## Set-up new computer to communicate with CTD
+- Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41
 
 - Install SEABIRD software suite:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  Communication settings: 
 * No parity 
@@ -152,33 +152,13 @@ Install required software. Estimated time:
 
 Most code used here is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well, proceeding here is only recommended for advanced users. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. The following approach has worked for me (macOS 13.3, Ventura, x86). Your mileage may vary, especially if running Apple silicone.
 
-[//]: # Following <https://github.com/Gcenx/wine-on-mac>
-[//]: # also check out <https://www.sysnettechsolutions.com/en/install-wine-macos/>
+[//]: # Following https://github.com/Gcenx/wine-on-mac
+[//]: # also check out https://www.sysnettechsolutions.com/en/install-wine-macos/
 
-If not present already, install homebrew: <https://brew.sh/> Install wine, using homebrew: brew install --no-quarantine gcenx/wine/wine-crossover
+If not present already, install homebrew: https://brew.sh/ Install wine, using homebrew: brew install --no-quarantine gcenx/wine/wine-crossover
 [//]: # show this code, but do not execute -- how?
-Configure wine setup in your user account: provide access to the relevant folders.\
+Configure wine setup in your user account: provide access to the relevant folders.
 To create a new pure 32-bit prefix, you can run: \$ WINEARCH=win32 WINEPREFIX=\~/.wine32 winecfg
 
 Copy seabird executables.
 
-
-## old R markdown stub/examples
-
-Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
