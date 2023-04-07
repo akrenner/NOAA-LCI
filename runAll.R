@@ -14,7 +14,7 @@ if (.Platform$OS.type=="windows"){
 }
 rm (list = ls())
 sT <- Sys.time()
-cat("\nStarting processing at: ", as.character (Sys.time()), "\n")
+cat ("\nStarting runAll.R at: ", as.character (Sys.time()), "\n")
 ## as of 2023-03-23 expect about 1:25 hours for CTD processing
 
 ## for SOB report -- quarterly vs annual -- clarify XXX
@@ -104,7 +104,7 @@ sink (file="StateOfBay-runlog.txt", append=FALSE)
 source ("EnvironmentSetup.R")
 
 ## State of the Bay Report
-source ("AnnualStateOfTheBay.R")
+try (source ("AnnualStateOfTheBay.R"))
 
 ## push to GoogleDrive
 ## requires rclone
@@ -117,8 +117,8 @@ print (Sys.time())
 sink()
 
 
-print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+cat ("finished runAll.R at", Sys.time(), "\n")
+cat ("Time taken for runAll.R:", difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
 
 ## EOF
 

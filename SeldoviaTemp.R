@@ -493,5 +493,5 @@ library (stats)
 tempFF <- fft (sldvia$Temp)             # doesn't seem productive -- may need tuning or dealing with NAs? Inf to -Inf
 }
 
-cat ("Finished SeldoviaTemp.R\n\n")
+cat ("\nFinished SeldoviaTemp.R\n\n")
 ## EOF
