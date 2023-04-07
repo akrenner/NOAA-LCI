@@ -19,13 +19,15 @@ cat("\nStarting processing at: ", as.character (Sys.time()), "\n")
 
 ## for SOB report -- quarterly vs annual -- clarify XXX
 pastYear <- FALSE  # plot currentYear-1 ?
-ongoingY <- TRUE
+ongoingY <- TRUE   # for quarterly update
 
 
 
 # setRepositories(graphics=FALSE, ind=76)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
+sink (file="runAll.log", append=FALSE, split=FALSE)
+
 
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
@@ -110,11 +112,13 @@ source ("AnnualStateOfTheBay.R")
 source ("CTDsyncGDwall.R")
 ## send email that run is completed
 source ("CTD_finishnotification.R")
-
 cat ("all done\n")
 print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
 sink()
+
+
+print (Sys.time())
+print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
 
 ## EOF
 

@@ -85,6 +85,7 @@ if (0){ ## tests
 
 
 transectS <- levels (poAll$Transect)
+cat ("\n\n## Begin CTDwall plotting\n\n")
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
   for (transectN in transectS){  # tn: transect
     ## for testing

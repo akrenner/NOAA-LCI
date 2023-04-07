@@ -48,8 +48,8 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
   c("9_6", "AlongBay_3", "AlongBay_9"))
-# pickStn <- 87 # 9-6
-# pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is
+pickStn <- 87 # 9-6
+# pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 
 
 deepThd <- 20   ## deep vs surface layer
@@ -1086,6 +1086,7 @@ if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 # use oce template for pretty plot
 
 
-# graphics.off()
+graphics.off()
+cat ("\nEnd of CTD_timeseries.R\n\n")
 
 ## EOF
