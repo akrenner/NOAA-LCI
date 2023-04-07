@@ -1,5 +1,5 @@
-Files in these script represent three overlapping projects, using data from pelagic and
-shore-based stations in Kachemak Bay and lower Cook Inlet. There is
+Files in these script represent three overlapping projects, using data from 
+pelagic and shore-based stations in Kachemak Bay and lower Cook Inlet. There is
 some inter-dependence of these files: runAll.R is the place to start. 
 
 Files preparing plots for the annual State of the Bay report are
@@ -12,3 +12,5 @@ Baird, Karyn DeCino, Chris Guo, Kris Holdereid, and Ben Weitzman. To
 run them locally, it may be necessary to the set working directory or
 adjust the folder structure, to reflect location of these scritps. 
 
+A complete documentation of the workflow, from sampling to analysis, can be 
+found in the file "SamplingManual.Rmd". 
