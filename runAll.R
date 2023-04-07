@@ -51,7 +51,7 @@ source ("CTD_DataAvailability.R")
 graphics.off()
 cat ("\n## \n## finished with basic CTD processing\n##\n##\n")
 
-
+sink ("wallpaper.log", append=FALSE, split=FALSE)
 ## the Wall
 source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")
@@ -95,10 +95,10 @@ if (0){ # Dec 2019 seasonality
   source ("physOcean.R")
   source ("consensusTree.R")
 }
+sink()
 
 
-
-sink (file="StateOfBay-runlog.txt", append=FALSE)
+sink (file="StateOfBay.log", append=FALSE, split=FALSE)
 
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
@@ -111,7 +111,7 @@ try (source ("AnnualStateOfTheBay.R"))
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 source ("CTDsyncGDwall.R")
 ## send email that run is completed
-source ("CTD_finishnotification.R")
+# source ("CTD_finishnotification.R")  # not yet ready or configured
 cat ("all done\n")
 print (Sys.time())
 sink()
