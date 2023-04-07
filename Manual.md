@@ -23,8 +23,8 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 
 ### CTD
 
-Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159, then click 'Connect", then 'Status'. Check that date and time are correct. [//]: # if not, correct like this...XXX **code** adjust time and date in seaterm: 
-- vbatt: battery must be greater than 12 V. If lower, change batteries. 
+Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159 (not SeatermV2), then click 'Connect", then 'Status'. Check that date and time are correct. [//]: # if not, correct like this...XXX **code** adjust time and date in seaterm: 
+- vbatt: battery must be greater than 12 V. If lower, change batteries.
 - casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate. mode: MUST be 'profile'. Ensure that CTD battery power is > X V. Lithium battery: > X V 
 [//]: # XXX set time and date -- adjust XXX insert screenshot
 
@@ -131,7 +131,9 @@ Produce a section plot from an individual survey and transect. [//]: #XXX fill i
 # Appendix: 
 
 ## Set-up new computer to communicate with CTD
-- Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41
+- Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
+- In device manager, install driver for USB-to-serial adapter (this may need an admin account). 
+- Depending on your RS-232 to USB adapter, your com-port may be configured on port-5 or on another. 
 
 - Install SEABIRD software suite:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  Communication settings: 
 * No parity 
