@@ -25,7 +25,7 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 
 Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159 (not SeatermV2), then click 'Connect", then 'Status'. Check that date and time are correct. [//]: # if not, correct like this...XXX **code** adjust time and date in seaterm: 
 - vbatt: battery must be greater than 12 V. If lower, change batteries.
-- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate. mode: MUST be 'profile'. Ensure that CTD battery power is > X V. Lithium battery: > X V 
+- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate. mode: MUST be 'profile'. Ensure that CTD battery power is > X V. If vlith falls below 7, replace the lithium backup battery (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).  
 [//]: # XXX set time and date -- adjust XXX insert screenshot
 
 ### iPad
@@ -131,16 +131,19 @@ Produce a section plot from an individual survey and transect. [//]: #XXX fill i
 # Appendix: 
 
 ## Set-up new computer to communicate with CTD
-- Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
-- In device manager, install driver for USB-to-serial adapter (this may need an admin account). 
-- Depending on your RS-232 to USB adapter, your com-port may be configured on port-5 or on another. 
 
-- Install SEABIRD software suite:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  Communication settings: 
+All installations may need to be done from an admin-account. 
+- Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
+- Connect serial cable with USB-to-serial adapter. In device manager, install driver for USB-to-serial adapter (should show up under "other" and be marked with a yellow warning triangle). 
+- Install the Seasoft 2.3 software suite from seabird.com:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  
+
+Open Seaterm v 1.59. Configure *SBE 19 plus ...*
+Communication settings: 
 * No parity 
 * 8 Data bits 
 * 9600 boud 
 * Mode: RS-232 full duplex
-
+Depending on your RS-232 to USB adapter, your COM-port may be configured on port-6 or on another. Select "Connect" and see whether communications to the instrument can be established. 
 
 ## Setup of local environment for data analysis
 
