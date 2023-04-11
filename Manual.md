@@ -132,8 +132,10 @@ Produce a section plot from an individual survey and transect. [//]: #XXX fill i
 
 ## Set-up new computer to communicate with CTD
 - Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
-- In device manager, install driver for USB-to-serial adapter (this may need an admin account). 
-- Depending on your RS-232 to USB adapter, your com-port may be configured on port-5 or on another. 
+- In device manager, install driver for USB-to-serial adapter (this needs an admin account). 
+- Open SeaTerm software V.159 and configure SBE 19 plus...  Select COM-port 6. If that does not work, try a different COM-port. 
+
+
 
 - Install SEABIRD software suite:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  Communication settings: 
 * No parity 
