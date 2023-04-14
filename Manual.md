@@ -100,6 +100,7 @@ Add 8 drops of Lugol's solution to each white sample bottle, if not already trea
 
 
 ## Data QAQC, analysis, and archiving
+Before CTD data can be used, files have to be downloaded from the instrument, matched with the data from notebooks, and converted from hex to .csv files. Most of these steps ave now been automated. 
 
 ### Download CTD
 Connect to CTD, as before.
@@ -118,15 +119,22 @@ https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Env
 #### Attended download
 If working manually: scan handwritten notes to pdf. Then upload that pdf to the WorkSpace, as above. 
 
-#### R
-git checkout main 
-git update
+#### Process and archive CTD files
+See Appendix below for the necessary set-up and software installation. To process new CTD files, enter the following commands in R: 
 
-Open runAll.R in RStudio. Press "Source". Batch processing everything should take about 3 hours. XXX
-
+```
+rFolder <- "~/myDocs/R-scripts"
+## set up folder for R scripts and pull scripts from github
+setwd (rFolder)
+system ("git update")
+# source ("runAll.R")
+source ("ctd_processing.R")
+````
+This will batch-process CTD files using SEABIRD software and do some basic QAQC. This may take a while. After a successful run, plots can be found in *~/tmp/LCI_noaa/media/*
 
 #### Run a small example dataset
 Produce a section plot from an individual survey and transect. [//]: #XXX fill in details
+
 
 
 # Appendix: 
@@ -145,29 +153,56 @@ Open Seaterm v 1.59. Configure *SBE 19 plus ...* Communication settings:
 * Mode: RS-232 full duplex
 Depending on your RS-232 to USB adapter, your COM-port may be configured on port-6 or on another. Select "Connect" and see whether communications to the instrument can be established. 
 
+
 ## Setup of local environment for data analysis
 
 ### Windows
 
-The following instructions work under Windows 11.
+The following instructions work under Windows 11. Install the following software: 
+<!--- [##]: Install required software. Estimated time: --->
+- R, version 4.0.0 or later https://cran.r-project.org/bin/windows/base/release.html
+- git https://git-scm.com/download/win
+Both of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use a IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
+In addition, a number of add-on R packages, data-files, and folder-structure are required. These will be automatically set-up with the instructions given below. 
 
-Install required software. Estimated time:
+Open R and paste the following lines of code to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them, but if you like, you can modify the location where R-scripts are stored (first line). 
+````
+rFolder <- "~/myDocs/R-scripts"
+## set up folder for R scripts and pull scripts from github
+dir.create (rFolder , recursive = TRUE)
+setwd (rFolder)
+system ("git clone https://github.com/akrenner/NOAA-LCI.git")
+## set up folder for data and pull data from github
+dir.create ("~/GISdata/", recursive = TRUE)
+setwd ("~/GISdata/")
+system ("git clone https://github.com/akrenner/LCI.git")
+````
+Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.  
+
 
 ### macOS or gnu/linux
 
-All R code for this project is cross-platform compatible. While it is possible to run all of this on a macOS or 
-gnu/linux platform as well, proceeding here is only recommended for advanced users. The main stumbling block is 
-processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible 
-to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or 
-using wine. The following approach has worked for me (macOS 13.3, Ventura, x86). Your mileage may vary, especially 
+All R code for this project is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well, proceeding here is only recommended for advanced users. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. 
+<!---
+The following approach has worked for me (macOS 13.3, Ventura, x86). Your mileage may vary, especially 
 if running Apple silicone.
-
 [//]: # Following https://github.com/Gcenx/wine-on-mac
 [//]: # also check out https://www.sysnettechsolutions.com/en/install-wine-macos/
-
 If not present already, install homebrew: https://brew.sh/ Install wine, using homebrew: brew install --no-quarantine gcenx/wine/wine-crossover
 [//]: # show this code, but do not execute -- how?
 Configure wine setup in your user account: provide access to the relevant folders.
 To create a new pure 32-bit prefix, you can run: \$ WINEARCH=win32 WINEPREFIX=\~/.wine32 winecfg
 
 Copy seabird executables.
+--->
+## Acknowledgments: 
+This would not have worked out without the help of Jim Schloemer. I also like to thank Kim Schuster for paving the way and Kris Holderied for guiding the way.  
+
+
+## Outlook
+Eventually, it would be desirable to implement this workflow on the workspace itself. This would require running SBEBatch.exe via ‘wine’ inside a docker container. Whether this setup would be of practical use remains to be seen. It would have the advantage that all my verbiage above is then obsolete and all processing could be done online. Whether that’s worth the trouble and a blessing or curse remains to be seen. 
+There are also several open source projects to do the same calculations, which has the potential of providing performance benefits and the ability to check what is actually being calculated: 
+* https://github.com/gunnarvoet/ctdproc
+* https://github.com/wmruef/sumpis 
+While promising, I did not evaluate these two options further at this time. Especially ctdproc appears to be under active development – watch this space. 
+
