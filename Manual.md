@@ -3,7 +3,7 @@ title: "Kachemak Bay Sampling Manual"
 author: "Martin Renner"
 date: "2023-04-06"
 output: pdf_document
-keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrients
+keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrients"
 ---
 
 ## Kachhemak Bay Ecological Sampling Protocols
@@ -163,22 +163,23 @@ The following instructions work under Windows 11. Install the following software
 - R, version 4.0.0 or later https://cran.r-project.org/bin/windows/base/release.html
 - git https://git-scm.com/download/win
 Both of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use a IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
-In addition, a number of add-on R packages, data-files, and folder-structure are required. These will be automatically set-up with the instructions given below. 
+In addition, a number of add-on R packages, data-files, and folder-structure are required. These will be automatically set-up with the instructions given below. Due to the required downloads, the initial run may take considerably longer than subsequent runs. 
 
-Open R and paste the following lines of code to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them, but if you like, you can modify the location where R-scripts are stored (first line). 
+Open R and paste the following lines of code to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them. 
 ````
-rFolder <- "~/myDocs/R-scripts"
+rFolder <- "~/myDocs/amyfiles/"
 ## set up folder for R scripts and pull scripts from github
 dir.create (rFolder , recursive = TRUE)
 setwd (rFolder)
 system ("git clone https://github.com/akrenner/NOAA-LCI.git")
 ## set up folder for data and pull data from github
-dir.create ("~/GISdata/", recursive = TRUE)
+dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 setwd ("~/GISdata/")
 system ("git clone https://github.com/akrenner/LCI.git")
 ````
 Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.  
 
+Finally, some public datasets are needed, not all of which can be downloaded automatically. To produce the figures for the State of Kachemak Bay Report (scripts starting with 'annual_...R'), first download the SWMP data from CDMO: https://cdmo.baruch.sc.edu/get/landing.cfm (Advanced Query System -> Launch -> Choose Zip Files. Select "Kachemak Bay, AK" (leave all stations selected.). Click "Submit locations and proceed to next step". Select from "2001" and To: <current year> and click "Get Files". Once you have the zip file, place it in `~/GISdata/LCI/SWMP/` on your harddrive. This process should be repeated about once a year (you can simply add to the zip files in the SWMP folder). 
 
 ### macOS or gnu/linux
 

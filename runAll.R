@@ -7,7 +7,7 @@
 
 if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-}else{
+}else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 rm (list = ls())
@@ -25,6 +25,9 @@ ongoingY <- TRUE
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
+
+
+source ("InitialSetup.R")
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
