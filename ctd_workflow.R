@@ -22,6 +22,7 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
 sink (file = "ctdprocessinglog.txt", split = TRUE) # show output and write to file
+cat ("Starting ctdprocessing at", as.character (Sys.time()), "\n\n")
 
 ## load missing packages
 if (!require("pacman")) install.packages("pacman"
@@ -58,7 +59,7 @@ cat ("## Finished CTD_cleanup.R\n\n")
 
 ## save snapshot of current package versions
 # renv::snapshot()
-
+cat ("finished ctd_workflow at ", as.character (Sys.time()))
 sink() # end console logging
 cat ("open log file to examine output")
 print (Sys.time())

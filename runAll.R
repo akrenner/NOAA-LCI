@@ -4,6 +4,9 @@
 ## if this is a new installation, it may be necessary to disconnect from VPN
 ## to avoid timeouts
 ## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
+## expect approximately 3 hours for a full run
+## (2023-04 on Latitude 5420; 11th Gen Intel Core i7 1185G7 @3.0 GHz/1.8 GHz)
+
 
 if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
@@ -95,6 +98,10 @@ if (0){ # Dec 2019 seasonality
 }
 
 
+
+## It may be necessary to restart R between above CTD processing and below Annual State of the Bay
+## scripts? There may be an issue with temp files?
+
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
 
@@ -109,9 +116,8 @@ if (grep ("[M|m]artin", getwd())){
   ## send email that run is completed
   source ("CTD_finishnotification.R")
 }
-cat ("all done\n")
-print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+
+cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
 sink()
 
 ## EOF
