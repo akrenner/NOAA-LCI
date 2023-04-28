@@ -32,13 +32,15 @@ ongoingY <- TRUE
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
-  source ("ctd_workflow.R")
+  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
+  sink()
 }
 
 
 
-sink (file="StateOfBay-runlog.txt", append=FALSE)
+sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
@@ -58,7 +60,7 @@ source ("SeldoviaTemp.R")
 source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
-source ("CTDwall-reportFigure.R")
+# source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
 
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
