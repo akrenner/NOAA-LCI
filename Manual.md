@@ -171,12 +171,13 @@ Open Seaterm v 1.59. Configure *SBE 19 plus ...* Communication settings:
 * 8 Data bits 
 * 9600 boud 
 * Mode: RS-232 full duplex
-Depending on your RS-232 to USB adapter, your COM-port may be configured on port-6 or on another. Select "Connect" and see whether communications to the instrument can be established. 
+Depending on your RS-232 to USB adapter, your COM-port may be configured on port-6, port-7 or on another (KBRR cable: port-6, NCCOS: 7). Select "Connect" and see whether communications to the instrument can be established. If not, check that the driver is installed (Device Manager), try a different port, check all cable connections, and check that CTD batteries have sufficient voltage. 
 
 Screenshot of Device Manager, showing the missing driver (to be installed by admin) ![Alt](/manual/DeviceManager-driver.PNG "missing driver")
 
-
-
+There are two ways to go about downloading hex files from the CTD: interactively, adding information to each file as they download, or in a batch process, then adding that information later. Since the download is quite slow, I recommend a batch download. For that, you want to set up Seaterm configurations as follows:
+- SBE 19plus Configuration Options: Upload Settings: select Upload data... "By cast number range"
+- SBE 19plus Configuration Options: Header Information: select "Don't include default header form in the upload file"
 
 
 ## Setup of local environment for data analysis
