@@ -28,7 +28,12 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 ## Sampling preparations
 
 ### CTD
-Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159 (not SeatermV2), then click 'Connect", then 'Status'. Check that date and time are correct. [//]: # if not, correct like this...XXX **code** adjust time and date in seaterm: 
+Prior to sampling, the CTD status must be checked to ensure that there is sufficient battery power, logging space, and that settings are correct. Connect to the CTD using SeaTerm v.159 (not SeatermV2), then click 'Connect", then 'Status'. Check that date and time are correct. If these need to be adjusted, issue commands like this example (2023-01-09 09:00:00):
+```
+MMDDYY=090123
+HHMMSS=090000
+```
+To change the date, the time command has to be issued as well. 
 - vbatt: battery must be greater than 12 V. If lower, change batteries.
 - vlith: replace lithium battery if vlith is < 7 (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).
 - casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate!!! 
@@ -86,7 +91,7 @@ Open FileMakerMoblile on iPad, then open LTMdatabase At each station, press "new
 
 -   Rinse CTD, Niskin-bottle, nets, everything that was in the water, with freshwater.
 -   Flush CTD with DI water: Attach syringe to lower water-intake port and flush with at least 3 full syringes.
--   Store water samples in fridge overnight, if not processing right away. Watersamples need to be processed and frozen within XX hours of collecting. XXX
+-   Store water samples in fridge overnight, if not processing right away. Watersamples need to be processed and frozen within 24 hours of collecting.
 
 
 ## Sample processing
@@ -139,6 +144,10 @@ system ("git update")
 source ("ctd_processing.R")
 ````
 This will batch-process CTD files using SEABIRD software and do some basic QAQC. This may take a while. After a successful run, plots can be found in *~/tmp/LCI_noaa/media/*
+
+#### Manual notes (no iPad)
+Make a PDF from the hand-written notes. You can use a scanner to PDF. If you have an iPhone, you can photograph all the pages. To make a PDF, select the relevant images -> share -> print -> share (and email it to yourself). The resultant PDF will be huge -- reduce its size by opening it in Acrobat and File -> Reduce File Size.  Name the resultant file YYYY-MM.pdf (using year and month of the survey) and upload to the workspace. 
+
 #### Run a small example dataset
 Running the script *runAll.R* will convert ctd hex files, as well as producing various section plots, and State-of-the-bay plots. 
 
