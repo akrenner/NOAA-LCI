@@ -37,6 +37,5 @@ source ("annual-waves.R")
 
 cat ("Finished AnnualStateOfTheBay.R\n")
 print (Sys.time())
-# print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because rm (list = ls())
 
 ## EOF
