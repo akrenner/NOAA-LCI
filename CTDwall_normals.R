@@ -52,6 +52,8 @@ save (poNorm, poSNorm, file="~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # f
 source ("CTDsectionFcts.R")
 dir.create (normDir, showWarnings=FALSE, recursive=TRUE)
 
+if (0){  ## not ready yet! XXX
+
 poNorm$Transect <- factor (stn$Line [match (poNorm$Match_Name, stn$Match_Name)])
 levels (poNorm$Transect) <- c (levels (poNorm$Transect), "ABext")
 
@@ -88,6 +90,7 @@ for (tn in 1:length (levels (poNorm$Transect))){
   }
   dev.off()
 }
+}
 
-
+cat ("#\n#end of CTDwall_normals.R\n\n")
 # EOF

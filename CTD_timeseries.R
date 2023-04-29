@@ -600,7 +600,7 @@ for (k in pickStn){
                   , zcol=colorRampPalette (c ("white", rev (cmocean ("haline")(32))))
                   # , zbreaks=zB
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
-                  , ylim=c(0,deepThd)
+                  , ylim=c(deepThd, 0)  ## new requirement of new oce version?
     )
     title (main=expression (Brunt-Väisälä~buoyancy~frequency~"["*s^-2*"]"))
     TSaxis (xCS@metadata$time)
