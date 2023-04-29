@@ -11,16 +11,19 @@ if (.Platform$OS.type == "unix"){
 }
 source ("annualPlotFct.R")
 
+currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
+snowsites <- c("mcneil canyon", "anchor river divide", "port graham")
 
-fetchNew <- TRUE  # get fresh data from server? takes longer
-# fetchNew <- FALSE  # get fresh data from server? takes longer
+
 maO <- 31
 qntl <- c (0.9) #, 0.8)
 ongoingYear=TRUE
 pastYear=FALSE
+
+
+
 Require("RColorBrewer")
 currentCol <- brewer.pal(3, "Blues")
-currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 
 # Require ("snotelr")
 # Require ("plotly")
@@ -51,32 +54,53 @@ Require (snotelr)
 ### single site treatments
 ##############################
 
+snowCache <- "~/tmp/LCI_noaa/cache/snow/"
+dir.create(snowCache, recursive=TRUE,showWarnings=FALSE)
+# for (sitePickNo in c(1003, 1062, 987)){
 
-for (sitePickNo in c(1003, 1062, 987)){
+x <- try (snotel_info())
+if (class (x)[1]=="try-error"){
+  load ("~/tmp/LCI_noaa/cache/snow.RData")
+}else{
+  save (x, file="~/tmp/LCI_noaa/cache/snow.RData")
+}
+if (0){
+  x$lat <- x$latitude
+  x$lon <- x$longitude
+
+  xK <- x [grep ("Kenai", x$county),]
+  xK [,c(3,9,11)]
+}
+
+
+for (i in seq_along(snowsites)){  # c("mcneil canyon", "anchor river divide", "port graham"))
+  sitePickNo <- x$site_id [which (trimws (x$site_name) == snowsites[i])]
+  # for (sitePickNo in c(1003, 1062, 987)){
+  suppressWarnings(
+    lC <- try (load (paste0 (snowCache, sitePickNo, ".RData")), silent=TRUE)
+  )
+  if (class (lC)[1] != "try-error"){
+    if (difftime(max (as.Date(snowMc$end)), Sys.Date(), units="days") < 7){
+      fetchNew <- FALSE
+    }else{fetchNew <- TRUE}
+  }else{fetchNew <- TRUE}
+
   if (fetchNew){
-    x <- snotel_info()
-    x$lat <- x$latitude
-    x$lon <- x$longitude
-
-    xK <- x [grep ("Kenai", x$county),]
-    xK [,c(3,9,11)]
-
     # Require ("leaflet")
     # leaflet(data = xK) %>%
     #   addTiles() %>%
     #   addCircles()
 
-
-    snowMc <- snotel_download (site = sitePickNo
-                               , path = "~/tmp/LCI_noaa/cache/"
-                               , internal = TRUE
-    )
-    siteN <- x$site_name [which (x$site_id == sitePickNo)]
-
-
-    save (snowMc, siteN, file = paste0 ("~/tmp/LCI_noaa/cache/snow1_", sitePickNo, ".RData"))
+    snowMc <- try (snotel_download (site = sitePickNo
+                                    , path = snowCache
+                                    , internal = TRUE
+    ))
+    if (class (snowMc) != "try-error"){
+      siteN <- x$site_name [which (x$site_id == sitePickNo)]
+      save (snowMc, siteN, file = paste0 (snowCache, sitePickNo, ".RData"))
+    }
   }else{
-    load (paste0 ("~/tmp/LCI_noaa/cache/snow1_", sitePickNo, ".RData"))
+    load (paste0 (snowCache, sitePickNo, ".RData"))
   }
 
 
@@ -124,7 +148,9 @@ for (sitePickNo in c(1003, 1062, 987)){
   )
 
   ## add min and max years
-  phy <- snotel_phenology(snowMc)
+  suppressWarnings(
+    phy <- snotel_phenology(snowMc)  ## XXX this is causing the warnings! -- snotelr bug?
+  )
   minY <- phy$year [which.min (phy$max_swe)]
   maxY <- phy$year [which.max (phy$max_swe)]
   lines (snow_water_equivalent~jday, subset (snowMc, year == minY), lwd = 2
@@ -149,17 +175,14 @@ for (sitePickNo in c(1003, 1062, 987)){
 
   title (main = capwords (siteN))
   dev.off()
-  rm (phy, minY, maxY)
-
 
   # plot (snow_water_equivalent~timestamp, snowMc, type = "l")
 
   ### swe for 2019 -- where is that max value of 493??? XXX
 
-
-  phy <- snotel_phenology(snowMc)
   summary (phy)
   phy [which (phy$year == currentYear),]
+  rm (phy, minY, maxY)
 }
 
 
@@ -170,9 +193,10 @@ for (sitePickNo in c(1003, 1062, 987)){
 ## PCA of Kachemak Bay sites ##
 ###############################
 
-sites <- c(1003, 1062, 987)
+sites <- x$site_id [which (trimws (x$site_name)%in% snowsites)]
+
 snoS <- lapply (sites, function (x){
-  load (paste0 ("~/tmp/LCI_noaa/cache/snow1_", x, ".RData"))
+  load (paste0 ("~/tmp/LCI_noaa/cache/snow/", x, ".RData"))
   return (snowMc)
 }
 )
@@ -201,13 +225,12 @@ snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
 Require ("missMDA")
 iDF <- imputePCA (snowMc [,2:(length (sites)+1)], method = "EM", ncp =2)
 Require ("FactoMineR")
-snowPCA <- PCA (iDF$completeObs, graph = TRUE, ncp = 2)
 
-# pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
+pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
+snowPCA <- PCA (iDF$completeObs, graph = TRUE, ncp = 2)
 snowMc$PCA1 <- predict (snowPCA, iDF$completeObs)$coord [,1]
 dev.off()
-unlink ("Rplots*.pdf")
-
+unlink ("~/tmp/LCI_noaa/media/snowPCA.pdf")
 rm (snowPCA, iDF)
 
 ## turn this into a snotel df
@@ -253,10 +276,6 @@ cLegend ("topright"
 title (main = "Imputed PCA of 3 Kachemak Bay sites")
 dev.off()
 rm (sMax, minY, maxY)
-
-
-
-
 
 
 cat ("Finished snowpack.R\n")

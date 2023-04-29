@@ -9,7 +9,7 @@
 rm (list=ls())
 
 ## interactively find folder of new survey
-uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-02"
+uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-04/"
 
 
 newSurvey <- list.files(uneditedD, pattern=".hex", full.names=TRUE, recursive=TRUE)
@@ -35,8 +35,10 @@ for (i in 1:length (newSurvey)){
   ## consistency checks
   ## match by cast number
   ## check by time and date -- stop if off by 5 min or more
+  require ("stringr") ## for leading zeros
+  headCast <- str_pad (headCast, 3, pad="0")
   cat (i, headCast, "\n")
-  if (headCast != fnCast){stop (hex [i], "filename cast# does not match header\n")}else{
+  if (headCast != fnCast){stop (newSurvey [i], "filename cast# does not match header\n")}else{
     rm (fnCast)
   }
   ctdTime <- hex [grep ("^\\* cast", hex)] %>%
@@ -45,7 +47,9 @@ for (i in 1:length (newSurvey)){
   deltaT <- difftime (as.POSIXct(paste (notR$Date_isotxt, notR$Time))
                       , ctdTime, units="min") %>%
     abs()
-  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", newSurvey [i])}
+  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", newSurvey [i]
+                        , "\nNotes: ", as.POSIXct(paste (notR$Date_isotxt, notR$Time))
+                        , "\nCTD:   ", ctdTime, "\n")}
   ## end of checks
 
   ## add geographic coordinates, station match_name, etc. to hex-header
