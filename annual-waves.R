@@ -14,7 +14,7 @@ if (!exists ("quarterly")){
 
 
 ## order: current, present, previous
-require ("RColorBrewer")
+Require ("RColorBrewer")
 currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
 currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # maO <- 3 # 30
@@ -111,7 +111,7 @@ if (0){
   aDB <- addTimehelpers(aDB)
 }
 
-require ("dplyr")
+Require ("dplyr")
 hmr <-  meteo_pull_monitors ("USW00025507"
                              , date_min = "1970-01-01"  # goes back to 1932-09-01
                              , date_max = as.character (Sys.Date())) %>%
@@ -287,15 +287,15 @@ rm (tDayP)
 
 ## find tide
 ## find daylight
-require ("rtide")
+Require ("rtide")
 # tStn <- tide_stations("Kasitsna.*")
 tStn <- tide_stations("Seldovia*")
 timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
 wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
 rm (tStn, timetable)
-require ("lubridate") # time zone conversion
+Require ("lubridate") # time zone conversion
 wDB$localTime <- with_tz (wDB$datetimestamp, "America/Anchorage")
-require ("suncalc")
+Require ("suncalc")
 wDB$sunAlt <- getSunlightPosition (date = wDB$localTime
                                    , lat = 59.643, lon = -151.526)$altitude # in radians
 wDB$sunDeg <- wDB$sunAlt / pi * 180
@@ -509,7 +509,7 @@ sTday <- prepDF(wDB, "surfs"
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
-require ("jpeg")
+Require ("jpeg")
 # img <- readJPEG ("~/My Pictures/surf/_J5A9758-s.jpg", native = TRUE) # fall
 # img <- readJPEG ("~/My Pictures/surf/_J5A9729-sc.jpg", native = TRUE)
 img <- readJPEG ("pictograms/_J5A9729-sc.jpg", native = TRUE)
@@ -611,7 +611,7 @@ if (0){  ## use the one above
 
 
 if (1){ ## windrose of wave height
-  require ("openair")
+  Require ("openair")
   wRD <- with (wDB, data.frame (ws = wave_height, wd = mean_wave_dir
                                 , date = datetimestamp
   ))
