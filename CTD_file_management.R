@@ -65,11 +65,11 @@ rm (x, instL)
 rL <- function (f, p = NULL){ # recursive listing of files
   ## NULL because some files are .txt -- gobble all up
   x <- list.files(paste0 (hexFileD, f)
-             , pattern = p, ignore.case = TRUE, recursive = TRUE
-             , full.names = TRUE)
+                  , pattern = p, ignore.case = TRUE, recursive = TRUE
+                  , full.names = TRUE)
   # print (length (x))
   return (x)
-  }
+}
 
 
 
@@ -78,11 +78,13 @@ rL <- function (f, p = NULL){ # recursive listing of files
 fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt")) ## not ALL duplicates (also air casts??)
-fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
+fL <- c(fL, rL ("YSI-2016", p=".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
 fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
-fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/", p=".hex"))
+## tmp -- pick out 2023 only:
+# fL <- rL ("ctd-data_2017-ongoing/1_Unedited .hex files/")
 # print (length (fL))
 rm (rL)
 
@@ -103,31 +105,71 @@ fDB <- data.frame (file = fL
 rm (fL)
 ## check duplicates by name or sha256
 ## check file content
-require ("cli")
-fDB$sha <- sapply (1:nrow (fDB), function (i){
-  hash_file_sha256(fDB$file [i])
-})
-dF <- duplicated (fDB$sha)
-cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
-# print (fDB$fN [which (dF)])
-fDB <- subset (fDB, !dF)
-rm (dF)
+# if (0){ ## for whatever reason, this is now causing trouble under windows (but not MacOS)
+  ## redundant (see below)
+  require ("cli")
+  fDB$sha <- sapply (1:nrow (fDB), function (i){
+    hash_file_sha256(fDB$file [i])
+  })
+  dF <- duplicated (fDB$sha)
+  cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
+  # print (fDB$fN [which (dF)])
+  fDB <- subset (fDB, !dF)
+  rm (dF)
+# }
+## check that fDB isn't empty now
+if (!nrow (fDB)>0){
+ stop ("fDB has zero (0) rows\n")
+}
+
+
 ##
+## remove duplicate hex-block (in case of both unedited and edited versions being present)
+## making the above redundant?
+fDB$hexStart <- character(nrow (fDB))
+fDB$copy <- logical (nrow (fDB))
+fDB$batteryOK <- logical (nrow (fDB))
+fDB$file <- as.character (fDB$file)
+for (i in 1:nrow (fDB)){
+  hF <- file (fDB$file [i], open="r", raw = TRUE)
+  hx <- readLines(hF, n = 100)
+  close (hF)
+  hx <- trimws(hx)
+  ## weed out unedited/edited duplicates
+  fHL <- grep ("*END*", hx, value=FALSE)+(1:20)  ## 1:50 eliminates many actual duplicates (edited vs unedited)
+  #  2: 126 dup
+  # 20: 126 dup
+  # 40:  64 dup
+  #100:  64 dup
+  fDB$hexStart [i] <- paste (hx [fHL], collapse = " ")
 
+  ## low battery or mag switch?
+  if (length (grep (", stop = mag switch$", hx))>0){
+    fDB$batteryOK [i] <- TRUE
+  }else if (length (grep (", stop = low batt$", hx))>0){
+    fDB$batteryOK [i] <- FALSE
+  }else{
+    stop ("No stop line in ", i, " -- ", fDB [i,], "\n")
+  }
+  grep ("stop = ", hx)
+  rm (hx)
+}
+summary (duplicated (fDB$hexStart))
+cat ("##\nRemoving", sum (duplicated (fDB$hexStart)), "duplicated files:\n")
+print (fDB$fN [which (duplicated(fDB$hexStart))])
+fDB <- subset (fDB, !duplicated(fDB$hexStart))
 
-
-
+## remove low battery casts
+summary (fDB$batteryOK)
+fDB <- subset (fDB, batteryOK)
 
 ##################################################################
 ## move files into new folder structure -- the main action item ##
 ##################################################################
 
-fDB$copy <- logical (nrow (fDB))
-fDB$file <- as.character (fDB$file)
-
 for (i in 1:nrow (fDB)){
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
-  hx <- readLines(hF, n = 10)
+  hx <- readLines(hF, n = 100)
   close (hF)
 
   hx <- gsub ("^.* ", "", grep ("Conductivity SN", hx, value = TRUE))
@@ -371,16 +413,17 @@ fDB$shortFN <- gsub ("^.*/", "", fDB$file)
 fDB$metDate <- as.POSIXct(rep (NA, nrow (fDB)))
 fDB$instN <- character (nrow (fDB))
 
-
-
 ## filename-dates
 x <- substr (fDB$shortFN, 1, 10)  ## extract dates
 x <- gsub ("_+", "-", x)          ## fix up messes
 x <- gsub ("-+", "-", x)
 # x <- gsub ("-$", "", x)
-fDB$fnDate <- as.POSIXct(x)
+fDB$fnDate <- as.Date(x)
 if (any (is.na (fDB$fnDate))){
-  cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  print (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  cat ("\n\n -- full path of files with bad dates\n")
+  print (subset (fDB$file, is.na (fDB$fnDate)))
+  #cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
   stop ("are bad file names")
 }
 rm (x)
@@ -475,11 +518,19 @@ rm (fixBoth, fixFN, fixMeta, delFile)
 
 fDB$tErr <- as.numeric (difftime(fDB$fnDate, fDB$metDate, units = "days"))
 summary (fDB$tErr)
+fDB$file [which.max (abs (fDB$tErr))]
+fDB$metDate [which.max (abs (fDB$tErr))]
+
 if (any (abs (fDB$tErr) > 1)){
   x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
   #  stop ("fix date discrepancies between metadata and file names")
   warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
+  cat ("\n\n#######\nDubious dates -- may need to fix file names ##\n\n")
   print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
+  ## 2021-05-01 seems right -- was this a make-up cruise?! was metadata fixed?
+  ## 2017-12-14 to 2018-01-17: time of clock being off? file names seem right
+
+
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
 #      fixMeta (fDB$shortFN [i], fDB$fnDate)

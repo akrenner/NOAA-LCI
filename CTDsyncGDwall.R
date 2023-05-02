@@ -45,3 +45,13 @@ if (0){
   system ("rclone sync remote:NOAA-laptop/cache/ ~/tmp/LCI_noaa/cache/ -P")
 }
 
+
+
+## sync from GoogleDrive back to local -- careful!!
+if (1){
+  ## any more recent files on GoogleDrive?
+  system (paste0 (rcloneDir, "rclone check remote:NOAA-laptop/amyfiles/currentDocs/ ", docs, "amyfiles/NOAA/currentDocs/"))
+  if (0){
+    system (paste0 (rcloneDir, "rclone sync remote:NOAA-laptop/amyfiles/currentDocs/ ", docs, "amyfiles/NOAA/currentDocs/"))
+  }
+}

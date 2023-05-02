@@ -10,6 +10,7 @@ if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
 }
+# quarterly <- FALSE
 
 
 ## order: current, present, previous
@@ -184,11 +185,12 @@ source ("annualPlotFct.R")
 tDay <- addTimehelpers (wDB)
 tDayW <- prepDF (dat = tDay, varName = "wave_height"
                 #, maO = maO, qntl = qntl
-               , sumFct = mean
+              , sumFct = mean
    #             , sumFct = max
-                , maO = maO
-                , qntl = qntl
-)
+              , maO = maO
+              , qntl = qntl
+              , currentYear=currentYear
+   )
 
 
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-waves.pdf"), width = 9, height = 6)
@@ -233,7 +235,7 @@ rm (tDayW, wFt, alt.ax, alt.at)
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-wavesPD.pdf", width = 9, height = 6)
 # maO <- 30
-tDayP <- prepDF (dat = tDay, varName = "dominant_wpd", maO = maO)
+tDayP <- prepDF (dat = tDay, varName = "dominant_wpd", maO = maO, currentYear=currentYear)
 aPlot (tDayP, "dominant_wpd", ylab = "dominant wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
@@ -250,7 +252,7 @@ cLegend ("bottomleft"
          , cYcol = currentCol
          , pastYear = FALSE, ongoingYear = TRUE
 )
-tDayP <- prepDF (dat = tDay, varName = "average_wpd") #, maO = 1)
+tDayP <- prepDF (dat = tDay, varName = "average_wpd", currentYear=currentYear) #, maO = 1)
 aPlot (tDayP, "average_wpd", ylab = "average wave period [s]"
        , currentCol = currentCol
        , MA = TRUE
@@ -406,6 +408,7 @@ legend ("top", bty = "n", pch = 19, col = c("red", "blue", "black"),
 wDB$surfs <- ifelse (wDB$surf >= 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
               , sumFct = function (x){mean (x >= 1)}
+              , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "propotion of surfable time"
        , currentCol = currentCol, MA = TRUE, main = paste ("Daily surf"))
@@ -423,6 +426,7 @@ sTday <- prepDF(wDB, "surfs"
                 #                , sumFct = function (x){mean (x, na.rm = TRUE)}
                 # , sumFct = function (x){sum (x >= 1) > 1 }
                 , sumFct = function (x){maO * any (x >= 1)}
+                , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE
@@ -437,7 +441,9 @@ cLegend ("top"
 
 ## proportion of GREAT days
 wDB$surfs <- ifelse (wDB$surf >= 2, 1, 0) # use maO so that mean over MA windows = N days
-sTday <- prepDF(wDB, "surfs", sumFct = function (x){maO * any (x > 0)})
+sTday <- prepDF(wDB, "surfs", sumFct = function (x){maO * any (x > 0)}
+                , currentYear=currentYear
+)
 aPlot (sTday, "surfs", ylab = "days with GREAT surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days"))
 cLegend ("top"
@@ -447,7 +453,7 @@ cLegend ("top"
          , cYcol = currentCol
 )
 ## mean score per day
-sTday <- prepDF(wDB, "surf")
+sTday <- prepDF(wDB, "surf", currentYear=currentYear)
 aPlot (sTday, "surf", ylab = "mean surf score"
        , currentCol = currentCol, MA = TRUE #, main = "Mean surf score"
        )
@@ -499,6 +505,7 @@ png (paste0 (mediaD, "sa-surf.png"), width = 1600, height = 1200, res = 200)
 wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
 sTday <- prepDF(wDB, "surfs"
                 , sumFct = function (x){maO * any (x >= 1)}
+                , currentYear=currentYear
 )
 aPlot (sTday, "surfs", ylab = "days with surf"
        , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
@@ -568,6 +575,7 @@ if (0){  ## use the one above
   wDB$surfs <- ifelse (wDB$surf > 1, 1, 0)
   sTday <- prepDF(wDB, "surfs"
                   , sumFct = function (x){maO * any (x >= 1)}
+                  , currentYear=currentYear
   )
   aPlot (sTday, "surfs", ylab = "days with surf"
          , currentCol = currentCol, MA = TRUE, main = paste ("Days per", maO, "days with surf"))
@@ -648,7 +656,15 @@ goodDays <- as.POSIXct (c("2021-03-06 19:40"
 , "2021-12-02 11:50" # 1 surfer, more coming
 , "2021-12-07 15:00" # 1+ m surf, no surfers
 , "2022-08-02 18:00" # 3 surfer in 0.8m surf (minimal, but some caught a wave)
-, "2023-01-13 13:00" # 2 surfers, big loud surf, offshore wind.
+, "2023-01-13 13:00" # 5 surfers, big loud surf, offshore wind.
+, "2023-02-08 15:30" # nice 2-3 feet, offshore wind, 2 surfers
+, "2023-02-20 14:45" # Vince and 2 others. Long, 1m waves
+, "2023-03-31 11:30" # two surfers, 1 m waves, tide rising
+, "2023-04-01 12:00" # vince and four other dudes. 1 m surf
+, "2023-04-09 16:30" # Sun; 4+ surfers, 1.2 m surf, offshore wind
+, "2023-04-17 11:50" # one surfer, 60 cm surf
+, "2023-04-22 17:30" # 1 m surf -- same day as sampling!
+, "2023-04-23 18:10" # April!  Vince and 2 other survers. 1m surf.
 )
 , tz = "America/Anchorage")
 as.data.frame (approx(wDB$datetimestamp, wDB$surf, xout = goodDays))

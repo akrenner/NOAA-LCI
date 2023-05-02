@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+## merge this with dataSetup.R ?
+
 ## setup working environment
 dir.create("~/GISdata/LCI/", recursive=TRUE, showWarnings=FALSE)
 dir.create("~/GISdata/data/coastline", recursive=TRUE, showWarnings=FALSE)

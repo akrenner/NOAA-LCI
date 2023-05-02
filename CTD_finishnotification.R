@@ -6,6 +6,10 @@
 
 
 if (Sys.getenv ("USERNAME") %in% c("Martin.Renner", "martin")){
-  require ("gmailR")
+  if (!require("pacman")) install.packages("pacman"
+                                           , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+  Require <- pacman::p_load
+
+  Require ("gmailr")
   ## send mail that CTD processing has finished.
 }

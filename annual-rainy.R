@@ -48,7 +48,7 @@ dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 ## aggregate data
-tDay <- prepDF (dat=hmr, varName="totprcp", maO=maO, qntl=qntl)
+tDay <- prepDF (dat=hmr, varName="totprcp", maO=maO, qntl=qntl, currentYear=currentYear)
 
 
 ## annual vs average precip
@@ -197,7 +197,7 @@ currentCol <- c ("pink", "red", "orange")
 source ("annualPlotFct.R") # important to call after defining currentCol!
 
 
-tDay <- prepDF (varName="rh", dat=hmr, maO=maO, qntl=qntl)
+tDay <- prepDF (varName="rh", dat=hmr, maO=maO, qntl=qntl, currentYear=currentYear)
 
 # pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.pdf", width=9, height=6)
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-relativeHumidity.png", width=1800, height=1200, res=300)

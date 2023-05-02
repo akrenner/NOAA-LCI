@@ -93,15 +93,15 @@ if (useSF){
   rm (detach_Package)
   ## Zimmermann bathymetry
   Require ("stars")
-  bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
   ## Zimmermann bathymetry
   Require ("raster")
   ## FIX !!  -- already in prepData? -- migrate to prepData!
     if (.Platform$OS.type == "windows"){
-      bathyZ <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+      bathyZ <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
     }else{
-      bathyZ <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+      bathyZ <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
     }
     rm (bfer)
 }

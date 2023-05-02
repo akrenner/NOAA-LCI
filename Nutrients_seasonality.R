@@ -38,6 +38,14 @@ summary (subset (nut$Station, nut$Depth_m < 10))
 
 
 
+## concentration conversions
+## seawater density: 1.03 g/mL  (so 1 mg/L != 1 ppm)
+# https://web.viu.ca/krogh/chem301/UNITS%20OF%20CONCENTRATION.pdf
+# values from: http://www.scymed.com/en/smnxtb/tbcbktk1.htm
+## phosphate  1 mg/dL = 0.3229 mmol/L
+## threshold limiting growth: 0.2 micro-molar (ref?)
+
+
 
 ## seasonality of PO4, and NOx, and CHLa
 require ("RColorBrewer")
@@ -57,11 +65,12 @@ nutE <- c ("Ammonia", "Nitrate/Nitrite", "Phosphate", "Silicate", "Chlorophyll")
 pdf ("~/tmp/LCI_noaa/media/EVOS/nutrientsSeason.pdf", width=8, height=5)
 ## one color per station (3)
 ## one panel per nutrient (4)
-# par (mfrow=c(2,2), mar=c(3, 4.5, 3, 1))
+ par (mfrow=c(2,2))
 par (mar=c(3, 4.5, 3, 1))
 
 
-for (i in 1:length (nutL)){
+# for (i in 1:length (nutL)){
+for (i in c(2,1,3,4)){  ## nicer arrangement
   nut$x <- nut [,which (names (nut)==nutL[i])]
 
   # summary (with (nut, factor (paste (Station, Date, Depth_m))))
@@ -77,10 +86,11 @@ for (i in 1:length (nutL)){
   title (main=nutE[i], line=1)
   axis(2)
   axis (1, at=as.Date(paste0("2021-", 1:12, "-01")), labels=FALSE, tick=TRUE)
-#  axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=1:12, tick=FALSE)
   axis (1, at=as.Date(paste0("2021-", 1:12, "-15")), labels=month.abb, tick=FALSE)
   box()
-  if (i %% 2 == 1){
+#  if (1){
+#  if (i %% 2 == 1){
+  if (i %in% c(2, 3)){
     title (ylab=expression ("Concentration ["~mg~l^-1~"]"))
   }
   abline (h=nut [1,which (names (nut)==nutL[i])+1], lty="dotted", lwd=2) # show detection limit
@@ -236,19 +246,20 @@ dev.off()
 
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalMeans.pdf"
      , width=8, height=6)
-# par (mfrow = c(2,2))  ## -- make individual plots
+par (mfrow = c(2,2))  ## -- make individual plots
 for (j in 1:length (nL)){
   nusw$var <- nusw [,which (names (nusw)==nL[j])]
   nSeason <- aggregate (var~month+depth+station, nusw, mean, na.rm=TRUE)
 
   plot (var~month, nSeason, type="n", main="", axes=FALSE
         , ylab="", xlab="")
-  # if (j %in% c(1,3)){
+    title (main=paste0 ("monthly mean ", nutL[j]
+                        # ," (", paste (range (as.numeric (levels (nusw$year)[nusw$year]))
+                        #                 , collapse="-"), ")"
+           ))
+   if (j %in% c(1,3)){
     title (ylab=expression ("Concentration ["~mg~l^-1~"]"), xlab="", line=2.5)
-    title (main=paste0 ("monthly mean ", nutL[j], " ("
-            , paste (range (as.numeric (levels (nusw$year)[nusw$year]))
-                                        , collapse="-"), ")"))
-    # }
+   }
   axis (1)
   axis (2)
   box()
@@ -259,24 +270,24 @@ for (j in 1:length (nL)){
     lines (var~month, subset (nSeason, depth=="shallow" & station==levels (station)[k])
            , lty = "solid", lwd=2, col=k)
   }
-  # if (j == 1){
-  #   legend ("top", lty = c("solid", "dashed"), legend=c("shallow", "deep")
-  #           , bty="n", lwd=2)
-  # }else if (j == 2){
-  #   legend ("top", col=c(1,2), legend=levels (nusw$station), bty="n", lwd=2)
-  # }
+  if (j == 1){
+    legend ("top", lty = c("solid", "dashed"), legend=c("shallow", "deep")
+            , bty="n", lwd=2)
+   }else if (j == 3){
+     legend ("top", col=c(1,2), legend=levels (nusw$station), bty="n", lwd=2)
+  }
 #  if (j==1){
-    legend (list ("top" #c(4.5,0.045)
-                  , "topright"
-                  , "top"
-                  , "topright")[[j]]
-            , lty=c("solid", "dashed"# , "dotted"
-                             , "solid", "solid")
-            , lwd=2, bty="n"
-            , legend=c(rev (levels (nusw$depth)) #, "detection limit"
-                       , levels (nusw$station))
-            , col=c(1,1,1,2)
-            , ncol=2)
+    # legend (list ("top" #c(4.5,0.045)
+    #               , "topright"
+    #               , "top"
+    #               , "topright")[[j]]
+    #         , lty=c("solid", "dashed"# , "dotted"
+    #                          , "solid", "solid")
+    #         , lwd=2, bty="n"
+    #         , legend=c(rev (levels (nusw$depth)) #, "detection limit"
+    #                    , levels (nusw$station))
+    #         , col=c(1,1,1,2)
+    #         , ncol=2)
  # }
 }
 dev.off()

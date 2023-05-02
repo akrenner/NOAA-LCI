@@ -4,6 +4,9 @@
 ## if this is a new installation, it may be necessary to disconnect from VPN
 ## to avoid timeouts
 ## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
+## expect approximately 3 hours for a full run
+## (2023-04 on Latitude 5420; 11th Gen Intel Core i7 1185G7 @3.0 GHz/1.8 GHz)
+
 
 if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
@@ -11,7 +14,8 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 rm (list = ls())
-sink (file="StateOfBay-runlog.txt", append=FALSE)
+
+
 sT <- Sys.time()
 
 
@@ -25,6 +29,44 @@ ongoingY <- TRUE
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
+source ("FieldNotesDB.R") # first because it doesn't depend on anything else
+if (1){
+  ## hex conversion and QAQC plots
+  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  source ("ctd_workflow.R")              ## approx. 1:30 hours
+  source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
+  sink()
+}
+
+
+
+sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
+
+## pull together CTD and biological data.
+## Also pull in external GIS data and produce data summaries
+source ("datasetup.R")
+## separate out CTD-specific stuff??
+#; bathymetry
+#; coastline
+#; CTD data
+## plot of seasonal-yearly matrix when samples were taken
+source ("CTD_DataAvailability.R")
+
+## only for SoB? -- mv down?
+source ("SeldoviaTemp.R")
+
+
+## the Wall
+source ("CTDwall-setup.R")
+source ("CTDwall_normals.R")
+source ("CTDwall.R")
+# source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
+
+# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
+
+
+
 if (0){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
@@ -35,14 +77,11 @@ if (0){ ## 2017 contract
   # rm -r ~/tmp/LCI_noaa/
 
   # source ("metaExtraction.R")
-  source ("SeldoviaTemp.R")
-  source ("dataSetup.R")
   source ("anaCTD.R")
   source ("ecoAn.R")
   source ("plotMaps.R")
   source ("commMap.R")
 
-  source ("CTDwall.R")
 }
 
 
@@ -61,25 +100,26 @@ if (0){ # Dec 2019 seasonality
 }
 
 
+
+## It may be necessary to restart R between above CTD processing and below Annual State of the Bay
+## scripts? There may be an issue with temp files?
+
 ## set up required work environment and external files/data
 source ("EnvironmentSetup.R")
-
-if (0){
-## The Wall -- this may have to move up XXX
-source ("ctd_workflow.R")  ## should split ctd_workflow up into processing and wall
-}
 
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")
 
+## push to GoogleDrive
+## requires rclone
+## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
+if (grep ("[M|m]artin", getwd())){
+  source ("CTDsyncGDwall.R")
+  ## send email that run is completed
+  source ("CTD_finishnotification.R")
+}
 
-
-source ("CTDsyncGDwall.R")
-
-
-cat ("all done\n")
-print (Sys.time())
-print (difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
+cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
 sink()
 
 ## EOF

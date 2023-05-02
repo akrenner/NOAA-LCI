@@ -377,7 +377,7 @@ fixGap <- function (df, intvl=15*60){ # interval of TS in seconds
 
 
 ## add Fahrenheit scale to temperature plot
-fAxis <- function (cGrad, side=4, line=3
+fAxis <- function (cGrad, side=4, line=2.5
                    , mT = "Temperature [°F]"  #expression('Temperature '~'['*degree~'F'*']')
                    , ...){
   slope <- 9/5
@@ -478,21 +478,22 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
   Require ("rnoaa")
   if (clearcache){
-    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData"))
-    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy", showWarnings=FALSE, recursive=TRUE)
+    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
+    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
-  ## this is slow -- cache as .RData file?
+  ## this is slow -- cache as .RData file
   nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
-    if (buoyID == 46108){endD <- 2011 }else{ endD <- 1970}
+    if (buoyID == 46108){endD <- 2011}else{endD <- 1970}
+    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }else{
-    endD <- max (as.integer (substr (wDB$time, 1, 4)))
+    endD <- max (as.integer (substr (wDB$time, 1, 4)))  # last cached year
   }
-  if (endD < as.integer (format (Sys.Date(), "%Y"))){ # only if not updated in a year
+  if (endD < as.integer (format (Sys.Date(), "%Y"))){ # if not updated in a year
     wB <- lapply (endD:as.integer (format (Sys.Date(), "%Y"))
                   , function (i){
                     try (buoy (dataset=set, buoyid=buoyID
-                               , year=i))
+                               , year=i), silent=TRUE)
                   }
     )
 
@@ -518,11 +519,11 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   if (class (cD) == "buoy"){
     wDB <- rbind (wDB, as.data.frame (cD$data))
   }
-  save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy", buoyID, ".RData")) ## cache of buoy data
+  save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")) ## cache of buoy data
 
   ## QAQC
   wDB <- wDB [!duplicated(wDB$time),]
-  tm <- gsub ("T", "", wDB$time)
+  tm <- gsub ("T", " ", wDB$time)
   tm <- gsub ("Z", "", tm)
   wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC") # move this up?
   rm (tm)

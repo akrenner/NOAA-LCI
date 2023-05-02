@@ -14,8 +14,8 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl=c(0.9) #, 0.8)
 currentYear <- as.numeric (format (Sys.Date(),"%Y"))-1
 require ("RColorBrewer")
-currentCol <- brewer.pal (3, "Paired")
-# currentCol <- brewer.pal (6, "Paired")[c(5,6,4)]
+# currentCol <- brewer.pal (3, "Paired")
+currentCol <- brewer.pal (6, "Paired")[c(7,6,5)]
 SWMP <- TRUE
 SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
@@ -74,7 +74,7 @@ if (0){  ## plot all years -- rainbow spaghetti
 }
 
 ## aggregate data
-tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl)
+tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl, currentYear=currentYear)
 
 #
 ## plot
@@ -85,9 +85,10 @@ dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 png (paste0 (mediaD, "sa-airTemp-"
              , ifelse (SWMP, "LE", "AP"), ".png"), width=1800, height=1200, res=300)
 
-par (mar=c(4,4,2,4))
+par (mar=c(3,4,2,4))
 aPlot (tDay, "atemp"
-       , ylab=expression ('air'~'temperature '~'['*degree~'C'*']')
+       #, ylab=expression ('air'~'temperature '~'['*degree~'C'*']')
+       , ylab="air temperature [°C]"
        , currentCol=currentCol, MA=TRUE
        , pastYear=pastYear, ongoingYear=ongoingY
        )
@@ -95,7 +96,8 @@ if (SWMP){title (main="Air Temperature at Homer Spit")}else{title (main="Air Tem
 # for (i in 1:length (levels (factor (hmr$year)))){
 #   lines (atemp~jday, subset (hmr, year == levels (factor (hmr$year))[i]))
 # }
-fAxis (c (-15, 15), mT=expression ('air'~'temperature '~'['*degree~'F'*']'))
+#fAxis (c (-15, 15), mT=expression ('air'~'temperature '~'['*degree~'F'*']'))
+fAxis (c (-15, 15), mT="air temperature [°F]")
 box()
 ## legend
 cLegend ("bottom", inset=0.05
