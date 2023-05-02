@@ -39,6 +39,7 @@ To change the date, the time command has to be issued as well.
 - casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate!!! 
 - mode: MUST be 'profile'. 
 Screenshot of Seaterm v1.59 ![Alt](/manual/SeaTerm.PNG "Seaterm")
+Document CTD time, date, and voltages in the FileMaker database (layout: CTDstatusLog). 
 
 ### iPad
 FileMaker database: sync to iPad. Write-down last ctd-cast number. 
@@ -70,7 +71,7 @@ FileMaker database: sync to iPad. Write-down last ctd-cast number.
 
 ## Monthly and quarterly sampling
 
-Monthly samplinng covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton. Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water samples: XXX
+Monthly samplinng covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count at each station. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton (see below). Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water samples: XXX
 
 ### CTD
 Verbalize turning on the CTD at the beginning of each cast. Lower the instrument to about 3m, raise it up to the surface (leaving the water intake port well submerged) and let it soak for at least 1 minute (use stop-watch). The lower it to about 5 m above the sounded depth (avoid touching the bottom). On retrieving the instrument, verbalize switching it off.
@@ -82,9 +83,7 @@ Niskin bottle water samples as well as bucket surface water samples are taken at
 Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the ouside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical.
 
 ### Notes
-Pay attention to times (local time) and station names.
-
-Open FileMakerMoblile on iPad, then open LTMdatabase At each station, press "new station".
+Open FileMakerMoblile on iPad, then open LTMdatabase At each station, press "new station" and fill out all required fields. Pay attention to times (local time) and station names. 
 
 
 ## Post-cruise cleanup
@@ -108,7 +107,7 @@ Add 8 drops of Lugol's solution to each white sample bottle, if not already trea
 
 ## Data QAQC, analysis, and archiving
 
-Before CTD data can be used, files have to be downloaded from the instrument, matched with the data from notebooks, and converted from hex to .csv files. Most of these steps ave now been automated. 
+Before CTD data can be used, files have to be downloaded from the instrument, matched with the data from notebooks/iPad, and converted from hex to .csv files. Most of these steps have now been automated. 
 
 ### Download CTD
 Connect to CTD, as before.
@@ -140,18 +139,16 @@ rFolder <- "~/myDocs/R-scripts"
 ## set up folder for R scripts and pull scripts from github
 setwd (rFolder)
 system ("git update")
-# source ("runAll.R")
-source ("ctd_processing.R")
+source ("runAll.R")
+# source ("ctd_processing.R")
 ````
-This will batch-process CTD files using SEABIRD software and do some basic QAQC. This may take a while. After a successful run, plots can be found in *~/tmp/LCI_noaa/media/*
+This will batch-process CTD files using SEABIRD software, do some basic QAQC, and update all the routine plots and analysis, State-of-the-Bay, etc. Some functions require an internet connection, some need a connection to the NCCOS VPN (update of SWMP data). This may take a while (several hours). After a successful run, plots can be found in *~/tmp/LCI_noaa/media/*. Aggregated CTD .csv files will be in *~/tmp/LCI_noaa/data-products/CTD/*. Using `source ("ctd_processing.R")` instead of `source ("runAll.R)` will only do the .hex to .csv conversion of the CTD files, along with some basic QAQC. 
 
 #### Manual notes (no iPad)
 Make a PDF from the hand-written notes. You can use a scanner to PDF. If you have an iPhone, you can photograph all the pages. To make a PDF, select the relevant images -> share -> print -> share (and email it to yourself). The resultant PDF will be huge -- reduce its size by opening it in Acrobat and File -> Reduce File Size.  Name the resultant file YYYY-MM.pdf (using year and month of the survey) and upload to the workspace. 
 
 #### Run a small example dataset
-Running the script *runAll.R* will convert ctd hex files, as well as producing various section plots, and State-of-the-bay plots. 
-
-A smaller and faster workflow, only plotting the most recent survey (or a user-chosen survey) is under development. 
+A smaller and faster workflow than *runAll.R* , only plotting the most recent survey (or a user-chosen survey) is under development. 
 
 #### CTD calibration files
 Any new calibration files need to be placed into ~/Documents/GISdata/LCI/CTD-processing/Workspace/conFiles/
