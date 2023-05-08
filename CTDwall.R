@@ -90,14 +90,13 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
   for (transectN in transectS){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
-    ## ov <- 1; tn <- 2
-#   transectN <- levels (poAll$Transect)[tn]
+    ## ov <- 1; tn <- 2 ; transectN <- levels (poAll$Transect)[tn]
     # transectN <- "ABext"
     cat ("\n\n", oVarsF [ov], " T-", transectN, "\n")
 
 
     ## doubly-used stations:  XXX bug here!
-    stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
+    stn$Line <- flexTransect (transectN, stn)  ## function from CTDsectionFcts.R
     lvl <- levels(poAll$Transect)
     poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
     poAll$Transect <- factor (poAll$Transect, levels = lvl); rm (lvl)
@@ -516,7 +515,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
 physOc <- poAll
-rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
+rm (transectN, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
 
 
 

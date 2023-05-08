@@ -38,7 +38,7 @@ sink (file="runAll.log", append=FALSE, split=FALSE)
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
-  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  sink (file = "ctdprocessinglog.log", append=FALSE, split = FALSE) # show output and write to file
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   sink()
@@ -46,7 +46,6 @@ if (1){
 
 
 
-sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
@@ -109,9 +108,8 @@ if (0){ # Dec 2019 seasonality
 sink()
 
 
+
 sink (file="StateOfBay.log", append=FALSE, split=FALSE)
-
-
 ## It may be necessary to restart R between above CTD processing and below Annual State of the Bay
 ## scripts? There may be an issue with temp files?
 
@@ -120,6 +118,7 @@ source ("EnvironmentSetup.R")
 
 ## State of the Bay Report
 try (source ("AnnualStateOfTheBay.R"))
+sink()
 
 ## push to GoogleDrive
 ## requires rclone
@@ -133,9 +132,9 @@ if (grep ("[M|m]artin", getwd())){
 }
 
 cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
+
+
 sink()
-
-
 cat ("finished runAll.R at", Sys.time(), "\n")
 # cat ("Time taken for runAll.R:", difftime(Sys.time(), sT, units = NULL)) ## not going to work here because of saved dumps
 
