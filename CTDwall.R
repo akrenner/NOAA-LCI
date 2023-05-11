@@ -95,15 +95,10 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     cat ("\n\n", oVarsF [ov], " T-", transectN, "\n")
 
 
-    ## doubly-used stations:  XXX bug here!
-# <<<<<<< Updated upstream
+    ## doubly-used stations -- flex them
     stn$Line <- flexTransect (transectN, stn)  ## function from CTDsectionFcts.R
-#=======
-#    stn$Line <- flexTransect (levels (poAll$Transect)[transectN], stn)  ## function from CTDsectionFcts.R
-# >>>>>>> Stashed changes
-    lvl <- levels(poAll$Transect)
     poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
-    poAll$Transect <- factor (poAll$Transect, levels = lvl); rm (lvl)
+    poAll$Transect <- factor (poAll$Transect, levels = transectS)
 
 
     ## to use as a reference for partial stations
