@@ -34,10 +34,10 @@ fixWD()
 
 
 source ("InitialSetup.R")
-source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   sink()
