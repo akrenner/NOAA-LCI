@@ -18,14 +18,11 @@ pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
 
 
-fixWD <- function(){
-  if (.Platform$OS.type=="windows"){
-    setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-  }else{ ## Linux or macOS platform
-    setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-  }
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}else{ ## Linux or macOS platform
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-fixWD()
 
 # setRepositories(graphics=FALSE, ind=76)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
@@ -43,7 +40,6 @@ if (1){
   sink()
   cat ("Finished CTD hex conversion and processing at: ", Sys.time(), "\n")
 }
-fixWD()
 
 
 sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
@@ -60,7 +56,6 @@ source ("CTD_DataAvailability.R")
 
 ## only for SoB? -- mv down?
 source ("SeldoviaTemp.R")
-fixWD()
 
 ## the Wall
 source ("CTDwall-setup.R")

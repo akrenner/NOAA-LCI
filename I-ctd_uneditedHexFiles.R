@@ -11,15 +11,15 @@ rm (list=ls())
 ## interactively find folder of new survey
 unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/")
 uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
-# "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-05"
+# uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-04"
+
 
 
 hexF <- list.files(uneditedD, pattern=".hex", full.names=TRUE, recursive=TRUE)
 notes <- list.files(uneditedD, pattern=".csv", full.names=TRUE,recursive=TRUE)
-dir.create(gsub ("1_Unedited .hex files", "tmp_2_edited .hex files", uneditedD)
-           , showWarnings=FALSE, recursive=FALSE)
 noteT <- read.csv (notes)
 noteT <- subset (noteT, Type=="CTD")
+noteT$Station <- as.character(noteT$Station) # in case all are numeric
 
 require ("tidyr")
 for (i in seq_along(hexF)){
@@ -31,8 +31,6 @@ for (i in seq_along(hexF)){
     substr (start=7, stop=10) %>%
     trimws() %>%
     as.numeric()
-  # %>%
-  #   formatC (width=3, format="d", flag="0")
   fnCast <- hexF [i] %>%
     substr (start=nchar (hexF [i])-6, stop=nchar (hexF [i])-4) %>%
     as.numeric()
@@ -56,10 +54,19 @@ for (i in seq_along(hexF)){
   ## end of checks
 
   ## add geographic coordinates, station match_name, etc. to hex-header
+  cL <- c (grep ("Cruise:", hex)  ## in case that standard headers had been added
+           , grep ("Station:", hex)
+           , grep ("Latitude:", hex)
+           ,grep ("Longitude:", hex)
+  )
+  if (length (cL)>0){hex <- hex [-cL]}
+  rm (cL)
+  # notR$Station <- ifelse (nchar (notR$Station) < 4, paste0 ("S", notR$Station)
+  #                         , notR$Station)
   eHex <- c (hex [1:6]
              , paste0 ("** Cook Inlet LTM ", notR$Transect)
              , paste0 ("** Date: ", notR$Date_isotxt)
-             , paste0 ("** Station:S", notR$Station)  #sprintf ("%02d", as.numeric (notR$Station)))
+             , paste0 ("** Station:", notR$Station)  #sprintf ("%02d", as.numeric (notR$Station)))
              , paste0 ("** Start Time: ", notR$Time)
              , paste0 ("** Depth (m): ", notR$Depth)
              , paste0 ("** Latitude:", notR$Lat_dDeg)
@@ -68,10 +75,20 @@ for (i in seq_along(hexF)){
              , hex [7:length (hex)])
 
   ## define new filename, following convention
+
+  headCast <-   sprintf("%03d", headCast)
+  if (nchar (notR$Station) < 4){
+    notR$Station <- as.numeric (notR$Station)
+    stn <-  paste0 ("S", sprintf ("%02d", notR$Station))
+  }else{
+    stn <- notR$Station
+  }
   nFN <- paste0 (format (as.POSIXct (notR$Date_isotxt), "%Y_%m-%d_")  ## new filename
-                 , notR$Transect, "_S", notR$Station, "_cast", headCast, ".hex")
+                 , notR$Transect, "_", stn
+                 , "_cast", headCast, ".hex")
   nD <- gsub ("1_Unedited .hex files/.+"
-              , paste0 ("tmp_2_edited .hex files/"
+              #, paste0 ("tmp_2_edited .hex files/"
+              , paste0 ("2_edited .hex files/"
                         , format (ctdTime, "%Y"), "/"
                         , notR$SurveyName, "/")
               , hexF [i])
@@ -82,7 +99,7 @@ for (i in seq_along(hexF)){
 
 
 cat ("\n############################################################################")
-cat ("\n##\n##\n##\n## After successful run and inspection: zip-up unedited .hex files! ## \n##\n##\n##\n")
+cat ("\n##\n##\n##\n## After successful run and inspection: move .hex files to their folder ## \n##\n##\n##\n")
 cat ("\n############################################################################")
 
 ## EOF
