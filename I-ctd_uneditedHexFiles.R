@@ -64,9 +64,10 @@ for (i in seq_along(hexF)){
   # notR$Station <- ifelse (nchar (notR$Station) < 4, paste0 ("S", notR$Station)
   #                         , notR$Station)
   eHex <- c (hex [1:6]
+             , paste0 ("** Ship:", notR$Vessel)
              , paste0 ("** Cook Inlet LTM ", notR$Transect)
-             , paste0 ("** Date: ", notR$Date_isotxt)
              , paste0 ("** Station:", notR$Station)  #sprintf ("%02d", as.numeric (notR$Station)))
+             , paste0 ("** Date: ", notR$Date_isotxt)
              , paste0 ("** Start Time: ", notR$Time)
              , paste0 ("** Depth (m): ", notR$Depth)
              , paste0 ("** Latitude:", notR$Lat_dDeg)

@@ -156,12 +156,13 @@ for (i in 1:length (conF)){
 ## run BinAvg again in SEABIRD and/or in R.
 ## tLB [3]: aligned, tLB [4]: looped,
 ## slow -- any way to parallelize this?
+## 2023-05-19: 2nd call to read.ctd fails at i==929 (oce version 1.7-10)
 
 if (1){  ## fails in oce 1.7-3 due to changes in oce
 fNf <- list.files(tLB [3], ".cnv"
                   , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 require ("oce")
-for (i in 1:length (fNf)){
+for (i in seq_along(fNf)){
   ## read all text and change digit-digit to digit -digit
   ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
   # read.table()
