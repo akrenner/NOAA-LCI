@@ -6,9 +6,8 @@
 ## - cross-platform hex-file processing
 ##
 
-rm (list = ls())
+# rm (list = ls())
 
-print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
   # MR personal setup
@@ -21,7 +20,7 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
   # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
-cat ("Starting ctdprocessing at", as.character (Sys.time()), "\n\n")
+cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 
 ## load missing packages
 if (!require("pacman")) install.packages("pacman"
