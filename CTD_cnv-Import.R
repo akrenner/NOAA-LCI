@@ -8,7 +8,7 @@
 ## import notebook database tables
 ## QAQC on notebook tables: match with master list
 
-## based on dataSetup.R -- pulled-out CTD import section.
+## based on early dataSetup.R version -- pulled-out CTD import section.
 ## new dataSetup.R to read-in output file produced here instead of doing the
 ## heavy lifting of CTD import and plotting itself.
 ##
@@ -16,6 +16,20 @@
 ## new read .CNV files freshly reprocessed by ctd_workflow.R -> CTD_hexprocessing.R
 ## this guarantees that there's a 1:1 match between HEX and CNV files
 ## Outsource as much of the post-merge QAQC to CTD_cleanup.R, as possible.
+
+
+## Alternative sources of location, date, and time information
+## location and date:
+##  - file name
+##  - metadata
+## => designate filename as gold standard
+##    trust filename over metadata, because it's more visible
+## => check against metadata!
+##    => fix metadata in file, as appropriate! -- carefully!
+## => check against notebook entries (low priority)
+
+
+
 
 
 
@@ -752,7 +766,7 @@ for (j in 1:nrow (x)){  ## hundreds -- need a different fix
   print (fx [order (fx$localTime), c(6,2,3,5)]) # all files from that date
 }
 }
-rm (fDt)
+rm (fDt, tS)
 ## 2. find missing matches: chsm %in% c(0,1)
 
 
@@ -945,7 +959,7 @@ if (length (nNames) == ncol (physOc)){
   names (physOc) <- nNames
 }else{stop ("Lenght of new names does not match number of columns in physOc\n")}
 # print (summary (physOc))
-rm (i)
+rm (i, nNames)
 
 
 
@@ -958,5 +972,10 @@ rm (sTime)
 
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
+
+## troubleshooting -- see Mark Dickson's email
+dick <- subset (physOc, format (isoTime, "%Y")=="2019")
+levels (factor (with (dick, paste (Date, Transect, Station))))
+levels (factor (dick$File.Name))
 
 ## EOF
