@@ -17,7 +17,7 @@ interactive <- FALSE
 ################################################
 
 ## un-comment to run only a single transect
-interactive <- TRUE
+# interactive <- TRUE
 
 ################################################
 ################################################
@@ -51,6 +51,7 @@ if (interactive){
   sSelect <- iFun ()
   rm (iFun)
 }
+
 
 
 test <- TRUE
