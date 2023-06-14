@@ -1,15 +1,56 @@
 ## make image for every survey, each section
 ## showing all data of each survey on one page
-## for QAQC and error checking0
+## for QAQC and error checking
+## option to run this for any one and only section
 
 
 rm (list = ls())
 load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
-
-
 source ("CTDsectionFcts.R")  # get pSec to plot sections
 # save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall2.RData")
+interactive <- FALSE
+
+
+################################################
+######## User configurations ###################
+################################################
+
+## un-comment to run only a single transect
+interactive <- TRUE
+
+################################################
+################################################
+
+
+
+
+## interactive collection of transects to plot
+
+## plot only last date?
+if (interactive){
+  iFun <- function (){
+    sY <- readline ("Enter the year to plot: ")
+    sbst <- subset (poAll, year == sY)
+    cat (paste0 ("The optional survey dates are:\n", paste (levels (factor (sbst$survey)), collapse="\n")))
+    sDt <- readline ("Pick a survey: ")
+    sbst <- subset (sbst, survey == sDt)
+    trnsct <- levels (factor (sbst$Transect))
+    if (length (trnsct) > 1){
+      cat (paste0 ("These transects were surveyed:\n", paste (trnsct, collapse="\n")))
+      sTr <- readline ("Pick a transect: ")
+    }else{
+      sTr <- trnsct
+    }
+    cat (paste0 ("Select one variable to plot\n",
+                 paste (paste (1:length (oVarsF), "-", oVarsF), collapse="\n")
+    ))
+    sData <- readline ("Enter a number: ")
+    return (list (survey=sDt, transect=sTr, data=oVarsF [as.numeric (sData)]))
+  }
+  sSelect <- iFun ()
+  rm (iFun)
+}
 
 
 test <- TRUE
@@ -17,7 +58,8 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 10}else{iX <- 1:length (levels (poAll$survey))}
+if (test){iX <- 10}else{iX <- seq_along(levels (poAll$survey))}
+if(interactive){iX <- which (levels (poAll$survey) == sSelect$survey)}
 
 require ("parallel")
 if (.Platform$OS.type=="unix"){
@@ -33,7 +75,8 @@ for (sv in iX){
   if (sv %% 10 == 0){cat (" ", sv, "/", max (iX), "\n", sep = "")}
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
-  if (test){iY <- 1}else{iY <-  1:length (levels (s$Transect))}# by transect
+  if (test){iY <- 1}else{iY <-  seq_along (levels (s$Transect))}# by transect
+  if (interactive){iY <- which (levels (s$Transect) == sSelect$transect)}
   for (tn in iY){  ## XXX testing XXX
     #  for (tn in 1:length (levels (poAll$Transect))){
     ## for testing
@@ -83,27 +126,29 @@ for (sv in iX){
 
       ## average multiple casts on same date?? XXX
 
-      png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", levels (poAll$survey)[sv]
-                   , " T-", levels (s$Transect)[tn]
-                   # , "%02d
-                   ,".png")
-           , height = 8.5*200, width = 11*200, res = 300  # landscape
-           # , height = 11*200, width = 8.5*200, res = 300 # portrait
-      )
+      if (!interactive){
+        png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", levels (poAll$survey)[sv]
+                     , " T-", levels (s$Transect)[tn]
+                     # , "%02d
+                     ,".png")
+             , height = 8.5*200, width = 11*200, res = 300  # landscape
+             # , height = 11*200, width = 8.5*200, res = 300 # portrait
+        )
 
-      # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/", oVars [ov]
-      #              , " T-", levels (poAll$Transect)[tn]
-      #              # , "_", levels (physOcY$year)[k]
-      #              , ".pdf")
-      #      , height = 8.5, width = 11)
-      layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
-      # layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
-      #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
-
+        # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/", oVars [ov]
+        #              , " T-", levels (poAll$Transect)[tn]
+        #              # , "_", levels (physOcY$year)[k]
+        #              , ".pdf")
+        #      , height = 8.5, width = 11)
+        layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
+        # layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
+        #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
+        oVseq <- seq_along(oVarsF)
+      }else{
+        oVseq <- which (oVarsF == sSelect$data)
+      }
       xCo <- sectionize (xC)
-
-
-      for (ov in 1:length (oVarsF)){
+      for (ov in oVseq){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov,]
         }else{
@@ -113,7 +158,7 @@ for (sv in iX){
                                        , Fluorescence_mg_m3, logPAR
                                        , Oxygen_umol_kg
                                        # , Oxygen_sat.perc.
-                                        , bvf
+                                       , bvf
           ))
           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
           # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
@@ -141,34 +186,36 @@ for (sv in iX){
         #       box (lwd = 4, col = "navy")
         #   }
       }
-      if (s$Transect[tn] == "AlongBay"){mt <- ""}else{mt <- "T"}
-      mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
-             , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm (mt)
-      plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
-            , which = 99
-            , coastline = "coastlineWorldFine"
-            , showStations = TRUE
-            , gird = TRUE
-            , map.xlim = range (poAll$longitude_DD) # +c(-0.5, 0.5)
-            # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
-            ## , map.xlim = c(-154, -151)
-            ## , map.ylim = c(57.5, 60.1)
-            , clatitude = mean (range (poAll$latitude_DD)) # 59.4
-            , clongitude = mean (range (poAll$longitude_DD)) # -152
-            , span = 200
-            # , showSpine = TRUE
-      )
-      if (0){  ## omit this map -- need the space
-        plot (xCo
+      if (!interactive){
+        if (s$Transect[tn] == "AlongBay"){mt <- ""}else{mt <- "T"}
+        mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
+               , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm (mt)
+        plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
               , which = 99
-              , coastline = "coastlineWorldFine"  ## add hi-res topography?
+              , coastline = "coastlineWorldFine"
               , showStations = TRUE
-              , showStart = TRUE
               , gird = TRUE
-              # , col = "red"
+              , map.xlim = range (poAll$longitude_DD) # +c(-0.5, 0.5)
+              # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
+              ## , map.xlim = c(-154, -151)
+              ## , map.ylim = c(57.5, 60.1)
+              , clatitude = mean (range (poAll$latitude_DD)) # 59.4
+              , clongitude = mean (range (poAll$longitude_DD)) # -152
+              , span = 200
+              # , showSpine = TRUE
         )
+        if (0){  ## omit this map -- need the space
+          plot (xCo
+                , which = 99
+                , coastline = "coastlineWorldFine"  ## add hi-res topography?
+                , showStations = TRUE
+                , showStart = TRUE
+                , gird = TRUE
+                # , col = "red"
+          )
+        }
+        dev.off()
       }
-      dev.off()
     }
   }
 }
@@ -177,7 +224,7 @@ rm (iY, iX, s, sv, tn)
 
 physOc <- poAll
 if (!test){
- # rm (xCo, tn, oVars, ov, poAll, pSec)
+  # rm (xCo, tn, oVars, ov, poAll, pSec)
   gc()
 }
 
