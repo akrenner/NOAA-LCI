@@ -895,7 +895,7 @@ mdata <- with (fileDB, data.frame (isoTime = localTime
 ))
 summary (mdata)
 summary (fileDB$consensNo)
-rm (stationEv)
+# rm (stationEv)  ## use in troubleshooting
 
 ## FIX here: lat-long: all NA!
 
@@ -977,5 +977,11 @@ save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 dick <- subset (physOc, format (isoTime, "%Y")=="2019")
 levels (factor (with (dick, paste (Date, Transect, Station))))
 levels (factor (dick$File.Name))
+levels (factor (dick$File.Name [grep ("2019_05-14", dick$File.Name)]))
+x <- subset (dick, File.Name == "2019_05-14_alongbay_skb12_cast203_4141")
+x$Transect
+x$Station
+
+dickFdb <- subset (fileDB, file=="2019_05-14_alongbay_skb12_cast203_4141.cnv")
 
 ## EOF
