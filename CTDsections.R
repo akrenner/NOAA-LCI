@@ -10,6 +10,8 @@ source ("CTDsectionFcts.R")  # get pSec to plot sections
 # save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall2.RData")
 interactive <- FALSE
+onlyCurrent <- FALSE
+test <- FALSE
 
 
 ################################################
@@ -18,6 +20,10 @@ interactive <- FALSE
 
 ## un-comment to run only a single transect
 # interactive <- TRUE
+## un-comment to process only the latest surveys
+# onlyCurrent <- TRUE
+## for trouble-shooting only
+# test <- TRUE
 
 ################################################
 ################################################
@@ -26,8 +32,6 @@ interactive <- FALSE
 
 
 ## interactive collection of transects to plot
-
-## plot only last date?
 if (interactive){
   iFun <- function (){
     sY <- readline ("Enter the year to plot: ")
@@ -51,15 +55,21 @@ if (interactive){
   sSelect <- iFun ()
   rm (iFun)
 }
+## plot only current year (to keep it simple)
+if (onlyCurrent){
+  poAll <- subset (poAll, year == format (Sys.time(), "%Y"))
+  ## reset factor levels
+  poAll$survey <- factor (poAll$survey)
+  poAll$Transect <- factor (poAll$Transect)
+}
 
 
-
-test <- TRUE
-test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 10}else{iX <- seq_along(levels (poAll$survey))}
+if (test){iX <- 10}else{
+  iX <- seq_along(levels (poAll$survey))
+  }
 if(interactive){iX <- which (levels (poAll$survey) == sSelect$survey)}
 
 require ("parallel")
@@ -91,7 +101,7 @@ for (sv in iX){
       s$Transect [(s$Transect == "4") & (s$Station == "3")] <- "AlongBay"
       s$Transect [(s$Transect == "9") & (s$Station == "6")] <- "AlongBay"
 
-      ## extended AlongBay Transect
+      ## extended AlongBay Transect -- got function for this already?
       # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
       fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
       # nS <- -3:0
@@ -135,7 +145,6 @@ for (sv in iX){
              , height = 8.5*200, width = 11*200, res = 300  # landscape
              # , height = 11*200, width = 8.5*200, res = 300 # portrait
         )
-
         # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDwall/", oVars [ov]
         #              , " T-", levels (poAll$Transect)[tn]
         #              # , "_", levels (physOcY$year)[k]
