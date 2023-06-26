@@ -16,13 +16,19 @@
 
 cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
 
-
-
 if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
 
 
 # TESTrun <- TRUE
 # TESTrun <- FALSE
+
+
+## process only latest new survey to speed things up
+latestonly <- FALSE
+# latestonly <- TRUE
+
+
+
 
 
 ## make this independent from ctd_workflow.R
@@ -162,6 +168,13 @@ fDB <- subset (fDB, !duplicated(fDB$hexStart))
 ## remove low battery casts
 summary (fDB$batteryOK)
 fDB <- subset (fDB, batteryOK)
+
+
+if (latestonly){
+  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
+}
+
+
 
 ##################################################################
 ## move files into new folder structure -- the main action item ##

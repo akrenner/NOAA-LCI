@@ -100,7 +100,7 @@ for (i in seq_along(hexF)){
 
 
 cat ("\n############################################################################")
-cat ("\n##\n##\n##\n## After successful run and inspection: move .hex files to their folder ## \n##\n##\n##\n")
+cat ("\n##\n##\n##\n## After successful run, inspect hex files in edited folder ## \n##\n##\n##\n")
 cat ("\n############################################################################")
 
 ## EOF
