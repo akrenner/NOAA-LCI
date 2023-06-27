@@ -12,7 +12,7 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
   # set environment variable to avoid "no such file or directory errors"
   Sys.setenv(TMPDIR = "C:\tmp")
-}else{
+}else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 rm (list = ls())
@@ -35,6 +35,9 @@ ongoingY <- TRUE   # for quarterly update
 sink (file="runAll.log", append=FALSE, split=FALSE)
 
 
+
+
+source ("InitialSetup.R")
 source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
