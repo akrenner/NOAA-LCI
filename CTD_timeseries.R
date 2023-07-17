@@ -756,10 +756,9 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 ## move this elsewhere! -- signature data?
 ## aggregate Freshwater contents over surface layer of T9
 xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
-fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=sum, na.rm=FALSE)
-fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=sum, na.rm=FALSE)$FreshWaterContDeep
+fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=mean, na.rm=FALSE)
+fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=mean, na.rm=FALSE)$FreshWaterContDeep
 fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
-fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
 
 names (fw) <- c ("Date", "freshCont", 'freshDeep')
 fw$Date <- as.POSIXct(as.Date (fw$Date))
@@ -768,6 +767,7 @@ fw$year <- as.numeric (format (fw$Date, "%Y"))
 
 ## QAQC
 # is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
+# fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
@@ -826,6 +826,17 @@ if (0){
   dev.off()
 }
 
+## variation of freshwater -- all in one panel
+fw$year <- factor (fw$year)
+png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=7*100, res=100)
+plot (freshCont~month, data=fw, type="n", ylab="freshwater contents", xlab="month")
+for (i in seq_along(levels (fw$year))){
+  lines (freshCont~month, data = fw, subset = fw$year==levels (fw$year)[i]
+         , col=i, lwd=2)
+}
+legend ("topleft", legend=levels (fw$year), col=seq_along(levels (fw$year))
+        , lwd=2, bty="n")
+dev.off()
 
 
 if (0){
