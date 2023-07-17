@@ -606,7 +606,7 @@ for (k in pickStn){
     TSaxis (xCS@metadata$time)
 
     ### XXX anAx (pre)
-    if(0){
+    if(1){
       ## anomaly  (too noisy?)
       zB <- sF (v=xC$anBvf, qR=0.90)
       plot.station (xCS, which="anBvf"
@@ -687,7 +687,8 @@ for (k in pickStn){
 
     ## time series of raw data
     plot.station (xCS, which="temperature"
-                  , zcol=ODV_colours
+#                  , zcol=ODV_colours
+                 , zcol= tCol
                   # , zbreaks=sF (xC$Temperature_ITS90_DecC)
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
                   , mar=Mr
