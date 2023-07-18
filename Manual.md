@@ -7,6 +7,9 @@ keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrien
 ---
 
 
+[//]: compile this markdown document to html by issuing: 
+
+
 ## Kachhemak Bay Ecological Sampling Protocols
 
 NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been 
@@ -21,7 +24,7 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 
 ## TOC
 
-[//]: # checked Jim's printed pages -- done 
+[//]: # checked Jim's printed pages -- done
 [//]: # incorporated Kim's manual XXX
 
 
@@ -114,12 +117,14 @@ Connect to CTD, as before.
 [//]: # Copy from Jim's instructions. 
 Two options: batch-downloading and attended download. 
 #### Batch download and processing with FileMaker and R
-Copy/sync filemaker database back to computer. 
+Copy/sync filemaker database back to computer (email file to self). 
 Connect to CTD, as before and display headers. Compare headers to recorded times in FileMaker database, and enter cast numbers. Export notesTable (script) and close FileMaker. Open R and run hexEdit.R. Manually inspect resultant edited hex files and copy them with containing folder to the appropriate place in 2_edited_hex_files. 
 
 Generate NoteBook pdf from FileMaker and upload it to the WorkSpace. 
 https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Environmental Drivers: Oceanographic monitoring in Cook Inlet and Kachemak Bay > Data, 2017-ongoing > Fiel notes > "year"
 [//]: # Producing this pdf needs details.
+
+
 #### Attended download
 If working manually: scan handwritten notes to pdf. Then upload that pdf to the WorkSpace, as above. 
 #### Process and archive CTD files
