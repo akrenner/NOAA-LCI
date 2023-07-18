@@ -44,10 +44,12 @@ require ("RColorBrewer")
 
 
 ## select which stations to plot -- all or only named stations
+physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
-                    c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
-# pickStn <- 1:length (levels (physOc$Match_Name))
+#                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
+  c("9_6", "AlongBay_3", "AlongBay_9"))
 pickStn <- 87 # 9-6
+# pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 
 
 deepThd <- 20   ## deep vs surface layer
@@ -488,7 +490,7 @@ for (k in pickStn){
     clPlot <- function (cT, which = "temperature", zcol = oceColorsTemperature(11), ...){
       plot (cT, which = which, xtype = "time", ztype = "image", zcol = zcol
             , xlim = c(as.POSIXct (as.Date (c("2000-01-01", "2000-12-31"))))
-            , axes = FALSE
+            , axes = FALSE, xlab=""
             , ...)
     }
 
@@ -600,7 +602,7 @@ for (k in pickStn){
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
                   , ylim=c(deepThd, 0)  ## new requirement of new oce version?
     )
-    title (main=expression (Brunt~Väisälä~Buoyancy~frequency~"["*s^-2*"]"))
+    title (main=expression (Brunt-Väisälä~buoyancy~frequency~"["*s^-2*"]"))
     TSaxis (xCS@metadata$time)
 
     ### XXX anAx (pre)
@@ -642,6 +644,33 @@ for (k in pickStn){
     lines (TempS_norm~timeStamp, T96f, col="blue", lwd=2)
     legend ("topright", lwd=2, col=c("black", "blue"), legend=c("max buoyancy", "seasonal mean"), bty="n")
     box()
+    dev.off()
+
+
+
+
+    #########################################
+    ## chlorophyll and pycnocline patterns ##
+    #########################################
+    png (paste0 (mediaD, "6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
+         , height=6*pngR, width=8*pngR)
+    par (las = 1, mfrow=c(2,1))
+    ## chlorophyll
+    clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll(12)
+            , ylim=c(0,25)) ## add contour
+    anAx(pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+    title (main=expression (Chlorophyll~concentration~"["*mg~m^-3*"]"))
+
+    ## buoyancy-frequency
+    clPlot (cT9, which="sBvf"
+            , zcol = colorRampPalette (c ("white", rev (cmocean ("haline")(8))))(12)
+            , ylim=c(0,25)
+    )
+    anAx (pretty (range (as.numeric (levels (ctdAgg$depthR)))))
+    title (main=expression (Brunt-Väisälä~buoyancy~frequency~"["*s^-2*"]"))
+
+    ## PAR
+    ## turbidity
     dev.off()
 
 
@@ -711,6 +740,16 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 
 
 
+
+
+
+
+
+
+
+
+
+
 #########################
 ## freshwater contents ##
 #########################
@@ -718,18 +757,20 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 ## move this elsewhere! -- signature data?
 ## aggregate Freshwater contents over surface layer of T9
 xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
-fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=sum, na.rm=FALSE)
-fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=sum, na.rm=FALSE)$FreshWaterContDeep
-fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
-fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
+fw <- aggregate (SalSurface~Date, data=xC, FUN=mean, na.rm=FALSE)
+fw$SalDeep <- aggregate (SalDeep~Date, data=xC, FUN=mean, na.rm=FALSE)$SalDeep
+fw$freshCont <- 33-fw$SalSurface
+fw$freshDeep <- 33-fw$SalDeep
 
-names (fw) <- c ("Date", "freshCont", 'freshDeep')
+# names (fw) <- c ("Date", "freshCont", 'freshDeep')
 fw$Date <- as.POSIXct(as.Date (fw$Date))
 fw$month <- as.numeric (format (fw$Date, "%m"))
 fw$year <- as.numeric (format (fw$Date, "%Y"))
 
 ## QAQC
 # is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
+# fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
+# fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
@@ -787,6 +828,58 @@ if (0){
                  , xlab = "freshwater anomaly"))
   dev.off()
 }
+
+
+## variation of freshwater -- all in one panel == for GWA report
+
+fwX <- fw
+lY <- rep ("dashed", 2)
+fw <- subset (fw, year < 2022)
+
+fw$year <- factor (fw$year)
+fw$jday <- as.numeric (format (fw$Date, "%j"))
+fwag <- aggregate (freshCont~month+year, data=fw, FUN=mean)
+fwag$freshDeep <- aggregate (freshDeep~month+year, data=fw, FUN=mean)$freshDeep
+
+png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
+par (mfrow=c(2,1))
+par (mar=c(4-3,4,4,1))
+plot (freshCont~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
+axis (2)
+for (i in seq_along(levels (fwag$year))){
+  lines (freshCont~month, data=fwag, subset=fwag$year==levels (fwag$year)[i]
+         , col=i, lwd=2
+         , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)[i]
+  )
+  # points (freshCont~month, data=fwag, subset=fwag$year==levels (fwag$year)[i], col=i, pch=19)
+}
+legend ("bottomright", legend=levels (fwag$year), col=seq_along(levels (fwag$year))
+        , lwd=2, bty="n", ncol=4
+        , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)
+)
+legend ("topright", legend="surface water", bty="n")
+box()
+
+par (mar=c(4,4,4-3,1))
+plot (freshDeep~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
+axis (1, labels=month.abb, at=1:12); axis (2)
+for (i in seq_along(levels (fwag$year))){
+  lines (freshDeep~month, data=fwag, subset=fwag$year==levels (fwag$year)[i]
+         , col=i, lwd=2
+         , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)[i]
+  )
+}
+legend ("topleft", legend=levels (fwag$year), col=seq_along(levels (fwag$year))
+        , lwd=2, bty="n", ncol=4
+        , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)
+)
+legend ("topright", legend="deep water", bty="n")
+box()
+
+mtext ("Freshwater content index", side=2, line=-1.5, outer=TRUE)
+dev.off()
+fw <- fwX; rm (fwX, fwag)
+
 
 
 
@@ -1049,6 +1142,7 @@ if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 # use oce template for pretty plot
 
 
-# graphics.off()
+graphics.off()
+cat ("\nEnd of CTD_timeseries.R\n\n")
 
 ## EOF
