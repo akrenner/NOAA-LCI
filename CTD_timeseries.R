@@ -756,11 +756,12 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
 ## move this elsewhere! -- signature data?
 ## aggregate Freshwater contents over surface layer of T9
 xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
-fw <- aggregate (FreshWaterCont~Date, data=xC, FUN=mean, na.rm=FALSE)
-fw$freshDeep <- aggregate (FreshWaterContDeep~Date, data=xC, FUN=mean, na.rm=FALSE)$FreshWaterContDeep
-fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
+fw <- aggregate (SalSurface~Date, data=xC, FUN=mean, na.rm=FALSE)
+fw$SalDeep <- aggregate (SalDeep~Date, data=xC, FUN=mean, na.rm=FALSE)$SalDeep
+fw$freshCont <- 33-fw$SalSurface
+fw$freshDeep <- 33-fw$SalDeep
 
-names (fw) <- c ("Date", "freshCont", 'freshDeep')
+# names (fw) <- c ("Date", "freshCont", 'freshDeep')
 fw$Date <- as.POSIXct(as.Date (fw$Date))
 fw$month <- as.numeric (format (fw$Date, "%m"))
 fw$year <- as.numeric (format (fw$Date, "%Y"))
@@ -768,6 +769,7 @@ fw$year <- as.numeric (format (fw$Date, "%Y"))
 ## QAQC
 # is.na (fw$freshCont [fw$freshCont > 200]) <- TRUE
 # fw$freshDeep <- ifelse (fw$freshDeep > 2000, NA, fw$freshDeep)  ## bad CTD battery?
+# fw$FreshWaterCont <- ifelse (fw$FreshWaterCont > 2000, NA, fw$FreshWaterCont)  ## bad CTD battery?
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
@@ -826,17 +828,59 @@ if (0){
   dev.off()
 }
 
-## variation of freshwater -- all in one panel
+
+## variation of freshwater -- all in one panel == for GWA report
+
+fwX <- fw
+lY <- rep ("dashed", 2)
+fw <- subset (fw, year < 2022)
+
 fw$year <- factor (fw$year)
-png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=7*100, res=100)
-plot (freshCont~month, data=fw, type="n", ylab="freshwater contents", xlab="month")
-for (i in seq_along(levels (fw$year))){
-  lines (freshCont~month, data = fw, subset = fw$year==levels (fw$year)[i]
-         , col=i, lwd=2)
+fw$jday <- as.numeric (format (fw$Date, "%j"))
+fwag <- aggregate (freshCont~month+year, data=fw, FUN=mean)
+fwag$freshDeep <- aggregate (freshDeep~month+year, data=fw, FUN=mean)$freshDeep
+
+png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
+par (mfrow=c(2,1))
+par (mar=c(4-3,4,4,1))
+plot (freshCont~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
+# axis (1, labels=month.abb, at=1:12)
+axis (2)
+for (i in seq_along(levels (fwag$year))){
+  lines (freshCont~month, data=fwag, subset=fwag$year==levels (fwag$year)[i]
+         , col=i, lwd=2
+         , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)[i]
+  )
+  # points (freshCont~month, data=fwag, subset=fwag$year==levels (fwag$year)[i], col=i, pch=19)
 }
-legend ("topleft", legend=levels (fw$year), col=seq_along(levels (fw$year))
-        , lwd=2, bty="n")
+legend ("bottomright", legend=levels (fwag$year), col=seq_along(levels (fwag$year))
+        , lwd=2, bty="n", ncol=4
+        , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)
+)
+legend ("topright", legend="surface water", bty="n")
+box()
+
+par (mar=c(4,4,4-3,1))
+plot (freshDeep~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
+axis (1, labels=month.abb, at=1:12); axis (2)
+for (i in seq_along(levels (fwag$year))){
+  lines (freshDeep~month, data=fwag, subset=fwag$year==levels (fwag$year)[i]
+         , col=i, lwd=2
+         , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)[i]
+  )
+}
+legend ("topleft", legend=levels (fwag$year), col=seq_along(levels (fwag$year))
+        , lwd=2, bty="n", ncol=4
+        , lty = c(rep ('solid', length (levels (fwag$year))-length (lY)), lY)
+)
+legend ("topright", legend="deep water", bty="n")
+box()
+
+mtext ("Freshwater content index", side=2, line=-1, outer=TRUE)
 dev.off()
+fw <- fwX; rm (fwX, fwag)
+
+
 
 
 if (0){
