@@ -7,7 +7,7 @@ keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrien
 ---
 
 
-[//]: compile this markdown document to html by issuing: 
+[//]: compile this markdown document to html by issuing something like:   pandoc -s Manual.md -o manual.rtf
 
 
 ## Kachhemak Bay Ecological Sampling Protocols
@@ -24,9 +24,6 @@ Previous versions included zooplankton, and OA sampling, projects that have been
 
 ## TOC
 
-[//]: # checked Jim's printed pages -- done
-[//]: # incorporated Kim's manual XXX
-
 
 ## Sampling preparations
 
@@ -41,7 +38,7 @@ To change the date, the time command has to be issued as well.
 - vlith: replace lithium battery if vlith is < 7 (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).
 - casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate!!! 
 - mode: MUST be 'profile'. 
-Screenshot of Seaterm v1.59 ![Alt](/manual/SeaTerm.PNG "Seaterm")
+Screenshot of Seaterm v1.59 ![Alt](manual/SeaTerm.PNG "Seaterm")
 Document CTD time, date, and voltages in the FileMaker database (layout: CTDstatusLog). 
 
 ### iPad
@@ -175,7 +172,7 @@ Open Seaterm v 1.59. Configure *SBE 19 plus ...* Communication settings:
 * Mode: RS-232 full duplex
 Depending on your RS-232 to USB adapter, your COM-port may be configured on port-6, port-7 or on another (KBRR cable: port-6, NCCOS: 7). Select "Connect" and see whether communications to the instrument can be established. If not, check that the driver is installed (Device Manager), try a different port, check all cable connections, and check that CTD batteries have sufficient voltage. 
 
-Screenshot of Device Manager, showing the missing driver (to be installed by admin) ![Alt](/manual/DeviceManager-driver.PNG "missing driver")
+Screenshot of Device Manager, showing the missing driver (to be installed by admin) ![Alt](manual/DeviceManager-driver.PNG "missing driver")
 
 There are two ways to go about downloading hex files from the CTD: interactively, adding information to each file as they download, or in a batch process, then adding that information later. Since the download is quite slow, I recommend a batch download. For that, you want to set up Seaterm configurations as follows:
 - SBE 19plus Configuration Options: Upload Settings: select Upload data... "By cast number range"
