@@ -98,6 +98,7 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
 dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 Require ("oce")
+cat ("\ncount to: ", length (levels (physOc$File.Name)), " \n")
 plotCTDprof <- function (i){
   cat (i, " ")
   if (i %% 7 == 0){cat ("\n")}
@@ -172,10 +173,10 @@ plotCTDprof <- function (i){
 
 if (.Platform$OS.type=="unix"){
   Require ("parallel")
-  x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
+  x <- mclapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }else{
   ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
-  x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
+  x <- lapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof)
 }
 # dev.off()
 
