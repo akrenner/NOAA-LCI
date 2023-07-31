@@ -7,6 +7,9 @@
 ## read in plankton and oceanographic data
 ## geographically link with seabird data
 ## interannual comparison in relation to SST
+##
+## re-arrange data columns, add a metadata-line and produce CSV files for
+## data publication (zooplankton, phytoplankton. CTD done elsewhere)
 
 
 rm (list = ls())
@@ -17,7 +20,13 @@ print (Sys.time())
 
 
 deepThd <- 15 ## bottom threshold -- everything above considered surface,
-                ## everything below bottom water
+              ## everything below bottom water
+              ## use 30 m as cut-off for deep-water, sure to be below pycnocline
+
+## for GWA report
+printSampleDates <- TRUE
+printSampleDates <- FALSE
+
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -73,8 +82,6 @@ Seasonal <- function (month){           # now using breaks from zoop analysis --
     month <- as.numeric (month)
     cut (month, breaks = c(-13,0,2,4,8,10, 25)
             , labels = c ("fall", "winter", "spring", "summer", "fall", "winter"))
-    ## cut (month, breaks = c(-13,3,6,9,12, 25)-0
-    ##         , labels = c ("winter", "spring", "summer", "fall", "winter"))
 }
 
 
@@ -187,6 +194,8 @@ poSS <- with (physOc, data.frame (File.Name = levels (File.Name)))
 poM <- match (poSS$File.Name, physOc$File.Name)
 
 poSS$Match_Name <- physOc$Match_Name [poM]
+poSS$Transect <- physOc$Transect [poM]
+
 poSS$latitude_DD <- physOc$latitude_DD [poM]
 poSS$longitude_DD <- physOc$longitude_DD [poM]
 poSS$timeStamp <- physOc$isoTime [poM]
@@ -313,7 +322,7 @@ poSS$SSS <- agg (physOc$Salinity_PSU, FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalMean <- agg (physOc$Salinity_PSU, FUN = mean, refDF=poSS)
 poSS$SalSurface <-agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. <= deepThd
                        , FUN=mean, na.rm=TRUE, refDF=poSS)
-poSS$SalDeep <- -agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > deepThd
+poSS$SalDeep <- agg (physOc$Salinity_PSU, subset=physOc$Depth.saltwater..m. > 30 # deepThd
                       , FUN=mean, na.rm=TRUE, refDF=poSS)
 poSS$SalBottom <- unlist (mclapply (poSS$File.Name, FUN=dMean, fldn="Salinity_PSU"
                                   , mc.cores=nCPUs))
@@ -448,6 +457,24 @@ save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 
 
+pT <- poSS
+pT$Year <- as.numeric (format (pT$timeStamp, "%Y"))
+
+## quick overview of sampling ##
+if (printSampleDates){
+  cat ("\n\nCTD sampling dates\n")
+  pT <- subset (pT, Year > 2016)
+  length (levels (factor (pT$Match_Name)))
+
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  rm (pT)
+}
 
 
 ## QAQC --- should go elsewhere!!!
@@ -587,7 +614,7 @@ phyp <- read.csv ("~/GISdata/LCI/phytoplankton/phytoplankton.csv"
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2017-02.csv")
 # phyp <- read.csv ("~/GISdata/LCI/KBL-Phytoplankton-2018-10-sorted.csv")
 ## current 2018 version does not have date
-phyp <- cbind (Match_Name = trimws (phyp$station), phyp)
+phyp <- cbind (Match_Name = trimws (phyp$Station), phyp)
 phyp$Match_Name <- gsub ("Transect\\s([1-9]),\\sStation\\s([0-9]+)", "\\1_\\2", phyp$Match_Name)
 # phyp$Match_Name <- gsub ("\\s([A-D])$", "_\\1", phyp$Match_Name) # space to underscore
 phyp$Match_Name <- gsub ("\\sBay", "", phyp$Match_Name) # del Cove
@@ -632,7 +659,7 @@ phyp <- cbind (SampleID = paste (phyp$Match_Name
                , phyp)
 rm (trnsct)
 phyCenv <- phyp
-phyCenv <- phyp [,c(1:which (names (phyCenv) == "station") # or use Match_Name? difference?
+phyCenv <- phyp [,c(1:which (names (phyCenv) == "Station") # or use Match_Name? difference?
                     , which (names (phyp) == "Total.cell.count"))]
 phyC <- phyp [,which (names (phyp) == "Alexandrium.spp.") :
                      which (names (phyp) == "unknown.pennate.diatom")]
@@ -642,7 +669,19 @@ sort (apply (phyC, 2, function (x){
 }))
 rm (phyp)
 
-
+## quick overview of sampling ##
+if (printSampleDates){
+  cat ("\n\nPhytoplankton sampling dates\n")
+  pT <- subset (phyCenv, Year > 2020)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  rm (pT, i)
+}
 
 #################
 ## zooplankton ##
@@ -668,9 +707,11 @@ zoop$Match_Name <- gsub ("^KB_", "AlongBay_", zoop$Match_Name)
 zoop$Match_Name <- gsub ("Peterson Bay_", "Peterson_", zoop$Match_Name, fixed = TRUE)
 zoop$Match_Name <- gsub ("^_$", "Halibut_B", zoop$Match_Name) # or A,C?
                                         # no matching CTD data on that date
+zoop$Match_Name <- gsub ("^_", "", zoop$Match_Name)
 refN <- match (zoop$Match_Name, stn$Match_Name)
 ## zoop$Match_Name [is.na (refN)]    # bad zoop stations that don't match master list
 # add geographic coordinates from stn
+if (any (is.na (refN))){stop ("zooplankton station does not match reference list")}
 zoop <- cbind (stn[refN, match (c ("Lon_decDegree", "Lat_decDegree"), names (stn))]
                , isoDate = strptime (zoop$Date, format = "%d-%b-%y") # output with tz?
              , zoop)
@@ -681,16 +722,14 @@ zoop <- cbind (SampleID= paste (zoop$Match_Name
              , SampleID_H= paste (zoop$Match_Name, format (zoop$timeStamp, format = "%Y-%m-%d_%H", usetz = FALSE))
              , season = Seasonal (format (zoop$timeStamp, "%m"))
              , zoop)
-if (any (is.na (zoop$Lon_decDegree))){
-    zoop <- zoop [!is.na (zoop$Lon_decDegree),] # cut out samples without coordinates
-}
-
+zoop <- subset (zoop, !is.na (zoop$isoDate))
 #### zoop <- zoop [,match (zoop$SampleID, poSS$SampleID)]
 
 
 ### fix species names
 ## fix Mueller's larvae in source!
 zoop$Species <- ifelse (zoop$Species == "M\xfcller's larvae", "Mullers larvae", zoop$Species)
+zoop$Species <- ifelse (zoop$Species == "Müller's larvae", "Mullers larvae", zoop$Species)
 zoop$Species <- tolower (as.character (zoop$Species))
 if (length (grep ("plastic", zoop$Species)) > 0){
   zoop <- zoop [-grep ("plastic", zoop$Species),]
@@ -699,21 +738,36 @@ if (length (grep ("plastic", zoop$Species)) > 0){
 zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
 
+## lookup deepth from field notes
+load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
+zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
+zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
 save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
 
 ## export zooplankton data to standardized file (matching first columns as in CTD aggregates)
-zoopOut <- with (zoop, data.frame (Station = Match_Name), Date = isoDate, Time
-                 , SampleID = SampleID_H
+zoopOut <- with (zoop, data.frame (Station = Match_Name, Date = isoDate, Time
                  , Latitude_DD = Lat_decDegree
-                 , Longitude_DD = Lon_decDegree, Mesh, Flow, Water.Sampled_m3 = Water.Sampled_..m3.
+                 , Longitude_DD = Lon_decDegree
+                 , Transect
+                 , StationN=Station
+                 , Depth
+                 , Mesh, Flow, Water.Sampled_m3=Water.Sampled..m3.
+                 , SampleID = SampleID_H
                  , Split
                  , Species
-                 , Count = RTotal)
-write.csv(zoopOut, row.names = FALSE
-          , file = "~/tmp/LCI_noaa/data-products/CookInletKachemakBay_Zooplankton.csv")
-rm (zoopOut)
+                 , Count = RTotal))
+
+zoopOut$StationN <- ifelse (zoopOut$StationN %in% 1:100
+                            , paste0 ("S_", zoopOut$Station), zoopOut$Station)
+tF <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv"
+write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent CTD and phytoplankton on select stations. 2012-2021.")
+        , file=tF, append=FALSE, ncolumns=1)
+suppressWarnings(write.table(zoopOut, file=tF, append=TRUE, quote=FALSE, sep=","
+                              , na="", row.names=FALSE, col.names=TRUE))
+rm (zoopOut, tF)
+
 
 allZoo <- aggregate (RTotal ~ SampleID, data = zoop, FUN = sum) # ouch -- sample ID!!
 # samp <- unique (data.frame (zoop [,1:7]))
@@ -748,17 +802,18 @@ zooC <- zooC [order (row.names (zooC)),] # not naturally ordered; but harmless?
 
 ## csv file of zooC community matrix to Kim
 ## print (row.names (zooC))
-write.csv (zooC, "~/tmp/LCI_noaa/media/community.csv")
+write.csv (zooC, "~/tmp/LCI_noaa/media/ZoopCommunity.csv")
 ## print (summary (zooC))
 
 
 ## corrected water volume to use as off-set
 ## density = count * split / volume
-zoop$volSample <- with (zoop, Split * Water.Sampled..m3.)
+zoop$volSample <- with (zoop, Water.Sampled..m3. / Split) ## remove when safe to do so
+zoop$volSampleM3 <- with (zoop, Flow *0.283 / Split )  ## 0.283 -- used throughout in Excel file
 ## merge zoop with poSS
 ## zooCenv <- zoop [!duplicated (zoop$SampleID_H), c(1:12, which (names (zoop) == "volSample"))]
 zooCenv <- zoop [match (row.names (zooC), zoop$SampleID_H)
-                ,c (1:12, which (names (zoop) == "volSample"))]
+                ,c (1:12, which (names (zoop) == "volSampleM3"))]
 # zooCenv$zoopDensity <-
 zooCenv$Year <- as.numeric (format (zooCenv$timeStamp, "%Y"))
 rm (zoop)
@@ -766,6 +821,21 @@ rm (zoop)
 summary (zooC$SampleID %in% poSS$SampleID)
 summary (zooC$SampleID_H %in% poSS$SampleID_H)
 
+if (printSampleDates){
+  ## quick overview of sampling ##
+  cat ("\n\nZooplankton sampling dates\n")
+  pT <- subset (zooCenv, Year > 2016)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  z <- subset (zooC, zooCenv$Year > 2016)
+
+  rm (pT, i, z)
+}
 ##  spplot (zoop, "RTotal")
 ## cluster analysis and/or DCA of along-bay vs transect 9
 
@@ -781,10 +851,30 @@ save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 #############
 
 ## pelagic stations (so far, 2021 only)
-nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
+nut <- read.csv ("~/GISdata/LCI/Nutrients/CookInletKachemakBay_Nutrients_2021.csv")
+nutC <- nut [,1:3]
 
-## shore stations (SWMP: Seldovia and Homer, monthly. Still needs QAQC!)
 
+## match to stn reference
+if (!all (levels (factor (nut$Station)) %in% stn$Match_Name)){ ## error trap
+  stop ("A station in nutrient table does not match reference station name\n\n")
+}
+sx <- match (nut$Station, stn$Match_Name)
+nutO <- with (nut, data.frame (Station, Date #, Time=NA
+                               , Latitude_DD=stn$Lon_decDegree [sx]
+                               , Longitude_DD=stn$Lat_decDegree [sx]
+                               , Transect=stn$Line [sx]
+                               , StationN=stn$Station [sx]
+))
+nutO$StationN <- ifelse (nutO$StationN %in% 1:100, paste0 ("S_", nutO$Station), nutO$Station)
+nutO <- cbind (nutO, nut [,3:ncol (nut)])
+tF <- "~/tmp/LCI_noaa/data-products/nutrients_KachemakBay_pelagic2021.csv"
+write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent CTD zoo- and phytoplankton on select stations. 2021 only.")
+       , file=tF, append=FALSE, ncolumns=1)
+suppressWarnings(write.table(nutO, file=tF, append=TRUE, quote=FALSE, sep=","
+                             , na="", row.names=FALSE, col.names=TRUE))
+# write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
+rm (tF, nutO, sx)
 
 
 #######################
@@ -792,7 +882,28 @@ nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
 #######################
 
 ## exploratory analysis did not yield much, other than noise -- abandone.
+oa <- read.csv ("~/GISdata/LCI/Ocean_Acidification_OA/OA2015-2018.csv")
+oa <- read.csv ("~/GISdata/LCI/Ocean_Acidification_OA/OA2017-2021.csv")
+oa$timeStamp <- as.POSIXct(oa$sample.date)
+oa$Year <- format (oa$timeStamp, "%Y")
+oa$MatchName <- substr (oa$sample.ID, 1, 5)
+oa$Transect <- substr (oa$sample.ID, 1,3)
+oa$Transect <- gsub ("^KB", "AB", oa$Transect)
+oa$Transect <- gsub ("_$", "", oa$Transect)
 
+## quick overview of sampling ##
+if (printSampleDates){
+  cat ("\n\nOA sampling dates\n")
+  pT <- subset (oa, Year > 2020)
+  pT$Transect <- factor (pT$Transect)
+  for (i in 1:length (levels (pT$Transect))){
+    cat ("\n\n", levels (pT$Transect)[i], "\n")
+    print (sort (levels (factor (
+      subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
+    ))))
+  }
+  rm (pT)
+}
 
 
 ##############
@@ -802,6 +913,7 @@ nut <- read.csv ("~/GISdata/LCI/CookInletKachemakBay_Nutrients_2021.csv")
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
+Require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
 
@@ -908,8 +1020,9 @@ save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 
 
-slot (coast, "proj4string") <- slot (poSS, "proj4string")
-badPO <- !is.na (over (poSS, coast)$id)
+
+slot (coast, "proj4string") <- slot (poSS, "proj4string")   ## migrate to sf
+badPO <- !is.na (over (poSS, coast)$id)                     ## migrate to sf
 PDF ("testSamplesites")
 plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
 # plot (NPPSD2, pch = 1, add = TRUE)
@@ -945,24 +1058,24 @@ rm (badPO)
 
 
 ## bathymetry from AOOS, Zimmerman
-# need to clean up source files -- get rid of obsolete/redundant data sets
 Require ("raster")
 Require ("rgdal")
-
-## need to supply absolute path because raster object is just a pointer.
-## still needs uncompressed raster file accessible.
 if (.Platform$OS.type == "windows"){
-  bath <- raster ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
-  bath <- raster ("/Users/martin/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
-## move to stars
+
 Require ("stars")
-bathyZ <- read_stars ("~/GISdata/LCI/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-
-
+## NC4 version -- gives trouble with projection?
+## st_mosaic not working for this. Try nc4 files again?
+# bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+#                      , read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CGOA_BATHY.nc4"))
+bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
 
 bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
+# bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))
 
 
 ch <- chull(coordinates (NPPSD2))
@@ -978,8 +1091,8 @@ grd <- spsample (sp_poly, n = 100^2, "regular") # ok, but grid size somewhat mys
 ## gridded (grd) <- TRUE
 rm (ch, chCoor, sp_poly)
 
-pr <- proj4string(bath)
-# pr <- slot (bath, "crs") ## no slot proj4string in raster object. spTran fails if pr is from crs-slot
+pr <- proj4string(bath)  ## fails when using slot (bath, "crs")
+# pr <- sf::st_crs (bathyZ)
 
 stnP <- spTran (stnP, pr)
 poSS <- spTran (poSS, pr)
@@ -989,6 +1102,7 @@ grd <- spTran (grd, pr)
 coast <- spTran (coast, pr)
 bathCont <- spTran (bathCont, pr)
 rm (spTran, pr)
+
 
 ## AOOS model data:
 ## - Tidal current speed

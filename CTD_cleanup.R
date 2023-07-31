@@ -231,9 +231,9 @@ stN <- gsub ("south", "", stN)
 stN <- gsub ("portgraham", "PTGR", stN)
 stN <- gsub ("spgrm", "PTGR", stN)
 stN <- gsub ("sptgm", "PTGR", stN)
-
 stN <- gsub ("spogi", "POGI", stN)
 stN <- gsub ("pogi", "POGI", stN)
+
 ## stN <- gsub ("[a-z]*$", "", stN) ## too gready -- cut it down
 stN <- gsub ("^0*", "", stN)
 for (i in 0:9){
@@ -298,6 +298,7 @@ physOc$Match_Name <- gsub ("_13to10m$", "_13", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^T4S02$", "4_2", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^T7S20$", "7_20", physOc$Match_Name)
 physOc$Match_Name <- gsub ("^T9S06$", "9_6", physOc$Match_Name)
+
 physOc$Match_Name <- gsub ("\\s([AB])$", "_\\1", physOc$Match_Name) # " A" or " B"
 ## all remaining spaces should be in transect names and should be removed (no underscore)
 physOc$Match_Name <- gsub ("\\s", "", physOc$Match_Name)

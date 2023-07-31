@@ -156,48 +156,64 @@ for (i in 1:length (conF)){
 ## run BinAvg again in SEABIRD and/or in R.
 ## tLB [3]: aligned, tLB [4]: looped,
 ## slow -- any way to parallelize this?
+## 2023-05-19: 2nd call to read.ctd fails at i==929 (oce version 1.7-10)
 
-if (1){  ## fails in oce 1.7-3 due to changes in oce
-fNf <- list.files(tLB [3], ".cnv"
-                  , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
-require ("oce")
-for (i in 1:length (fNf)){
-  ## read all text and change digit-digit to digit -digit
-  ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
-  # read.table()
+if (0){
+  ## fails in oce 1.7-3 due to changes in oce?
+  ## simply stick to all SBE for now
+  ## eventually replace SBE completely with python
+  fNf <- list.files(tLB [3], ".cnv"
+                    , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 
-  ctdF <- try (read.ctd(fNf [i]), silent=TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
-  if (class (ctdF) == "try-error"){
-    cat ("\n##\ntrouble reading ", i, fNf [i], "--trying to fix\n##\n\n")
-    cT <- readLines(fNf [i])
-    ## gsub: capture text and use it again -- line 283 of i==1058
-    dS <- grep ("^\\*END", cT) + 1 # line where data starts
-    #  cT [(dS-3):(dS+5)]
-    ctx <- cT [dS:length (cT)]
-    ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
-#   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
-    cTf <- c (cT [1:(dS-1)], ctx2)
-    ctdF <- read.ctd (textConnection (cTf))
-    rm (cT,ctx, ctx2, cTf, dS)
+  ## for troubleshooting
+  save.image ("~/tmp/LCI_noaa/cache/CTD_hexconversion.RData")
+  # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/CTD_hexconversion.RData")
+  require ("oce")
+  for (i in seq_along(fNf)){
+    ## read all text and change digit-digit to digit -digit
+    ## i <- 929 # has issue
+    ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
+    # read.table()
+
+    ctdF <- try (read.ctd(fNf [i]), silent=TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
+    if (class (ctdF) == "try-error"){
+      cat ("\n##\ntrouble reading ", i, fNf [i], "--trying to fix\n##\n\n")
+      cT <- readLines(fNf [i])
+      ## gsub: capture text and use it again -- line 283 of i==1058
+      dS <- grep ("^\\*END", cT) + 1 # line where data starts
+      #  cT [(dS-3):(dS+5)]
+      ctx <- cT [dS:length (cT)]
+      ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
+      #   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
+      cTf <- c (cT [1:(dS-1)], ctx2)
+      ctdF <- read.ctd (textConnection (cTf))
+      rm (cT,ctx, ctx2, cTf, dS)
+    }
+    cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
+                           # , parameters=list (minSoak=1, maxSoak=20)
+    )  ## min/maxSoak=dbar (approx m)
+    , silent=TRUE)
+    if (class (cTrim) == "try-error"){
+      ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
+      # could/should specify min soak times, soak depth -- min soak time=40s
+      #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
+    }else{
+      ctdF <- cTrim
+    }
+    write.ctd (ctdF, file=gsub ("3-aligned", "4r-looped", fNf [i]))
+    ## tried, but largely failed so far with
+    ## vprr bin_cast / bin_calculate
+    ## and/or oce::ctdDecimate
+    # -- ctdDecimate seems to work but depth still a bit off
+    ## or use oce::binMean1D
   }
-  cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
-                         # , parameters=list (minSoak=1, maxSoak=20)
-                         )  ## min/maxSoak=dbar (approx m)
-                , silent=TRUE)
-  if (class (cTrim) == "try-error"){
-    ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
-    # could/should specify min soak times, soak depth -- min soak time=40s
-    #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
-  }else{
-    ctdF <- cTrim
-  }
-  write.ctd (ctdF, file=gsub ("3-aligned", "4r-looped", fNf [i]))
-  ## tried, but largely failed so far with
-  ## vprr bin_cast / bin_calculate
-  ## and/or oce::ctdDecimate
-  # -- ctdDecimate seems to work but depth still a bit off
-  ## or use oce::binMean1D
-}
+  ## move CNV final folder, as appropriate
+  file.rename(gsub ("3-aligned", "4-looped", dirname(fNf [1]))
+              , gsub ("3-aligned", "4SBE-looped", dirname(fNf [1]))
+              )
+  file.rename(gsub ("3-aligned", "4r-looped", dirname(fNf [1]))
+              , gsub ("3-aligned", "4-looped", dirname(fNf [1]))
+  )
 }
 rm (bT, i, j, tLD)
 rm (conF, psa, outF, inD, tL, l1, l2, l3)

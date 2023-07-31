@@ -40,13 +40,15 @@
 
 
 
-rm (list = ls())
+# rm (list = ls())
+
 ## CAREFUL with this!!
 # system ("rm -r ~/tmp/LCI_noaa/")
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
 sTime <- Sys.time()
-
+runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
+runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -60,14 +62,9 @@ x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 
 set.seed(7)
 
-## check processed 'rawish' files on workspace for bad profiles, see whether these look ok
-## deep-water stability:  50m vs bottom : where and when does this occur? (difference, not ratio)
-## GAK-1 50 m sensor:  time series compared to LCI
-
 ## better solution:
 ## put all this code into a package
 ## make required packages a dependency -> they will install automatically, if missing, during package install
-
 
 
 ## hard-code location to AK -- how?
@@ -86,17 +83,7 @@ if (!require("pacman")){
 Require <- pacman::p_load
 
 
-Require ("parallel")
-nCPUs <- detectCores()
-if (.Platform$OS.type != "unix"){
-  nCPUs <- 1
-  isWin <- TRUE
-}
-# require (doParallel)
-# cl <- makeCluster(nCPUs)
-# registerDoParallel(cl)
-# ## foreach (i = 1:3) %dopar% sqrt (i)
-# stopCluster(cl)
+
 
 
 
@@ -109,14 +96,8 @@ Require (oce)
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv", full.names = TRUE, ignore.case = TRUE)
 fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)
 
+
 ## cut-out bad files for now -- fix this later -- why bad?
-badF <- c ("2012-10-29-cookinlet-tran4-cast065-s07_4141"
-           , "2012_10-29_t4_s07b_cast065_4141"
-           , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
-           , "2013_04-19_t6_s05b_cast076_5028"
-           , "2015_06-26_t9_s01b_cast117_5028"
-           , "2015_06-26_t9_s06b_cast111_5028"
-           , "2021_05-01_ab_s06_surface-duplicate_cast036_5028")
 badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't cause major trouble
            , "2012_10-29_t4_s07b_cast065_4141"
            , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
@@ -147,7 +128,7 @@ fN <- gsub ("^.*/", "", fNf)
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 getMeta <- function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
 # for (i in 1:length (fNf)){print (i)
-    Require ("oce")
+    require ("oce")
   ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
   if (class (ctdF) == "try-error"){
     print (i)
@@ -160,7 +141,6 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
     depth_bottom <- NA
   }else{
     cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
-    time <- ctdF@metadata$startTime
     instSerNo <- ctdF@metadata$serialNumberTemperature # serial number of CTD instrument
     depth_bottom <- ctdF@metadata$waterDepth
   }
@@ -171,7 +151,29 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
   return (outDF)
 }
 
-fileDB <- lapply (1:length (fNf), FUN = getMeta)
+
+
+if (.Platform$OS.type=="unix"){
+  isWin <- FALSE
+}else{
+  isWin <- TRUE
+}
+if (runParallel){
+  ## doParallel -- blocked on NCCOS computer?
+  Require ("parallel")
+  Require ("doParallel")
+  nCPUs <- detectCores(logical=TRUE)
+  cl <- makeCluster (nCPUs - 1, type="PSOCK")
+  registerDoParallel (cl)
+  clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
+  fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
+#  stopCluster (cl)
+#  rm (cl)
+}else{
+  nCPUs <- 1
+  fileDB <- lapply (1:length (fNf), FUN = getMeta)
+}
+
 rm (getMeta)
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
 fileDB <- subset (fileDB, !is.na (time))
@@ -190,7 +192,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function (i){
-  Require (oce)
+  require (oce)
   ctdF <- try (read.ctd (fNf [i]
                          # , columns = "define name of dV/dT"
                          , deploymentType = "profile"
@@ -254,20 +256,40 @@ readCNV <- function (i){
 
 
 ## read and concatenate all cnv files
-CTD1 <- mclapply (1:length (fNf), function (i){
+# Require ("parallel")
+# CTD1 <- mclapply (1:length (fNf), function (i){
+# CTD1 <- lapply (seq_along (fNf), function (i){
+#   x <- try (readCNV (i))
+#   if (class (x) == "try-error"){
+#     cat (i, fNf [i], "\n\n")
+#   }else{return (x)}
+# }
+# ) #, mc.cores = nCPUs) # read in measurements
+
+rCNV <- function (i){
   x <- try (readCNV (i))
-  if (class (x) == "try-error"){
-    cat (i, fNf [i], "\n\n")
-  }else{return (x)}
+    if (class (x) == "try-error"){
+      cat (i, fNf [i], "\n\n")
+    }else{return (x)}
+  }
+
+if (runParallel){
+# cl <- makeCluster (nCPUs -1, TYPE="PSOCK")
+# registerDoParallel(cl)
+clusterExport(cl=cl, list ("rCNV", "fNf", "readCNV"))
+CTDx <- parLapply (cl=cl, seq_along (fNf), rCNV)
+stopCluster (cl)
+rm (cl)
+}else{
+  CTDx <- lapply (seq_along (fNf), rCNV)
 }
-, mc.cores = nCPUs) # read in measurements
-CTD1 <- as.data.frame (do.call (rbind, CTD1))
-
-rm (readCNV)
-rm (fN, fNf)
-
+CTD1 <- as.data.frame (do.call (rbind, CTDx))
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
+
+rm (readCNV, CTDx)
+rm (fN, fNf)
+
 
 
 
@@ -285,6 +307,8 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 
 ## update Access tables from Notebook database
 ## may need to adapt this to make this portable
+## ---  move all this to FieldNotesDB.R?
+
 if (isWin){
   ## need to call 32-bit version of R to use ODBC -- until 64-bit Access ODBC driver installed
   ## windows-version of mdb-export?
@@ -298,10 +322,18 @@ if (isWin){
   system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
 }
 
+## which set of tables is best to import? -- MDBTools vs ODBC
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/"  ## ODBC via 32-bit R-4.1.3
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/manualExport/" ## manual export from Access
+tblDir <- "~/GISdata/LCI/EVOS_LTM_tables/mdbtools/"  ## mdbtools
 # manually exported tables from note-book Access DB, read-in those data and link to existing tables
+
 stationEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
 transectEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
 #  sampleEv <- read.csv ("~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+
+stationEv <- read.csv(paste0 (tblDir, "tblStationEvent.txt"))
+transectEV <- read.csv (paste0 (tblDir, "tblTransectEvent.txt"))
 
 ## temporary fix of transects names -- fix this in Access DB!!
 transectEv$Transect <- ifelse (transectEv$Transect == 1, "AlongBay"
@@ -326,8 +358,14 @@ stationEv [is.na (stationEv$timeStamp), c (8, 10, 5, 6)]  ## 40 notebook records
 ## make relational DB links within notebook DB
 tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
 if (any (is.na (tM))){
-  print (stationEv [which (is.na (tM)), c (21, 8, 9, 10)])
-  stop ("no missing transectEvents allowed")
+  print (stationEv [which (is.na (tM)), c (5, 6, 21, 8, 9, 10, 21)])
+#  stop ("no missing transectEvents allowed")  ## not an issue until January 2023 -- Access DB missing transect entries?
+  warning ("no missing transectEvents allowed")
+  ## trouble-shooting
+  x <- stationEv [which (is.na (tM)),]
+  x$Date <- as.POSIXct(x$Date); x$Time <- as.POSIXct(x$Time)
+  x$timeStamp <- as.POSIXct (paste (format (x$Date, "%Y-%m-%d"), format(x$Time, "%H:%M"), sep=" "))
+  summary (factor (x$timeStamp))
 }
 
 ## this may be the only needed field from TransectEvent
@@ -661,8 +699,7 @@ row.names(fileDB) <- 1:nrow (fileDB) # reset for troubleshooting
 ##   chsm == 2: time match, station doesn't. -- concurrent surveys? nudge times?
 ##   chsm == 3 -- trust those.
 
-## -1 -- conflict
-fileDB$consensNo <- ifelse ((fileDB$chsm == -1) && (fileDB$tErr_min < 10), fileDB$matchN, NA)
+fileDB$consensNo <- ifelse ((fileDB$chsm == -1) & (fileDB$tErr_min < 10), fileDB$matchN, NA)
 
 
 ## export chsm == 0 for Jim to look for notebook entries
@@ -736,12 +773,12 @@ dubFiles <- unlist (lapply (1:nrow (dF), FUN = function (i){
   fileDB [which (fileDB$localTime == dF$localTime [i]),c(2,6,9)]
 }))
 print (dubFiles)
-fX <- fileDB
-cX <- CTD1
 ## speed-up by using sqlite-DF
 #  if (0){ ## XXX not working yet === CTD1 ends up empty   XXX
 ## need to check by hand!! not plausible
 if (0){
+  fX <- fileDB
+  cX <- CTD1
   if (length (dubFiles) > 0){
     for (i in 1:length (dubFiles)){ ## remove one of dubFiles-pair from CDT1
       killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
@@ -760,11 +797,11 @@ if (0){
       if (nrow (CTD1) == 0){stop(print (i), " messed up")}
     }
   }
+  rm (fX, cX)
+  ## there are a few -- delete cnv file!
+  # unlink (paste0 (dir, "/", fileDB$path [dF]))
+  rm (dF, dubFiles)
 }
-## there are a few -- delete cnv file!
-# unlink (paste0 (dir, "/", fileDB$path [dF]))
-rm (dF, dubFiles)
-rm (fX, cX)
 
 
 if (0){ ## MATCH file names to database --- WHAT to do about doubles??? (same station sampled 2x+ per day)
@@ -919,21 +956,7 @@ cat ("\n# ", format (Sys.time(), format = "%Y-%m-%d %H:%M"
      , " \n# \n# End of CTD_cnv-Import.R\n#\n#\n")
 rm (sTime)
 
-
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV2.RData")
-
-
-## tmp test
-if (0){
-  png ("~/tmp/zzTurbidity.png")
-  plot (turbidity~PAR.Irradiance, physOc)
-  dev.off()
-  png ("~/tmp/zzAtten.png")
-  plot (attenuation~PAR.Irradiance, physOc)
-  dev.off()
-}
-
-cat ("\n# END CTD_cnv-Import.R #\n")
 
 ## EOF
