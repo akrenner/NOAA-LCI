@@ -36,7 +36,11 @@ test <- FALSE
 
 
 stopatDate <- "2022-07-31"
-# stopatDate <- Sys.time()
+stopatDate <- Sys.Date()
+
+maxSize <- FALSE
+# maxSize <- TRUE
+
 
 
 ## add AlongBay-short transect as a new virtual transect
@@ -92,6 +96,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2 ; transectN <- levels (poAll$Transect)[tn]
     # transectN <- "ABext"
+    # transectN <- "AlongBay"
     cat ("\n\n", oVarsF [ov], " T-", transectN, "\n")
 
 
@@ -123,13 +128,18 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (transectN %in% mnthly){
-      ## monthly
-      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-      ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
-      pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
-      pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
-
-      yearPP <- 11 # years (rows) per page
+      if (maxSize){
+        pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
+        yearPP <- 11 # years (rows) per page
+      }else{
+        ## monthly
+        pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+        ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
+        pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
+        ## for T9/AlongBay, full-width: adjust pH dynamically with N-years
+        yearPP <- diff (range (as.numeric (format (physOcY$DateISO, "%Y"))))+1 # all on one page of expanding length
+        pW <- 42; pH <- 3.2 * (1+yearPP)
+      }
       omcex <- 2   # size of mtext annotations
       Require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
@@ -353,7 +363,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
-                                , c(10000, -depth, 10000)
+                                , c(10000, depth, 10000)
                                 , col=tgray))
           rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
@@ -492,8 +502,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       yL <-1.2
       par (mar=c(10, 1,3,1))
     }
-    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
-                   , ylim=c(0,yL)  # ylim to make bar narrower, less high
+    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col=t.ramp
+                   , border=NA, ylim=c(0,yL)  # ylim to make bar narrower, less high
     )
     title (main = oVars [ov], cex=3, line=0.5)
     lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
