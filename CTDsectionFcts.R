@@ -441,7 +441,7 @@ sectionPad <- function (sect, transect, ...){
 ## multi-use stations, used for overlapping transects
 flexTransect <- function (transect, stn){
   if (transect=="ABext"){
-    swMN <- c ("4_3", "9_6", "6_2", "7_22", paste ("AlongBay", 1:13, sep="_"))
+    swMN <- c ("4_3", "9_6", "6_2", "7_22", "7_21", paste ("AlongBay", 1:13, sep="_"))
   }else if (transect=="4"){
     swMN <- "4_3"
   }else if (transect=="9"){
