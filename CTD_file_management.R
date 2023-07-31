@@ -525,11 +525,10 @@ if (any (abs (fDB$tErr) > 1)){
   x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
   #  stop ("fix date discrepancies between metadata and file names")
   warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
-  cat ("\n\n#######\nDubious dates -- may need to fix file names ##\n\n")
+  cat ("\n\n#######\nDubious dates -- may need to fix file names? Or correct header ##\n\n")
   print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
   ## 2021-05-01 seems right -- was this a make-up cruise?! was metadata fixed?
-  ## 2017-12-14 to 2018-01-17: time of clock being off? file names seem right
-
+  ## 2017-12-14 to 2018-01-17: File names are correct! Dates are off after changing from DLT to winter.
 
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
@@ -541,10 +540,8 @@ if (any (abs (fDB$tErr) > 1)){
 ## fix metDate above to make this unneccessary,
 ## or fix this so metDate does not become numeric
 
-## for now, fix discrepancy in favor of filename (here?)
+## for now, fix discrepancy in favor of filename (here?) -- most reliable!
 
-
-## thought: cut-out date-filename, replace with metDate
 
 # save.image ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdHexConv3.RData")
@@ -626,6 +623,7 @@ for (i in 1:nrow (fDB)){
   fDB$procDir [i] <- cFDB$dir [which.min (dT)]
 }
 
+
 ## exclude those files for now pre-dating the first calibration file
 # fDBx <- subset (fDB, fDB$calDist < 365*10) # should never be greater than 10 years
 fDBx <- fDB
@@ -639,11 +637,14 @@ if (any (!cpCk)){
 rm (cpCk)
 unlink (nD, recursive = TRUE, force = TRUE)
 
-### missing feature: !!! XXX
 
-## remove config-directories with no hex files
-## -- this is currently not automated, but has to be done manually
-## i.e. config files are staged in a separate folder until data has been collected.
+## delete conf file, if it has not yet been used to prevent processing to hang
+for (i in seq_along(cFDB$dir)){
+  if (length (list.files(cFDB$dir [i], pattern = ".hex$")) < 1){  ## XXX test that this works!! XX
+    unlink (cFDB$dir [i], recursive=TRUE)
+    cat ("Removed empty folder: ", cFDB$dir [i], "\n")
+  }
+}
 
 
 

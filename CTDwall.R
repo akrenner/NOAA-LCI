@@ -195,7 +195,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
          , mar=c(4,4,3,0.1)
     )
     }else {
-      par (oma=c(3,5,8,2)
+      par (oma=c(3,5,9,2)
            , mar=c(4,4,3,0.1)
       )
 }

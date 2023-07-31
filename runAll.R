@@ -28,6 +28,11 @@ pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE   # for quarterly update
 
 
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}else{ ## Linux or macOS platform
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}
 
 # setRepositories(graphics=FALSE, ind=76)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
@@ -38,17 +43,18 @@ sink (file="runAll.log", append=FALSE, split=FALSE)
 
 
 source ("InitialSetup.R")
-source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
-  sink (file = "ctdprocessinglog.log", append=FALSE, split = FALSE) # show output and write to file
+  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   sink()
+  cat ("Finished CTD hex conversion and processing at: ", Sys.time(), "\n")
 }
 
 
-
+sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
@@ -65,6 +71,7 @@ cat ("\n## \n## finished with basic CTD processing\n##\n##\n")
 sink ("wallpaper.log", append=FALSE, split=FALSE)
 ## only for SoB? -- mv down?
 source ("SeldoviaTemp.R")
+
 ## the Wall
 source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")

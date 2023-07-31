@@ -1,6 +1,8 @@
 ## query acess DB
 rm (list=ls())
 
+
+cat("summaries from Access Field notes DB\n")
 require ("dplyr")
 
 
