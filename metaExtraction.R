@@ -39,9 +39,9 @@ PDF <- function (fn, ...){
     pdf (paste ("~/tmp/LCI_noaa/media/", fn, sep = ""), ...)
 }
 
-Require <- function (package, ...){
+Require <- function (...){
     ## package <- as.character(substitute(package))
-    ext <- require (package)
+    ext <- require (...)
     if (ext){
         install.packages (package, repos = "http://cran.fhcrc.org/", dependencies = TRUE)
     }
@@ -70,7 +70,7 @@ regStr <- "^([a-zA-Z.0]{3})([a-zA-Z0-9_.]+)"
 
 for (i in 1:length (fN)){
     agF <- read.csv (fN [i], na.strings = "N/A")
-    names (agF) <- gsub (regStr, "\\1",names (agF))    
+    names (agF) <- gsub (regStr, "\\1",names (agF))
     names (agF)[ncol(agF)] <- "O2Sat"
     if (i == 1){
         physOc <- agF
@@ -84,7 +84,7 @@ rm (agF, i, fN)
 
 ## this is what field names look like after importing CSV file into R
 ## apply these names again to keep export consistent and to avoid having to
-## change names throughout this script now. 
+## change names throughout this script now.
 newNames <- c ("File.Name", "Date", "Transect", "Station", "Time", "CTD.serial"
              , "latitude_DD", "longitude_DD", "Bottom.Depth", "Depth.saltwater..m."
              , "Temperature_ITS90_DegC", "Salinity_PSU", "Density_sigma.theta.kg.m.3"
