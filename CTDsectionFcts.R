@@ -44,7 +44,8 @@ getBathy <- function (transect, stn){
 
 
 pSec <- function (xsec, N, cont = TRUE, zCol
-                  , showBottom=TRUE, custcont = NULL, labcex=1.0,  ...){
+                  , showBottom=TRUE, custcont = NULL, labcex=1.0
+                  , plotContours=TRUE, ...){
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -100,13 +101,15 @@ pSec <- function (xsec, N, cont = TRUE, zCol
         zvar <- zvar [-cutS,]
         stop ("bad distance")
       }
-      cT <- try (contour (distance, depth, zvar, add = TRUE
-                          # , nlevels = 5
-                          , labcex=labcex # default: labcex=0.6
-                          , levels = cLev  ## error XXX
-                          , col = "black", lwd = 1), silent = TRUE)
-      if (class (cT) == "try-error"){
-        legend ("bottomleft", legend = "no contours")
+      if (plotContours){
+        cT <- try (contour (distance, depth, zvar, add = TRUE
+                            # , nlevels = 5
+                            , labcex=labcex # default: labcex=0.6
+                            , levels = cLev  ## error XXX
+                            , col = "black", lwd = 1), silent = TRUE)
+        if (class (cT) == "try-error"){
+          legend ("bottomleft", legend = "no contours")
+        }
       }
     }
   }
@@ -440,7 +443,7 @@ sectionPad <- function (sect, transect, ...){
 ## multi-use stations, used for overlapping transects
 flexTransect <- function (transect, stn){
   if (transect=="ABext"){
-    swMN <- c ("4_3", "9_6", "6_2", "7_22", paste ("AlongBay", 1:13, sep="_"))
+    swMN <- c ("4_3", "9_6", "6_2", "7_21", "7_22", paste ("AlongBay", 1:13, sep="_"))
   }else if (transect=="4"){
     swMN <- "4_3"
   }else if (transect=="9"){
