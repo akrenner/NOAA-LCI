@@ -584,7 +584,7 @@ for (i in 1:length (cCast)){
 
 
 save.image ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")  ## this to be read by dataSetup.R
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")  ## this to be read by dataSetup.R
 
 summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))
@@ -626,7 +626,7 @@ rm (dayF, crs, cF, crsC)
 ###############################################
 
 save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
 
 
 

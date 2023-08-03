@@ -4,7 +4,7 @@
 
 
 rm (list = ls())
-load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
+base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 
 
 source ("CTDsectionFcts.R")  # get pSec to plot sections

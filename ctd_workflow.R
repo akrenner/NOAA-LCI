@@ -31,6 +31,7 @@ Require <- pacman::p_load
 ## do all renv work manually to avoid clash between base::load() and renv::load()
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
+# renv::activate()
 
 ## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
@@ -57,6 +58,6 @@ cat ("## Finished CTD_cleanup.R\n\n")
 
 ## save snapshot of current package versions
 # renv::snapshot()
-cat ("finished ctd_workflow at ", as.character (Sys.time()))
+cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
 #EOF
