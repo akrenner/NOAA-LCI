@@ -1,5 +1,5 @@
-## replot CTD wallpaper for office
-## provide line-graph alternatives
+## EVOS final GulfWatch Report
+## plot 2017-2021, March, July, October, December
 
 
 
@@ -10,8 +10,6 @@ load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 
 
 test <- TRUE
-## EVOS final GulfWatch Report
-## plot 2017-2021, March, July, October, December
 
 
 startDate <- "2000-01-01" # default; all data
@@ -19,9 +17,9 @@ stopatDate <- Sys.time()
 startDate <- "2017-01-01"
 stopatDate <- "2022-01-01"
 
-month.select <- c (3,7)
-month.select <- c (10,12)
-# month.select <- c(3,7,10,12)  ## have to run this manually, one at a time, for now
+# month.select <- c (3,7)
+# month.select <- c (10,12)
+month.select <- c(3,7,10,12)  ## have to run this manually, one at a time, for now
 cat ("\n\n\n##\n##\n## Manually switch over to other set of months! XXX \n##\n##\n##\n##")
 year.select <- levels (poAll$year)
 year.select <- 2017:2021
@@ -31,18 +29,18 @@ year.select <- 2017:2021
 levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 
 
-if (test){
-  oceanvarC <- 1:length (oVarsF) #
-  oceanvarC <- 8
+#if (test){
+#  oceanvarC <- 1:length (oVarsF) #
+#  oceanvarC <- 8
   oceanvarC <- c (1,2)
  # oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect))
+#  transectC <- 1:length (levels (poAll$Transect))
   transectC <- 6 # AlongBay
-}else{
-  oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
-  # transectC <- c(5,6,7)  ## T9, AB, ABext
-}
+#}else{
+#   oceanvarC <- 1:length (oVarsF)
+#   transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
+#   # transectC <- c(5,6,7)  ## T9, AB, ABext
+# }
 
 
 
@@ -61,16 +59,7 @@ if (!exists ("useSF")){useSF <- FALSE}  ## should have useSF from CTDwall-setup.
 mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
-if (0){ ## tests
-  levels (factor (subset (poAll, year == 2012)$DateISO))
-  xC <- subset (poAll, (Transect == "9")&(DateISO == "2019-09-16") )
-  # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
-  xCo <- sectionize (xC)
-  plot (xCo)
-  pSec (xCo, 1, zcol = oCol [[1]])
-  pSec (xCo, 1, zcol = turbo (10), custcont = c(10, 11, 11.1))
-  rm (xC, xCo)
-}
+
 
 
 
@@ -80,8 +69,97 @@ if (0){ ## tests
 ##                                ##
 ####################################
 
-for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
+
+# ## T-M1, S-M1, T-M2, S-M2...
+# mVarL <- list (c(ov[1], ))
+#
+#
+# for (mVar in seq_along(mVarL)){
+#   ov <- mVarL [[mVar]][1]
+# }
+
+oceanvarC
+transectC
+year.select
+month.select
+
+## print column by column
+plotSelect <- expand.grid (oceanvarC, year.select, month.select)
+names (plotSelect) <- c("oceanvarC", "year", "month")
+
+
+tn <- transectC [1]
+
+
+
+
+### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
+if (exists ("year.select")){
+  pH <- 9.0; pW <- 7
+  yearPP <- length (year.select)
+  omcex <- 1
+  Require ("stringr")
+  sampleTimes <- str_pad (month.select, 2, pad = "0")
+  # physOcY$smplIntvl <- physOcY$month
+
+  layoutM <- matrix (1:10, 5, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
+  omText <- month.name [month.select]
+  # rescale colors to cover only this figure
+
+
+}else if (levels (poAll$Transect)[tn] %in% mnthly){
+  ## monthly
+  pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+  ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
+  pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
+  pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
+
+  yearPP <- 11 # years (rows) per page
+  omcex <- 2   # size of mtext annotations
+  Require ("stringr")
+  sampleTimes <- str_pad (1:12, 2, pad = "0")
+  # physOcY$smplIntvl <- physOcY$month
+  nY <- as.numeric (format (stopatDate, "%Y")) - as.numeric (format (startDate, "%Y")) + 1
+  nY <- yearPP
+  layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
+  omText <- month.name
+  rm (nY)
+}else{
+  ## quarterly
+  pH <- 8.5; pW <- 14    # legal size
+  yearPP <- 5
+  omcex <- 1
+  sampleTimes <- levels (physOcY$season)
+  physOcY$smplIntvl <- physOcY$season
+  layoutM <- matrix (1:16, 4, byrow = TRUE)
+  omText <- sampleTimes
+}
+
+
+
+
+dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+           , showWarnings=FALSE, recursive=TRUE)
+res=300
+png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+             #, oVarsF [ov]
+             , " T-", levels (poAll$Transect)[tn], "%01d.png")
+     , height = pH*res, width = pW*res, res=res); rm (res)
+layout (layoutM); rm (layoutM)
+par (oma=c(3,4,3,1))
+
+
   for (tn in transectC){  # tn: transect
+for (pS in seq_len(nrow (plotSelect))){
+  # pS <- 1
+  ov <- plotSelect$oceanvarC [pS]
+  iY <- plotSelect$year.select [pS]
+  iM <- plotSelect$month.select [pS]
+  # yearC <- 1:length (year.select)  ## or fix subset below
+  # for (iY in yearC){
+# }
+
+# for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
@@ -89,6 +167,11 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     ## doubly-used stations:
     ## make this a function?
+
+
+    ## use flex station XXX
+
+
     if (levels (poAll$Transect)[tn] == "ABext"){
       swMN <- c ("4_3", "9_6", "6_2", "7_22")
       poAll$Transect [poAll$Match_Name %in% swMN] <- "ABext"
@@ -151,89 +234,65 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     physOcY$DateISO <- as.Date (physOcY$DateISO)
     pStash <- physOcY
     physOcY <- pStash
+
+
+    oRange <- t (sapply (c ("Temperature_ITS90_DegC"
+                            , "Salinity_PSU"
+                            , "Density_sigma.theta.kg.m.3"
+                            , "turbidity" # , "logTurbidity"
+                            , "Fluorescence_mg_m3"
+                            , "logPAR"
+                            , "Oxygen_umol_kg"
+                            , "bvf"
+    )
+    , FUN = function(vn){range (physOcY [,which (names (physOcY) == vn)], na.rm = TRUE)
+    }))
+
+
+
     physOcY <- subset (physOcY, (startDate < DateISO)&(DateISO < stopatDate))
+
+    ## XXX if xy.. monthly/seasonal
+    physOcY$smplIntvl <- physOcY$month
+
+
+#XXXX    physOcY <- subset (physOcY, numeric (levels (physOcY$month)))
+
+
     if (exists ("month.select")){
-      physOcY <- subset (physOcY, as.numeric (levels (physOcY$month)[physOcY$month]) %in% month.select)
+#      physOcY <- subset (physOcY, as.numeric (levels (physOcY$month)[physOcY$month]) %in% month.select)
+      physOcY <- subset (physOcY, month == iM)
       physOcY$month <- factor (physOcY$month)
     }
 
 
     ## set-up page size for large poster-PDF
-    ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
-    if (exists ("year.select")){
-      pH <- 9.0; pW <- 7
-      yearPP <- length (year.select)
-      omcex <- 1
-      Require ("stringr")
-      sampleTimes <- str_pad (month.select, 2, pad = "0")
-      physOcY$smplIntvl <- physOcY$month
-      layoutM <- matrix (1:10, 5, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
-      omText <- month.name [month.select]
-      # rescale colors to cover only this figure
-      oRange <- t (sapply (c ("Temperature_ITS90_DegC"
-                              , "Salinity_PSU"
-                              , "Density_sigma.theta.kg.m.3"
-                              , "turbidity" # , "logTurbidity"
-                              , "Fluorescence_mg_m3"
-                              , "logPAR"
-                              , "Oxygen_umol_kg"
-                              , "bvf"
-      )
-      , FUN = function(vn){range (physOcY [,which (names (physOcY) == vn)], na.rm = TRUE)
-      }))
 
-
-    }else if (levels (poAll$Transect)[tn] %in% mnthly){
-      ## monthly
-      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-      ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
-      pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
-      pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
-
-      yearPP <- 11 # years (rows) per page
-      omcex <- 2   # size of mtext annotations
-      Require ("stringr")
-      sampleTimes <- str_pad (1:12, 2, pad = "0")
-      physOcY$smplIntvl <- physOcY$month
-      nY <- as.numeric (format (stopatDate, "%Y")) - as.numeric (format (startDate, "%Y")) + 1
-      nY <- yearPP
-      layoutM <- matrix (1:(12*nY), nY, byrow = TRUE) # across, then down
-      omText <- month.name
-      rm (nY)
-    }else{
-      ## quarterly
-      pH <- 8.5; pW <- 14    # legal size
-      yearPP <- 5
-      omcex <- 1
-      sampleTimes <- levels (physOcY$season)
-      physOcY$smplIntvl <- physOcY$season
-      layoutM <- matrix (1:16, 4, byrow = TRUE)
-      omText <- sampleTimes
-    }
-
-dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
-           , showWarnings=FALSE, recursive=TRUE)
-    # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
-    #              , oVarsF [ov], " T-", levels (poAll$Transect)[tn], ".pdf")
-    #      , height = pH, width = pW)
-res=300
-    png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
-                 , oVarsF [ov], " T-", levels (poAll$Transect)[tn], "%01d.png")
-         , height = pH*res, width = pW*res, res=res); rm (res)
-    layout (layoutM); rm (layoutM)
-    # if (pH > 14){
-    # par (oma=c(3,5,12,2)
-    #      , mar=c(4,4,3,0.1)
-    # )
-    # }else {
-      par (oma=c(3,4,3,1)
-           # , mar=c(0.1,4,0.0,0)
-      )
+# dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+#            , showWarnings=FALSE, recursive=TRUE)
+#     # pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+#     #              , oVarsF [ov], " T-", levels (poAll$Transect)[tn], ".pdf")
+#     #      , height = pH, width = pW)
+# res=300
+#     # png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/GWAreport"
+#     #          , levels (poAll$Transect)[tn], "%01d.png")
+#     png (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-likeFigures/"
+#                  , oVarsF [ov], " T-", levels (poAll$Transect)[tn], "%01d.png")
+#              , height = pH*res, width = pW*res, res=res); rm (res)
+#     layout (layoutM); rm (layoutM)
+#     # if (pH > 14){
+#     # par (oma=c(3,5,12,2)
+#     #      , mar=c(4,4,3,0.1)
+#     # )
+#     # }else {
+#       par (oma=c(3,4,3,1)
+#            # , mar=c(0.1,4,0.0,0)
+#       )
     # }
 
     ## test-option
-    yearC <- 1:length (year.select)  ## or fix subset below
-    for (iY in yearC){
+#    yearC <- 1:length (year.select)  ## or fix subset below
+#    for (iY in yearC){
       ## for testing:
       # iY <- 7 # pick 2018
       # iY <- 2
@@ -390,6 +449,7 @@ res=300
                 , drawPalette=FALSE
                 , custcont=cCont
                 , mar=c(1,3,2,0)
+                , showContours=FALSE
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
@@ -426,7 +486,7 @@ res=300
       }
       mtext (text=oVars [ov], side=3, line=1.2, outer=TRUE, cex=omcex)
       cat ("\n")
-    }
+#    }
 
     ##############################################################
     ## add color scale and map after all section plots are done ##
