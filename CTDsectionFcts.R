@@ -44,7 +44,7 @@ getBathy <- function (transect, stn){
 
 
 pSec <- function (xsec, N, cont = TRUE, zCol
-                  , showBottom=TRUE, custcont = NULL, labcex=1.0,  ...){
+                  , showBottom=TRUE, custcont = NULL, labcex=1.0, showContours=TRUE, ...){
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -100,13 +100,15 @@ pSec <- function (xsec, N, cont = TRUE, zCol
         zvar <- zvar [-cutS,]
         stop ("bad distance")
       }
-      cT <- try (contour (distance, depth, zvar, add = TRUE
-                          # , nlevels = 5
-                          , labcex=labcex # default: labcex=0.6
-                          , levels = cLev  ## error XXX
-                          , col = "black", lwd = 1), silent = TRUE)
-      if (class (cT) == "try-error"){
-        legend ("bottomleft", legend = "no contours")
+      if (showContours){
+        cT <- try (contour (distance, depth, zvar, add = TRUE   ## some contours not connected -- have issues
+                            # , nlevels = 5
+                            , labcex=labcex # default: labcex=0.6
+                            , levels = cLev  ## error XXX
+                            , col = "black", lwd = 1), silent = TRUE)
+        if (class (cT) == "try-error"){
+          legend ("bottomleft", legend = "no contours")
+        }
       }
     }
   }
