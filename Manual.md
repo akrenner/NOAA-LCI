@@ -115,12 +115,14 @@ Connect to CTD, as before.
 Two options: batch-downloading and attended download. 
 #### Batch download and processing with FileMaker and R
 Copy/sync filemaker database back to computer (email file to self). 
-Connect to CTD, as before and display headers. Compare headers to recorded times in FileMaker database, and enter cast numbers. Export notesTable (script) and close FileMaker. Open R and run hexEdit.R. Manually inspect resultant edited hex files and copy them with containing folder to the appropriate place in 2_edited_hex_files. 
+
+Connect to CTD, as before and display headers. Compare headers to recorded times in FileMaker database, and enter cast numbers. Export notesTable (Scripts: export CURRENT survey)  and close FileMaker. Open R and run I-hexEdit.R. Correct any errors that may occur. Manually inspect resultant edited hex files and copy them with containing folder to the appropriate place in 2_edited_hex_files. 
 
 Generate NoteBook pdf from FileMaker and upload it to the WorkSpace. 
 https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Environmental Drivers: Oceanographic monitoring in Cook Inlet and Kachemak Bay > Data, 2017-ongoing > Fiel notes > "year"
 [//]: # Producing this pdf needs details.
 
+If producing PDF from paper notes, you can scan directly to PDf. Or, photograph pages with an iPhone. Select all the images, -> share -> print. Then share the resultant PDF and email it to yourself. Open PDf on computer with Acrobat and save with reduced space. 
 
 #### Attended download
 If working manually: scan handwritten notes to pdf. Then upload that pdf to the WorkSpace, as above. 

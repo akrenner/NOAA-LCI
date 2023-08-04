@@ -7,12 +7,6 @@
 ## expect approximately 3 hours for a full run
 ## (2023-04 on Latitude 5420; 11th Gen Intel Core i7 1185G7 @3.0 GHz/1.8 GHz)
 
-
-if (.Platform$OS.type=="windows"){
-  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-}else{ ## Linux or macOS platform
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-}
 rm (list = ls())
 
 
@@ -24,6 +18,11 @@ pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE
 
 
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+}else{ ## Linux or macOS platform
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+}
 
 # setRepositories(graphics=FALSE, ind=76)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
@@ -32,15 +31,15 @@ ongoingY <- TRUE
 
 
 source ("InitialSetup.R")
-source ("FieldNotesDB.R") # first because it doesn't depend on anything else
 if (1){
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   sink()
+  cat ("Finished CTD hex conversion and processing at: ", Sys.time(), "\n")
 }
-
 
 
 sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
@@ -57,7 +56,6 @@ source ("CTD_DataAvailability.R")
 
 ## only for SoB? -- mv down?
 source ("SeldoviaTemp.R")
-
 
 ## the Wall
 source ("CTDwall-setup.R")

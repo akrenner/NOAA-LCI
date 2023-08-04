@@ -6,9 +6,8 @@
 ## - cross-platform hex-file processing
 ##
 
-rm (list = ls())
+# rm (list = ls())
 
-print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
   # MR personal setup
@@ -21,7 +20,7 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
   # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
-cat ("Starting ctdprocessing at", as.character (Sys.time()), "\n\n")
+cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 
 ## load missing packages
 if (!require("pacman")) install.packages("pacman"
@@ -32,6 +31,7 @@ Require <- pacman::p_load
 ## do all renv work manually to avoid clash between base::load() and renv::load()
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
+# renv::activate()
 
 ## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
@@ -58,6 +58,6 @@ cat ("## Finished CTD_cleanup.R\n\n")
 
 ## save snapshot of current package versions
 # renv::snapshot()
-cat ("finished ctd_workflow at ", as.character (Sys.time()))
+cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
 #EOF
