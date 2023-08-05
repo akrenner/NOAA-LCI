@@ -19,13 +19,15 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
-# setRepositories(graphics=FALSE, ind=76)
-# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
-# chooseCRANmirror(graphics=FALSE, ind=76)
 
 
 sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
 cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
+
+## set-up renv
+## do all renv work manually to avoid clash between base::load() and renv::load()
+# Require ("renv")  ## do NOT load this here in script!
+# renv::init()
 
 source ("InitialSetup.R")
 if (1){

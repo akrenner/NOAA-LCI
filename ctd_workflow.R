@@ -7,10 +7,9 @@
 ##
 
 # rm (list = ls())
-
+print (Sys.time())
 # CTD processing
 if (length (grep ("martin", tolower (getwd()))) > 0){
-  # MR personal setup
   if (.Platform$OS.type != "windows"){
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
   }else{
@@ -27,11 +26,6 @@ if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 Require <- pacman::p_load
 
-## set-up renv
-## do all renv work manually to avoid clash between base::load() and renv::load()
-# Require ("renv")  ## do NOT load this here in script!
-# renv::init()
-# renv::activate()
 
 ## pre-load widely needed packages. Do this here for new users.
 Require ("tools")
@@ -58,6 +52,6 @@ cat ("## Finished CTD_cleanup.R\n\n")
 
 ## save snapshot of current package versions
 # renv::snapshot()
-cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
+cat ("Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
 #EOF

@@ -24,7 +24,7 @@
       },
       {
         "Name": "CRAN",
-        "URL": "https://cran.rstudio.com"
+        "URL": "https://cran.case.edu"
       },
       {
         "Name": "CRANextra",
@@ -662,6 +662,16 @@
       ],
       "Hash": "24b6d006b8b2343876cf230687546932"
     },
+    "codetools": {
+      "Package": "codetools",
+      "Version": "0.2-19",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "c089a619a7fae175d149d89164f8c7d8"
+    },
     "colorspace": {
       "Package": "colorspace",
       "Version": "2.1-0",
@@ -843,6 +853,30 @@
       ],
       "Hash": "b18a9cf3c003977b0cc49d5e76ebe48d"
     },
+    "doParallel": {
+      "Package": "doParallel",
+      "Version": "1.0.17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "foreach",
+        "iterators",
+        "parallel",
+        "utils"
+      ],
+      "Hash": "451e5edf411987991ab6a5410c45011f"
+    },
+    "dotCall64": {
+      "Package": "dotCall64",
+      "Version": "1.0-2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "6aa9e277302190b6c618af042d904bdf"
+    },
     "dplyr": {
       "Package": "dplyr",
       "Version": "1.1.2",
@@ -962,6 +996,20 @@
       "Repository": "CRAN",
       "Hash": "f7736a18de97dea803bde0a2daaafb27"
     },
+    "fields": {
+      "Package": "fields",
+      "Version": "14.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "maps",
+        "methods",
+        "spam",
+        "viridis"
+      ],
+      "Hash": "75f08bec9520d29ff8c3b37276eb3da7"
+    },
     "fontawesome": {
       "Package": "fontawesome",
       "Version": "0.5.1",
@@ -990,6 +1038,19 @@
       ],
       "Hash": "1a0a9a3d5083d0d573c4214576f1e690"
     },
+    "foreach": {
+      "Package": "foreach",
+      "Version": "1.5.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "codetools",
+        "iterators",
+        "utils"
+      ],
+      "Hash": "618609b42c9406731ead03adf5379850"
+    },
     "forecast": {
       "Package": "forecast",
       "Version": "8.21",
@@ -1015,6 +1076,19 @@
         "zoo"
       ],
       "Hash": "ef845ee0a60ce95240085d60f6daef02"
+    },
+    "foreign": {
+      "Package": "foreign",
+      "Version": "0.8-84",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "467ec0ca895d4e61a22cfbac9bccddf8"
     },
     "fracdiff": {
       "Package": "fracdiff",
@@ -1434,6 +1508,17 @@
       ],
       "Hash": "0080607b4a1a7b28979aecef976d8bc2"
     },
+    "iterators": {
+      "Package": "iterators",
+      "Version": "1.0.14",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "8954069286b4b2b0d023d1b288dce978"
+    },
     "jpeg": {
       "Package": "jpeg",
       "Version": "0.1-10",
@@ -1685,6 +1770,24 @@
       ],
       "Hash": "644a88fb036ab50cee0b715394eefa1a"
     },
+    "maptools": {
+      "Package": "maptools",
+      "Version": "1.1-8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "foreign",
+        "grDevices",
+        "grid",
+        "lattice",
+        "methods",
+        "sp",
+        "stats",
+        "utils"
+      ],
+      "Hash": "2457cdde319dfcd4d78ff10b9238c08e"
+    },
     "marmap": {
       "Package": "marmap",
       "Version": "1.0.10",
@@ -1914,6 +2017,18 @@
         "utils"
       ],
       "Hash": "b37932b67288bc62bb81686b2f337a7d"
+    },
+    "parallelly": {
+      "Package": "parallelly",
+      "Version": "1.36.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "parallel",
+        "tools",
+        "utils"
+      ],
+      "Hash": "bca377e1c87ec89ebed77bba00635b2e"
     },
     "pbapply": {
       "Package": "pbapply",
@@ -2409,6 +2524,19 @@
       ],
       "Hash": "79f14e53725f28900d936f692bfdd69f"
     },
+    "rpart": {
+      "Package": "rpart",
+      "Version": "4.1.19",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "stats"
+      ],
+      "Hash": "b3c892a81783376cc2204af0f5805a80"
+    },
     "rprojroot": {
       "Package": "rprojroot",
       "Version": "2.0.3",
@@ -2581,6 +2709,32 @@
         "utils"
       ],
       "Hash": "2551981e6f85d59c81652bf654d6c3ca"
+    },
+    "spam": {
+      "Package": "spam",
+      "Version": "2.9-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "dotCall64",
+        "grid",
+        "methods"
+      ],
+      "Hash": "2024a309411ff865488552f108c68333"
+    },
+    "spatial": {
+      "Package": "spatial",
+      "Version": "7.3-17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "graphics",
+        "stats",
+        "utils"
+      ],
+      "Hash": "1229a01b4ec059e9f2396724f2ec9010"
     },
     "spectral": {
       "Package": "spectral",
@@ -3028,6 +3182,19 @@
         "permute"
       ],
       "Hash": "659fe7589b8e0b16baa49043a61a0ce0"
+    },
+    "viridis": {
+      "Package": "viridis",
+      "Version": "0.6.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "ggplot2",
+        "gridExtra",
+        "viridisLite"
+      ],
+      "Hash": "80cd127bc8c9d3d9f0904ead9a9102f1"
     },
     "viridisLite": {
       "Package": "viridisLite",

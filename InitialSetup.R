@@ -1,6 +1,6 @@
 #! /usr/bin/env Rscript
 
-
+## ensure data is available locally
 bDir <- "~/GISdata/LCI/bathymetry/"
 
 if (!dir.exists(bDir)){
@@ -22,5 +22,21 @@ if (!dir.exists(bDir)){
   unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir=paste0 (bDir, "Cook_bathymetry_grid/"))
   unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir=paste0 (bDir, "CGOA_bathymetry_grid/"))
 }
+
+
+## set-up local R environment
+setRepositories(graphics=FALSE, ind=73)
+# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
+# chooseCRANmirror(graphics=FALSE, ind=76)
+## see https://stackoverflow.com/questions/11488174/how-to-select-a-cran-mirror-in-r
+## Default repo
+# local({r <- getOption("repos")
+# r["CRAN"] <- "https://cloud.r-project.org"  ## always nearby
+# options(repos=r)
+# })
+
+choorseCRANmirror (graphics=FALSE, ind=1)  # 1 = cloud
+renv::restore()
+
 
 #EOF
