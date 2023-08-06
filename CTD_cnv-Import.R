@@ -78,9 +78,9 @@ set.seed(7)
 ############################
 
 
-if (!require("pacman")){
-  install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-Require <- pacman::p_load
+# if (!require("pacman")){
+#   install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
+# require <- pacman::p_load
 
 
 
@@ -91,7 +91,7 @@ Require <- pacman::p_load
 ## CTD data ##
 ##############
 
-Require (oce)
+require (oce)
 ## read in processed files of individual CTD casts
 # fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv", full.names = TRUE, ignore.case = TRUE)
 fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)
@@ -160,8 +160,8 @@ if (.Platform$OS.type=="unix"){
 }
 if (runParallel){
   ## doParallel -- blocked on NCCOS computer?
-  Require ("parallel")
-  Require ("doParallel")
+  require ("parallel")
+  require ("doParallel")
   nCPUs <- detectCores(logical=TRUE)
   cl <- makeCluster (nCPUs - 1, type="PSOCK")
   registerDoParallel (cl)
@@ -256,7 +256,7 @@ readCNV <- function (i){
 
 
 ## read and concatenate all cnv files
-# Require ("parallel")
+# require ("parallel")
 # CTD1 <- mclapply (1:length (fNf), function (i){
 # CTD1 <- lapply (seq_along (fNf), function (i){
 #   x <- try (readCNV (i))
@@ -346,7 +346,7 @@ transectEv$Transect <- ifelse (transectEv$Transect == "0", "SubBay"
 ## clean up dates/times
 stationEv$Date <- ifelse (stationEv$Date == "", "1900-01-01", stationEv$Date)
 stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
-Require ("lubridate") # for time-zone adjustment
+require ("lubridate") # for time-zone adjustment
 stationEv$timeStamp <- ymd_hms (paste (gsub (" .*", '', stationEv$Date)
                                        , gsub (".* ", '', stationEv$Time))
                                         , tz = "America/Anchorage")
@@ -404,7 +404,7 @@ rm (stnMaster, sMatch)
 # pro move: all QAQC to cleanup, keep this one simple
 # con: logical to do it right after match, before it's forgotton
 
-Require (geosphere)
+require (geosphere)
 stationErr <- data.frame (posError = with (stationEv, distHaversine (
   cbind (LonNotes, LatNotes), cbind (LonMast, LatMast)
 )))
@@ -853,7 +853,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
 #  ls()
 ## where's notebook data? need lat-lon. Also need masterlist
 # "CTD1"      "cX"        "dirL"      "fileDB"    "fX"        "i"         "nCPUs"
-# "Require"  "stationEv" "sTime"
+# "require"  "stationEv" "sTime"
 ## need: CTD1, fileDB?
 
 

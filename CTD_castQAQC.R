@@ -97,7 +97,7 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
   dirN <- "~/tmp/LCI_noaa/media/CTDcasts/CTDprofiles/"
 dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
-Require ("oce")
+require ("oce")
 plotCTDprof <- function (i){
   cat (i, " ")
   if (i %% 7 == 0){cat ("\n")}
@@ -171,10 +171,11 @@ plotCTDprof <- function (i){
 }
 
 if (.Platform$OS.type=="unix"){
-  Require ("parallel")
+  require ("parallel")
   x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }else{
   ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
+  ## use parallelly ??
   x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
 }
 # dev.off()
@@ -191,7 +192,7 @@ system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
 
 ## find windows equivalent here XXX  -- still needed?
 if (.Platform$OS.type!="unix"){
-#     Require ("zip")
+#     require ("zip")
 #     unlink ("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles.zip", force = TRUE)
 #     zFiles <- list.files (dirN, pattern = ".pdf", full.names = FALSE)
 #     zip::zip ("~/tmp/LCI_noaa/media/CTDprofiles.zip", files = zFiles, recurse = FALSE
@@ -213,7 +214,7 @@ cat ("\n\n")
 
 
 if (0){                           # use oce -- not flexible enouth
-    Require ("oce")
+    require ("oce")
     ctd <- with (cT, as.ctd (salinity = Salinity_PSU
                            , temperature = Temperature_ITS90_DegC
                            , pressure = Pressure..Strain.Gauge..db.
@@ -251,7 +252,7 @@ KBay$dateP <- with (KBay, isoTime)
 
 ## subset to summer months
 
-Require ("oce")
+require ("oce")
  for (j in 1:length (levels (KBay$season))){
 # j <- 1
    pdf (paste ("~/tmp/LCI_noaa/media/KBayCTDplots_", levels (KBay$season)[j]
@@ -275,7 +276,7 @@ ctdX <- subset (ctdS, (File.Name == levels (ctdS$File.Name)[i]))
     dev.off()
 
 
-Require ("oce")
+require ("oce")
 for (j in 1:length (levels (KBay$season))){
     pdf (paste ("~/tmp/LCI_noaa/media/KBayCTDplots_EndStation_", levels (KBay$season)[j]
               , ".pdf", sep = ""))

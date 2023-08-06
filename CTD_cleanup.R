@@ -371,12 +371,12 @@ rm (noPos)
 
 
 ## bad densities (some are not sigma theta, up to 1024)
-Require ("oce")
+require ("oce")
 # physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
 #                                                           , Pressure..Strain.Gauge..db.
 #                                                           , eos = "unesco"))-1000
 # if (0){
-# Require ("LakeMetabolizer")
+# require ("LakeMetabolizer")
 # ## # physOc$Oxygen.Saturation.Garcia.Gordon.mg.l. -- or get straight from seabird!
 # O2 <- with (
 #   physOc, o2.at.sat.base (temp = Temperature_ITS90_DegC
@@ -569,7 +569,7 @@ rm (i, year)
 
 if (0){  # currently fails -- fix later XXX
 ## plot cast-profiles
-Require ("oce")
+require ("oce")
 cCast <- levels (factor (physOc$File.Name))
 outF <- "~/tmp/LCI_noaa/media/CTDtests/profilePlots/"
 dir.create(outF, recursive = TRUE, showWarnings = FALSE)
@@ -696,7 +696,7 @@ ctdX <- sapply (1:length (levels (yr)), function (i){
 
 if (0){  # if (.Platform$OS.type=="windows"){
   ## zip-up files -- about 100 MB
-  Require ("zip")
+  require ("zip")
   wD <- getwd()
   setwd (outD) ## zip blows up otherwise
   unlink ("processedCTD_annual.zip", force = TRUE)
