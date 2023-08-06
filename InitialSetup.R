@@ -25,7 +25,8 @@ if (!dir.exists(bDir)){
 
 
 require ("renv")
-install (repos="https://cloud.r-project.org/")
-
+renv::init(bioconductor = TRUE)
+renv::init(bioconductor = "3.17")
+renv::install (repos="https://cloud.r-project.org/")
 
 #EOF
