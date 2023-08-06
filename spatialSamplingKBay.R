@@ -16,10 +16,10 @@ if (class (tr) == "try-error"){
   load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 }
 set.seed (9)
-Require ("SDraw")
-# Require ("Rgshhs")
-Require ("sp")
-Require ("raster")
+require ("SDraw")
+# require ("Rgshhs")
+require ("sp")
+require ("raster")
 dir.create ("~/tmp/LCI_noaa/media/2021/", recursive = TRUE, showWarnings = FALSE)
 dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
@@ -67,7 +67,7 @@ proj4string(p) <- CRS (proj4string(zooCenv))
 # plot (coast, col = "beige", add = TRUE)
 
 ## restrict study area to water
-Require ("rgeos")
+require ("rgeos")
 studyA <- gDifference (p, coast)
 
 
@@ -80,7 +80,7 @@ plot (coast, col = "beige", add = TRUE)
 blues <- colorRampPalette(rev (c ("red", "purple", "blue", "cadetblue1", "white")))
 # blues <- colorRampPalette (rev (c("lightsteelblue4", "lightsteelblue3", "lightsteelblue2", "lightsteelblue1")))
 plot (bath, col = blues (100), add = TRUE)
-# Require ("marmap")
+# require ("marmap")
 # plot.bathy (bath, bpal = blues (100) , add = TRUE)
 
 
@@ -95,13 +95,13 @@ text (zooCenv, labels = zooCenv$Station, pos = 4, offset = 0.5)
 dev.off()
 
 
-# Require ("dismo")
+# require ("dismo")
 # zooD <- voronoi (zooCenv, ext = 10)
 # plot (zooD, add = TRUE)
 # spplot (zooD, "id")
 
 
-Require ("sf")
+require ("sf")
 ## should add envelope to st_voronoi
 zPt <- coordinates (zooCenv) %>%
   st_multipoint() %>%
