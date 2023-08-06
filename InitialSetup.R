@@ -23,4 +23,10 @@ if (!dir.exists(bDir)){
   unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir=paste0 (bDir, "CGOA_bathymetry_grid/"))
 }
 
+
+require ("renv")
+install (repos="https://cloud.r-project.org/")
+
+
+
 #EOF

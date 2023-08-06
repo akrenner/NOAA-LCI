@@ -29,7 +29,6 @@ if (.Platform$OS.type=="windows"){
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
 
-
 source ("InitialSetup.R")
 if (1){
   ## hex conversion and QAQC plots
