@@ -22,8 +22,8 @@ if (length (grep ("darwin", version$os)) >0 ){
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 
-if (!require("pacman", quietly=TRUE)){install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-Require <- pacman::p_load
+# if (!require("pacman", quietly=TRUE)){install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
+# Require <- pacman::p_load
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
@@ -31,7 +31,7 @@ Require <- pacman::p_load
 
 
 ### data prep
-Require ("oce")
+ ("oce")
 ## define sections
 physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
@@ -58,7 +58,7 @@ useSF <- TRUE
 useSF <- FALSE  ## marmap still depends on sp/raster -- temp work-around
 
 
-Require ("marmap")
+ ("marmap")
 bfer <- 0.5
 cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
 # unlink (cFile)
@@ -92,11 +92,11 @@ if (useSF){
   detach_package ("sp") ## needed as long as marmap depends on sp and raster. Still need to convert bathyNaa?
   rm (detach_Package)
   ## Zimmermann bathymetry
-  Require ("stars")
+   ("stars")
   bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
   ## Zimmermann bathymetry
-  Require ("raster")
+  require ("raster")
   ## FIX !!  -- already in prepData? -- migrate to prepData!
     if (.Platform$OS.type == "windows"){
       bathyZ <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
@@ -114,7 +114,7 @@ if (useSF){
 
 
 
-Require ("ocedata") # coastlineWorldFine
+require ("ocedata") # coastlineWorldFine
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
@@ -150,7 +150,7 @@ if (0){
 
   if (useSF){
     ## migrate to sf, stars/terra
-    Require (c ("sf", "lubridate"))
+    require (c ("sf", "lubridate"))
     pop <- poAll %>%
       st_as_sf (coords = c("longitude_DD", "latitude_DD")) %>%
       st_set_crs(value="+proj=longlat +datum=WGS84 +units=m")
@@ -160,7 +160,7 @@ if (0){
     rm (pop)
     # sapply(st_intersects(x,y), function(z) if (length(z)==0) NA_integer_ else z[1])
   }else{
-    Require (sp)
+    require (sp)
     poP <- poAll
     coordinates (poP) <- ~longitude_DD+latitude_DD
     proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
@@ -268,7 +268,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
 odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
-Require ("cmocean")  ## for color ramps
+require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
 ## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
@@ -280,7 +280,7 @@ oCol3 <- list (  ## fix versions?
   , colorRampPalette (cmocean ("turbid")(5), bias=3) #, cmocean ("matter")  # or turbid
   , colorRampPalette (cmocean ("algae")(5), bias=3)
   #, oceColorsTurbo # cmocean ("solar")
-  , function (n){Require ("viridis"); turbo (n, begin=0.25, end=0.8)}
+  , function (n){require ("viridis"); turbo (n, begin=0.25, end=0.8)}
   , cmocean ("oxy")
   , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
