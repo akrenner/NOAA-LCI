@@ -4,9 +4,9 @@
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 set.seed (8)
-require ("sp")
-require ("raster")
-require ("vegan")
+Require ("sp")
+Require ("raster")
+Require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019-zoop/", recursive = TRUE, showWarnings = FALSE)
 
 PDF <- function (fN, ...){
@@ -157,7 +157,7 @@ zooCenv@data$warmCatL <- cut (zooCenv$TempAnom
                       , labels = c("cold", "neutral", "warm"))
 zooCenv@data$Sal  <- tempDay$SalD365 [tempMatch]
 # print (summary (zooCenv))
-require (sp)
+Require (sp)
 # print (with (zooCenv@data, summary (Sal)))
 zooCenv@data$SalCat <- with (zooCenv@data, cut (Sal
                                     , breaks = c(-10, mean (Sal, na.rm = TRUE)+c(-1,1)*sd (Sal, na.rm = TRUE)/4, 100)
@@ -249,7 +249,7 @@ cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
    # X <- subset (X, envX$Transect != 9)
     hpts <- chull (X)
     hpts <- c(hpts, hpts [1])
-    require (mixtools)
+    Require (mixtools)
     ## collect points of ellipse and draw filled polygon
     if (hull){
         ## lines (X [hpts,], col = colC, lwd = 2)
@@ -281,7 +281,7 @@ zooCenv$transO <- ifelse (zooCenv$Transect == "4" & zooCenv$Station == "2", "S",
 # 1st week of May: LCI survey
 # Isabella: semester by the bay student. Needs qGIS help
 
-require ("colorspace")
+Require ("colorspace")
 ## mCol  <- brewer.pal (12, "Spectral")
 mCol <- rainbow_hcl (12)
 
@@ -362,8 +362,8 @@ spDF <- subset (spDF, month %in% 3)
 sLM <- lm (nMDS1 ~ TempAnom, spDF)
 
 
-# require ("glmm")  ## better
-require ("MCMCglmm")
+# Require ("glmm")  ## better
+Require ("MCMCglmm")
 # sLM <- glmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM, varcomps.names = "month")
 sLM <- MCMCglmm (nMDS1 ~ month + Temp, random = nMDS1~ Match_Name, data = sLM)
 ## better: glmm, random factor = station
@@ -389,7 +389,7 @@ rm (T9, T9env, spDF)
 mT9 <- aggregate (T9~month, T9env, FUN = mean)
 mT9 <- aggregate (as.matrix (zooC)~month, data = zooCenv, subset = Transect == 9, FUN = mean)
 
-require ("factoextra")
+Require ("factoextra")
 if (0){
     PDF ("2019/Zoop_nSeasons")
     fviz_nbclust (mT9, kmeans, method = "gap_stat")
@@ -401,7 +401,7 @@ if (0){
     rm (kM)
 }
 
-require (magrittr) # for pipe!
+Require (magrittr) # for pipe!
 ## consider using a different distance to focus on composition rather than abundance
 zoo.hc <- mT9 %>%
     scale() %>%
@@ -451,7 +451,7 @@ cbind (month.abb, as.character (Seasonal (1:12)))
 
 
 nMCol <- Seasonal (zooCenv$month)
-require ("RColorBrewer")
+Require ("RColorBrewer")
 fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 # fCol <- adjustcolor (fCol, alpha.f = 0.4)
 ## annual zooplankton cycle
@@ -510,7 +510,7 @@ plotInSeason <- function (pdfN, plotCat = "warmCat"
         par (mfrow = c(2,2))
         for (i in 1:length (levels (zooCenv$season))){
             if (reScale){
-                require (vegan)
+                Require (vegan)
                 cat ("\n##\n", i, levels (zooCenv$season) [i], "\n\n##\n")
                 subSc <- metaMDS (subset (zooC
                                         , zooCenv$season == levels (zooCenv$season)[i])
@@ -557,7 +557,7 @@ plotInSeason (pdfN = "Zoop_intraseasonal-nMDS_warm-cold"
             , hull = TRUE, legLoc = "bottomleft")
 
 ## compare location (Transects; Stations)
-require ("RColorBrewer")
+Require ("RColorBrewer")
 plotInSeason ("Zoop_intraseasonal-nMDS_location"
             , plotCat = "Transect"
             , colP = rainbow_hcl (length (levels (factor (zooCenv$Transect))))
@@ -593,21 +593,21 @@ rm (plotInSeason)
 
 
 save.image ("~/tmp/LCI_noaa/cache/zoopCommModel.RData")
-## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopCommModel.RData") #; require (vegan)
+## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopCommModel.RData") #; Require (vegan)
 # print (names (zooCenv@data))
 
 
 
 ## finer resolution than months?
 ## plot actual day-of year against nMDS axes 1+2
-require ("sp")
+Require ("sp")
 
 zooCenv@data$jDate <- as.numeric (format (zooCenv@data$timeStamp, format = "%j"))
 # nMScores <- nMScores [order (zooCenv$timeStamp),]
 # zooC <- zooC []
 # zooCenv <- zooCenv [order (zooCenv$timeStamp),]
 PDF ("2019/nmds1daily")
-# require ("lattice")
+# Require ("lattice")
 # wideT <- data.frame (jDate = zooCenv$jDate, nMScores)
 # longT <- with (wideT, data.frame (jDate = rep (jDate, 2)
 #   , axes = rep (c(1,2), each = nrow (wideT))
@@ -638,7 +638,7 @@ dev.off()
 ## }
 ## rm (varName, i)
 
-require ("AICcmodavg")
+Require ("AICcmodavg")
 zooCenv@data$month <- factor (zooCenv@data$month)
 Modnames <- c ("season+TempAnom", "season*TempAnom", "season+Sal", "season*Sal"
              , "season+Temp", "season+SalAnom"
@@ -697,7 +697,7 @@ rm (aicTb, bM, aicTx, mdlL)
 
 if (0){## quantify variability within seasons, comparing warm/cold (why??)
 sDz <- aggregate (nMScores [,1:3]~season+warmCat, data = zooCenv, FUN = sd)
-require (lattice)
+Require (lattice)
 # bargraph
 PDF ("2019/Zoop_seasonal-SD")
 for (i in 1:3){
@@ -735,10 +735,10 @@ for (j in 1:3){
     }
     mtext (paste ("nMDS axis", j), outer = TRUE)
 }
-require (lattice)
+Require (lattice)
 bwplot (nMScores[,1]~zooCenv$warmCat|zooCenv$season)
 boxplot (nMScores [,1]~zooCenv$warmCat+zooCenv$season, notch = TRUE)
-require (vioplot)
+Require (vioplot)
 vioplot (nMScores [,1]~zooCenv$warmCat+zooCenv$season)
 dev.off()
 }
@@ -781,7 +781,7 @@ rm (zY)
 # zooY <- zooY [,which (apply (zooY, 2, max) > 1)
 
 
-require (vegan)
+Require (vegan)
 nm <- metaMDS (zooY, try = 20, trymax = 100, parallel = 12)
 
 PDF ("2019/Zoop_YearsNMDS")
@@ -798,7 +798,7 @@ dev.off()
 # pdfFl <- list.files ("~/tmp/LCI_noaa/media/2019/", "*.pdf", full.names = TRUE)
 # pngFl <- gsub (".pdf$", ".png", pdfFl)
 # pngFl <- gsub ("2019/", "2019-png/", pngFl)
-# require (parallel)
+# Require (parallel)
 # outP <- mclapply (1:length (pdfFl), function (i){
 #     oP <- system (paste ("~/bin/convertHQ", pdfFl [i], pngFl [i])
 #                                 , intern = TRUE, ignore.stdout = TRUE)
