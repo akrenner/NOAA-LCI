@@ -61,8 +61,8 @@
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
 sTime <- Sys.time()
-runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
-runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
+# runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
+runParallel <- TRUE   ## 11 minutes on same hardware (4 cores, 8 threads), also Windows
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -107,8 +107,8 @@ Require <- pacman::p_load
 
 Require (oce)
 ## read in processed files of individual CTD casts
-# fNf <- list.files("~/GISdata/LCI/CTD-processing/allCTD/CNV/", ".cnv", full.names = TRUE, ignore.case = TRUE)
-fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)
+fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)  # break tmp-file reliance?
+# fNf <- list.files ("~/GISdata/LCI/CTD-processing/", ".hex", full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 
 
 ## cut-out bad files for now -- fix this later -- why bad?
@@ -141,8 +141,7 @@ fN <- gsub ("^.*/", "", fNf)
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 getMeta <- function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
-# for (i in 1:length (fNf)){print (i)
-    require ("oce")
+  require ("oce")
   ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
   if (class (ctdF) == "try-error"){
     print (i)
@@ -161,7 +160,7 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
   outDF <- data.frame (time = cT
                        , file = fN [i], path = fNf [i]
                        , instSerNo, depth_bottom
-                       )
+  )
   return (outDF)
 }
 
@@ -174,15 +173,15 @@ if (.Platform$OS.type=="unix"){
 }
 if (runParallel){
   ## doParallel -- blocked on NCCOS computer?
-  Require ("parallel")
+  # Require ("parallel")
+  Require ("parallelly")
   Require ("doParallel")
-  nCPUs <- detectCores(logical=TRUE)
+  nCPUs <- availableCores(omit=1)  ## keep one core out
   cl <- makeCluster (nCPUs - 1, type="PSOCK")
   registerDoParallel (cl)
   clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
-#  stopCluster (cl)
-#  rm (cl)
+  ## shut down cluster farther down
 }else{
   nCPUs <- 1
   fileDB <- lapply (1:length (fNf), FUN = getMeta)
@@ -288,22 +287,66 @@ rCNV <- function (i){
   }
 
 if (runParallel){
-# cl <- makeCluster (nCPUs -1, TYPE="PSOCK")
-# registerDoParallel(cl)
-clusterExport(cl=cl, list ("rCNV", "fNf", "readCNV"))
-CTDx <- parLapply (cl=cl, seq_along (fNf), rCNV)
-stopCluster (cl)
-rm (cl)
+  clusterExport(cl=cl, list ("rCNV", "fNf", "readCNV"))
+  CTDx <- parLapply (cl=cl, seq_along (fNf), rCNV)
+  stopCluster (cl)
+  rm (cl)
 }else{
   CTDx <- lapply (seq_along (fNf), rCNV)
 }
 CTD1 <- as.data.frame (do.call (rbind, CTDx))
+rm (rCNV, readCNV, CTDx)
+rm (fN, fNf)
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 
-rm (readCNV, CTDx)
-rm (fN, fNf)
 
+
+
+
+
+## revisit using file names
+## if trouble, fix file names!
+## goal: simplify R code
+Require ("stringr")
+# require ("stringr")
+fileDB$FN_Date <- substring(fileDB$file, 1, 10) %>%
+  str_replace_all ("_", "-") %>%
+  as.Date
+fileDB$FN_Transect <- substring (fileDB$file, 12, 15) %>%
+  str_replace_all("-", "_") %>%
+  str_replace_all("_$", "") %>%
+  str_replace_all("^_", "") %>%
+  str_replace_all("_s$", "") %>%
+  str_replace("^t", "") %>%
+  str_replace ("^0", "") %>%
+  str_replace ("_[0-9]$", "") %>%
+  #str_replace("_[a-z]$", "") %>%
+  str_replace ("alon", "ab")
+summary (factor (fileDB$FN_Transect))
+
+fileDB$file [fileDB$FN_Transect == "3_t"]
+fileDB$file [fileDB$FN_Transect == "utk"]
+fileDB$file [fileDB$FN_Transect == "stev"]
+fileDB$file [fileDB$FN_Transect == "sadi"]
+fileDB$file [fileDB$FN_Transect == "9_n"]
+fileDB$file [fileDB$FN_Transect == "ab_p"]
+fileDB$file [fileDB$FN_Transect == "abex"]
+
+
+fileDB$FN_Station <- fileDB$file %>%
+  str_replace_all("[-,_]", " ") %>%
+  word (start=5L) %>%
+  str_replace ("^[s]", "") %>%
+  str_replace ("^adie", "Sadie") %>%
+  str_replace ("^[kb]", "") %>%
+  str_replace("ptgm", "pgrm") %>%
+  str_replace("ptgr", "pgrm") %>%
+  str_replace ("^0", "")
+summary (factor (fileDB$FN_Station))
+levels (factor (fileDB$FN_Station))
+
+fileDB$file [fileDB$FN_Station == "pgrmm"]
 
 
 

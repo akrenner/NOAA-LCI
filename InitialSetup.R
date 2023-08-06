@@ -25,7 +25,7 @@ if (!dir.exists(bDir)){
 
 
 ## set-up local R environment
-setRepositories(graphics=FALSE, ind=73)
+# setRepositories(graphics=FALSE, ind=73)
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 ## see https://stackoverflow.com/questions/11488174/how-to-select-a-cran-mirror-in-r
@@ -35,7 +35,8 @@ setRepositories(graphics=FALSE, ind=73)
 # options(repos=r)
 # })
 
-choorseCRANmirror (graphics=FALSE, ind=1)  # 1 = cloud
+chooseCRANmirror (graphics=FALSE, ind=1)  # 1 = cloud
+require ("renv")
 renv::restore()
 
 

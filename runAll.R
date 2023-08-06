@@ -19,6 +19,8 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
+source ("InitialSetup.R")
+renv::status()
 
 
 sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
@@ -29,7 +31,6 @@ cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
 # Require ("renv")  ## do NOT load this here in script!
 # renv::init()
 
-source ("InitialSetup.R")
 if (1){
   ## hex conversion and QAQC plots
   source ("FieldNotesDB.R") # first because it doesn't depend on anything else
