@@ -538,6 +538,18 @@
       ],
       "Hash": "71619ea0f73b03741c5bc1ed7195ce82"
     },
+    "XLConnect": {
+      "Package": "XLConnect",
+      "Version": "1.0.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "rJava"
+      ],
+      "Hash": "79adc7d20a8edf938373ac997780001c"
+    },
     "XML": {
       "Package": "XML",
       "Version": "3.99-0.14",
@@ -3508,6 +3520,17 @@
         "survival"
       ],
       "Hash": "47a0047c3082b2a285434db2eb418dcc"
+    },
+    "rJava": {
+      "Package": "rJava",
+      "Version": "1.0-6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods"
+      ],
+      "Hash": "0415819f6baa75d86d52483f7292b623"
     },
     "ragg": {
       "Package": "ragg",
