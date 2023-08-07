@@ -48,7 +48,7 @@
 
 sTime <- Sys.time()
 runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
-runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
+# runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -158,12 +158,15 @@ if (runParallel){
   require ("parallel")
   require ("doParallel")
   nCPUs <- detectCores(logical=TRUE)
-  cl <- makeCluster (nCPUs - 1, type="PSOCK")
+  cl <- makeCluster (nCPUs-1, type="PSOCK")
   registerDoParallel (cl)
   clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
 #  stopCluster (cl)
 #  rm (cl)
+
+  ## somehow above is no longer working -- NCCOS change?? try parallelly?
+
 }else{
   nCPUs <- 1
   fileDB <- lapply (1:length (fNf), FUN = getMeta)
