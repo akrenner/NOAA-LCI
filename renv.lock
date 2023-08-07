@@ -24,11 +24,8 @@
       },
       {
         "Name": "CRAN",
+        "URL": "https://ftp.osuosl.org/pub/cran"
         "URL": "https://packagemanager.posit.co/cran/latest"
-      },
-      {
-        "Name": "CRANextra",
-        "URL": "http://www.stats.ox.ac.uk/pub/RWin"
       }
     ]
   },
@@ -72,11 +69,7 @@
       "Package": "BH",
       "Version": "1.81.0-1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Hash": "68122010f01c4dcfbe58ce7112f2433d"
     },
     "Biobase": {
@@ -168,11 +161,7 @@
       "Package": "FNN",
       "Version": "1.1.3.2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -235,11 +224,7 @@
       "Package": "MBA",
       "Version": "0.1-0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "BH",
         "R"
@@ -355,11 +340,7 @@
       "Package": "RNetCDF",
       "Version": "2.6-2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -457,11 +438,7 @@
       "Package": "Rttf2pt1",
       "Version": "1.3.12",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -558,6 +535,18 @@
       ],
       "Hash": "71619ea0f73b03741c5bc1ed7195ce82"
     },
+    "XLConnect": {
+      "Package": "XLConnect",
+      "Version": "1.0.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "rJava"
+      ],
+      "Hash": "79adc7d20a8edf938373ac997780001c"
+    },
     "XML": {
       "Package": "XML",
       "Version": "3.99-0.14",
@@ -631,11 +620,7 @@
       "Package": "automap",
       "Version": "1.1-9",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "ggplot2",
@@ -710,11 +695,7 @@
       "Package": "bookdown",
       "Version": "0.34",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "htmltools",
@@ -1086,11 +1067,7 @@
       "Package": "credentials",
       "Version": "1.3.2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "askpass",
         "curl",
@@ -1430,11 +1407,7 @@
       "Package": "evd",
       "Version": "2.3-6.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "grDevices",
         "graphics",
@@ -1446,11 +1419,7 @@
       "Package": "extrafont",
       "Version": "0.19",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "Rttf2pt1",
@@ -1464,11 +1433,7 @@
       "Package": "extrafontdb",
       "Version": "1.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -1650,11 +1615,7 @@
       "Package": "furrr",
       "Version": "0.3.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "future",
@@ -1670,11 +1631,7 @@
       "Package": "future",
       "Version": "1.33.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "digest",
         "globals",
@@ -1739,11 +1696,7 @@
       "Package": "geoR",
       "Version": "1.9-2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "MASS",
         "R",
@@ -1782,7 +1735,7 @@
       "Package": "gert",
       "Version": "1.9.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "askpass",
         "credentials",
@@ -1792,26 +1745,25 @@
         "zip"
       ],
       "Hash": "9122b3958e749badb5c939f498038b57"
-<<<<<<< HEAD
-=======
     },
     "gganimate": {
       "Package": "gganimate",
       "Version": "1.0.8",
-=======
->>>>>>> c130ed0 (update renv lockfile)
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
-        "askpass",
-        "credentials",
-        "openssl",
-        "rstudioapi",
-        "sys",
-        "zip"
+        "ggplot2",
+        "glue",
+        "grDevices",
+        "grid",
+        "progress",
+        "rlang",
+        "scales",
+        "stringi",
+        "tweenr",
+        "utils"
       ],
-      "Hash": "9122b3958e749badb5c939f498038b57"
->>>>>>> temp
+      "Hash": "8e627464910e6bcf6ccb62b0bdbffa35"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -1909,8 +1861,6 @@
     "gh": {
       "Package": "gh",
       "Version": "1.4.0",
-<<<<<<< HEAD
-=======
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1927,60 +1877,9 @@
     "gifski": {
       "Package": "gifski",
       "Version": "1.12.0-1",
->>>>>>> temp
       "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R",
-        "cli",
-        "gitcreds",
-        "httr2",
-        "ini",
-        "jsonlite",
-        "rlang"
-      ],
-      "Hash": "03533b1c875028233598f848fda44c4c"
-    },
-    "gitcreds": {
-      "Package": "gitcreds",
-      "Version": "0.1.2",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R"
-      ],
-      "Hash": "ab08ac61f3e1be454ae21911eb8bc2fe"
-    },
-    "glmnet": {
-      "Package": "glmnet",
-      "Version": "4.1-7",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "Rcpp",
-        "RcppEigen",
-        "foreach",
-        "methods",
-        "shape",
-        "survival",
-        "utils"
-      ],
-      "Hash": "06f12f72ce94e533751a041cef8b71bc"
-    },
-    "globals": {
-      "Package": "globals",
-      "Version": "0.16.2",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R",
-        "codetools"
-      ],
-      "Hash": "baa9585ab4ce47a9f4618e671778cc6f"
-<<<<<<< HEAD
-=======
+      "Repository": "CRAN",
+      "Hash": "4452aa95618d562452c5a5a3e7e5fa00"
     },
     "gitcreds": {
       "Package": "gitcreds",
@@ -2020,7 +1919,6 @@
         "codetools"
       ],
       "Hash": "baa9585ab4ce47a9f4618e671778cc6f"
->>>>>>> temp
     },
     "glue": {
       "Package": "glue",
@@ -2037,11 +1935,7 @@
       "Package": "gmailr",
       "Version": "2.0.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "base64enc",
@@ -2145,11 +2039,7 @@
       "Package": "gstat",
       "Version": "2.1-1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "FNN",
         "R",
@@ -2217,11 +2107,7 @@
       "Package": "here",
       "Version": "1.0.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "rprojroot"
       ],
@@ -2324,11 +2210,7 @@
       "Package": "httpuv",
       "Version": "1.6.11",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "R6",
@@ -2358,11 +2240,7 @@
       "Package": "httr2",
       "Version": "0.2.3",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "R6",
@@ -2413,22 +2291,14 @@
       "Package": "ini",
       "Version": "0.3.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Hash": "6154ec2223172bce8162d4153cda21f7"
     },
     "intamap": {
       "Package": "intamap",
       "Version": "1.5-6",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "MASS",
         "MBA",
@@ -2467,11 +2337,7 @@
       "Package": "intervals",
       "Version": "0.15.4",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "graphics",
@@ -2518,11 +2384,7 @@
       "Package": "jomo",
       "Version": "2.7-6",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "MASS",
         "lme4",
@@ -2730,11 +2592,7 @@
       "Package": "listenv",
       "Version": "0.9.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -2819,11 +2677,7 @@
       "Package": "mapdata",
       "Version": "2.3.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "maps"
@@ -2941,11 +2795,7 @@
       "Package": "mice",
       "Version": "3.16.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "Rcpp",
@@ -2982,11 +2832,7 @@
       "Package": "miniUI",
       "Version": "0.1.1.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "htmltools",
         "shiny",
@@ -3008,11 +2854,7 @@
       "Package": "missMDA",
       "Version": "1.18",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "FactoMineR",
         "R",
@@ -3033,11 +2875,7 @@
       "Package": "mitml",
       "Version": "0.4-5",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "grDevices",
         "graphics",
@@ -3128,11 +2966,7 @@
       "Package": "ncmeta",
       "Version": "0.3.5",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "RNetCDF",
@@ -3194,11 +3028,7 @@
       "Package": "oai",
       "Version": "0.4.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "httr",
         "plyr",
@@ -3226,11 +3056,7 @@
       "Package": "oceanexplorer",
       "Version": "0.0.2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "DT",
         "R",
@@ -3260,11 +3086,7 @@
       "Package": "oceanmap",
       "Version": "0.1.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "abind",
@@ -3342,11 +3164,7 @@
       "Package": "ordinal",
       "Version": "2022.11-16",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "MASS",
         "Matrix",
@@ -3377,22 +3195,14 @@
       "Package": "pan",
       "Version": "1.8",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Hash": "7dd72a850a16b0b92c8ac7bedb878541"
     },
     "parallelly": {
       "Package": "parallelly",
       "Version": "1.36.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "parallel",
         "tools",
@@ -3734,6 +3544,17 @@
       ],
       "Hash": "47a0047c3082b2a285434db2eb418dcc"
     },
+    "rJava": {
+      "Package": "rJava",
+      "Version": "1.0-6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods"
+      ],
+      "Hash": "0415819f6baa75d86d52483f7292b623"
+    },
     "ragg": {
       "Package": "ragg",
       "Version": "1.2.5",
@@ -3886,11 +3707,7 @@
       "Package": "reshape",
       "Version": "0.8.9",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "plyr"
@@ -3914,11 +3731,7 @@
       "Package": "rgbif",
       "Version": "3.7.7",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R6",
         "crul",
@@ -4065,11 +3878,7 @@
       "Package": "rsf",
       "Version": "0.3.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "bookdown",
         "gert",
@@ -4257,11 +4066,7 @@
       "Package": "sftime",
       "Version": "0.2-0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "methods",
         "sf"
@@ -4285,11 +4090,7 @@
       "Package": "shiny",
       "Version": "1.7.4.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "R6",
@@ -4323,11 +4124,7 @@
       "Package": "shinyFeedback",
       "Version": "0.4.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "fontawesome",
@@ -4341,11 +4138,7 @@
       "Package": "shinyjs",
       "Version": "2.1.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "digest",
@@ -4368,11 +4161,7 @@
       "Package": "snotelr",
       "Version": "1.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "httr",
@@ -4389,11 +4178,7 @@
       "Package": "sourcetools",
       "Version": "0.1.7-1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -4420,11 +4205,7 @@
       "Package": "spacetime",
       "Version": "1.3-0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "graphics",
@@ -4470,11 +4251,7 @@
       "Package": "splancs",
       "Version": "2.01-43",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "grDevices",
@@ -4661,11 +4438,7 @@
       "Package": "thematic",
       "Version": "0.1.2.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "farver",
@@ -4852,6 +4625,21 @@
       ],
       "Hash": "a2045b968f6360df39d3267cf0f9d230"
     },
+    "tweenr": {
+      "Package": "tweenr",
+      "Version": "2.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cpp11",
+        "farver",
+        "magrittr",
+        "rlang",
+        "vctrs"
+      ],
+      "Hash": "c16efcef4c72d3bff5e65031f3f1f841"
+    },
     "tzdb": {
       "Package": "tzdb",
       "Version": "0.4.0",
@@ -4867,11 +4655,7 @@
       "Package": "ucminf",
       "Version": "1.2.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R"
       ],
@@ -4943,11 +4727,7 @@
       "Package": "usethis",
       "Version": "2.2.2",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "cli",
@@ -5087,11 +4867,7 @@
       "Package": "waiter",
       "Version": "0.2.5",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R6",
         "htmltools",
@@ -5120,22 +4896,14 @@
       "Package": "whisker",
       "Version": "0.4.1",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Hash": "c6abfa47a46d281a7d5159d0a8891e88"
     },
     "whoami": {
       "Package": "whoami",
       "Version": "1.3.0",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "httr",
         "jsonlite",
@@ -5237,11 +5005,7 @@
       "Package": "ymlthis",
       "Version": "0.1.7",
       "Source": "Repository",
-<<<<<<< HEAD
-      "Repository": "RSPM",
-=======
       "Repository": "CRAN",
->>>>>>> temp
       "Requirements": [
         "R",
         "crayon",

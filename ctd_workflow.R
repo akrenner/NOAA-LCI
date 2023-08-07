@@ -27,11 +27,6 @@ cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 #                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 # Require <- pacman::p_load
 
-## set-up renv
-## do all renv work manually to avoid clash between base::load() and renv::load()
-# require ("renv")  ## do NOT load this here in script!
-# renv::init()
-# renv::activate()
 
 ## pre-load widely needed packages. Do this here for new users.
 require ("tools")
@@ -56,8 +51,6 @@ cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 cat ("## Finished CTD_cleanup.R\n\n")
 
-## save snapshot of current package versions
-# renv::snapshot()
 cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
 #EOF

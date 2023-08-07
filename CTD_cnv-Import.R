@@ -78,11 +78,6 @@ set.seed(7)
 ############################
 
 
-# if (!require("pacman")){
-#   install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-# require <- pacman::p_load
-
-
 
 
 

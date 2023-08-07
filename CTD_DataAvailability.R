@@ -20,8 +20,8 @@ if (nColumns == 1){CA <-0.4}else if (nColumns == 2){CA <- 0.7}else {CA <- 1}
 if (nColumns > 3){Cx <- 1; las = 2}else{Cx <- 1}
 
 
-load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
-# load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")
+base::load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, stn
+# base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")
 
 
 ## add time variables

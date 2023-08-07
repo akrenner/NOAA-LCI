@@ -105,7 +105,7 @@ if (.Platform$OS.type != "unix"){
 ## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
 ## this is done by scripts called in ctd_workflow.R
 
-# load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
+# base::load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
 require ("tidyverse")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
@@ -735,8 +735,8 @@ if (length (grep ("plastic", zoop$Species)) > 0){
 zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
 
-## lookup deepth from field notes
-load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
+## lookup depth from field notes
+base::load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
 zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
 zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
