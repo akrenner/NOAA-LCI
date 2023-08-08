@@ -44,10 +44,8 @@ myspecies <- c("Carcinus maenas")
 ## finish set-up ##
 ###################
 
-if (!require("pacman")) install.packages("pacman")
-Require <- pacman::p_load
-Require ("sf")
-Require ("stars")
+require ("sf")
+require ("stars")
 units (distX) <- "km"
 
 
@@ -60,10 +58,10 @@ units (distX) <- "km"
 #######################################
 ## DOWNLOAD AND CLEAN DATA FROM GBIF ##
 #######################################
-Require ("rgbif")
+require ("rgbif")
 # library(scrubr)
-Require ("maps")
-Require ("readr")
+require ("maps")
+require ("readr")
 
 # IF YOU HAVE ONLY ONE SPECIES ----
 # download GBIF occurrence data for this species; this takes time if there are many data points!
@@ -98,10 +96,10 @@ gbifP <- subset (gbif_data$data, decimalLongitude > -25) %>%    # include Austra
 ## https://www.ncei.noaa.gov/products/world-ocean-atlas  (downside: files are 3d = big)
 
 
-Require ("oceanexplorer")  # works with stars
+require ("oceanexplorer")  # works with stars
 if (1){
   gN <- function (...){
-    Require ("readr")
+    require ("readr")
     get_NOAA (..., spat_res=1, cache=TRUE) %>%
       filter_NOAA (depth=0)  ##
   }
@@ -109,7 +107,7 @@ if (1){
   ## manual download to ~/GISdata/data/world-ocean-atlas/
   # https://www.ncei.noaa.gov/thredds-ocean/fileServer/ncei/woa/salinity/decav/0.25/woa18_decav_s00_04.nc
   gN <- function (var="temperature", av_period="January"){
-    Require ("stars")
+    require ("stars")
     if (var=="temperature"){
       dCub <- st_read (paste0 ("~/GISdata/data/world-ocean-atlas/temperature/woa18_decav_t"
                                , sprintf ("%02i", which (month.name %in% av_period))
@@ -156,12 +154,12 @@ rm (sss, tMin, tMax, tMean)
 #####################
 
 ## shoreline
-Require ("maptools")
-Require ("zip")
+require ("maptools")
+require ("zip")
 tD <- tempdir()
 unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
        , junkpaths = TRUE, exdir = tD)
-Require ("sf")
+require ("sf")
 coastG <- st_read (dsn = tD, layer = "GSHHS_l_L1") ## select f, h, i, l, c  ---  doesn't need to be fine-scale here
 
 ## clip to bounding box: NW Atlantic
@@ -215,7 +213,7 @@ rm (distX, cbX, cb)
 if (1){
   ## interpolate NA values from neighbours
   seax <- sea
-  Require ("zoo") ## use na.approx -- not ideal, but does the trick for now. ideal: r.neighbors
+  require ("zoo") ## use na.approx -- not ideal, but does the trick for now. ideal: r.neighbors
   for (i in 1:length (seax)){
     seax [[i]] <- na.approx (seax [[i]])
   }
@@ -283,7 +281,7 @@ summary (m1)
 # plot (m1)
 
 sea$pred <- predict (m1, newdata=sea, type="response")  # type= "link"/"response"/"terms"
-Require ("viridis")
+require ("viridis")
 png ("~/tmp/LCI_noaa/media/GreenCrab.png", width=1600, height=900, res=100)
 plot (sea ['pred'], col = inferno(12), breaks="equal")
 dev.off()
@@ -293,7 +291,7 @@ write_stars (sea, dsn="~/tmp/LCI_noaa/data-products/EuroGreenCrab.tif", layer="p
 
 
 
-Require ("ResourceSelection")
+require ("ResourceSelection")
 m1 <- ResourceSelection::rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=999)
 m2 <- ResourceSelection::rsf (status~Tmin+Tmax, mDF, m=0, B=999)
 m3 <- ResourceSelection::rsf (status~Tmin+sal, mDF, m=0, B=999)
@@ -311,11 +309,11 @@ sea$rsf <- predict (m1, newdata=sea) #, type="response")
 
 
 ## rsf -- same as "ResourceSelection" ??
-Require ("rsf")
+require ("rsf")
 m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
 
 ## maxent
-# Require ("dismo")
+# require ("dismo")
 # maxent ()
 
 

@@ -94,7 +94,11 @@ if (.Platform$OS.type != "unix"){
 ## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
 ## this is done by scripts called in ctd_workflow.R
 
+<<<<<<< HEAD
 # base::load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
+=======
+# load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
+>>>>>>> main
 require ("tidyverse")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
@@ -742,6 +746,7 @@ require ("sf")
 
 spTran <- function (x, p4){
     # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+#    require ("rgdal")
   require ("sf")
   suppressWarnings (y <- spTransform (x, CRS (p4)))
     return (y)

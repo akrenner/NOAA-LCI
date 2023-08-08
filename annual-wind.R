@@ -42,7 +42,7 @@ scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained o
 
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
-Require ("RColorBrewer")
+require ("RColorBrewer")
 if (quarterly){
   pastYear <- FALSE  ## for winter/spring publication
   ongoingY <- TRUE
@@ -61,7 +61,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 # rm (scAdvT, galeT, stormT)
 
 ## get up-to-date SWMP data
-Require ("openair") # for windRose
+require ("openair") # for windRose
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
@@ -111,7 +111,7 @@ for (k in 1:length (wStations)){
   if (0){  # activate once it's working to get weather from alternative NOAA source: Augustine, Flat Island, etc.
     source ("noaaWeather.R")
     hmr <- noaa
-    Require ("rnoaa")
+    require ("rnoaa")
     ## list/map airport-like weather stations
     hStn <- meteo_nearby_stations(data.frame (id="Homer", latitude=59.63, longitude=-151.51)
                                   , radius=250)
@@ -240,7 +240,7 @@ for (k in 1:length (wStations)){
   # is.na (sTab [1:(nrow (sTab)-2), ncol (sTab)]) <- TRUE
   sTab [1:(nrow (sTab)-2), ncol (sTab)] <- 0
 
-  Require ("RColorBrewer")
+  require ("RColorBrewer")
   gCols <- c("lightgray", "darkgray", brewer.pal (4, "Paired")[1:2])
 
   # png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
@@ -282,7 +282,7 @@ for (k in 1:length (wStations)){
 
 
   if (0){ ## violin plot of frequency of storms/gales
-    Require("vioplot")
+    require("vioplot")
     vioplot (yGale$maxwspd, ylab="N gales")
     ## abline (h=yGale$maxwspd [yGale$year == currentYear])
     points (1, yGale$maxwspd [yGale$year == currentYear]
@@ -318,7 +318,7 @@ for (k in 1:length (wStations)){
   dMeans$wdir <- with (dMeans, meanWind (uw, vw))
   dMeans$windSpd <- with (dMeans, sqrt (uw^2+vw^2))
   dMeans$wdir <- with (dMeans, ifelse (wdir < 0, wdir + 360, wdir)) # needed??
-  Require ("circular")
+  require ("circular")
   circWind <- circular (hmr$wdir, type="directions", units="degrees", template="geographics")
   wDir2 <- aggregate (circWind~jday+year, hmr, FUN=function (x){
     as.numeric (mean (x, na.rm=TRUE)) ## this is NOT right -- need to apply weight by wind speed! XXX
@@ -329,12 +329,12 @@ for (k in 1:length (wStations)){
   ## MA of current/past year -- Moving Average
   ##--- this (and others should be handled with prepPDF) XXX
 
-  # Require (forecast)
+  # require (forecast)
   # load ("~/tmp/LCI_noaa/cache/MAfunction.RData") ## gets maT -- function -- backwards MA -- is that what we want? XXX
   # ma <- maT
   # dMeans$maW <- as.numeric (maT (dMeans$wspd, maO))
   # dMeans$galeMA <- as.numeric (maT (dMeans$gale, maO))
-  Require ("SWMPr")
+  require ("SWMPr")
   dMeans$maW <- unlist (smoother (dMeans$wspd, maO, sides=1))
   dMeans$galeMA <- unlist (smoother (dMeans$gale, maO, sides=1))
 
@@ -473,7 +473,7 @@ for (k in 1:length (wStations)){
     hmrS$date <- hmrS$datetimestamp
 
     windR <- function (df){  ## noisy. sink () does not suppress console output or warnings
-      Require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
+      require ("openair", warn.conflicts=FALSE, quietly=TRUE) # for windRose
       wR <- windRose (df, ws="wspd", wd="wdir"
                       #, type="yClass"
                       , type=c("season") #, "yClass")
@@ -515,7 +515,7 @@ for (k in 1:length (wStations)){
     #  par (mar=c())
     windR (hmrS)
     dev.off()
-    Require ("png")
+    require ("png")
     img2 <- readPNG (paste0 (tF, "ltc.png"))
     unlink(tF, recursive=TRUE); rm (tF)
     ## calculate coordinates for raster-image, to avoid readjusting it each year
@@ -553,7 +553,7 @@ for (k in 1:length (wStations)){
           text (jday, p365ma + 0.5, labels=p365wCar, srt=0, cex=0.8))
   }
   # with (subset (tDay, p365galDay > 0), text (jday, 5.8, labels=p365wCar))
-  Require ("png")
+  require ("png")
   ## plot gales or storms?
   galeS <- subset (tDay, p365galDay > 0)  ## should be storms!
   hgt <- 1.1; wdh <- 15
@@ -605,8 +605,8 @@ for (k in 1:length (wStations)){
   ## start-over/add windrose
   # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/wind2.RData")
 
-  # if (!Require ("openair")){
-  # Require("devtools") ## needs Rtools -- which needs VPN
+  # if (!require ("openair")){
+  # require("devtools") ## needs Rtools -- which needs VPN
   # install_github('davidcarslaw/openair')
   # }
 
@@ -679,7 +679,7 @@ for (k in 1:length (wStations)){
   # dM <- subset (dMeans, jday >= 335) # 1 Dec=335
   #
   # windR <- function (subsV, ...){
-  #   Require ("climatol")
+  #   require ("climatol")
   #   wndfr <- with (subset (dM, subsV)
   #                  , table (cut (wspd, breaks=c(0,3,6,9,60), include.lowest=TRUE)
   #                           , cDir (wdir, nDir=16)))
@@ -690,7 +690,7 @@ for (k in 1:length (wStations)){
   #   names (wndfr) <- gsub ("Freq.", "", names (wndfr))
   #   rosavent (as.data.frame (wndfr), uni=vUnit, key=TRUE, flab=1)
   # }
-  # # Require("Hmisc") # subplot incompatible with layout() :(
+  # # require("Hmisc") # subplot incompatible with layout() :(
   # # spSi <- 1.7
   # # subplot (windR (dM$year < currentYear)
   # #          , x=160, y=12.8, vadj=1, size=c(spSi, spSi))
@@ -708,12 +708,12 @@ for (k in 1:length (wStations)){
 
   # library(devtools)
   # install_github("tomhopper/windrose")   ## not that pretty -- looks like ggplot2
-  # Require ("windrose")
+  # require ("windrose")
   # data(wind_data)
   # wind_rose <- windrose(wind_data, spd=Wind_Speed_meter_per_second, dir=Wind_Direction_deg)
   # plot(wind_rose)
 
-  # Require ("clifro")  # builds on ggplot2
+  # require ("clifro")  # builds on ggplot2
   # example (windrose)
 
 
@@ -750,7 +750,7 @@ for (k in 1:length (wStations)){
     pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
     ## alternative: wldiag in dgolicher/giscourse on github
     ## for same but with more customization, see library (iki.dataclim)
-    Require ("climatol")
+    require ("climatol")
     ## Error in sprintf("%d-%d", yeari, yearf) :
     ## invalid format '%d'; use format %f, %e, %g or %a for numeric objects
     diagwl (dat=climD (subset (hmr, year < currentYear))  ## diagwl currently producing error

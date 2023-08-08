@@ -48,7 +48,7 @@
 
 sTime <- Sys.time()
 runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
-runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
+# runParallel <- TRUE   ## 11 minutes on same hardware, also Windows
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -76,11 +76,6 @@ set.seed(7)
 ############################
 ## define basic functions ##
 ############################
-
-
-if (!require("pacman")){
-  install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-Require <- pacman::p_load
 
 
 
@@ -163,12 +158,15 @@ if (runParallel){
   Require ("parallel")
   Require ("doParallel")
   nCPUs <- detectCores(logical=TRUE)
-  cl <- makeCluster (nCPUs - 1, type="PSOCK")
+  cl <- makeCluster (nCPUs-1, type="PSOCK")
   registerDoParallel (cl)
   clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
 #  stopCluster (cl)
 #  rm (cl)
+
+  ## somehow above is no longer working -- NCCOS change?? try parallelly?
+
 }else{
   nCPUs <- 1
   fileDB <- lapply (1:length (fNf), FUN = getMeta)
@@ -317,9 +315,11 @@ if (isWin){
            , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
   }
 }else{
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  if (0){
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  }
 }
 
 ## which set of tables is best to import? -- MDBTools vs ODBC

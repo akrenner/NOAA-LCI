@@ -4,9 +4,9 @@
 
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 set.seed (8)
-Require ("sp")
-Require ("raster")
-Require ("vegan")
+require ("sp")
+require ("raster")
+require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019-zoop/", recursive = TRUE, showWarnings = FALSE)
 
 PDF <- function (fN, ...){
@@ -82,7 +82,7 @@ cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
    # X <- subset (X, envX$Transect != 9)
     hpts <- chull (X)
     hpts <- c(hpts, hpts [1])
-    Require (mixtools)
+    require (mixtools)
     ## collect points of ellipse and draw filled polygon
     if (hull){
         ## lines (X [hpts,], col = colC, lwd = 2)
@@ -105,7 +105,7 @@ cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
 # 1st week of May: LCI survey
 # Isabella: semester by the bay student. Needs qGIS help
 
-Require ("colorspace")
+require ("colorspace")
 ## mCol  <- brewer.pal (12, "Spectral")
 mCol <- rainbow_hcl (12)
 
@@ -119,7 +119,7 @@ mCol <- rainbow_hcl (12)
 # nMCol <- Seasonal (zooCenv$month)
 # fCol <- brewer.pal (length (levels (nMCol)), "Dark2")
 nMCol <- factor (zooCenv$month)
-Require ("RColorBrewer")
+require ("RColorBrewer")
 fCol <- rainbow_hcl (12, alpha = 0.5)
 # fCol <- adjustcolor (fCol, alpha.f = 0.4)
 ## annual zooplankton cycle

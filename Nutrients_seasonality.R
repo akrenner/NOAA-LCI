@@ -129,13 +129,13 @@ nut [which.max (nut$NH3_mg.L),]
 
 ## set-up parameters
 source ("annualPlotFct.R") # already loads SWMPr
-suppressPackageStartupMessages (Require ("R.utils"))
+suppressPackageStartupMessages (require ("R.utils"))
 
 sF <- list.files("~/GISdata/LCI/SWMP/", pattern="*.zip", full.names=TRUE)
 SWMPfile <- sF [which.max (file.info(sF)$ctime)]
 
 ## load and process SWMP data
-Require ("SWMPr")
+require ("SWMPr")
 gS <- function (station){
   sws <- getSWMP(station)
   sws$jday <- as.numeric (format (sws$datetimestamp, format="%j"))

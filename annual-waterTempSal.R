@@ -24,7 +24,7 @@ currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # currentYear <- 2021   ## temp!! XXX
 #################
 currentCol <- c ("lightblue", "blue", "magenta")
-Require ("RColorBrewer")
+require ("RColorBrewer")
 currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 

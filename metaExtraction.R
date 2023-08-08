@@ -39,14 +39,6 @@ PDF <- function (fn, ...){
     pdf (paste ("~/tmp/LCI_noaa/media/", fn, sep = ""), ...)
 }
 
-Require <- function (...){
-    ## package <- as.character(substitute(package))
-    ext <- require (...)
-    if (ext){
-        install.packages (package, repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-    }
-}
-Require <- require
 
 Seasonal <- function (month){
     month <- as.numeric (month)

@@ -16,10 +16,10 @@ if (class (tr) == "try-error"){
   load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 }
 set.seed (9)
-Require ("SDraw")
-# Require ("Rgshhs")
-Require ("sp")
-Require ("raster")
+# require ("SDraw")    ## unresolved check-errors; no longer in CRAN, only in archive
+# require ("Rgshhs")
+require ("sp")
+require ("raster")
 dir.create ("~/tmp/LCI_noaa/media/2021/", recursive = TRUE, showWarnings = FALSE)
 dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
@@ -42,7 +42,7 @@ phyCenv <- spTransform(phyCenv, CRSobj = CRS (proj4string(coast)))
 ## define study area -- Kachemak Bay
 ## cookie-cutter a box
 bb <- bbox (zooCenv)
-# 
+#
 # bb <- rbind (c(118100, 1150000) #easting
 #              , c(102000, 10868000))  # northing
 kBs <- rbind (bb [,1]
@@ -53,12 +53,12 @@ kBs <- rbind (bb [,1]
               , bb [,1]
 )
 kBs [1,] <- c (114500,  1038000) # SW corner
-#              119162.5 1058273.3 
+#              119162.5 1058273.3
 kBs [5,] <- kBs [1,]
 kBs [3,] <- c (176000, 1102000)  # east, north  -- extend into upper bay -- NE corner
 #                      1087091
 kBs [4,] <- c (176000,  1045000)
-#              164823.8 1058273.3 
+#              164823.8 1058273.3
 
 p <- SpatialPolygons (list (Polygons (list (Polygon (kBs)), 1)))
 proj4string(p) <- CRS (proj4string(zooCenv))
@@ -67,7 +67,7 @@ proj4string(p) <- CRS (proj4string(zooCenv))
 # plot (coast, col = "beige", add = TRUE)
 
 ## restrict study area to water
-Require ("rgeos")
+require ("rgeos")
 studyA <- gDifference (p, coast)
 
 
@@ -80,7 +80,7 @@ plot (coast, col = "beige", add = TRUE)
 blues <- colorRampPalette(rev (c ("red", "purple", "blue", "cadetblue1", "white")))
 # blues <- colorRampPalette (rev (c("lightsteelblue4", "lightsteelblue3", "lightsteelblue2", "lightsteelblue1")))
 plot (bath, col = blues (100), add = TRUE)
-# Require ("marmap")
+# require ("marmap")
 # plot.bathy (bath, bpal = blues (100) , add = TRUE)
 
 
@@ -95,17 +95,17 @@ text (zooCenv, labels = zooCenv$Station, pos = 4, offset = 0.5)
 dev.off()
 
 
-# Require ("dismo")
+# require ("dismo")
 # zooD <- voronoi (zooCenv, ext = 10)
 # plot (zooD, add = TRUE)
 # spplot (zooD, "id")
 
 
-Require ("sf")
+require ("sf")
 ## should add envelope to st_voronoi
 zPt <- coordinates (zooCenv) %>%
   st_multipoint() %>%
-  st_voronoi() %>% 
+  st_voronoi() %>%
   st_collection_extract()
 zPt <- as (zPt, "Spatial") ## convert sf to sp spatial
 proj4string(zPt) <- CRS (proj4string(zooCenv))

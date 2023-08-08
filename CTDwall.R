@@ -111,27 +111,27 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
-    Require ("oce")
+    require ("oce")
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
     ## extract from bathyZ. then fill-in the missing values from get.depth
     if (useSF){
-      Require ("sf")
+      require ("sf")
       sect <- st_as_sf(sect, coords=c("loni", "lati"))
       sf::st_crs(sect) <- 4326  ## WGS84 definition
-      Require ("stars")
+      require ("stars")
       sectP <- sf::st_transform(sect, st_crs (bathyZ))
       bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
     }else{
-      Require ("sp")
-      Require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
+      require ("sp")
+      require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
       coordinates (sect) <- ~loni+lati
       proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
       sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
       bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
-    Require ("marmap")
+    require ("marmap")
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
     bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
@@ -155,7 +155,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
-      Require ("stringr")
+      require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (stopatDate, "%Y")) - min (as.integer (levels (poAll$year))) + 1
@@ -458,7 +458,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       }
 
       if (0){  ## vector based -- not windows compatible and doesn't rotate
-        Require ("grImport")  ## requires installation of GS -- go raster after all
+        require ("grImport")  ## requires installation of GS -- go raster after all
         grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
         p <- readPicture("pictograms/eye.ps.xml")
         unlink ("pictograms/eye.ps.xml")
@@ -474,7 +474,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
         #     library (grConvert)}
         #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
         # }
-        # Require ("grImport2")
+        # require ("grImport2")
         # p <- grImport2::readPicture ("pictograms/eye2.svg")
         # g <- grImport2::pictureGrob(p)
         # grid.picture(g)
@@ -482,9 +482,9 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       if (.Platform$OS.type=="unix"){
         system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
       }
-      Require ("png")
+      require ("png")
       p <- readPNG ("pictograms/eye.png")
-      # Require ("OpenImageR")
+      # require ("OpenImageR")
       # p <- rotateImage (p, angle=rU, method="nearest")
       rasterImage(p
                   , xleft=xU       # -152       +3*1*(xU-0.5)
@@ -571,7 +571,7 @@ if (0){
   dev.off()
 
   ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-  Require (ocedata) #for the coastlineWorldFine data
+  require (ocedata) #for the coastlineWorldFine data
   data(coastlineWorldFine)
 
   mp <- function() {

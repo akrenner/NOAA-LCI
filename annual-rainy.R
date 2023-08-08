@@ -82,7 +82,7 @@ ARq <- quantile(yA2$totprcp, 0.5 + c(-1,1) * qntl [1] /2 , na.rm=TRUE)
 
 ## violin plot of annual rain
 if (0){
-  Require ("vioplot")
+  require ("vioplot")
   yA2 <- aggregate (totprcp~year, subset (hmr, (year > cOffY))
                     , FUN=sum, na.rm=TRUE)
   x <- vioplot(yA2$totprcp, ylab="annual precipitation [mm]")

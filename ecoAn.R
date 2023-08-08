@@ -40,8 +40,8 @@ summary (subset (birdS$TUPU, birdS$Year < 2014))
 
 
 
-Require (vegan)
-Require (sp)
+require (vegan)
+require (sp)
 
 
 ## strip sp info -- necessary and wise = ?? 
@@ -112,10 +112,10 @@ aC <- function (oldN, data, FUN = sum){
 ## subsample to address spatial autocorrelation? 
 ## should scale post.mean by overall mean?!  (not if on log-scale?)
 save.image ("~/tmp/LCI_noaa/cache/mcmcPrep.RData")
-### rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mcmcPrep.RData"); Require ("parallel")
+### rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mcmcPrep.RData"); require ("parallel")
 
 
-Require ("MCMCglmm")
+require ("MCMCglmm")
 set.seed (7)
 indS <- function (spp = "BLKI", df = birdS, sFam = "exponential"){
     sT <- Sys.time()
@@ -133,14 +133,14 @@ indS <- function (spp = "BLKI", df = birdS, sFam = "exponential"){
     }
     
     ## spatial distance matrix
-    ## Require ("geosphere")               # for distance matrix on great circle
+    ## require ("geosphere")               # for distance matrix on great circle
     ## llDist <- distm (spTransform (stn
     ##                             , CRS("+proj=longlat +datum=WGS84"))[
     ##     match (df$Match_Name, stn$Match_Name),])
                                         # skip for now! poSS (physical oceanography)
                                         # is currently data.frame, not spatial.data.frame
                                         # address spatial autocorrelations -- later
-    ## Require ("spdep")
+    ## require ("spdep")
     ## dM <- knn2nb(knearneigh(coords, k = 4), row.names = IDs)
     ## also consider require (rstanarm) # -- stan being the latest and greatest, past WinBUGS
 
@@ -185,8 +185,8 @@ indS <- function (spp = "BLKI", df = birdS, sFam = "exponential"){
     return (wcDF)    
 }
 
-Require ("parallel")
-Require ("dplyr")
+require ("parallel")
+require ("dplyr")
 if (0){
 indS ("BLKI")
 indS ("SEOT")
@@ -231,12 +231,12 @@ zooAn <- mdlW (names (zooS)[(which (names (zooS) == "Year")+1):ncol (zooS)], zoo
 phyAn <- mdlW (names (phyp)[grep ("Alexandrium", names (phyp))[1]:ncol (phyp)], phyp)
 
 save.image ("~/tmp/LCI_noaa/cache/mcmc.RData")
-### rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mcmc.RData"); Require ("parallel")
+### rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mcmc.RData"); require ("parallel")
 
 
 
 ## some tests
-Require (dplyr)
+require (dplyr)
 bAn2 <- bind_rows (
     lapply (names (birdS)[which (names (birdS) == "ALTE"):ncol (birdS)]
               , df = birdS, FUN = function (spp, df){
@@ -351,7 +351,7 @@ for (i in 1:length (climAn)){
     climRat <- tDF$post.mean/tDF$summer
     hist (climRat, main = "", xlab = "regime/summer")
     abline (v = mean (climRat), col = "blue")
-    Require ("latex2exp")
+    require ("latex2exp")
     mtext (paste ("mean:", round (mean (climRat), 1)), side = 3, at = mean (climRat), line = 0)    
 #    mtext (TeX (paste ("$\bar{x}=", round (mean (climRat), 1), "$")), side = 1, at = mean (climRat), line = 0)
 #    mtext (expression (paste ("bar (x) = ", round (mean (climRat), 1))), side = 1, at = mean (climRat), line = 0)
@@ -370,10 +370,10 @@ for (i in 1:length (climAn)){
 
 
 
-# Require ("indicspecies")
+# require ("indicspecies")
 # ?IndVal
 
-## Require ("vegan")
+## require ("vegan")
 ## ?indpower
 
 
@@ -462,7 +462,7 @@ noZ <- function (mtx){
 ## phyto vs physOc matrix
 
 ccaM <- function (X, Y, ...){
-    Require (vegan)
+    require (vegan)
     if (nrow (X) != nrow (Y)){cat ("rows don't match\n"); stop ()}
     i <- noZ (Y)
     mdl <- cca (Y [i,] ~ X [i,]) #, ..., na.action = na.omit)
@@ -528,7 +528,7 @@ c1 <- clnNA (c1)
 c2 <- clnNA (c2)
 c3 <- clnNA (c3)
 
-## Require (elipse)
+## require (elipse)
 ## ?plotcorr
 
 
