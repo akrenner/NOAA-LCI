@@ -61,7 +61,7 @@
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
 sTime <- Sys.time()
-# runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
+runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
 runParallel <- TRUE   ## 11 minutes on same hardware (4 cores, 8 threads), also Windows
 
 ## file structure:
@@ -92,11 +92,6 @@ set.seed(7)
 ############################
 
 
-if (!require("pacman")){
-  install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-Require <- pacman::p_load
-
-
 
 
 
@@ -105,7 +100,7 @@ Require <- pacman::p_load
 ## CTD data ##
 ##############
 
-Require (oce)
+require (oce)
 ## read in processed files of individual CTD casts
 fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)  # break tmp-file reliance?
 # fNf <- list.files ("~/GISdata/LCI/CTD-processing/", ".hex", full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
@@ -174,8 +169,8 @@ if (.Platform$OS.type=="unix"){
 if (runParallel){
   ## doParallel -- blocked on NCCOS computer?
   # Require ("parallel")
-  Require ("parallelly")
-  Require ("doParallel")
+  require ("parallelly")
+  require ("doParallel")
   nCPUs <- availableCores(omit=1)  ## keep one core out
   cl <- makeCluster (nCPUs - 1, type="PSOCK")
   registerDoParallel (cl)
@@ -268,23 +263,12 @@ readCNV <- function (i){
 }
 
 
-## read and concatenate all cnv files
-# Require ("parallel")
-# CTD1 <- mclapply (1:length (fNf), function (i){
-# CTD1 <- lapply (seq_along (fNf), function (i){
-#   x <- try (readCNV (i))
-#   if (class (x) == "try-error"){
-#     cat (i, fNf [i], "\n\n")
-#   }else{return (x)}
-# }
-# ) #, mc.cores = nCPUs) # read in measurements
-
 rCNV <- function (i){
   x <- try (readCNV (i))
-    if (class (x) == "try-error"){
-      cat (i, fNf [i], "\n\n")
-    }else{return (x)}
-  }
+  if (class (x) == "try-error"){
+    cat (i, fNf [i], "\n\n")
+  }else{return (x)}
+}
 
 if (runParallel){
   clusterExport(cl=cl, list ("rCNV", "fNf", "readCNV"))
@@ -308,8 +292,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 ## revisit using file names
 ## if trouble, fix file names!
 ## goal: simplify R code
-Require ("stringr")
-# require ("stringr")
+require ("stringr")
 fileDB$FN_Date <- substring(fileDB$file, 1, 10) %>%
   str_replace_all ("_", "-") %>%
   as.Date
@@ -317,38 +300,45 @@ fileDB$FN_Transect <- substring (fileDB$file, 12, 15) %>%
   str_replace_all("-", "_") %>%
   str_replace_all("_$", "") %>%
   str_replace_all("^_", "") %>%
-  str_replace_all("_s$", "") %>%
   str_replace("^t", "") %>%
   str_replace ("^0", "") %>%
-  str_replace ("_[0-9]$", "") %>%
-  #str_replace("_[a-z]$", "") %>%
-  str_replace ("alon", "ab")
+  str_replace("_[0-9,n,p,s,t]$", "") %>%
+  str_replace ("^(sadi|stev|subb|utk)", "Subbay") %>%
+  str_replace ("(alon|ab)", "AlongBay")
 summary (factor (fileDB$FN_Transect))
 
-fileDB$file [fileDB$FN_Transect == "3_t"]
-fileDB$file [fileDB$FN_Transect == "utk"]
-fileDB$file [fileDB$FN_Transect == "stev"]
-fileDB$file [fileDB$FN_Transect == "sadi"]
-fileDB$file [fileDB$FN_Transect == "9_n"]
-fileDB$file [fileDB$FN_Transect == "ab_p"]
-fileDB$file [fileDB$FN_Transect == "abex"]
+# fileDB$file [fileDB$FN_Transect == "3_t"] # "2018_09-13_t3_testbluff_cast005_5028.cnv"
+# fileDB$file [fileDB$FN_Transect == "9_n"]   # 2015_07-29_t9_north_cast149_5028.cnv
 
 
 fileDB$FN_Station <- fileDB$file %>%
   str_replace_all("[-,_]", " ") %>%
   word (start=5L) %>%
-  str_replace ("^[s]", "") %>%
+  str_replace("(ptgm|ptgr)", "pgrm") %>%
+  str_replace("(pogibshi|pogipoint|pt.pogi)", "pogi") %>%
+  str_replace ("^(skb|kb|s)", "") %>%  # along-bay variations
   str_replace ("^adie", "Sadie") %>%
-  str_replace ("^[kb]", "") %>%
-  str_replace("ptgm", "pgrm") %>%
-  str_replace("ptgr", "pgrm") %>%
+  str_replace     ("0[ab]$", "0") %>% ## strip out trailing a/b (duplicate casts?)
+  str_replace_all ("1([ab]|extra)$", "1") %>%
+  str_replace     ("2[ab]$", "2") %>%
+  str_replace_all ("3([ab]|extra)", "3") %>%
+  str_replace     ("4([ab]|east|south)$", "4") %>%
+  str_replace     ("5[ab]$", "5") %>%
+  str_replace     ("6[ab]$", "6") %>%
+  str_replace     ("7[ab]$", "7") %>%
+  str_replace     ("8[ab]$", "8") %>%
+  str_replace_all ("9([ab]|extra)$", "9") %>%
   str_replace ("^0", "")
-summary (factor (fileDB$FN_Station))
+# summary (factor (fileDB$FN_Station))
 levels (factor (fileDB$FN_Station))
-
-fileDB$file [fileDB$FN_Station == "pgrmm"]
-
-
+fileDB$file [fileDB$FN_Station == "intensive"]
+fileDB$file [fileDB$FN_Station == "aya"]
+fileDB$file [fileDB$FN_Station == "cast221"]     ## stevekibbler
+fileDB$file [fileDB$FN_Station == "5cast051"]
+# fileDB$file [fileDB$FN_Station == "t9s06"]     ## renamed source file
+# fileDB$file [grep ("[0-9][ab]", fileDB$FN_Station)]
+# fileDB$file [fileDB$FN_Station == "pgrmaham"]  ## renamed source file
+# fileDB$file [grep ("cast", fileDB$FN_Station)] ## renamed source file
 
 
 
@@ -403,7 +393,7 @@ transectEv$Transect <- ifelse (transectEv$Transect == "0", "SubBay"
 ## clean up dates/times
 stationEv$Date <- ifelse (stationEv$Date == "", "1900-01-01", stationEv$Date)
 stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
-Require ("lubridate") # for time-zone adjustment
+require ("lubridate") # for time-zone adjustment
 stationEv$timeStamp <- ymd_hms (paste (gsub (" .*", '', stationEv$Date)
                                        , gsub (".* ", '', stationEv$Time))
                                         , tz = "America/Anchorage")
@@ -461,7 +451,7 @@ rm (stnMaster, sMatch)
 # pro move: all QAQC to cleanup, keep this one simple
 # con: logical to do it right after match, before it's forgotton
 
-Require (geosphere)
+require (geosphere)
 stationErr <- data.frame (posError = with (stationEv, distHaversine (
   cbind (LonNotes, LatNotes), cbind (LonMast, LatMast)
 )))
@@ -910,7 +900,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVyc.RData")
 #  ls()
 ## where's notebook data? need lat-lon. Also need masterlist
 # "CTD1"      "cX"        "dirL"      "fileDB"    "fX"        "i"         "nCPUs"
-# "Require"  "stationEv" "sTime"
+# "stationEv" "sTime"
 ## need: CTD1, fileDB?
 
 
