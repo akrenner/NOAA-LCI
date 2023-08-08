@@ -72,11 +72,8 @@ PDF <- function (fN, ...){
   }
 }
 
-if (!require("pacman")) install.packages("pacman"
-  , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
 
-Require ("sp")  ## move to sf
+require ("sp")  ## move to sf
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -85,7 +82,7 @@ Seasonal <- function (month){           # now using breaks from zoop analysis --
 }
 
 
-Require ("parallel")
+require ("parallel")
 nCPUs <- detectCores()
 if (.Platform$OS.type != "unix"){
     nCPUs <- 1
@@ -108,8 +105,8 @@ if (.Platform$OS.type != "unix"){
 ## http://www.comm-tec.com/Training/Training_Courses/SBE/Module%203%20Basic%20Data%20Processing.pdf
 ## this is done by scripts called in ctd_workflow.R
 
-# load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-Require ("tidyverse")
+# base::load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
+require ("tidyverse")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
                       # forcing physOct$Station to "character" would be convenient
@@ -242,11 +239,11 @@ poSS$maxDepth <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS
 
 
 ## date/time-based conditions: daylight and tidal cycle
-Require ("rtide")
+require ("rtide")
 tRange <- function (tstmp){
     ## uses NOAA tide table data
     ## only available for US, but 8x faster than webtide (with oce)
-    Require ("rtide")
+    require ("rtide")
     kasbay <- tide_stations ("Kasitsna.*")
     timetable <- data.frame (Station = kasbay, DateTime =
                                seq (tstmp -12*3600, tstmp + 12*3600, by = 600)
@@ -277,9 +274,9 @@ rm (tRange)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){  ## REVIEW THIS!
   ## return radians degree of tidal phase during cast
-  Require ("suncalc")
+  require ("suncalc")
   poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
-  ## Require (oce)
+  ## require (oce)
   ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
 # POss$tidePhase <- unlist (mclapply (poSS$timeStamp, mc.cores=nCPUs))
@@ -336,7 +333,7 @@ rm (dMean, agg)
 ## almost the same als salinity. skip it
 
 ## derived seawater summary statistics
-Require ("parallel")
+require ("parallel")
 wcStab <- function (fn){
     ## calculate water column stability for a given File.Name as difference density between upper and lower water layer
     ## any reference to this??
@@ -520,7 +517,7 @@ save.image ("~/tmp/LCI_noaa/cache/troublesPO.RData")
 SCo <- stn[match (poSS$Match_Name, stn$Match_Name), names (stn) %in% c("Lon_decDegree"
                                                                      , "Lat_decDegree")]
 SCo <- as.matrix (cbind (SCo, cbind (poSS$longitude_DD, poSS$latitude_DD)))
-Require ("fields")
+require ("fields")
 StDis <- sapply (1:nrow (SCo), FUN = function (i){
     rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
 })
@@ -639,8 +636,8 @@ phyp <- cbind (stn [match (phyp$Match_Name
 names (phyp)[1:2] <- c("lon", "lat")
 
 ## add: month, year, SampleID
-# Require ("tidyverse")
-Require (magrittr) # for pipe!
+# require ("tidyverse")
+require (magrittr) # for pipe!
 trnsct <- strsplit (phyp$Match_Name, "_", fixed = TRUE) %>%
   unlist () %>%
       matrix (ncol =2 , byrow = TRUE)
@@ -689,7 +686,7 @@ if (printSampleDates){
 
 zoop <- read.csv ("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton.csv", as.is = TRUE)
 
-## Require ("XLConnect")
+## require ("XLConnect")
 ## stn <- readWorksheetFromFile ("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
 ## stn <- subset (stn, !is.na (Lon_decDegree))
 
@@ -738,8 +735,8 @@ if (length (grep ("plastic", zoop$Species)) > 0){
 zoop$Species <- paste (toupper (substring (zoop$Species, 1,1)) , substring (zoop$Species, 2, 100), sep = "")
 print (sort (levels (factor (zoop$Species))))
 
-## lookup deepth from field notes
-load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
+## lookup depth from field notes
+base::load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
 zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
 zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
@@ -913,7 +910,7 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
-Require ("sp")
+require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
 
@@ -923,15 +920,15 @@ lonL <- c(-154.2,-151.2)
 latL <- c(58.8,60.6)
 
 
-# Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp")
-Require ("sf")
+# require ("sp"); require ("rgdal"); require ("rgeos") # for gBuffer
+require ("sp")
+require ("sf")
 
 
 spTran <- function (x, p4){
     # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
-#    Require ("rgdal")
-  Require ("sf")
+#    require ("rgdal")
+  require ("sf")
   suppressWarnings (y <- spTransform (x, CRS (p4)))
     return (y)
 }
@@ -983,13 +980,13 @@ slot (NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-Require ("maptools")
-Require ("zip")
+require ("maptools")
+require ("zip")
 tD <- tempdir()
 unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
 
-Require ("sf")
+require ("sf")
 coastSF <- read_sf (dsn = tD, layer = "GSHHS_f_L1") ## select f, h, i, l, c
 ## clip to bounding box: larger Cook Inlet area
 b <- st_bbox (coastSF)
@@ -998,18 +995,18 @@ b[c(2,4)] <- latL+c(-5,2)
 bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
 
 coastSP <- as (coastSF, "Spatial")
-# Require ("stars")
+# require ("stars")
 # coast <- st_intersection (coastSP, bP)
 # coast <- st_intersects (coastSP, bP)
 
 if (1){
-Require ("raster")
-# Require ("rgeos")
+require ("raster")
+# require ("rgeos")
 coast <- raster::intersect(coastSP, bP)
 }else{
- #  Require ("terra") # replacement for raster
+ #  require ("terra") # replacement for raster
  # coast <- terra::intersect(coastSP, bP)
- Require ("stars")
+ require ("stars")
  coast <- st_intersects (coastSP, bP)
 }
 # plot (coastC)
@@ -1058,15 +1055,15 @@ rm (badPO)
 
 
 ## bathymetry from AOOS, Zimmerman
-Require ("raster")
-Require ("rgdal")
+require ("raster")
+require ("rgdal")
 if (.Platform$OS.type == "windows"){
   bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }else{
   bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
 }
 
-Require ("stars")
+require ("stars")
 ## NC4 version -- gives trouble with projection?
 ## st_mosaic not working for this. Try nc4 files again?
 # bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
@@ -1107,7 +1104,7 @@ rm (spTran, pr)
 ## AOOS model data:
 ## - Tidal current speed
 if (0){ ## not working?
-  Require (ncdf4)
+  require (ncdf4)
   url <- "http://thredds.aoos.org/thredds/dodsC/NOAA_CSDL_ROMS.nc?lon[0:1:787][0:1:145],lat[0:1:787][0:1:145],u[0:1:532][0][0:1:787][0:1:145],v[0:1:532][0][0:1:787][0:1:145],time[0:1:532]" # 500 MB? -- only need climatology; how to do that?
   ## or could actually look up individual pixels
   con <- nc_open (url)
@@ -1121,8 +1118,8 @@ if (0){ ## not working?
 ## match stnP and birds at different levels of buffer
 # for (i in length (stnB)){
 
-Require ("rgeos")
-Require ("parallel")
+require ("rgeos")
+require ("parallel")
 bDist <- function (stnL){
     ## stnL is SpatialPointsDataFrame
     ## buffDist <- unlist (mclapply (1:nrow (stnL), FUN = function (i){
@@ -1158,7 +1155,7 @@ xo <- mclapply (1:length (lBuff), FUN = findBirds
 
 ## birds <- do.call (rbind, xo)  # 20 s
 
-Require ("dplyr")
+require ("dplyr")
 birds <- bind_rows (xo)                 # 10 s
 print (warnings())
 

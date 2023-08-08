@@ -24,9 +24,9 @@ if (class (tr) == "try-error"){
   load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 }
 set.seed (9)
-Require ("sp")
-Require ("raster")
-Require ("vegan")
+require ("sp")
+require ("raster")
+require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019/", recursive = TRUE, showWarnings = FALSE)
 dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
@@ -159,7 +159,7 @@ if (1){
 }
 
 ## cluster analysis
-Require ("RColorBrewer")
+require ("RColorBrewer")
 sCol <- brewer.pal(4, "Set2")
 sColC <- factor (gsub ("^(\\d|AlongBay)*_\\d+-", "", row.names (agZoop)))
 sColC <- sCol [as.integer(sColC)]
@@ -175,7 +175,7 @@ if (1){ ## mark T4
   sColC <- ifelse (sCol, "red", "black")
 }
 
-Require ("vegan")
+require ("vegan")
 zClust <- hclust (vegdist (agZoop, "bray"), method = "ward.D")
 
 
@@ -184,7 +184,7 @@ pdf ("~/tmp/LCI_noaa/media/zoopStationYear-Cluster.pdf"
           , width = 12, height = 12)
 # plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
 
-Require ("ape")
+require ("ape")
 plot (as.phylo (zClust)
       , tip.color = sColC, label.offset = 0.0, cex = 1 # 0.7
 #      , type = "fan"
@@ -202,7 +202,7 @@ pdf ("~/tmp/LCI_noaa/media/zoopStation-Cluster-simple.pdf"
      , width = 12, height = 12)
 # plot (hclust (vegdist (agZoop, "bray"), method = "ward.D"))
 
-Require ("ape")
+require ("ape")
 plot (as.phylo (zClust)
       #, tip.color = sColC, label.offset = 0.0, cex = 1
       #      , type = "fan"
@@ -241,7 +241,7 @@ p <- SpatialPolygons (list (Polygons (list (Polygon (kBs)), 1)))
 proj4string(p) <- CRS (proj4string(zooCenv))
 
 ## restrict study area to water (cookie-cutter)
-Require ("rgeos")
+require ("rgeos")
 studyA <- gDifference (p, coast)
 # plot (studyA)
 # plot (agZPt, add = TRUE, col = "red")
@@ -250,7 +250,7 @@ studyA <- gDifference (p, coast)
 
 
 ## voronoi diagram / biogeography from cluster diagram
-Require ("sf")
+require ("sf")
 ## should add envelope to st_voronoi
 vor <- coordinates (agZPt) %>%
   st_multipoint() %>%
@@ -266,7 +266,7 @@ vor <- gIntersection (vor, studyA, byid= TRUE)
 ## assign bioG to points, then polygons
 vor <- SpatialPolygonsDataFrame (vor, data = data.frame (over (vor, agZPt)))
 
-Require ("RColorBrewer")
+require ("RColorBrewer")
 cCol <- brewer.pal (length (levels (vor$clust)), "Set2") # set3 = longest
 ## if 3 groups, fix up colors manually using PAIRED
 if (length (levels (agZPt$clust)) == 3){
@@ -293,8 +293,8 @@ vor@data$nmds1 <- scores (nM) [match (vor@data$Match_Name, row.names (scores (nM
 
 pdf ("~/tmp/LCI_noaa/media/KBayZoopBioGeoNMDS.pdf", width = 11, height = 8.5)
 
-Require ("dismo")  # for google basemap
-Require ("raster")
+require ("dismo")  # for google basemap
+require ("raster")
 
 # base.map <- gmap (agZPt, type = "terrain")  ## would need Google API key
 Pl <- spplot (vor, "nmds1", col = "transparent"
@@ -341,7 +341,7 @@ rm (n, df)
 ## iterative reduction
 disM <- function (cM){# distance measure
   # dist (cM, "manhattan")
-  Require ("vegan")
+  require ("vegan")
   vegdist (cM, "bray")
 }
 
@@ -577,9 +577,9 @@ ncutStn <-  1:(nrow (agZoop)-2) # N stations x seasons to cut
 # could use future_apply instead of furrr::future_map -- difference is only semantics?
 # it's the future?
 
-Require ("purrr")  # for %>%
-Require ("furrr")
-Require ("tictoc")
+require ("purrr")  # for %>%
+require ("furrr")
+require ("tictoc")
 plan (multisession (workers = availableCores()-1)) # still triggers firewall?
 
 tic()
@@ -705,16 +705,16 @@ if (nrow (agZoop) < 15){
 ## plyr? (seems just right)
 
 
-Require ("parallel")
-Require ("vegan")
+require ("parallel")
+require ("vegan")
 nCPUs <- detectCores (logical = TRUE)-1
 if (version$os == "mingw32"){
   ## set up cluster
-  #  Require ("doParallel")
+  #  require ("doParallel")
   cl <- makeCluster (nCPUs, type = "PSOCK")
   #  registerDoParallel (cl)
-  clusterExport (cl, c ("agZoop", "dM", "Require"))
-  x <- clusterEvalQ (cl, Require ("vegan")) # suppress output
+  clusterExport (cl, c ("agZoop", "dM", "require"))
+  x <- clusterEvalQ (cl, require ("vegan")) # suppress output
   # clusterEvalQ (cl, library (lm4))
   # system.time (save3 <- parLapply (cl, 1:100, ))
 }

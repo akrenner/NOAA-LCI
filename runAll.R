@@ -28,12 +28,19 @@ if (.Platform$OS.type=="windows"){
 # setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
 # chooseCRANmirror(graphics=FALSE, ind=76)
 
+## set-up renv
+## do all renv work manually to avoid clash between base::load() and renv::load()
+# require ("renv")  ## do NOT load this here in script!
+# renv::init()
+# renv::activate()
+
 
 
 source ("InitialSetup.R")
 if (1){
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
   source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
