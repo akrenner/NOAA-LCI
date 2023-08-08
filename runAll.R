@@ -24,10 +24,17 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
-# setRepositories(graphics=FALSE, ind=76)
-# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
-# chooseCRANmirror(graphics=FALSE, ind=76)
 
+######################################
+## temp to transition from sp to sf
+require ("renv")
+dep <- renv::dependencies()
+# dep$Source [which (dep$Package=="sp")]
+# dep$Source [which (dep$Package=="rgdal")]
+# dep$Source [which (dep$Package=="rgeos")]
+# dep$Source [which (dep$Package=="maptools")]
+unique (dep$Source [which (dep$Package %in% c("maptools", "rgeos", "rgdal", "sp"))])
+######################################
 
 
 source ("InitialSetup.R")
