@@ -22,9 +22,11 @@ Martin Renner martin.renner@noaa.gov or Kris Holderied  kris.holderied@noaa.gov.
 Previous versions included zooplankton, and OA sampling, projects that have been suspended for now.
 
 
-## TOC
+[//]: suggestions for ToC:https://stackoverflow.com/questions/11948245/markdown-to-create-pages-and-table-of-contents 
+[//]: ## TOC
+[//]: 1. [Sampling preparations](#prep)
 
-
+[//]: ## Sampling preparations <a name="prep"></a>
 ## Sampling preparations
 
 ### CTD
