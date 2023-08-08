@@ -913,7 +913,7 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
-Require ("sp")
+# Require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
 
@@ -924,8 +924,8 @@ latL <- c(58.8,60.6)
 
 
 # Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp")
-Require ("sf")
+# Require ("sp")
+require ("sf")
 
 
 spTran <- function (x, p4){
