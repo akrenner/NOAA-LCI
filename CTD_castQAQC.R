@@ -5,11 +5,12 @@
 ## also location of station??
 
 ## from datasetup.R   ## somehow not updated since 2020 -- fix this eventually. use CNV1.RData in the meantime
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function
+rm (list = ls())
+base::load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function
 
 ## start with file from CTD_cleanup.R
 # rm (list = ls());
-load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## have latest version of physOc from CTD_cleanup.R, but also have functions from datasetup.R
+base::load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## have latest version of physOc from CTD_cleanup.R, but also have functions from datasetup.R
 
 
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/CTDsummarieplots", recursive = TRUE, showWarnings = FALSE)
@@ -99,8 +100,11 @@ dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 Require ("oce")
 plotCTDprof <- function (i){
-  cat (i, " ")
-  if (i %% 7 == 0){cat ("\n")}
+  if ((i > 1000) & (i %% 2 == 2)){
+    cat (i, " ")
+    # cat (round (i/length (levels (physOc$File.Name)), digits=3), " ")
+  }
+  if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
     # pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))

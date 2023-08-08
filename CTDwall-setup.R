@@ -14,7 +14,8 @@
 
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
-rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts-sf.RData")  # physOc and stn from dataSetup.R
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts-sf.RData")  # physOc and stn from dataSetup.R
+rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
 
 if (length (grep ("darwin", version$os)) >0 ){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
@@ -56,7 +57,7 @@ useSF <- TRUE
 useSF <- FALSE  ## marmap still depends on sp/raster -- temp work-around
 
 
- ("marmap")
+require ("marmap")  ## replace with Zimmermann's GOA bathymetry -- require (sp) legacy
 bfer <- 0.5
 cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
 # unlink (cFile)

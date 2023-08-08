@@ -25,8 +25,10 @@ if (!dir.exists(bDir)){
 
 
 require ("renv")
-renv::init(bioconductor = TRUE)
-renv::init(bioconductor = "3.17")
+# renv::init(bioconductor = TRUE)
+# renv::init(bioconductor = "3.17")
 renv::install (repos="https://cloud.r-project.org/")
+unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
 
 #EOF
