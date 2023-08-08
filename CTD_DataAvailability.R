@@ -108,6 +108,7 @@ xTL <- lapply (1:nColumns, function (i){
 
 
 
+dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings=FALSE, recursive=TRUE)
 pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 11, width = 8.5)
 par (mfrow = c(1,nColumns))
 par (las = las, mar = c(4,5,5,1))
