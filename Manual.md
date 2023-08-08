@@ -45,6 +45,7 @@ Document CTD time, date, and voltages in the FileMaker database (layout: CTDstat
 
 ### iPad
 FileMaker database: sync to iPad. Write-down last ctd-cast number. 
+Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@icloud.com. Then open Mail.app on iPad, download database, and open directly in FileMaker (replacing old copy). 
 
 ### staging gear Have the following items handy to bring to the boat:
 - note book
@@ -116,7 +117,7 @@ Connect to CTD, as before.
 [//]: # Copy from Jim's instructions. 
 Two options: batch-downloading and attended download. 
 #### Batch download and processing with FileMaker and R
-Copy/sync filemaker database back to computer (email file to self). 
+Copy/sync filemaker database back to computer (email file to self). Import the new records into the existing desktop copy. Search for the most recent survey and run the export script. 
 
 Connect to CTD, as before and display headers. Compare headers to recorded times in FileMaker database, and enter cast numbers. Export notesTable (Scripts: export CURRENT survey)  and close FileMaker. Open R and run I-hexEdit.R. Correct any errors that may occur. Manually inspect resultant edited hex files and copy them with containing folder to the appropriate place in 2_edited_hex_files. 
 
@@ -125,7 +126,6 @@ https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Env
 [//]: # Producing this pdf needs details.
 
 If producing PDF from paper notes, you can scan directly to PDf. Or, photograph pages with an iPhone. Select all the images, -> share -> print. Then share the resultant PDF and email it to yourself. Open PDf on computer with Acrobat and save with reduced space. 
-
 #### Attended download
 If working manually: scan handwritten notes to pdf. Then upload that pdf to the WorkSpace, as above. 
 #### Process and archive CTD files
