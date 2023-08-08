@@ -22,8 +22,6 @@ if (length (grep ("darwin", version$os)) >0 ){
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 
-# if (!require("pacman", quietly=TRUE)){install.packages("pacman", repos = "http://cran.fhcrc.org/", dependencies = TRUE)}
-# Require <- pacman::p_load
 
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn

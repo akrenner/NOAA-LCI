@@ -22,12 +22,12 @@ pastYear=FALSE
 
 
 
-Require("RColorBrewer")
+require("RColorBrewer")
 currentCol <- brewer.pal(3, "Blues")
 
-# Require ("snotelr")
-# Require ("plotly")
-# Require ("shinydashboard")
+# require ("snotelr")
+# require ("plotly")
+# require ("shinydashboard")
 # snotel_explorer()
 
 # snotel_info(path = ".")
@@ -45,7 +45,7 @@ currentCol <- brewer.pal(3, "Blues")
 # sitePickNo <- 987
 ##
 
-Require (snotelr)
+require (snotelr)
 
 
 
@@ -86,7 +86,7 @@ for (i in seq_along(snowsites)){  # c("mcneil canyon", "anchor river divide", "p
   }else{fetchNew <- TRUE}
 
   if (fetchNew){
-    # Require ("leaflet")
+    # require ("leaflet")
     # leaflet(data = xK) %>%
     #   addTiles() %>%
     #   addCircles()
@@ -222,9 +222,9 @@ snowMc$month <- as.numeric (format (snowMc$datetimestamp, "%M"))
 snowMc <- subset(snowMc, datetimestamp > as.POSIXct("1990-01-01"))
 ## impute somewhere here!
 # Dray & Josse 2015: ipca is best way:  library (missMDA)
-Require ("missMDA")
+require ("missMDA")
 iDF <- imputePCA (snowMc [,2:(length (sites)+1)], method = "EM", ncp =2)
-Require ("FactoMineR")
+require ("FactoMineR")
 
 pdf ("~/tmp/LCI_noaa/media/snowPCA.pdf")
 snowPCA <- PCA (iDF$completeObs, graph = TRUE, ncp = 2)

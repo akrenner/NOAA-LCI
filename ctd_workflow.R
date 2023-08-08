@@ -23,26 +23,26 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
 cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 
 ## load missing packages
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
+# if (!require("pacman")) install.packages("pacman"
+#                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+# Require <- pacman::p_load
 
 ## set-up renv
 ## do all renv work manually to avoid clash between base::load() and renv::load()
-# Require ("renv")  ## do NOT load this here in script!
+# require ("renv")  ## do NOT load this here in script!
 # renv::init()
 # renv::activate()
 
 ## pre-load widely needed packages. Do this here for new users.
-Require ("tools")
-Require ("dplyr")
-Require ("oce")
-Require ("openssl")
-Require ("parallel")
-Require ("lubridate")
-Require ("geosphere")
-Require ("zip")
-# Require ("LakeMetabolizer")
+require ("tools")
+require ("dplyr")
+require ("oce")
+require ("openssl")
+require ("parallel")
+require ("lubridate")
+require ("geosphere")
+require ("zip")
+# require ("LakeMetabolizer")
 
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"

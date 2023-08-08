@@ -60,9 +60,6 @@ PDF <- function (fN, ...){
   }
 }
 
-if (!require("pacman")) install.packages("pacman"
-  , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
 
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
@@ -74,7 +71,7 @@ Seasonal <- function (month){           # now using breaks from zoop analysis --
 }
 
 
-Require ("parallel")
+require ("parallel")
 nCPUs <- detectCores()
 if (.Platform$OS.type != "unix"){
     nCPUs <- 1
@@ -98,7 +95,7 @@ if (.Platform$OS.type != "unix"){
 ## this is done by scripts called in ctd_workflow.R
 
 # load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-Require ("tidyverse")
+require ("tidyverse")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
 physOcT <- list.files(aD, pattern=".csv", full.name=TRUE) %>%
@@ -137,7 +134,7 @@ stn$Plankton <- stn$Plankton == "Y"
 
 # save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
-## Require ("XLConnect")
+## require ("XLConnect")
 ## stn <- readWorksheetFromFile ("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
 
 
@@ -212,11 +209,11 @@ dMean <- function (fn, fldn){
     return (outM)
 }
 
-Require ("rtide")
+require ("rtide")
 tRange <- function (tstmp){
     ## uses NOAA tide table data
     ## only available for US, but 8x faster than webtide (with oce)
-    Require ("rtide")
+    require ("rtide")
     kasbay <- tide_stations ("Kasitsna.*")
     timetable <- data.frame (Station = kasbay, DateTime =
                                seq (tstmp -12*3600, tstmp + 12*3600, by = 600)
@@ -247,9 +244,9 @@ rm (tRange)
 ## tidal phase
 tPhase <- function (tstmp, lat, lon){
   ## return radians degree of tidal phase during cast
-  Require ("suncalc")
+  require ("suncalc")
   poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
-  ## Require (oce)
+  ## require (oce)
   ## poSS$sunAlt <- with (poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
 rm (tPhase)
@@ -337,7 +334,7 @@ if ("turbidity" %in% names (physOc)){
 rm (sAgg)
 
 ## derived summary statistics
-Require ("parallel")
+require ("parallel")
 wcStab <- function (fn){
     ## calculate water column stability for a given File.Name
     uLay <- c (0,3)
@@ -358,7 +355,7 @@ wcStab <- function (fn){
 poSS$stability <- unlist (mclapply (poSS$File.Name, FUN = wcStab, mc.cores = nCPUs))
 rm (wcStab)
 ## summary (poSS$stability)
-Require ("oce")
+require ("oce")
 wcStab2 <- function (fn){
     ## similar to http://www.sciencedirect.com/science/article/pii/S0967063711000884 !
     ## \citep{Bourgain:2011}
@@ -370,7 +367,7 @@ wcStab2 <- function (fn){
 }
 poSS$stability2 <- unlist (mclapply (poSS$File.Name, FUN = wcStab2, mc.cores = nCPUs))
 rm (wcStab2)
-Require ("oce")
+require ("oce")
 ## physOc$N2 <- median, max, mean N2 in deep-water section -- this should be a
 ## good indicator of presence of deep-water salinity gradient
 deepPyc <- function (fn){
@@ -451,7 +448,7 @@ save.image ("~/tmp/LCI_noaa/cache/troublesPO.RData")
 SCo <- stn[match (poSS$Match_Name, stn$Match_Name), names (stn) %in% c("Lon_decDegree"
                                                                      , "Lat_decDegree")]
 SCo <- as.matrix (cbind (SCo, cbind (poSS$longitude_DD, poSS$latitude_DD)))
-Require ("fields")
+require ("fields")
 StDis <- sapply (1:nrow (SCo), FUN = function (i){
     rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
 })
@@ -559,8 +556,8 @@ phyp <- cbind (stn [match (phyp$Match_Name
 names (phyp)[1:2] <- c("lon", "lat")
 
 ## add: month, year, SampleID
-# Require ("tidyverse")
-Require (magrittr) # for pipe!
+# require ("tidyverse")
+require (magrittr) # for pipe!
 trnsct <- strsplit (phyp$Match_Name, "_", fixed = TRUE) %>%
   unlist () %>%
       matrix (ncol =2 , byrow = TRUE)
@@ -597,7 +594,7 @@ rm (phyp)
 
 zoop <- read.csv ("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton.csv", as.is = TRUE)
 
-## Require ("XLConnect")
+## require ("XLConnect")
 ## stn <- readWorksheetFromFile ("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
 ## stn <- subset (stn, !is.na (Lon_decDegree))
 
@@ -739,14 +736,14 @@ lonL <- c(-154.2,-151.2)
 latL <- c(58.8,60.6)
 
 
-# Require ("sp"); Require ("rgdal"); Require ("rgeos") # for gBuffer
-Require ("sp") ; Require ("sf")
+# require ("sp"); require ("rgdal"); require ("rgeos") # for gBuffer
+require ("sp") ; require ("sf")
 
 
 spTran <- function (x, p4){
     # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
-#    Require ("rgdal")
-  Require ("sf")
+#    require ("rgdal")
+  require ("sf")
   suppressWarnings (y <- spTransform (x, CRS (p4)))
     return (y)
 }
@@ -796,13 +793,13 @@ proj4string (NPPSD2) <- LLprj
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-Require ("maptools")
-Require ("zip")
+require ("maptools")
+require ("zip")
 tD <- tempdir()
 unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
 
-Require ("sf")
+require ("sf")
 coastSF <- read_sf (dsn = tD, layer = "GSHHS_f_L1") ## select f, h, i, l, c
 ## clip to bounding box: larger Cook Inlet area
 b <- st_bbox (coastSF)
@@ -811,11 +808,11 @@ b[c(2,4)] <- latL+c(-5,2)
 bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
 
 coastSP <- as (coastSF, "Spatial")
-Require ("raster")
-Require ("rgeos")
+require ("raster")
+require ("rgeos")
 coast <- raster::intersect(coastSP, bP)
-# Require ("sf")
-# Require ("terra") # replacement for raster
+# require ("sf")
+# require ("terra") # replacement for raster
 # coast <- terra::intersect(coastSP, bP)
 # plot (coastC)
 unlink (tD, TRUE); rm (tD)
@@ -864,8 +861,8 @@ rm (badPO)
 
 ## bathymetry from AOOS, Zimmerman
 # need to clean up source files -- get rid of obsolete/redundant data sets
-Require ("raster")
-Require ("rgdal")
+require ("raster")
+require ("rgdal")
 
 ## need to supply absolute path because raster object is just a pointer.
 ## still needs uncompressed raster file accessible.
@@ -916,7 +913,7 @@ v <- ncvar_get (con, "v")
 ## match stnP and birds at different levels of buffer
 # for (i in length (stnB)){
 
-Require ("rgeos"); Require ("parallel")
+require ("rgeos"); require ("parallel")
 bDist <- function (stnL){
     ## stnL is SpatialPointsDataFrame
     ## buffDist <- unlist (mclapply (1:nrow (stnL), FUN = function (i){
@@ -952,7 +949,7 @@ xo <- mclapply (1:length (lBuff), FUN = findBirds
 
 ## birds <- do.call (rbind, xo)  # 20 s
 
-Require ("dplyr")
+require ("dplyr")
 birds <- bind_rows (xo)                 # 10 s
 print (warnings())
 

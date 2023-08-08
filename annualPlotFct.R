@@ -24,9 +24,9 @@ meanCol <- "darkgray"
 
 # 365 <- 365 ## standardize a year to have 365 days for convenience
 
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
+# if (!require("pacman")) install.packages("pacman"
+#                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+# Require <- pacman::p_load
 
 
 
