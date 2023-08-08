@@ -315,9 +315,11 @@ if (isWin){
            , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
   }
 }else{
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  if (0){
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  }
 }
 
 ## which set of tables is best to import? -- MDBTools vs ODBC
