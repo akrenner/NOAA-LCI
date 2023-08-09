@@ -18,22 +18,17 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-
-
-require ("renv")
-renv::status()
-# renv::snapshot()
-
 source ("InitialSetup.R")
 
 
-sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
-cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
+if (0){
+  ## to update packages:
+  renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
+  renv::snapshot()
+  renv::status()
+}
 
-## set-up renv
-## do all renv work manually to avoid clash between base::load() and renv::load()
-# require ("renv")  ## do NOT load this here in script!
-# renv::init()
+
 
 if (1){
   ## hex conversion and QAQC plots
