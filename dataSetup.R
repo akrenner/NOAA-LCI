@@ -73,7 +73,6 @@ PDF <- function (fN, ...){
 }
 
 
-require ("sp")  ## move to sf
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -82,6 +81,7 @@ Seasonal <- function (month){           # now using breaks from zoop analysis --
 }
 
 
+## migrate this to require ("parallelly"); enable under windows!
 require ("parallel")
 nCPUs <- detectCores()
 if (.Platform$OS.type != "unix"){
@@ -840,7 +840,7 @@ if (printSampleDates){
 
 
 save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
 
 
 #############
@@ -910,9 +910,14 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
+options("sp_evolution_status"=2)
 require ("sp")
-# pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
+
+pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+# require ("sf")
+# LLprj <- st_crs ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+
 
 
 ## bounding-box for LCI
@@ -921,8 +926,7 @@ latL <- c(58.8,60.6)
 
 
 # require ("sp"); require ("rgdal"); require ("rgeos") # for gBuffer
-require ("sp")
-require ("sf")
+# require ("sf")
 
 
 spTran <- function (x, p4){
@@ -978,6 +982,11 @@ slot (NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
 
 
 
+
+save.image ("~/tmp/LCI_noaa/cache/dataSetupMap.RData")
+## rm (list=ls()); base::load ("~/tmp/LCI_noaa/cache/dataSetupMap.RData")
+
+
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
 require ("maptools")
@@ -992,29 +1001,27 @@ coastSF <- read_sf (dsn = tD, layer = "GSHHS_f_L1") ## select f, h, i, l, c
 b <- st_bbox (coastSF)
 b[c(1,3)] <- lonL+c(-8,11)
 b[c(2,4)] <- latL+c(-5,2)
-bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
-
-coastSP <- as (coastSF, "Spatial")
-# require ("stars")
-# coast <- st_intersection (coastSP, bP)
-# coast <- st_intersects (coastSP, bP)
 
 if (1){
-require ("raster")
-# require ("rgeos")
-coast <- raster::intersect(coastSP, bP)
+  bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
+  coastSP <- as (coastSF, "Spatial")
+  require ("raster")
+  # require ("rgeos")
+  coast <- raster::intersect(coastSP, bP)
 }else{
- #  require ("terra") # replacement for raster
- # coast <- terra::intersect(coastSP, bP)
- require ("stars")
- coast <- st_intersects (coastSP, bP)
+  #  require ("terra") # replacement for raster
+  bP <- st_as_sfc (b)
+  bP <- st_bbox(b)
+  require ("stars")
+  coast <- st_intersects (coastSF, bP)
 }
 # plot (coastC)
 unlink (tD, TRUE); rm (tD)
 rm (b, bP, coastSP, coastSF)
 
 save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
+
 
 
 
