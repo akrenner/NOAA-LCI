@@ -149,7 +149,7 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
     depth_bottom <- NA
   }else{
     cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
-    instSerNo <- ctdF@metadata$serialNumberTemperature # serial number of CTD instrument
+    instSerNo <- trimws (ctdF@metadata$serialNumberTemperature) # serial number of CTD instrument
     depth_bottom <- ctdF@metadata$waterDepth
   }
   outDF <- data.frame (time = cT
@@ -292,9 +292,11 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 ## if trouble, fix file names!
 ## goal: simplify R code
 require ("stringr")
+## date
 fileDB$FN_Date <- substring(fileDB$file, 1, 10) %>%
   str_replace_all ("_", "-") %>%
   as.Date
+## transect
 fileDB$FN_Transect <- substring (fileDB$file, 12, 15) %>%
   str_replace_all("-", "_") %>%
   str_replace_all("_$", "") %>%
@@ -304,40 +306,43 @@ fileDB$FN_Transect <- substring (fileDB$file, 12, 15) %>%
   str_replace("_[0-9,n,p,s,t]$", "") %>%
   str_replace ("^(sadi|stev|subb|utk)", "Subbay") %>%
   str_replace ("(alon|ab)", "AlongBay")
-summary (factor (fileDB$FN_Transect))
-
+# summary (factor (fileDB$FN_Transect))
 # fileDB$file [fileDB$FN_Transect == "3_t"] # "2018_09-13_t3_testbluff_cast005_5028.cnv"
 # fileDB$file [fileDB$FN_Transect == "9_n"]   # 2015_07-29_t9_north_cast149_5028.cnv
 
-
+## station number
 fileDB$FN_Station <- fileDB$file %>%
   str_replace_all("[-,_]", " ") %>%
   word (start=5L) %>%
   str_replace("(ptgm|ptgr)", "pgrm") %>%
   str_replace("(pogibshi|pogipoint|pt.pogi)", "pogi") %>%
-  str_replace ("^(skb|kb|s)", "") %>%  # along-bay variations
+  str_replace ("^(skb|kb|s)", "") %>%            # AlongBay variations
   str_replace ("^adie", "Sadie") %>%
-  str_replace     ("0[ab]$", "0") %>% ## strip out trailing a/b (duplicate casts?)
-  str_replace_all ("1([ab]|extra)$", "1") %>%
-  str_replace     ("2[ab]$", "2") %>%
-  str_replace_all ("3([ab]|extra)", "3") %>%
-  str_replace     ("4([ab]|east|south)$", "4") %>%
-  str_replace     ("5[ab]$", "5") %>%
-  str_replace     ("6[ab]$", "6") %>%
-  str_replace     ("7[ab]$", "7") %>%
-  str_replace     ("8[ab]$", "8") %>%
-  str_replace_all ("9([ab]|extra)$", "9") %>%
-  str_replace ("^0", "")
+  str_replace ("^eldovia", "Seldovia") %>%
+  str_replace ("^ay", "kbay") %>%
+  str_replace ("^0", "") %>%                     # no leading zero
+  str_replace_all ("([0-9])([a-z]+)", "\\1")         # strip-out all duplicates; match by cast#. Clean.
 # summary (factor (fileDB$FN_Station))
-levels (factor (fileDB$FN_Station))
-fileDB$file [fileDB$FN_Station == "intensive"]
-fileDB$file [fileDB$FN_Station == "aya"]
-fileDB$file [fileDB$FN_Station == "cast221"]     ## stevekibbler
-fileDB$file [fileDB$FN_Station == "5cast051"]
-# fileDB$file [fileDB$FN_Station == "t9s06"]     ## renamed source file
-# fileDB$file [grep ("[0-9][ab]", fileDB$FN_Station)]
-# fileDB$file [fileDB$FN_Station == "pgrmaham"]  ## renamed source file
-# fileDB$file [grep ("cast", fileDB$FN_Station)] ## renamed source file
+# fileDB$file [fileDB$FN_Station == "04east"]
+# fileDB$file [fileDB$FN_Station == "04south"]
+# fileDB$file [fileDB$FN_Station == "intensive"]
+# fileDB$file [fileDB$FN_Station == "cast221"]     ## stevekibbler
+# fileDB$file [fileDB$FN_Station == "dvpt"]
+# fileDB$file [fileDB$FN_Station == "jbaya"]
+# fileDB$file [fileDB$FN_Station == "outh"]
+
+# summary (factor (fileDB$FN_Station [fileDB$FN_Transect == "AlongBay"]))
+# summary (factor (fileDB$FN_Station [fileDB$FN_Transect == "Subbay"]))
+# fileDB$file [fileDB$FN_Transect == "AlongBay" & fileDB$FN_Station == "beara"]
+## cast number
+fileDB$FN_cast <- fileDB$file %>%
+  str_replace_all ("[-,_]", " ") %>%
+  str_extract ("cast[0-9]+") %>%
+  str_replace ("cast", "")
+
+head (fileDB$FN_cast)
+summary (factor (fileDB$FN_cast))
+levels (factor (fileDB$FN_cast))
 
 
 
@@ -354,6 +359,7 @@ fileDB$file [fileDB$FN_Station == "5cast051"]
 ## update Access tables from Notebook database
 ## may need to adapt this to make this portable
 ## ---  move all this to FieldNotesDB.R?
+## Migrate to FileMaker and automated export of tables
 
 if (isWin){
   ## need to call 32-bit version of R to use ODBC -- until 64-bit Access ODBC driver installed
