@@ -12,8 +12,8 @@
 
 ## output from dataSetup.R
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
-Require (raster)
-Require (rgeos)
+require (raster)
+require (rgeos)
 
 poT <- subset (poSS, grepl ("^[1-9]|Along", poSS$Match_Name))
 tranS <- factor (paste (substr (poT$Match_Name, 1, 1)

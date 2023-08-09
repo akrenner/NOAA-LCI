@@ -22,21 +22,21 @@ if (length (grep ("martin", tolower (getwd()))) > 0){
 cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 
 ## load missing packages
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
+# if (!require("pacman")) install.packages("pacman"
+#                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+# Require <- pacman::p_load
 
 
 ## pre-load widely needed packages. Do this here for new users.
-Require ("tools")
-Require ("dplyr")
-Require ("oce")
-Require ("openssl")
-Require ("parallel")
-Require ("lubridate")
-Require ("geosphere")
-Require ("zip")
-# Require ("LakeMetabolizer")
+require ("tools")
+require ("dplyr")
+require ("oce")
+require ("openssl")
+require ("parallel")
+require ("lubridate")
+require ("geosphere")
+require ("zip")
+# require ("LakeMetabolizer")
 
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
 hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
@@ -50,8 +50,6 @@ cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 cat ("## Finished CTD_cleanup.R\n\n")
 
-## save snapshot of current package versions
-# renv::snapshot()
-cat ("Finished ctd_workflow at ", as.character (Sys.time()), "\n")
+cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
 #EOF

@@ -168,11 +168,10 @@ if (.Platform$OS.type=="unix"){
 }
 if (runParallel){
   ## doParallel -- blocked on NCCOS computer?
-  # Require ("parallel")
   require ("parallelly")
   require ("doParallel")
   nCPUs <- availableCores(omit=1)  ## keep one core out
-  cl <- makeCluster (nCPUs - 1, type="PSOCK")
+  cl <- makeCluster (nCPUs, type="PSOCK")
   registerDoParallel (cl)
   clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
@@ -364,9 +363,11 @@ if (isWin){
            , input = paste('"C:/Users/Martin.Renner/Applications/R-4.1.3/bin/i386/Rscript.exe" C:/Users/Martin.Renner/Documents/myDocs/amyfiles/NOAA-LCI/ctd_odbc-export.R'))
   }
 }else{
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
-  system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  if (0){
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblStationEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblStationEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblTransectEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblTransectEvent.csv")
+    system ("mdb-export ~/GISdata/LCI/EVOS_LTM.accdb tblSampleEvent > ~/GISdata/LCI/EVOS_LTM_tables/tblSampleEvent.txt")
+  }
 }
 
 ## which set of tables is best to import? -- MDBTools vs ODBC

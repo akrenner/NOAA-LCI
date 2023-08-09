@@ -24,20 +24,11 @@ if (!dir.exists(bDir)){
 }
 
 
-## set-up local R environment
-# setRepositories(graphics=FALSE, ind=73)
-# setRepositories(addURLs=c (CRAN="https://archive.linux.duke.edu/cran/"))
-# chooseCRANmirror(graphics=FALSE, ind=76)
-## see https://stackoverflow.com/questions/11488174/how-to-select-a-cran-mirror-in-r
-## Default repo
-# local({r <- getOption("repos")
-# r["CRAN"] <- "https://cloud.r-project.org"  ## always nearby
-# options(repos=r)
-# })
-
-chooseCRANmirror (graphics=FALSE, ind=1)  # 1 = cloud
 require ("renv")
-renv::restore()
-
+# renv::init(bioconductor = TRUE)
+# renv::init(bioconductor = "3.17")
+renv::install (repos="https://cloud.r-project.org/")
+unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
 
 #EOF

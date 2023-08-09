@@ -59,10 +59,10 @@ for (tn in 1:length (levels (poNorm$Transect))){
   poNorm$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
 sect <- subset (stn, subse)
   ## get bathymetry
-  Require ("sf")
+  require ("sf")
   sect <- st_as_sf(sect, coords=c("loni", "lati"))
   sf::st_crs(sect) <- 4326  ## WGS84 definition
-  Require ("stars")
+  require ("stars")
   sectP <- sf::st_transform(sect, st_crs (bathyZ))
   bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
 

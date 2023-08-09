@@ -19,8 +19,12 @@ if (.Platform$OS.type=="windows"){
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
-source ("InitialSetup.R")
+
+require ("renv")
 renv::status()
+# renv::snapshot()
+
+source ("InitialSetup.R")
 
 
 sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
@@ -33,6 +37,8 @@ cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
 
 if (1){
   ## hex conversion and QAQC plots
+  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
   source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction

@@ -24,16 +24,16 @@ meanCol <- "darkgray"
 
 # 365 <- 365 ## standardize a year to have 365 days for convenience
 
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
+# if (!require("pacman")) install.packages("pacman"
+#                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+# Require <- pacman::p_load
 
 
 
 
 if (0){
   ## using RColorBrewer:
-  Require ("RColorBrewer")
+  require ("RColorBrewer")
   bCol <- brewer.pal(12, "Paired")
   rangCol <- bCol [5:6]
   qantCol <- bCol [9]
@@ -215,7 +215,7 @@ saggregate <- function (..., refDF){ ## account for missing factors in df compar
 seasonalMA <- function (var, jday, width=maO){
   ## work in progress -- not yet functioning
   df <- cbind (var=rep (var, 3), jds=c(jday-365, jday, jday+365))
-  suppressPackageStartupMessages(Require ("zoo"))
+  suppressPackageStartupMessages(require ("zoo"))
   if (length (var) > 365){
     df <- aggregate (var~jds+year, df, mean, na.rm=FALSE) # ## NAs are lost -- gap-fill?
   }
@@ -246,7 +246,7 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   ## flexible for varName to be a vector!!  -- XXX extra feature
   dat$xVar <- dat [,which (names (dat) == varName)]
 
-  suppressPackageStartupMessages(Require ("zoo"))
+  suppressPackageStartupMessages(require ("zoo"))
   dat <- dat [order (dat$datetimestamp),] # just to be sure
 
   ## necessary to use dMeans to pad missiing values as NA!
@@ -356,7 +356,7 @@ addTimehelpers <- function (df){
   ## assumes "datetimestamp" is present
   df$jday <- as.integer (strftime (df$datetimestamp, "%j"))
   df$year <- as.integer (strftime (df$datetimestamp, "%Y"))
-  suppressPackageStartupMessages (Require (lubridate))
+  suppressPackageStartupMessages (require (lubridate))
   df$month <- month (df$datetimestamp)
   df$week <- week (df$datetimestamp)
   return (df)
@@ -406,8 +406,8 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-  Require ("SWMPr")
-  Require ("R.utils")
+  require ("SWMPr")
+  require ("R.utils")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   dir.create(cacheFolder, showWarnings=FALSE)
@@ -476,7 +476,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-  Require ("rnoaa")
+  require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
@@ -595,12 +595,12 @@ cDir <- function (wd, nDir=8){
 merge.png.pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
   ## taken from https://jonkimanalyze.wordpress.com/2014/07/24/r-compile-png-files-into-pdf/
   #### Package Install ####
-  gridExists <- Require ("grid")
+  gridExists <- require ("grid")
   if ( !gridExists ) {
     install.packages ("grid")
     library ("grid")
   }
-  pngPackageExists <- Require ("png")
+  pngPackageExists <- require ("png")
   if ( !pngPackageExists ) {
     install.packages ("png")
     library ("png")
