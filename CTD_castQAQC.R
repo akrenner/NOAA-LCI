@@ -102,7 +102,7 @@ require ("oce")
 cat ("\ncount to: ", length (levels (physOc$File.Name)), " \n")
 plotCTDprof <- function (i){
 
- # if (i %% 2 == 2){cat (i, " ")}; if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
+  if (i %% 2 == 2){cat (i, " ")}; if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
 
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
