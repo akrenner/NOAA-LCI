@@ -60,9 +60,11 @@
 # system ("rm -r ~/tmp/LCI_noaa/")
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
-sTime <- Sys.time()
+sink ("CTD_cnv-import.log")
+
+print (sTime <- Sys.time())
 runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
-runParallel <- TRUE   ## 11 minutes on same hardware (4 cores, 8 threads), also Windows
+runParallel <- TRUE   ##  7 minutes on same Dell (4 cores, 8 threads)
 
 ## file structure:
 ## source files in ~/GISdata/LCI/
@@ -161,23 +163,14 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
 
 
 
-if (.Platform$OS.type=="unix"){
-  isWin <- FALSE
-}else{
-  isWin <- TRUE
-}
 if (runParallel){
-  ## doParallel -- blocked on NCCOS computer?
-  require ("parallelly")
-  require ("doParallel")
-  nCPUs <- availableCores(omit=1)  ## keep one core out
-  cl <- makeCluster (nCPUs, type="PSOCK")
-  registerDoParallel (cl)
+  require ("parallel") ## revert to require ("parallel")
+  cl <- makeCluster (detectCores()-1, type="PSOCK")
+  # registerDoParallel (cl)
   clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
   ## shut down cluster farther down
 }else{
-  nCPUs <- 1
   fileDB <- lapply (1:length (fNf), FUN = getMeta)
 }
 
@@ -281,7 +274,7 @@ CTD1 <- as.data.frame (do.call (rbind, CTDx))
 rm (rCNV, readCNV, CTDx)
 rm (fN, fNf)
 save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx.RData")
 
 
 
@@ -334,15 +327,15 @@ fileDB$FN_Station <- fileDB$file %>%
 # summary (factor (fileDB$FN_Station [fileDB$FN_Transect == "AlongBay"]))
 # summary (factor (fileDB$FN_Station [fileDB$FN_Transect == "Subbay"]))
 # fileDB$file [fileDB$FN_Transect == "AlongBay" & fileDB$FN_Station == "beara"]
+
 ## cast number
 fileDB$FN_cast <- fileDB$file %>%
   str_replace_all ("[-,_]", " ") %>%
   str_extract ("cast[0-9]+") %>%
   str_replace ("cast", "")
-
-head (fileDB$FN_cast)
-summary (factor (fileDB$FN_cast))
-levels (factor (fileDB$FN_cast))
+# head (fileDB$FN_cast)
+# summary (factor (fileDB$FN_cast))
+# levels (factor (fileDB$FN_cast))
 
 
 
@@ -361,7 +354,7 @@ levels (factor (fileDB$FN_cast))
 ## ---  move all this to FieldNotesDB.R?
 ## Migrate to FileMaker and automated export of tables
 
-if (isWin){
+if (.Platform$OS.type!="unix"){
   ## need to call 32-bit version of R to use ODBC -- until 64-bit Access ODBC driver installed
   ## windows-version of mdb-export?
   if (0){
@@ -398,12 +391,14 @@ transectEv$Transect <- ifelse (transectEv$Transect == "0", "SubBay"
 
 
 ## clean up dates/times
-stationEv$Date <- ifelse (stationEv$Date == "", "1900-01-01", stationEv$Date)
-stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time)
+stationEv$Date <- ifelse (stationEv$Date == "", "1900-01-01", stationEv$Date) %>%
+  word(start=1L,end=1L) # only date part
+stationEv$Time <- ifelse (stationEv$Time == "", "1900-01-01 00:00", stationEv$Time) %>%
+  word (start=2L)  # only time part
 require ("lubridate") # for time-zone adjustment
-stationEv$timeStamp <- ymd_hms (paste (gsub (" .*", '', stationEv$Date)
-                                       , gsub (".* ", '', stationEv$Time))
-                                        , tz = "America/Anchorage")
+stationEv$timeStamp <- ymd_hms (paste (stationEv$Date, stationEv$Time, ":00")
+                                , tz = "America/Anchorage")
+
 stationEv [is.na (stationEv$timeStamp), c (8, 10, 5, 6)]  ## 40 notebook records with missing timestamps
 ## ignore these, if there are no matching CTD files available. No point trying to interpolate them?
 
@@ -412,14 +407,12 @@ stationEv [is.na (stationEv$timeStamp), c (8, 10, 5, 6)]  ## 40 notebook records
 ## make relational DB links within notebook DB
 tM <- match (stationEv$TransectEvent, transectEv$TransectEvent) ## assuming dates are all correct
 if (any (is.na (tM))){
-  print (stationEv [which (is.na (tM)), c (5, 6, 21, 8, 9, 10, 21)])
-#  stop ("no missing transectEvents allowed")  ## not an issue until January 2023 -- Access DB missing transect entries?
+  print (stationEv [which (is.na (tM)), which (names (stationEv) %in% c("timeStamp", "TransectEvent", "StationEvent", "Station"))])
+  #  stop ("no missing transectEvents allowed")  ## not an issue until January 2023 -- Access DB missing transect entries?
   warning ("no missing transectEvents allowed")
   ## trouble-shooting
   x <- stationEv [which (is.na (tM)),]
-  x$Date <- as.POSIXct(x$Date); x$Time <- as.POSIXct(x$Time)
-  x$timeStamp <- as.POSIXct (paste (format (x$Date, "%Y-%m-%d"), format(x$Time, "%H:%M"), sep=" "))
-  summary (factor (x$timeStamp))
+  print (summary (factor (x$timeStamp)))
 }
 
 ## this may be the only needed field from TransectEvent
@@ -451,6 +444,11 @@ rm (stnMaster, sMatch)
 
 
 
+
+
+save.image ("~/tmp/LCI_noaa/cache/cnvImportQAQCnotes.RData")
+## rm (list=ls()); base::load ("~/tmp/LCI_noaa/cache/cnvImportQAQCnotes.RData")
+
 ## QAQC: distance between master-position and note-book position
 
 #################  ---- move this part to cleanup -----------  ###############
@@ -471,11 +469,14 @@ stationEv <- stationEv [order (stationErr$posError, decreasing = TRUE),]
 stationErr <- stationErr [order (stationErr$posError, decreasing = TRUE),]
 stationErr$nm <- stationErr$posError/1852
 
+
 x <- data.frame (stationEv, stationErr) [which (stationErr$posError > 1852*1.0),]
 if (nrow (x) > 3){
   ## notebook positions that deviate from original positions -> Jim to check
   print ("Stations with large positional error, exported to badDBpos.csv")
-  print (x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)])
+  print (x [order (x$timeStamp)[1:nrow (x)],
+            which (names (x) %in% c("timeStamp", "Match_Name", "nm"))])
+            # c(21,23,24,25,26,27,29,30, 31, 28, 7)])
   write.csv(x [order (x$timeStamp)[1:nrow (x)], c(21,23,24,25,26,27,29,30, 31, 28, 7)]
             , file = paste0(dirL [[3]], "badDBPos.csv"), row.names = FALSE)
 }
@@ -1023,5 +1024,7 @@ x$Transect
 x$Station
 
 dickFdb <- subset (fileDB, file=="2019_05-14_alongbay_skb12_cast203_4141.cnv")
+
+sink()
 
 ## EOF
