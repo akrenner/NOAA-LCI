@@ -82,7 +82,7 @@
 # system ("rm -r ~/tmp/LCI_noaa/")
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
-sink ("CTD_cnv-import.log")
+sink ("CTD_cnv-import.log.txt")
 
 print (sTime <- Sys.time())
 runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
@@ -203,7 +203,7 @@ fileDB <- subset (fileDB, !is.na (time))
 
 
 save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 
 
 
@@ -331,21 +331,25 @@ fileDB$FN_station <- fileDB$file %>%
   str_replace ("spogi|pogibshi|pogipoint|pt.pogi|pogi", "POGI") %>%
   str_replace ("^(skb|kb|s)([0-9])", "\\2") %>%  # AlongBay variations
   str_replace ("^jbay", "jakolof") %>%
+  str_replace ("^(kbay)", "kasitsna") %>%
   str_replace ("^0", "") %>%                         # no leading zero
   str_replace_all ("([0-9])([a-z]+)", "\\1")         # strip-out all duplicates; match by cast#. Clean.
 # levels (factor (fileDB$FN_station))
 # fileDB$file [fileDB$FN_station == "seldovia"]         # 2015_07-29_t9_north_cast149_5028.cnv
 
 ## fixing lots of small one-off casts
-sbbStns <- c ("bear", "chinapoot", "halibut", "jakolof", "kbay", "peterson"
+sbbStns <- c ("bear", "chinapoot", "halibut", "jakolof", "kasitsna", "peterson"
               , "sadie", "seldovia", "tutka")
 for (i in seq_along(sbbStns)){
-  fileDB$FN_transect [grep (sbbStns [i], fileDB$FN_station)] <- "Subbay" # some are "AlongBay"
+  fileDB$FN_transect [grep (toupper(sbbStns [i])
+                            , toupper (fileDB$FN_station))] <- "Subbay" # some are "AlongBay"
   fileDB$FN_station <- str_replace_all (toupper (fileDB$FN_station)
                                         , paste0 ("(", toupper (sbbStns [i]), ")([A-D])")
                                         , paste0 (tools::toTitleCase (sbbStns [i]), "_\\2"))
 }
-summary (factor (fileDB$FN_station))
+rm (sbbStns, i)
+# summary (factor (fileDB$FN_transect))
+# summary (factor (fileDB$FN_station))
 
 
 
@@ -364,11 +368,22 @@ stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
 fileDB$FN_matchname <- with (fileDB, paste (FN_transect, FN_station, sep="_")) %>%
   str_replace_all("Subbay_", "")
 fileDB$match <- match (toupper (fileDB$FN_matchname), toupper (stnMaster$Match_Name))
+## alert if there are any new mismatches
 badM <- which (is.na (fileDB$match))
-length (badM)
-fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))]
+if (length (badM) != 59){
+  cat ("\n\n##\n## The following casts don't have a match in main station table:\n")
+  print (fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))])
+  stop ("The number of non-matched CTD casts has changed from 59\n\n")
+}
+rm (badM)
+## as of 2022-08-11, these are 59 files (1.3%)
+## -> match with notes by date and cast-number; check against time
+## -> fix filenames accordingly
 
-## -> let them be and match with notes by date and cast-number; check against time
+
+
+
+
 
 
 
@@ -546,7 +561,7 @@ stationEv <- stationEv [,-which (names (stationEv) %in%
 
 
 save.image ("~/tmp/LCI_noaa/cache/CNVy.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CNVy.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVy.RData")
 ## this is the ROOM where it's happening
 
 ## match CTD data to Access DB by timestamp -- this is the one that matters!
