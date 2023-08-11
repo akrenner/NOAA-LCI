@@ -302,9 +302,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 
 
 
-
-## revisit using file names
-## if trouble, fix file names!
+# ---------- extract date, transect, station, cast-# from file names --------- #
 ## goal: simplify R code
 require ("stringr")
 ## date
@@ -313,13 +311,13 @@ fileDB$FN_date <- substring(fileDB$file, 1, 10) %>%
   as.Date
 ## transect
 fileDB$FN_transect <- substring (fileDB$file, 12, 15) %>%
-  str_replace_all("-", "_") %>%
-  str_replace_all("_$", "") %>%
-  str_replace_all("^_", "") %>%
-  str_replace("^t", "") %>%
-  str_replace ("^0", "") %>%
-  str_replace("_[0-9,n,p,s,t]$", "") %>%
-  str_replace ("^(sadi|stev|subb|utk)", "Subbay") %>%
+  str_replace_all ("-", "_") %>%
+  str_replace ("_$", "") %>%
+  str_replace ("^_", "") %>%
+  str_replace ("(^t)([0-9])", "\\2") %>%   # leading t
+  str_replace ("^0", "") %>%              # leading 0
+  str_replace ("_[0-9,n,p,s,t]$", "") %>%  # trailing tail
+  str_replace ("^(sadi|stev|subb|tutk)", "Subbay") %>%
   str_replace ("(alon|ab)", "AlongBay")
 # summary (factor (fileDB$FN_transect))
 # fileDB$file [fileDB$FN_transect == "3_t"] # "2018_09-13_t3_testbluff_cast005_5028.cnv"
@@ -329,15 +327,14 @@ fileDB$FN_transect <- substring (fileDB$file, 12, 15) %>%
 fileDB$FN_station <- fileDB$file %>%
   str_replace_all("[-,_]", " ") %>%
   word (start=5L) %>%
-  str_replace("(ptgm|ptgr|pgrm)", "PGRM") %>%
-  str_replace("(pogibshi|pogipoint|pt.pogi|pogi)", "POGI") %>%
-  str_replace ("^(skb|kb|s)", "") %>%            # AlongBay variations
-  str_replace ("^adie", "sadie") %>%
-  str_replace ("^eldovia", "seldovia") %>%
-  str_replace ("^ay", "kbay") %>%
+  str_replace_all ("^(spgrm|sptgm|sptgr|ptgm|ptgr|pgrm)", "PGRM")%>%
+  str_replace ("spogi|pogibshi|pogipoint|pt.pogi|pogi", "POGI") %>%
+  str_replace ("^(skb|kb|s)([0-9])", "\\2") %>%  # AlongBay variations
   str_replace ("^jbay", "jakolof") %>%
-  str_replace ("^0", "") %>%                     # no leading zero
-  str_replace_all ("([0-9])([a-z]+)", "\\1")     # strip-out all duplicates; match by cast#. Clean.
+  str_replace ("^0", "") %>%                         # no leading zero
+  str_replace_all ("([0-9])([a-z]+)", "\\1")         # strip-out all duplicates; match by cast#. Clean.
+# levels (factor (fileDB$FN_station))
+# fileDB$file [fileDB$FN_station == "seldovia"]         # 2015_07-29_t9_north_cast149_5028.cnv
 
 ## fixing lots of small one-off casts
 sbbStns <- c ("bear", "chinapoot", "halibut", "jakolof", "kbay", "peterson"
@@ -348,7 +345,6 @@ for (i in seq_along(sbbStns)){
                                         , paste0 ("(", toupper (sbbStns [i]), ")([A-D])")
                                         , paste0 (tools::toTitleCase (sbbStns [i]), "_\\2"))
 }
-
 summary (factor (fileDB$FN_station))
 
 
