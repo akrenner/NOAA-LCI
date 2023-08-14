@@ -6,7 +6,8 @@
 
 ## from datasetup.R   ## somehow not updated since 2020 -- fix this eventually. use CNV1.RData in the meantime
 rm (list = ls())
-base::load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function
+
+# base::load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function -- no longer in use here
 
 ## start with file from CTD_cleanup.R
 # rm (list = ls());
@@ -70,9 +71,9 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
 
 physOc$year <- as.factor (format (physOc$isoTime, "%Y"))
 physOc$month <- as.numeric (format (physOc$isoTime, "%m"))
-physOc$season <- Seasonal (physOc$month)
 
 if (0){
+physOc$season <- Seasonal (physOc$month)
 ## Transects 3,6,5,6,9
 # physOc$Transect <- grep ("^[A:Z,a-b,0-9]+_", physOc$Match_Name, value = TRUE)            # overwrite
 plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"

@@ -31,4 +31,12 @@ renv::install (repos="https://cloud.r-project.org/")
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
 
+
+dir.create("~/tmp/LCI_noaa/cache/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/data-products/", showWarnings=FALSE, recursive=TRUE)
+
+
 #EOF
