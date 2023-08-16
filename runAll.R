@@ -32,7 +32,7 @@ cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
 
 ## set-up renv
 ## do all renv work manually to avoid clash between base::load() and renv::load()
-# Require ("renv")  ## do NOT load this here in script!
+# require ("renv")  ## do NOT load this here in script!
 # renv::init()
 
 if (1){
