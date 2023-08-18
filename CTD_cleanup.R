@@ -40,7 +40,7 @@
 
 
 
-rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV2.RData")
+rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV2.RData")  # from CTD_cnv-Import.R
 
 
 
