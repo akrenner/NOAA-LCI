@@ -235,6 +235,8 @@ dev.off()
 ## salinity ##
 ##############
 currentCol <- c ("lightblue", "darkblue", "hotpink")
+PSUrange <- c(24, 32.5)
+
 
 tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
@@ -246,7 +248,7 @@ par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )
 
-aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=c(24, 31.8)
+aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=PSUrange
        , ylab="salinity"
        , pastYear=pastYear, ongoingYear=ongoingY
 )
@@ -258,13 +260,13 @@ cLegend ("bottomleft", inset=0.05, currentYear=currentYear
          , pastYear=pastYear, ongoingYear=ongoingY
          )
 ## add homer data
-aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity"
+aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=PSUrange, ylab="salinity"
        , pastYear=pastYear, ongoingYear=ongoingY
 )
 title (main="Homer surface")
 box()
 dev.off()
-
+rm (PSUrange)
 
 
 

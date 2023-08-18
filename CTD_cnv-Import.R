@@ -387,12 +387,13 @@ rm (badM)
 
 
 # mdata <- .....    # cook-up from notebooks
-mdata <- with (fileDB, data.frame (isoTime = localTime
+mdata <- with (fileDB, data.frame (isoTime = as.POSIXct (paste (format (FN_date, "%Y-%m-%d")  # mix filename and metadata
+                                                                , format (time, "%H:%M:%S"))) # localTime
                                    , File.Name = gsub (".cnv", "", file, fixed = TRUE)
                                    , Date = format (FN_date,  "%Y-%m-%d") # format (localTime, "%Y-%m-%d") #??
                                    , Transect = FN_transect               # stationEv$Transect [consensNo]
                                    , Station = FN_station                 # stationEv$Station [consensNo]
-                                   , Time = format (localTime, "%H:%M")
+                                   , Time = format (time, "%H:%M")        # CTD instrument time
                                    , CTD.serial = instSerNo
                                    , latitude_DD =  stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LatNotes [consensNo]
                                    , longitude_DD = stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LonNotes [consensNo]
@@ -465,7 +466,7 @@ if (length (nNames) == ncol (physOc)){
   names (physOc) <- nNames
 }else{stop ("Lenght of new names does not match number of columns in physOc\n")}
 # print (summary (physOc))
-rm (i, nNames)
+rm (nNames)
 
 
 

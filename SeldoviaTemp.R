@@ -73,6 +73,17 @@ if (0){  ## instead of SWMP's qaqc function -- is this more reliable?
 
 ## Fahrenheit -- do not compute here, but rather indicate in right-hand legend
 
+## manual QAQC; use SWMPr::qaqc?
+sldvia$temp <- ifelse (format (sldvia$datetimestamp, "%M") == "01" & sldvia$temp > 15
+                       , NA              # swmp QAQC flags should cover it, but so far doesn't. Jan 2023.
+                       , sldvia$temp
+)
+
+# x <- subset (as.data.frame (sldvia), sldvia$datetimestamp >= as.POSIXct ("2023-07-01 00:00:00") &
+#                station=="SeldoviaDeep")
+# plot (temp~datetimestamp, x)
+# plot (temp~datetimestamp, subset (x, datetimestamp < as.POSIXct ("2023-02-01 00:00:00")))
+
 
 
 ## more QCQA -- fix spikes
