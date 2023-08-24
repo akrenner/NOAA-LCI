@@ -11,7 +11,7 @@ if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
 }
-load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
+base::load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 
 

@@ -161,7 +161,7 @@ If an instrument has been newly calibrated but not yet used, place the con-file 
 
 ## Set-up new computer to communicate with CTD
 
-All installations may need to be done from an admin-account. 
+All installations may need to be done from an admin-account (ask tech-support). 
 - Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
 - Connect serial cable with USB-to-serial adapter. In device manager, install driver for USB-to-serial adapter (should show up under "other" and be marked with a yellow warning triangle). 
 - Install the Seasoft 2.3 software suite from seabird.com:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  
