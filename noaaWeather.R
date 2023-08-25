@@ -6,10 +6,7 @@
 
 if (!require("pacman")) install.packages("pacman"
                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
-# setwd("~/myDocs/amyfiles/NOAA-LCI/")
-
-Require ("rnoaa")
+require ("rnoaa")
 ## see https://recology.info/2015/07/weather-data-with-rnoaa/
 ## GHCND          daily summaries
 ## PRECIP_HLY     Precipitation Hourly
@@ -48,7 +45,7 @@ if (0){
   #         , startdate = as.Date ("1999-01-01"), enddate = as.Date ("1999-02-01"))
 }
 
-Require ("dplyr")
+require ("dplyr")
 source ("annualPlotFct.R")
 ## meteo_pull_monitors appears to be incomplete. Start with data from manual download
 ## from https://www.ncei.noaa.gov/cdo-web/
@@ -73,7 +70,7 @@ cF <- list.files(cacheD, "dly", full.names=TRUE)
 rm (cacheD)
 ## delete cache file if older than one month and computer is online
 if (max (file.info (cF)$ctime) < (Sys.time()-30*24*3600)){  # file is older than 1 month
-  Require (curl)
+  require (curl)
   if (curl::has_internet()){  ## only flush cache if new data can be downloaded
     unlink (cF)
   }
@@ -146,7 +143,7 @@ if(0){
   df <- stations[complete.cases(stations$lat, stations$lon), ]
   df <- df[df$lat != 0, ]
   ### make plot
-  Require ("leaflet")
+  require ("leaflet")
   leaflet(data = df) %>%
     addTiles() %>%
     addCircles()

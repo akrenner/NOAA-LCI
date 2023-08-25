@@ -681,6 +681,7 @@ for (k in pickStn){
     ODV_colours <- colorRampPalette(c("#feb483", "#d31f2a", "#ffc000", "#27ab19"
                                       , "#0db5e6", "#7139fe", "#d16cfa"))(50) %>%
       rev()
+    dir.create("~/tmp/LCI_noaa/media/EVOS/", showWarnings=FALSE, recursive=TRUE)
     png ("~/tmp/LCI_noaa/media/EVOS/Figure4-TSC-panel.png", width=6.5*150,height=8.0*150, res=150)
     par (mfrow=c(3,1))
     Mr <- c(3,3.5,2.5,1.2)

@@ -8,7 +8,7 @@
 
 ## claculate consensus
 
-library (ape)
+library ("ape")
 # consensus ()
 
 
@@ -32,8 +32,8 @@ ConsensusClusterPlus (d=distanceMatrix, clusterAlg = "km")  # k-means
 ## better?
 # Bioconductor:maanova
 ## consensus (macluster, level - 0.8, draw = TRUE)
-BiocManager::install("maanova")
-require ("maanova")
+# BiocManager::install("maanova")
+# require ("maanova")
 
 
 ## bootstrap trees

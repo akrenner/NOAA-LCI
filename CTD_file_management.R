@@ -16,13 +16,19 @@
 
 cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
 
-
-
 if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
 
 
 # TESTrun <- TRUE
 # TESTrun <- FALSE
+
+
+## process only latest new survey to speed things up -- make this a parameter for ctd_workflow.R
+latestonly <- FALSE
+# latestonly <- TRUE  ## not everything is working yet
+
+
+
 
 
 ## make this independent from ctd_workflow.R
@@ -162,6 +168,13 @@ fDB <- subset (fDB, !duplicated(fDB$hexStart))
 ## remove low battery casts
 summary (fDB$batteryOK)
 fDB <- subset (fDB, batteryOK)
+
+
+if (latestonly){
+  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
+}
+
+
 
 ##################################################################
 ## move files into new folder structure -- the main action item ##
@@ -650,25 +663,26 @@ for (i in seq_along(cFDB$dir)){
 
 
 ## make small dataset for testing
-x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
-             , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
-xmlC <- list.files (paste0 (hexCache, "hex2process"), ".xmlcon"
-                    , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
-## remove 8138 and 2021 callibration until they've been used!
-# xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
-xmlC <- xmlC [-grep ("2021", xmlC)]
+if (!latestonly){
+  x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
+               , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
+  xmlC <- list.files (paste0 (hexCache, "hex2process"), ".xmlcon"
+                      , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+  ## remove 8138 and 2021 callibration until they've been used!
+  # xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
+  xmlC <- xmlC [-grep ("2021", xmlC)]
 
-file.copy (paste0 (hexCache, "hex2process/", xmlC)
-           , paste0 (hexCache, "hex2test/", xmlC))
-rm (xmlC)
+  file.copy (paste0 (hexCache, "hex2process/", xmlC)
+             , paste0 (hexCache, "hex2test/", xmlC))
+  rm (xmlC)
 
-fDB2 <- list.files (paste0 (hexCache, "hex2process/"), ".HEX"
-                    , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
-set.seed (8)
-fDB2 <- sample (fDB2, 30) ## better to force distribution, but good for now -- happens to work
-file.copy (paste0 (hexCache, "hex2process/", fDB2)
-           , paste0 (hexCache, "hex2test/", fDB2))
-
+  fDB2 <- list.files (paste0 (hexCache, "hex2process/"), ".HEX"
+                      , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+  set.seed (8)
+  fDB2 <- sample (fDB2, 30) ## better to force distribution, but good for now -- happens to work
+  file.copy (paste0 (hexCache, "hex2process/", fDB2)
+             , paste0 (hexCache, "hex2test/", fDB2))
+}
 
 cat ("\n# END CTD_file_management.R #\n")
 ## EOF

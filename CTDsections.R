@@ -5,7 +5,9 @@
 
 
 rm (list = ls())
-load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
+base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
+
+
 source ("CTDsectionFcts.R")  # get pSec to plot sections
 # save.image ("~/tmp/LCI_noaa/cache/ctdwall2.RData") # use this for CTDwall.R
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall2.RData")
@@ -158,7 +160,9 @@ for (sv in iX){
         oVseq <- which (oVarsF == sSelect$data)
       }
       xCo <- sectionize (xC)
-      for (ov in oVseq){
+
+
+      for (ov in seq_along(oVarsF)){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov,]
         }else{

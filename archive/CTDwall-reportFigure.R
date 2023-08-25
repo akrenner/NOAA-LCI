@@ -1,7 +1,7 @@
 ## replot CTD wallpaper for office
 ## provide line-graph alternatives
 
-
+## need to manually change month range and re-run for the different pages
 
 
 rm (list = ls())
@@ -389,6 +389,7 @@ res=300
                 , showBottom=FALSE
                 , drawPalette=FALSE
                 , custcont=cCont
+                , plotContours=FALSE
                 , mar=c(1,3,2,0)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent

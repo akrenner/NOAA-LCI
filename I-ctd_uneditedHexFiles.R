@@ -13,9 +13,12 @@ rm (list=ls())
 ## interactively find folder of new survey
 unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/")
 uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
-# uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-04"
+# uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-07"
 
-
+## automatically fine the most recent survey based on modification time of notebookTable.csv file
+notes <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/"
+                     , pattern=".csv", full.names=TRUE, recursive=TRUE)
+uneditedD <- dirname(notes [which.max (file.mtime(notes))])
 
 hexF <- list.files(uneditedD, pattern=".hex", full.names=TRUE, recursive=TRUE)
 notes <- list.files(uneditedD, pattern=".csv", full.names=TRUE,recursive=TRUE)
@@ -95,14 +98,16 @@ for (i in seq_along(hexF)){
                         , format (ctdTime, "%Y"), "/"
                         , notR$SurveyName, "/")
               , hexF [i])
-  dir.create(nD, showWarnings=FALSE, recursive=TRUE)
-  write.table (eHex, file=paste0 (nD, nFN), append=FALSE, quote=FALSE, row.names=FALSE
-               , col.names=FALSE)
+  if (length (grep ("aircast", hexF [i])) < 1){  # skip aircasts
+    dir.create(nD, showWarnings=FALSE, recursive=TRUE)
+    write.table (eHex, file=paste0 (nD, nFN), append=FALSE, quote=FALSE, row.names=FALSE
+                 , col.names=FALSE)
+  }
 }
 
 
 cat ("\n############################################################################")
-cat ("\n##\n##\n##\n## After successful run and inspection: move .hex files to their folder ## \n##\n##\n##\n")
+cat ("\n##\n##\n##\n## After successful run, inspect hex files in edited folder ## \n##\n##\n##\n")
 cat ("\n############################################################################")
 
 ## EOF

@@ -4,20 +4,12 @@
 ## emulate/evolve from ODV
 
 
-# Require <- function (pack){if (!require (pack)){install.packages(pack); library (pack)}}
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-Require <- pacman::p_load
-
-
-
-# getBathy <- function (transect, stn){
-getBathy <- function (stnT){
+getBathy <- function (transect, stn){
   ## get Zimmerman bathymetry for a given transect
   ## "transect" is any one factor in stn$Line
   ## stn is the master list of stations used in Kachemak Bay/lower Cook Inlet
-  Require ("oce")  # for geoDist
-  Require ("sf")
+  require ("oce")  # for geoDist
+  require ("sf")
 
   # stnT <- subset (stn, stn$Line==transect)
   lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
@@ -25,12 +17,21 @@ getBathy <- function (stnT){
   dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
   sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
-  sectS <- st_as_sf(sect, coords=c("loni", "lati"))
-  sf::st_crs(sectS) <- 4326  ## WGS84 definition
-  Require ("stars")
-  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid")
-  sectP <- sf::st_transform(sectS, st_crs (bathyZ))
-  sect$bottom <- stars::st_extract(bathyZ, at=sectP)$ci_bathy_grid
+# <<<<<<< HEAD
+#   sectS <- st_as_sf(sect, coords=c("loni", "lati"))
+#   sf::st_crs(sectS) <- 4326  ## WGS84 definition
+#   Require ("stars")
+#   bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid")
+#   sectP <- sf::st_transform(sectS, st_crs (bathyZ))
+#   sect$bottom <- stars::st_extract(bathyZ, at=sectP)$ci_bathy_grid
+# =======
+  sect <- st_as_sf(sect, coords=c("loni", "lati"))
+  sf::st_crs(sect) <- 4326  ## WGS84 definition
+  require ("stars")
+  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
+  sectP <- sf::st_transform(sect, st_crs (bathyZ))
+  sectP$bottom <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
+# >>>>>>> main
   # st_mosaic does not seem to work here -- no worth the trouble at this place
   if (any (is.na (sectP$bottom))){
     bCI <- read_stars("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/")
@@ -45,11 +46,12 @@ getBathy <- function (stnT){
 
 
 pSec <- function (xsec, N, cont = TRUE, zCol
-                  , showBottom=TRUE, custcont = NULL, labcex=1.0,  ...){
+                  , showBottom=TRUE, custcont = NULL, labcex=1.0
+                  , plotContours=TRUE, ...){
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
-  Require ("oce")
+  require ("oce")
   if (length (xsec@data$station) < 2){
     plot (1:10, type="n")
   }else{
@@ -101,13 +103,15 @@ pSec <- function (xsec, N, cont = TRUE, zCol
         zvar <- zvar [-cutS,]
         stop ("bad distance")
       }
-      cT <- try (contour (distance, depth, zvar, add = TRUE
-                          # , nlevels = 5
-                          , labcex=labcex # default: labcex=0.6
-                          , levels = cLev  ## error XXX
-                          , col = "black", lwd = 1), silent = TRUE)
-      if (class (cT) == "try-error"){
-        legend ("bottomleft", legend = "no contours")
+      if (plotContours){
+        cT <- try (contour (distance, depth, zvar, add = TRUE
+                            # , nlevels = 5
+                            , labcex=labcex # default: labcex=0.6
+                            , levels = cLev  ## error XXX
+                            , col = "black", lwd = 1), silent = TRUE)
+        if (class (cT) == "try-error"){
+          legend ("bottomleft", legend = "no contours")
+        }
       }
     }
   }
@@ -180,7 +184,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
   if (packageVersion("oce") <= "1.7.3"){
     stop ("Need package:oce version 1.7.4 or later")
   }
-  Require ("oce")
+  require ("oce")
   if (nrow (xC) < 2){stop ("no data to make a section")}
   # stn <- factor (sprintf ("%02s", xC$Station))
   xC$Match_Name <- factor (xC$Match_Name)
@@ -197,7 +201,7 @@ sectionize <- function (xC){  ## keep this separate as this function is specific
 }
 
 makeSection <- function (xC, stn){
-  Require ("oce")
+  require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
   as.section (lapply (1:length (levels (stn))
@@ -254,7 +258,7 @@ seasonize <- function (mon, breaks = c (0,2,4,8,10,13)){
 
 
 is.night <- function (ctd){
-  Require ("suncalc")
+  require ("suncalc")
   sunAlt <- getSunlightPosition (date = as.POSIXct (ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
                                  , lat = ctd@data$latitude [1]
                                  , lon = ctd@data$longitude [1])$altitude # in radians
@@ -441,7 +445,7 @@ sectionPad <- function (sect, transect, ...){
 ## multi-use stations, used for overlapping transects
 flexTransect <- function (transect, stn){
   if (transect=="ABext"){
-    swMN <- c ("4_3", "9_6", "6_2", "7_22", "7_21", paste ("AlongBay", 1:13, sep="_"))
+    swMN <- c ("4_3", "9_6", "6_2", "7_21", "7_22", paste ("AlongBay", 1:13, sep="_"))
   }else if (transect=="4"){
     swMN <- "4_3"
   }else if (transect=="9"){
@@ -460,7 +464,7 @@ flexTransect <- function (transect, stn){
 
 
 # ## execute for each run rather than pull from .RData (which gets messed up)
-# Require ("cmocean")
+# require ("cmocean")
 # oCol3 <- list (
 #   cmocean ("thermal")
 #   , cmocean ("haline")
