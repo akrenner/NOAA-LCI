@@ -425,7 +425,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
     }
   }
 
-  suppressWarnings (lT <- try (load (paste0 (cacheFolder, "/", station, ".RData"))
+  suppressWarnings (lT <- try (base::load (paste0 (cacheFolder, "/", station, ".RData"))
                                , silent=TRUE)) # yields smp
   if (class (lT)[1] == "try-error"){
     smp <- import_local(SMPfile, station) ## this is initially required!
@@ -482,7 +482,7 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
   ## this is slow -- cache as .RData file
-  nw <- try (load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
+  nw <- try (base::load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
   if (class (nw) == "try-error"){
     if (buoyID == 46108){endD <- 2011}else{endD <- 1970}
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
