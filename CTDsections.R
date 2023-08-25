@@ -103,7 +103,7 @@ for (sv in iX){
       xCo <- sectionize (xC)
 
 
-      for (ov in 1:length (oVarsF)){
+      for (ov in seq_along(oVarsF)){
         if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov,]
         }else{
