@@ -91,12 +91,11 @@ if (0){ ## tests
 transectS <- levels (poAll$Transect)
 cat ("\n\n## Begin CTDwall plotting\n\n")
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
-  for (transectN in transectS){  # tn: transect
+  for (tn in seq_along (transectS)){
+    transectN <- transectS [tn]  ## convenience
     ## for testing
-    ## ov <- 1; tn <- 6 ## AlongBay
-    ## ov <- 1; tn <- 2 ; transectN <- levels (poAll$Transect)[tn]
-    # transectN <- "ABext"
-    # transectN <- "AlongBay"
+    ## ov <- 1; transectN <- 6 ## AlongBay
+    ## ov <- 1; transectN <- 2 ; transectN <- levels (poAll$Transect)[transectN]
     cat ("\n\n", oVarsF [ov], " T-", transectN, "\n")
 
 
@@ -115,7 +114,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       require ("sf")
 
     }
-    stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
+    stnT <- subset (stn, stn$Line == transectN)
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
@@ -218,7 +217,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
          , height = pH, width = pW)
     layout (layoutM); rm (layoutM)
     if (pH > 14){
-    par (oma=c(3,5,12,2)
+    par (oma=c(3,5,12,2)    ## for letter/legal size
          , mar=c(4,4,3,0.1)
     )
     }else {
