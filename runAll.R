@@ -32,13 +32,14 @@ unique (dep$Source [which (dep$Package %in% c("maptools", "rgeos", "rgdal" #, "s
 source ("InitialSetup.R")
 
 
-sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
-cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
+if (0){
+  ## to update packages:
+  renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
+  renv::snapshot()
+  renv::status()
+}
 
-## set-up renv
-## do all renv work manually to avoid clash between base::load() and renv::load()
-# require ("renv")  ## do NOT load this here in script!
-# renv::init()
+
 
 if (1){
   ## hex conversion and QAQC plots
@@ -48,8 +49,8 @@ if (1){
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat ("Finished CTD hex conversion and processing at: ", as.character (Sys.time()), "\n")
+  sink()
 }
-sink()
 
 
 sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)

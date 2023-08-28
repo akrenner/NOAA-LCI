@@ -1,6 +1,22 @@
 #! /usr/bin/env Rscript
 
-## ensure data is available locally
+## ------------------- install required packages ----------------
+if (!require("renv")){
+  install.packages("renv")
+  require ("renv")
+}
+renv::status()
+# renv::init(bioconductor = TRUE)
+# renv::init(bioconductor = "3.17")
+renv::install (repos="https://cloud.r-project.org/")
+# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+require ("conflicted")
+conflicted::conflicts_prefer(base::load())
+unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+
+
+
+## --------------- ensure data is available locally ---------------
 bDir <- "~/GISdata/LCI/bathymetry/"
 
 if (!dir.exists(bDir)){
@@ -24,13 +40,8 @@ if (!dir.exists(bDir)){
 }
 
 
-require ("renv")
-# renv::init(bioconductor = TRUE)
-# renv::init(bioconductor = "3.17")
-renv::install (repos="https://cloud.r-project.org/")
-unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
-# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
-
+## get data from GitHub
+# .... still need to add this here. rsync would be ideal.
 
 dir.create("~/tmp/LCI_noaa/cache/", showWarnings=FALSE, recursive=TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE, recursive=TRUE)
