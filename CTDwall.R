@@ -38,6 +38,10 @@ test <- FALSE
 stopatDate <- "2022-07-31"
 # stopatDate <- Sys.time()
 
+maxSize <- FALSE
+# maxSize <- TRUE
+
+
 
 ## add AlongBay-short transect as a new virtual transect
 levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
@@ -147,13 +151,18 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if (levels (poAll$Transect)[tn] %in% mnthly){
-      ## monthly
-      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-      ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
-      pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
-      pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
-
-      yearPP <- 11 # years (rows) per page
+      if (maxSize){
+        pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
+        yearPP <- 11 # years (rows) per page
+      }else{
+        ## monthly
+        pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+        ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
+        pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
+        ## for T9/AlongBay, full-width: adjust pH dynamically with N-years
+        yearPP <- diff (range (as.numeric (format (physOcY$DateISO, "%Y"))))+1 # all on one page of expanding length
+        pW <- 42; pH <- 3.2 * (1+yearPP)
+      }
       omcex <- 2   # size of mtext annotations
       require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
