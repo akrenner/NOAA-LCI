@@ -31,19 +31,16 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-
-
-
-
-require ("renv")
-renv::status()
-# renv::snapshot()
-
 source ("InitialSetup.R")
 
 
-sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
-cat ("Start ctdprocessing: ", as.character (Sys.time()), "\n")
+if (0){
+  ## to update packages:
+  renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
+  renv::snapshot()
+  renv::status()
+}
+
 
 
 if (1){
@@ -54,8 +51,8 @@ if (1){
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat ("Finished CTD hex conversion and processing at: ", as.character (Sys.time()), "\n")
+  sink()
 }
-sink()
 
 
 sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)

@@ -42,6 +42,10 @@ maxSize <- FALSE
 # maxSize <- TRUE
 
 
+maxSize <- FALSE
+# maxSize <- TRUE
+
+
 
 ## add AlongBay-short transect as a new virtual transect
 levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
