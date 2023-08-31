@@ -120,7 +120,7 @@ colN <- expand.grid (transect=levels (factor (sam$Transect)), type=sType) %>%
   as.data.frame ()
 row.names (colN) <- apply(colN, 2,as.character) %>%
   as.data.frame %>%
-  mutate (across(everything(), gsub, pattern="^AlongBay", replacement="AB")) %>%
+  mutate (across(everything(), gsub, pattern="^AlongBay", replacement="AB")) %>%   ## across arguments deprecated XXX
   apply (MARGIN=1, FUN=paste, collapse="-")
 
 sampleM <- matrix (0, nrow=nrow (sampleDF), ncol=nrow (colN)

@@ -164,7 +164,7 @@ If an instrument has been newly calibrated but not yet used, place the con-file 
 
 ## Set-up new computer to communicate with CTD
 
-All installations may need to be done from an admin-account. 
+All installations may need to be done from an admin-account (ask tech-support). 
 - Install driver PL2303_Prolific_DriverInstaller_v1200 from https://www.prolific.com.tw/US/ShowProduct.aspx?p_id=225&pcid=41 -- this may or may not be necessary?
 - Connect serial cable with USB-to-serial adapter. In device manager, install driver for USB-to-serial adapter (should show up under "other" and be marked with a yellow warning triangle). 
 - Install the Seasoft 2.3 software suite from seabird.com:  https://www.seabird.com/cms-view-en.jsa?page=/cms/list-items/seasoft-2-3-0-en.jsp  
@@ -194,7 +194,7 @@ The following instructions work under Windows 11. Install the following software
 Both of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use a IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
 In addition, a number of add-on R packages, data-files, and folder-structure are required. These will be automatically set-up with the instructions given below. Due to the required downloads, the initial run may take considerably longer than subsequent runs. 
 
-Open R and paste the following lines of code to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them. 
+Open R and paste the following lines of code into the R console to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them. 
 ````
 rFolder <- "~/myDocs/amyfiles/"
 ## set up folder for R scripts and pull scripts from github
@@ -205,6 +205,7 @@ system ("git clone https://github.com/akrenner/NOAA-LCI.git")
 dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 setwd ("~/GISdata/")
 system ("git clone https://github.com/akrenner/LCI.git")
+renv::restore()
 ````
 Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.  
 

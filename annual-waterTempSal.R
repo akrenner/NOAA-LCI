@@ -11,7 +11,7 @@ if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
 }
-load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
+base::load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 
 
@@ -24,7 +24,7 @@ currentYear <- as.numeric (format (Sys.Date(), "%Y"))-1
 # currentYear <- 2021   ## temp!! XXX
 #################
 currentCol <- c ("lightblue", "blue", "magenta")
-Require ("RColorBrewer")
+require ("RColorBrewer")
 currentCol <- c ("black", brewer.pal (4, "Paired"))[c(1,3,2)]
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
@@ -235,6 +235,8 @@ dev.off()
 ## salinity ##
 ##############
 currentCol <- c ("lightblue", "darkblue", "hotpink")
+PSUrange <- c(24, 32.5)
+
 
 tDayH <- prepDF (dat=homerS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
 tDayS <- prepDF (dat=sldviaS, varName="sal", qntl=qntl, maO=maO, currentYear=currentYear)
@@ -246,7 +248,7 @@ par (mfrow=c(2,1)
      , mar=c(3,4,4,2)+0.1
 )
 
-aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=c(24, 31.8)
+aPlot (df=tDayS, vName="sal", currentCol=currentCol, ylim=PSUrange
        , ylab="salinity"
        , pastYear=pastYear, ongoingYear=ongoingY
 )
@@ -258,13 +260,13 @@ cLegend ("bottomleft", inset=0.05, currentYear=currentYear
          , pastYear=pastYear, ongoingYear=ongoingY
          )
 ## add homer data
-aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=c(24, 31.8), ylab="salinity"
+aPlot (tDayH, "sal", MA=pMA, currentCol=currentCol, ylim=PSUrange, ylab="salinity"
        , pastYear=pastYear, ongoingYear=ongoingY
 )
 title (main="Homer surface")
 box()
 dev.off()
-
+rm (PSUrange)
 
 
 

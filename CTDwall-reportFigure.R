@@ -1,7 +1,7 @@
 ## replot CTD wallpaper for office
 ## provide line-graph alternatives
 
-
+## need to manually change month range and re-run for the different pages
 
 
 rm (list = ls())
@@ -117,27 +117,27 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
     loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
-    require ("oce")
+    Require ("oce")
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
     ## extract from bathyZ. then fill-in the missing values from get.depth
     if (useSF){
-      require ("sf")
+      Require ("sf")
       sect <- st_as_sf(sect, coords=c("loni", "lati"))
       sf::st_crs(sect) <- 4326  ## WGS84 definition
-      require ("stars")
+      Require ("stars")
       sectP <- sf::st_transform(sect, st_crs (bathyZ))
       bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
     }else{
-      require ("sp")
-      require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
+      Require ("sp")
+      Require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
       coordinates (sect) <- ~loni+lati
       proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
       sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
       bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
     }
-    require ("marmap")
+    Require ("marmap")
     ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
     bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
     bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
@@ -164,7 +164,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       pH <- 9.0; pW <- 7
       yearPP <- length (year.select)
       omcex <- 1
-      require ("stringr")
+      Require ("stringr")
       sampleTimes <- str_pad (month.select, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       layoutM <- matrix (1:10, 5, byrow=TRUE) ## any way to automate this? -- XXX still needs work!
@@ -192,7 +192,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
       yearPP <- 11 # years (rows) per page
       omcex <- 2   # size of mtext annotations
-      require ("stringr")
+      Require ("stringr")
       sampleTimes <- str_pad (1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric (format (stopatDate, "%Y")) - as.numeric (format (startDate, "%Y")) + 1
@@ -389,6 +389,7 @@ res=300
                 , showBottom=FALSE
                 , drawPalette=FALSE
                 , custcont=cCont
+                , plotContours=FALSE
                 , mar=c(1,3,2,0)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent

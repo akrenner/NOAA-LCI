@@ -7,13 +7,10 @@
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ecoAn.RData") # from ecoAn.R
 
-Require (parallel)
-Require (automap)
-## require (intamap)
-## require (oceanmap)
-# require (marmap)
-Require (geoR)
-Require (rgdal)
+require (parallel)
+require (automap)
+require (geoR)
+require (rgdal)
 
 nCPUs <- detectCores()
 gRes <- 2e3
@@ -77,9 +74,9 @@ cor (poSS@data [,which (names (poSS) == "SST"):ncol (poSS@data)]
 ## subsets
 ## average common locations
 
-## Require (ocedata)
+## require (ocedata)
 ## data(coastlineWorldFine)
-## Require (oceanmap)
+## require (oceanmap)
 
 
 # coast <- spTransform (coast, CRS (LLprj))
@@ -123,7 +120,7 @@ ak <- function (i, poSS = poSS){
 
 
     ## jitter duplicate coordinates
-    Require (geoR)
+    require (geoR)
     jC <- jitter2d (coordinates (poSS), max = 1e3, min = 10)
     poSSA <- data.frame (jC, poSS@data [,i])
     names (poSSA) <- c("x","y", names (poSS@data)[i])
@@ -138,7 +135,7 @@ ak <- function (i, poSS = poSS){
     ## interp.new
 
     if (0){
-        Require (intamap)                   # abstraction beyond automap -- good choice!
+        require (intamap)                   # abstraction beyond automap -- good choice!
         obj = createIntamapObject(
             observations = poSSA
             , predictionLocations = grd
@@ -205,8 +202,8 @@ plotKrige <- function (i){
                   , ".pdf", sep = ""))
         ## automapPlot (kr$krige_output, "var1.pred") # trellis
         ## http://rstudio-pubs-static.s3.amazonaws.com/53530_1af2d0b5ae1f4a36a75e611d3566f777.html#1
-        Require (sp)
-        Require (raster)
+        require (sp)
+        require (raster)
         lciP <- spplot (krigL[[i]]$krige_output, "var1.pred"
                       , main = fieldN
                       , col.regions = heat.colors(64) # or rainbow (64)
@@ -248,10 +245,10 @@ plotKrige <- function (i){
         plot (poSS, add = TRUE, pch = 19, cex = 0.3)
         ## text (coordinates (stn), labels = stn$Match_Name)
 
-        ## Require (graticule)
+        ## require (graticule)
         ## graticule
         ## or in rgdal
-        Require (rgdal)
+        require (rgdal)
         llgridlines (kout, lty = 3, side = "WS", offset = -0.5, lwd = 0.5, cex = 0.5)
     }
 
@@ -261,7 +258,7 @@ plotKrige <- function (i){
              , kr$krige_output$var1.pred)
 
 
-    Require (oce)                       # a real possibility!!
+    require (oce)                       # a real possibility!!
     drawPalette(colormap=cm)
     mapPlot(coastlineWorld, projection="+proj=moll", grid=FALSE)
     par(mar=c(2, 2, 1, 1))
@@ -273,7 +270,7 @@ plotKrige <- function (i){
 
 
     krR <- raster (kr$krige_output)
-    Require (raster)
+    require (raster)
 #    plot (as.raster (
 
 #   plot (kr$krige_output$var1.pred, xaxs="i", yaxs = "i")
@@ -305,12 +302,12 @@ save.image ("~/tmp/LCI_noaa/cache/postKrige.RData")
 
 if (0){
 ## find slope and max slope to detect fronts
-## Require ("SDMTools")
+## require ("SDMTools")
 ## slope (
-Require ("raster")
+require ("raster")
 dir.create ("~/tmp/LCI_noaa/media/fronts", recursive = TRUE)
 slopeF <- function (i){
-    Require ("raster")
+    require ("raster")
     dR <- krigL[[i]]$krige_output
     dR@data <- data.frame (dR@data$var1.pred)
     if (var (dR@data [,1]) > 0){
@@ -360,7 +357,7 @@ q()
 
 
 
-Require (oceanmap)                      # requires Lat Lon, not projected
+require (oceanmap)                      # requires Lat Lon, not projected
 ## plotmap ()
 ## v()
 pdf (paste ("~/tmp/LCI_noaa/media/", names (poSS)[i], "_map.pdf", sep = ""))

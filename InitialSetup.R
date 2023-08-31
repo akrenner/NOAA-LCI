@@ -1,6 +1,22 @@
 #! /usr/bin/env Rscript
 
+## ------------------- install required packages ----------------
+if (!require("renv")){
+  install.packages("renv")
+  require ("renv")
+}
+renv::status()
+# renv::init(bioconductor = TRUE)
+# renv::init(bioconductor = "3.17")
+renv::install (repos="https://cloud.r-project.org/")
+# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+require ("conflicted")
+conflicted::conflicts_prefer(base::load())
+unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 
+
+
+## --------------- ensure data is available locally ---------------
 bDir <- "~/GISdata/LCI/bathymetry/"
 
 if (!dir.exists(bDir)){
@@ -22,5 +38,16 @@ if (!dir.exists(bDir)){
   unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir=paste0 (bDir, "Cook_bathymetry_grid/"))
   unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir=paste0 (bDir, "CGOA_bathymetry_grid/"))
 }
+
+
+## get data from GitHub
+# .... still need to add this here. rsync would be ideal.
+
+dir.create("~/tmp/LCI_noaa/cache/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/data-products/", showWarnings=FALSE, recursive=TRUE)
+
 
 #EOF

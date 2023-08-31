@@ -5,11 +5,13 @@
 ## also location of station??
 
 ## from datasetup.R   ## somehow not updated since 2020 -- fix this eventually. use CNV1.RData in the meantime
-rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function
+rm (list = ls())
+
+# base::load ("~/tmp/LCI_noaa/cache/CTD.RData") ## still load for Seasonal() function -- no longer in use here
 
 ## start with file from CTD_cleanup.R
 # rm (list = ls());
-load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## have latest version of physOc from CTD_cleanup.R, but also have functions from datasetup.R
+base::load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## have latest version of physOc from CTD_cleanup.R, but also have functions from datasetup.R
 
 
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/CTDsummarieplots", recursive = TRUE, showWarnings = FALSE)
@@ -69,9 +71,9 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
 
 physOc$year <- as.factor (format (physOc$isoTime, "%Y"))
 physOc$month <- as.numeric (format (physOc$isoTime, "%m"))
-physOc$season <- Seasonal (physOc$month)
 
 if (0){
+physOc$season <- Seasonal (physOc$month)
 ## Transects 3,6,5,6,9
 # physOc$Transect <- grep ("^[A:Z,a-b,0-9]+_", physOc$Match_Name, value = TRUE)            # overwrite
 plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
@@ -98,15 +100,18 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
 dir.create(dirN, showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 require ("oce")
+cat ("\ncount to: ", length (levels (physOc$File.Name)), " \n")
 plotCTDprof <- function (i){
-  cat (i, " ")
-  if (i %% 7 == 0){cat ("\n")}
+
+  if (i %% 2 == 2){cat (i, " ")}; if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
+
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
     # pdf (paste0 (dirN, levels (physOc$File.Name)[i], ".pdf"))
     nR <- 4
     png (paste0 (dirN, levels (physOc$File.Name)[i], ".png")
-         , res=200, height=2.75*nR*200, width=8.5*200)
+         , res=200, height=2.75*nR*200, width=8.5*200#, type="cairo"
+         )
     par (mfrow=c(nR,2))
     rm (nR)
     try ({
@@ -152,33 +157,29 @@ plotCTDprof <- function (i){
     }, silent=TRUE)
     mtext (levels (physOc$File.Name)[i],side=3, line=-1.25, outer=TRUE)
     dev.off()
-    if (0){ ## combine all into one PDF
-      system ("sleep 5", wait = TRUE)
-      system (paste ("pdfunite ~/tmp/LCI_noaa/media/CTDprofiles/"
-                     , levels (physOc$File.Name)[i]
-                     , ".pdf ~/tmp/LCI_noaa/media/CTDprofiles/"
-                     , levels (physOc$File.Name)[i]
-                     , "_additions.pdf ~/tmp/LCI_noaa/media/CTDprofiles/c_"
-                     ,  levels (physOc$File.Name)[i], ".pdf"
-                     , sep = ""), wait = FALSE)
-      system (paste ("rm ~/tmp/LCI_noaa/media/CTDprofiles/"
-                     , levels (physOc$File.Name)[i], "*.pdf", sep = "")
-              , wait = FALSE)
-    }
   }else{
     warning (paste (levels (physOc$File.Name)[i]), " has less than 4 records\n\n")
   }
 }
 
+
 if (.Platform$OS.type=="unix"){
   require ("parallel")
-  x <- mclapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
+  x <- mclapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof, mc.cores = nCPUs)
 }else{
-  ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
-  ## use parallelly ??
-  x <- lapply (1:length (levels (physOc$File.Name)), FUN = plotCTDprof)
+  if (0){  ## NOT working, neither in R.exe
+    require ("parallel") ## parallelly is unnecessarily complex for here
+    cl <- makeCluster(detectCores()-1)
+    # clusterEvalQ(cl, require ("oce"))
+    clusterExport(cl, varlist = c ("physOc", "plotCTDprof", "dirN"))
+    x <- parLapply(cl, seq_along (levels (physOc$File.Name)), fun=plotCTDprof)
+    stopCluster(cl); rm (cl)
+  }else{
+    ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
+    x <- lapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof)
+  }
 }
-# dev.off()
+
 
 if (0){
 system (paste ("pdfunite" , paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"

@@ -12,7 +12,7 @@
 
 ## set-up parameters
 source ("annualPlotFct.R") # already loads SWMPr
-suppressPackageStartupMessages (Require ("R.utils"))
+suppressPackageStartupMessages (require ("R.utils"))
 
 sF <- list.files("~/GISdata/LCI/SWMP/", pattern="*.zip", full.names=TRUE)
 SWMPfile <- sF [which.max (file.info(sF)$ctime)]; rm (sF)
@@ -24,7 +24,7 @@ dir.create ("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursiv
 
 
 ## load and process SWMP data
-Require ("SWMPr")
+require ("SWMPr")
 sldvia <- getSWMP ("kacsdwq") # Seldovia deep
 sldvia1 <- getSWMP ("kacsewq") # Seldovia deep -- early, no longer updated
 sldvia <- rbind (sldvia1, sldvia); rm (sldvia1)
@@ -72,6 +72,17 @@ if (0){  ## instead of SWMP's qaqc function -- is this more reliable?
 }
 
 ## Fahrenheit -- do not compute here, but rather indicate in right-hand legend
+
+## manual QAQC; use SWMPr::qaqc?
+sldvia$temp <- ifelse (format (sldvia$datetimestamp, "%M") == "01" & sldvia$temp > 15
+                       , NA              # swmp QAQC flags should cover it, but so far doesn't. Jan 2023.
+                       , sldvia$temp
+)
+
+# x <- subset (as.data.frame (sldvia), sldvia$datetimestamp >= as.POSIXct ("2023-07-01 00:00:00") &
+#                station=="SeldoviaDeep")
+# plot (temp~datetimestamp, x)
+# plot (temp~datetimestamp, subset (x, datetimestamp < as.POSIXct ("2023-02-01 00:00:00")))
 
 
 
@@ -149,12 +160,12 @@ tempDay$homerS <- tHom$Sal  [match (paste (tempDay$year, tempDay$jday), paste (t
 rm (tHom)
 
 sltFit <- function (varN){
-    Require ("stlplus")                       # use stlplus because it handles NAs gracefully
+    require ("stlplus")                       # use stlplus because it handles NAs gracefully
     stlplus (ts (tempDay [,which (names (tempDay) == varN)], start = c (min (tempDay$year),1)
                , frequency = 365.25)
            , s.window = "periodic")
 }
-Require ("stlplus")                       # use stlplus because it handels NAs gracefully
+require ("stlplus")                       # use stlplus because it handels NAs gracefully
 fit <- sltFit ("Temp")
 fitS <- sltFit ("Sal")
 fitSH <- sltFit ("homerS")
@@ -176,9 +187,9 @@ dev.off()
 ## rm (dayMean)
 
 # tempDay$seasonal <- fit$data$seasonal
-# Require ("zoo")
+# require ("zoo")
 seaStd <- function (x, seasonC){ # subtract mean and standardize by range of season
-    Require ("zoo")
+    require ("zoo")
     xM <- na.approx (x, na.rm = FALSE) - seasonC
     xM <- xM - mean (xM, na.rm = TRUE)
     xM <- xM / diff (range (seasonC))
@@ -205,7 +216,7 @@ rm (seaStd)
 #     return (winSum)
 # }
 # save (maT, file = "~/tmp/LCI_noaa/cache/MAfunction.RData")
-Require ("SWMPr")
+require ("SWMPr")
 maT <- function (df, maO){unlist (smoother (df, maO))}  # XXX move to annualPlotFct.R
 
 lagV <- c(1,7,30,60,90, 180, 365, 730)
@@ -385,7 +396,7 @@ sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
     box()
     abline (h = mean (sdT$tsVar), col = "gray", lty = "dashed")
     ## add circular smoothing spline
-    Require ("pbs")
+    require ("pbs")
     splS <- glm (tsVar~pbs::pbs (jday, df = 4, Boundary.knots=c(1,366)), data = sdT)
     splP <- predict (splS, type = "response", newdata = data.frame (jday = 1:366), se.fit = TRUE)
     lines (sdT$jday, splP$fit, col = "blue", lwd = 2)
@@ -394,9 +405,9 @@ sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
 }
 
 
-## Require ("colorspace")
+## require ("colorspace")
 ## tsCol <- rep (rainbow_hcl (length (levels (tempDay$year))/2), 2)
-## Require ("RColorBrewer")
+## require ("RColorBrewer")
 ## tsCol <- rep (brewer.pal (length (levels (tempDay$year))/2, name = "Set3"), 2)
 tsCol <- rep (1:(length (levels (tempDay$year))/2), 2)
 
@@ -463,13 +474,13 @@ if (0){
 ## seasonal decomposition
 
 ## interpolate NAs
-Require ("zoo")
+require ("zoo")
 ## na.locf
 # sldvia$Temp <- na.approx (sldvia$Temp,
 sldviaTS <- ts (sldvia$Temp, delta = 1/(4*24*365.25), start = min (sldvia$year))
 sldviaTS <- na.approx (sldviaTS)
 
-Require ("forecast")
+require ("forecast")
 tempTS <- msts (sldviaTS, seasonal.periods = c(24*4,
                                                   12.4206 * 4, # M2 tide
                                                   24*4*365.25) # daily and annual signal
