@@ -1,9 +1,11 @@
 ---
 title: "Kachemak Bay Sampling Manual"
 author: "Martin Renner <martin.renner@noaa.gov>"
-date: "2023-04-06"
-output: pdf_document
-keywords: "NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrients"
+date: "2023-09-01"
+output:
+  word_document: default
+  pdf_document: default
+keywords: NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrients
 ---
 
 
@@ -22,11 +24,6 @@ Martin Renner martin.renner@noaa.gov or Kris Holderied  kris.holderied@noaa.gov.
 Previous versions included zooplankton, and OA sampling, projects that have been suspended for now.
 
 
-[//]: suggestions for ToC:https://stackoverflow.com/questions/11948245/markdown-to-create-pages-and-table-of-contents 
-[//]: ## TOC
-[//]: 1. [Sampling preparations](#prep)
-
-[//]: ## Sampling preparations <a name="prep"></a>
 ## Sampling preparations
 
 ### CTD
@@ -221,7 +218,7 @@ Finally, some public datasets are needed, not all of which can be downloaded aut
 
 ### macOS or gnu/linux
 
-All R code for this project is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well, proceeding here is only recommended for advanced users. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. 
+All R code for this project is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well (and ultimately on the WorkSpace), there are still major hurdles. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. 
 <!---
 The following approach has worked for me (macOS 13.3, Ventura, x86). Your mileage may vary, especially 
 if running Apple silicone.
@@ -234,6 +231,7 @@ To create a new pure 32-bit prefix, you can run: \$ WINEARCH=win32 WINEPREFIX=\~
 
 Copy seabird executables.
 --->
+
 ## Acknowledgments: 
 This would not have worked out without the help of Jim Schloemer. I also like to thank Kim Schuster for paving the way and Kris Holderied for guiding the way.  
 

@@ -476,7 +476,10 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-  require ("rnoaa")
+#  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
+#  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+
+    require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
