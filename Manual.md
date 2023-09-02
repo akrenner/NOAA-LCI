@@ -44,8 +44,9 @@ Screenshot of Seaterm v1.59 ![Alt](manual/SeaTerm.PNG "Seaterm")
 Document CTD time, date, and voltages in the FileMaker database (layout: CTDstatusLog). 
 
 ### iPad
-FileMaker database: sync to iPad. Write-down last ctd-cast number. 
-Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@icloud.com. Then open Mail.app on iPad, download database, and open directly in FileMaker (replacing old copy). 
+Charge iPad the night before (USB-C charger in blue bag). Also check that there's a pen with a soft stylus bag on the clipboard. Store iPad with screen towards clipboard to protect it. 
+
+FileMaker database: sync to iPad. Write-down last ctd-cast number. Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@icloud.com. Then open Mail.app on iPad, download database, and open directly in FileMaker (replacing old copy). -- last updated on 2023-08-30, MR.
 
 ### staging gear Have the following items handy to bring to the boat:
 - note book
@@ -53,13 +54,13 @@ Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@ic
 - CTD
 - Niskin bottle 
 - phytoplankton bottles (small, white): 6 for monthly 
-- nutrient bottles (0.5l brown nalgene): 12 for monthly 
+- nutrient bottles (0.5l brown nalgene): 12 for monthly, +2 quarterly
 - Otter-bag with:
-  - iPad + charging cable 
+  - iPad + USB-C charging cable 
   - zip ties 
   - this protocol 
-  - clip-board with data sheets 
-  - MESSANGER WEIGHT 
+  - clip-board with data sheets and stylus for iPad
+  - MESSENGER WEIGHT 
   - stop-watch 
 - Toolbox with: 
   - multimeter 
@@ -83,10 +84,13 @@ Verbalize turning on the CTD at the beginning of each cast. Lower the instrument
 Niskin bottle water samples as well as bucket surface water samples are taken at pre-determined stations. XXX details?
 
 ### Phytoplankton
-Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the ouside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical.
+Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the ouside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical. Label bottle with date, Transect and station, and amount of water filtered (usually 40 l).
 
 ### Notes
-Open FileMakerMoblile on iPad, then open LTMdatabase At each station, press "new station" and fill out all required fields. Pay attention to times (local time) and station names. 
+Take notes on paper, as before -- at a minimum, date, time, transect, and station numbers; as back-up. 
+iPad: There's a sticker on the back of the iPad with the lock-code (99603). Use the soft-tipped stylus pen if your fingers are getting wet. Open iPad (swipe up) and open FileMaker. 
+
+Open FileMakerMoblile on iPad, then open LTMdatabase. To start a new survey, press "NEW Survey". For multi-day (quarterly) surveys, adjust the end-time, as appropriate. At each station, press "NEW Station" and fill out all required fields. When ready to turn on CTD, press "Get Position". 
 
 
 ## Post-cruise cleanup
@@ -153,6 +157,9 @@ This will batch-process CTD files using SEABIRD software, do some basic QAQC, an
 
 #### Manual notes (no iPad)
 Make a PDF from the hand-written notes. You can use a scanner to PDF. If you have an iPhone, you can photograph all the pages. To make a PDF, select the relevant images -> share -> print -> share (and email it to yourself). The resultant PDF will be huge -- reduce its size by opening it in Acrobat and File -> Reduce File Size.  Name the resultant file YYYY-MM.pdf (using year and month of the survey) and upload to the workspace. 
+
+### Notes on iPad
+Use the < > buttons at the bottom of the screen to navigate to the first station of the survey. Comparing times with CTD-times, fill-in cast# for each CTD cast. When done, press "email notes table" and email a copy of the attached table to self. Check your email and copy the attached csv file to *~/GISdata/LCI/*, replacing any previous copy there. Then run I-ctd_uneditedHexFiles.R. Correct any errors that may be detected (usually bad file names). When finished, upload a copy of the edited hex files to the Workspace. 
 
 #### Run a small example dataset
 A smaller and faster workflow than *runAll.R* , only plotting the most recent survey (or a user-chosen survey) is under development. 
