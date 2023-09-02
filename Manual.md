@@ -125,7 +125,7 @@ Connect to CTD, as before and display headers. Compare headers to recorded times
 
 When batch-uploading CTD files from instrument to local HD, place all files from one day in a folder (named like S2023-08) within 1_Unedited .hex files. If there are multiple dates, add subfolders labeled with date and transect (as before) and move files into those subfolders once batch-upload is completed. When prompted, supply a file name following this convention: YYYY-MM-DD_cast. Seaterm will add the three-digit cast numbers to the end of the filename. 
 
-Run I-ctd_uneditedHexFiles.R interactively. Correct any errors (usually bad filenames) until you get a clean run. At this stage, edited hex-files should be in the appropriate folder in *~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/*. Upload a copy to the workspace. 
+Open R and run I-ctd_uneditedHexFiles.R interactively. Correct any errors (usually bad filenames) until you get a clean run. At this stage, edited hex-files should be in the appropriate folder in *~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/*. Upload a copy to the workspace. 
 
 Generate NoteBook pdf from FileMaker and upload it to the WorkSpace. 
 https://researchworkspace.com/campaingn/2562960/evos-gulf-watch-2017-ongoing Environmental Drivers: Oceanographic monitoring in Cook Inlet and Kachemak Bay > Data, 2017-ongoing > Fiel notes > "year"
