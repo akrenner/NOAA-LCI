@@ -17,7 +17,7 @@ test <- FALSE
 
 dir.create("~/tmp/LCI_noaa/media/CTDsections/sectionImages/", showWarnings = FALSE, recursive = TRUE)
 
-if (test){iX <- 10}else{iX <- 1:length (levels (poAll$survey))}
+if (test){iX <- 10}else{iX <- rev (seq_along (levels (poAll$survey)))} # rev: new years first
 
 require ("parallel")
 if (.Platform$OS.type=="unix"){
