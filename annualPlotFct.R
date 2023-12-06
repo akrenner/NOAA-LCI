@@ -275,7 +275,7 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
 ## construct long-term climatology, using data excluding the present year
 dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
 tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
+tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
 tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
