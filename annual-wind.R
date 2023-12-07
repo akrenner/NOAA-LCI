@@ -341,9 +341,9 @@ for (k in 1:length (wStations)){
 
   ## annual data                 ## use prepDF instead?? XXX
   tDay <- aggregate (wspd~jday, dMeans, FUN=meanNA, subset=year < currentYear) # exclude current year
-  tDay$sdWind <- aggregate (wspd~jday, dMeans, FUN=sd, subset=year < currentYear)$wspd
+  tDay$sdWind <- aggregate (wspd~jday, dMeans, FUN=stats::sd, subset=year < currentYear)$wspd
   tDay$smoothWindMA <- aggregate (maW~jday, dMeans, FUN=meanNA, subset=year < currentYear)$maW
-  tDay$sdMA <- aggregate (maW~jday, dMeans, FUN=sd, na.rm=TRUE)$maW ## it's circular(ish): av across years
+  tDay$sdMA <- aggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE)$maW ## it's circular(ish): av across years
   tDay$lowPerMA <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE)$maW
   tDay$uppPerMA <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE)$maW
   lowQ <- 0.8
@@ -358,7 +358,7 @@ for (k in 1:length (wStations)){
   tDay$gale <- aggregate (gale~jday, dMeans, FUN=meanNA, subset=year < currentYear)$gale # * maO
   tDay$galeMA <- aggregate (galeMA~jday, dMeans, FUN=meanNA, subset=year < currentYear)$maGale
   # may need different averager for storms?? kernel-density?? XXX
-  tDay$sdGaleMA <- aggregate (galeMA~jday, dMeans, FUN=sd, na.rm=TRUE, subset=year < currentYear)$maGale
+  tDay$sdGaleMA <- aggregate (galeMA~jday, dMeans, FUN=stats::sd, na.rm=TRUE, subset=year < currentYear)$maGale
   ## XX tDay$sca <- aggregate (sca~jday, dMeans, FUN=meanNA, subset=year < currentYear)$sca
 
   ## current year under consideration

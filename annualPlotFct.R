@@ -275,7 +275,7 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
 ## construct long-term climatology, using data excluding the present year
 dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
 tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
+tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
 tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
@@ -411,6 +411,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   dir.create(cacheFolder, showWarnings=FALSE)
+  cacheStation <- paste0 (cacheFolder, station, ".RData")
 
   zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names=TRUE)
   if (length (zF) < 1){stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
@@ -418,27 +419,25 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   rm (zF)
 
   ## delete cacheFolder if zip file is newer
-  if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){
-    if (file.info (paste0 (cacheFolder, "/kachomet.RData"))$ctime <
-        file.info (SMPfile)$ctime){
-      unlink (cacheFolder, recursive = "TRUE")
+  if (file.exists(cacheStation)){
+    if (file.info (cacheStation)$ctime < file.info (SMPfile)$ctime){
+      unlink (cacheStation)
     }
   }
 
-  suppressWarnings (lT <- try (base::load (paste0 (cacheFolder, "/", station, ".RData"))
-                               , silent=TRUE)) # yields smp
-  if (class (lT)[1] == "try-error"){
-    smp <- import_local(SMPfile, station) ## this is initially required!
+  if (file.exists(cacheStation)){
+    base::load (cacheStation)
+      }else{
+    smp <- import_local(SMPfile, station)
     if (QAQC){
-      smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+      smp <- qaqc (smp)  ## scrutinize further? Wise to do here? Keep level 1?
     }
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
-  #  ## not sure whyere the bad line is coming from, but it has to go
+  #  ## not sure where the bad line is coming from, but it has to go
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  # if (0){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station
@@ -469,7 +468,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   }
   ## fixGap() here??
   ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
-  save (smp, file=paste0 (cacheFolder, "/", station, ".RData"))
+  save (smp, file=cacheStation)
   return (smp)
 }
 

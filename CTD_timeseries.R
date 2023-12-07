@@ -774,7 +774,7 @@ fw$year <- as.numeric (format (fw$Date, "%Y"))
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
-fwS$sd <- aggregate (freshCont~month, fw, sd)$freshCont
+fwS$sd <- aggregate (freshCont~month, fw, stats::sd)$freshCont
 lfw <- fwS; lfw$month <- lfw$month - 12
 ufw <- fwS; ufw$month <- ufw$month + 12
 fwS <- rbind (lfw, fwS, ufw); rm (lfw, ufw)
