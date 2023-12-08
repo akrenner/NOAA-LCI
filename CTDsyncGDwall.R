@@ -21,7 +21,9 @@ if (.Platform$OS.type == "unix"){
   docs <- paste0 (hm, "myDocs/")
 }
 GD <- "remote:GulfWatch/"
-# GD <- "remote:Science/plots/"
+## accessing shared kasitsna bay lab folder directly: currently not allowed
+## use shortcut/link from GulfWatch on personal drive to shared drive for now
+
 
 ## unified cross-platform rclone commands
 system (paste0 (rcloneDir, "rclone dedupe remote:GulfWatch/plots --dedupe-mode newest -P"))
