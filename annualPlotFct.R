@@ -209,7 +209,8 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
   nA <- aggregate (...)
-  nA [match (refDF$jday, nA$jday),]
+  nA <- nA [match (refDF$jday, nA$jday),]
+  nA
 }
 
 seasonalMA <- function (var, jday, width=maO){
@@ -473,14 +474,54 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 }
 
 
+getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
+  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
+  ## using package riem
+  ## data from University of Iowa. Downside: not covering every NOAA station (has Homer airport, but not spit or Flat Island)
+  ##  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+  # rN <- riem_networks()  # AK_ASOS  Alaska ASOS
+  # rS <- riem_stations(network="AK_ASOS")
+  # rS [which (rS$county %in% "Kenai Peninsula"),]
+
+  ## require (pmetar): another package to access data from Iowa State University
+
+  require ("riem")
+  dir.create ("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings=FALSE, recursive=TRUE)
+  if (clearcache){
+    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+  }
+  if (file.exists(paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))){
+    load (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    lastD <- max (rW$valid) # valid = date-time
+    ## fudge to get 1 year overlap
+    lastD <- as.Date (paste0 (as.integer (substr(as.character(lastD), start=1, stop=4))-1, "-01-01"))
+  }else{
+    lastD <- "2000-01-01"
+  }
+  rWn <- try (riem_measures (station=stationID, date_start=lastD, date_end=as.character(Sys.Date())))
+  if (class (rWn)[1]=="try-error"){rm (rWn)} # if computer is off-line
+  if (exists("rW")){
+    ## remove overlapping data
+    rW <- subset (rW, valid < lastD)
+    rW <- rbind (rW, rWn)
+  }else{
+    rW <- rWn
+  }
+  rm (rWn)
+  save (rW, file=paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+  rW
+}
+
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-#  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
-#  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+  #  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
+  #  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+  # 2023-12-08: buoy still working with rnoaa -> use it while it works
 
-    require ("rnoaa")
+  require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
+    unlink ("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
   ## this is slow -- cache as .RData file
@@ -491,15 +532,13 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   }else{
     endD <- max (as.integer (substr (wDB$time, 1, 4)))  # last cached year
   }
-  if (endD < as.integer (format (Sys.Date(), "%Y"))){ # if not updated in a year
-    wB <- lapply (endD:as.integer (format (Sys.Date(), "%Y"))
+  if (as.integer (format (Sys.Date(), "%Y")) - endD > -1){ # if not updated in a year
+    wB <- lapply ((endD-1):as.integer (format (Sys.Date(), "%Y"))
                   , function (i){
                     try (buoy (dataset=set, buoyid=buoyID
                                , year=i), silent=TRUE)
                   }
     )
-
-    # lapply (1:length (wB), function (i){try (ncol (wB[[i]]$data))})
     for (i in 1:length (wB)){
       if (class (wB [[i]]) != "try-error"){
         if (!exists ("wDB")){
