@@ -112,7 +112,7 @@ physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through th
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 # print (summary (physOc))
 
-mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections/"
+mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections"
 dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
 
 
@@ -367,7 +367,8 @@ for (k in pickStn){
     if (plotRAW){
       ## time series of raw data
       plot.station (xCS, which="temperature"
-                    , zcol=tCol
+                    , zcol = colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
+                                                      "#bfe1bf", "#a2d7d8")))(9)
                     # , zbreaks=sF (xC$Temperature_ITS90_DecC)
                     , legend.loc="" #legend.text="temperature anomaly [°C]"
                     , mar=c(2.5,4,2.3,1.2)  ## default:  3.0 3.5 1.7 1.2
@@ -390,8 +391,7 @@ for (k in pickStn){
     ## time series of anomalies
     # zB <- sF (xC$anTem), n=9)  XXX fix this
     plot.station (xCS, which = "anTem"
-                  , zcol = colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
-                                                    "#bfe1bf", "#a2d7d8")))(9)
+                  , zcol=tCol
                   # , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
                   # , zbreaks = zB
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
@@ -576,7 +576,8 @@ for (k in pickStn){
     ## buoyancy ##
     ##############
     #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-    png (paste0 (mediaD, "4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
+    dir.create(paste0 (mediaD, "_experimental/"), showWarnings=FALSE, recursive=TRUE)
+    png (paste0 (mediaD, "_experimental/", "4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
     par (mfrow=c(3,1))
     ## raw buoyancy profile
     ## bvf climatology
@@ -652,7 +653,7 @@ for (k in pickStn){
     #########################################
     ## chlorophyll and pycnocline patterns ##
     #########################################
-    png (paste0 (mediaD, "6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
+    png (paste0 (mediaD, "/6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
          , height=6*pngR, width=8*pngR)
     par (las = 1, mfrow=c(2,1))
     ## chlorophyll
@@ -788,8 +789,8 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 ## add freshwater -- deep
 
-# pdf (paste0 (mediaD, "T9S6_freshwatercontent.pdf"), height = 9, width = 6)
-png (paste0 (mediaD, "T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
+# pdf (paste0 (mediaD, "/T9S6_freshwatercontent.pdf"), height = 9, width = 6)
+png (paste0 (mediaD, "/T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
 par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1))
 ## time series
 plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
@@ -821,8 +822,8 @@ dev.off()
 ### timing of freshwater -- panel for each year ###
 if (0){
   require ("lattice")
-  # pdf (paste0 (mediaD, "T9S6_freshSeason.pdf"), width = 7, height = 9)
-  png (paste0 (mediaD, "T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
+  # pdf (paste0 (mediaD, "/T9S6_freshSeason.pdf"), width = 7, height = 9)
+  png (paste0 (mediaD, "/T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
   print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
   print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
                  , xlab = "freshwater anomaly"))
@@ -841,7 +842,7 @@ fw$jday <- as.numeric (format (fw$Date, "%j"))
 fwag <- aggregate (freshCont~month+year, data=fw, FUN=mean)
 fwag$freshDeep <- aggregate (freshDeep~month+year, data=fw, FUN=mean)$freshDeep
 
-png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
+png (paste0 (mediaD, "/T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
 par (mfrow=c(2,1))
 par (mar=c(4-3,4,4,1))
 plot (freshCont~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
@@ -961,13 +962,13 @@ for (iS in 1:length (tL)){
   rm (tbnorm)
 
   if (tempName == ("Deep")){
-    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+    png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR, width=fDim [1]*pngR)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
   }else{
-    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+    png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
     if (tempName=="TempSurface"){
       anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
