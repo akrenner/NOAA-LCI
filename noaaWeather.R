@@ -62,7 +62,7 @@ hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
 
 ## may have to delete cache
 if (.Platform$OS.type=="windows"){
-  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/"
+  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/" ## relative path??
 }else{
   cacheD <- "~/Library/Caches/R/noaa_ghcnd/"
 }
