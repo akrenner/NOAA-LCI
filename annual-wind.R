@@ -10,6 +10,7 @@ if (!exists ("quarterly")){
 }
 source ("annualPlotFct.R")
 
+
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 # setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 
@@ -21,14 +22,16 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "AUGA2"     # Augustine Island  --- subsets
 # metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
 # metstation <- "AMAA2"       # East Amatuli, Barren
-metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
-# metstation <- "PAHO"      # Homer Airport -- using riem package
+# metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram -- Mike's preferred station
+metstation <- "HMRA2"       # Homer Spit, research reserve
+metstation <- "PAHO"      # Homer Airport -- using riem package
 
 
 wStations <- c("kachomet", "FILA2"
                # , "AUGA2" #, "46105"
                # , "AMAA2" #, "HMSA2"
 )
+wStations <- c("PAHO", "FILA2")
 rm (wStations)
 
 
@@ -62,6 +65,12 @@ if (quarterly){
 windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 # rm (scAdvT, galeT, stormT)
 
+
+## --------- get weather data ---------- ##
+load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") ## loads hmr
+
+
+
 ## get up-to-date SWMP data
 require ("openair") # for windRose
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
@@ -76,46 +85,53 @@ for (k in 1:length (wStations)){
   suppressWarnings(rm (hmr))
 
 
-  stationL <- c ("Homer Spit", "Flat Island", "Augustine Island", "East Amatuli")[k]
+  stationL <- "Homer Airport"
+  # stationL <- c ("Homer Spit", "Flat Island", "Augustine Island", "East Amatuli")[k]
+  #
+  #
+  #
+  #
+  #
+  # ## get data from NOAA server or local cache
+  # if (metstation== "PAHO"){
+  #   load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData") # hmr
+  #   # hmr3 <- getNOAAweather(metstation)
+  #   # hmr <- with (hmr3, data.frame (datetimestamp = valid, atemp=(tmpf-32)*5/9
+  #   #                                , rh=relh
+  #   #                                , bp=rep (is.na (nrow (hmr3)))
+  #   #                                , wspd=sknt * 0.5144444444 # convert knots to m/s
+  #   #                                , maxwspd=peak_wind_gust * 0.5144444444
+  #   #                                , wdir=peak_wind_drct
+  #   #                                # , wdir=drct
+  #   #                                , sdwdir=rep (is.na (nrow (hmr3)))
+  #   #                                , totpar=rep (is.na (nrow (hmr3)))
+  #   #                                , totprcp=rep (is.na (nrow (hmr3)))
+  #   #                                , totsorad=rep (is.na (nrow (hmr3)))
+  #   # ))
+  #   # rm (hmr3)
+  # }else if (metstation == "kachomet"){
+  #   # hmr <- getSWMP (metstation)
+  #   load ("tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")"  # Homer Airport
+  # }else{
+  #   hmr2 <- getNOAA (metstation) # fetch from NOAA
+  #   # hmr2 <- getNOAA ("HMSA2") # fetch from NOAA
+  #   hmr <- with (hmr2, data.frame (datetimestamp, atemp=air_temperature
+  #                                  , rh=rep (is.na (nrow (hmr2)))  # relative humidity
+  #                                  , bp=rep (is.na (nrow (hmr2)))  # barometric pressure
+  #                                  , wspd=wind_spd # m/s -- same as SWMP  # NOAA wspd in m/s
+  #                                  , maxwspd=gust
+  #                                  , wdir=wind_dir
+  #                                  , sdwdir=rep (is.na (nrow (hmr2)))
+  #                                  , totpar=rep (is.na (nrow (hmr2)))
+  #                                  , totprcp=rep (is.na (nrow (hmr2)))
+  #                                  , totsorad=rep (is.na (nrow (hmr2)))
+  #   ))
+  #   rm (hmr2)
+  # }
+
+      load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  # hmr,  Homer Airport
 
 
-
-
-
-  ## get data from NOAA server or local cache
-  if (metstation== "PAHO"){
-    hmr3 <- getNOAAweather(metstation)
-    hmr <- with (hmr3, data.frame (datetimestamp = valid, atemp=(tmpf-32)*5/9
-                                   , rh=relh
-                                   , bp=rep (is.na (nrow (hmr3)))
-                                   , wspd=sknt * 0.5144444444 # convert knots to m/s
-                                   , maxwspd=peak_wind_gust * 0.5144444444
-                                   , wdir=peak_wind_drct
-                                   # , wdir=drct
-                                   , sdwdir=rep (is.na (nrow (hmr3)))
-                                   , totpar=rep (is.na (nrow (hmr3)))
-                                   , totprcp=rep (is.na (nrow (hmr3)))
-                                   , totsorad=rep (is.na (nrow (hmr3)))
-    ))
-    rm (hmr3)
-  }else if (metstation == "kachomet"){
-    hmr <- getSWMP (metstation)
-  }else{
-    hmr2 <- getNOAA (metstation) # fetch from NOAA
-    # hmr2 <- getNOAA ("HMSA2") # fetch from NOAA
-    hmr <- with (hmr2, data.frame (datetimestamp, atemp=air_temperature
-                                   , rh=rep (is.na (nrow (hmr2)))  # relative humidity
-                                   , bp=rep (is.na (nrow (hmr2)))  # barometric pressure
-                                   , wspd=wind_spd # m/s -- same as SWMP  # NOAA wspd in m/s
-                                   , maxwspd=gust
-                                   , wdir=wind_dir
-                                   , sdwdir=rep (is.na (nrow (hmr2)))
-                                   , totpar=rep (is.na (nrow (hmr2)))
-                                   , totprcp=rep (is.na (nrow (hmr2)))
-                                   , totsorad=rep (is.na (nrow (hmr2)))
-    ))
-    rm (hmr2)
-  }
 
   ## apply QAQC flaggs ##
   # is.na (hmr$atemp [which (hmr$f_atemp != "<0>")]) <- TRUE
@@ -353,31 +369,36 @@ for (k in 1:length (wStations)){
   # dMeans$galeMA <- as.numeric (maT (dMeans$gale, maO))
   require ("SWMPr")
   dMeans$maW <- unlist (smoother (dMeans$wspd, maO, sides=1))
-  dMeans$galeMA <- unlist (smoother (dMeans$gale, maO, sides=1))
+  dMeans$galeMA <- unlist (smoother (dMeans$gale, maO, sides=1)) ## all NAs XXX fix
 
 
   ## annual data                 ## use prepDF instead?? XXX
-  tDay <- aggregate (wspd~jday, dMeans, FUN=meanNA, subset=year < currentYear) # exclude current year
-  tDay$dWind <- saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=year < currentYear)$wspd
-  # tDay$sdWind <- saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=year < currentYear, tDay)$wspd
-  tDay$smoothWindMA <- aggregate (maW~jday, dMeans, FUN=meanNA, subset=year < currentYear)$maW
-  tDay$sdMA <- aggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE)$maW ## it's circular(ish): av across years
-  tDay$lowPerMA <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE)$maW
-  tDay$uppPerMA <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE)$maW
+  sSet <- with (dMeans, (year < currentYear)&(jday < 366))
+  tDay <- aggregate (wspd~jday, dMeans, FUN=meanNA, subset=sSet) # exclude current year
+  tDay$sdWind <- saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=sSet, refDF=tDay)$wspd
+  tDay$smoothWindMA <- saggregate (maW~jday, dMeans, FUN=meanNA, subset=sSet, refDF=tDay)$maW
+  tDay$sdMA <- saggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$maW ## it's circular(ish): av across years
+  tDay$lowPerMA <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE, refDF=tDay)$maW
+  tDay$uppPerMA <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE, refDF=tDay)$maW
   lowQ <- 0.8
-  tDay$lowPerMAs <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE)$maW
-  tDay$uppPerMAs <- aggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE)$maW
+  tDay$lowPerMAs <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW
+  tDay$uppPerMAs <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW
   rm (lowQ)
 
   ## all these aggregates are valuable to break when there are missing data!
-  tDay$uw <- aggregate (uw~jday, dMeans, FUN=meanNA, subset=year < currentYear)$uw
-  tDay$vw <- aggregate (vw~jday, dMeans, FUN=meanNA, subset=year < currentYear)$vw
+  tDay$uw <- saggregate (uw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$uw
+  tDay$vw <- saggregate (vw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$vw
   tDay$wdir <- meanWind (tDay$uw, tDay$vw)
 
-  tDay$gale <- aggregate (gale~jday, dMeans, FUN=meanNA, subset=year < currentYear)$gale # * maO
-  tDay$galeMA <- aggregate (galeMA~jday, dMeans, FUN=meanNA, subset=year < currentYear)$maGale
-  # may need different averager for storms?? kernel-density?? XXX
-  tDay$sdGaleMA <- aggregate (galeMA~jday, dMeans, FUN=stats::sd, na.rm=TRUE, subset=year < currentYear)$maGale
+  tDay$gale <- saggregate (gale~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$gale # * maO
+
+  ## galeMA is all NAs -- fix it!
+  # if (all (is.na (dMeans$galeMA)))
+  ## blows up on all NAs
+  # tDay$galeMA <- saggregate (galeMA~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$maGale
+  # # may need different averager for storms?? kernel-density?? XXX
+  # tDay$sdGaleMA <- saggregate (galeMA~jday, dMeans, FUN=stats::sd, na.rm=TRUE, subset=year < currentYear
+  #                              , refDF=tDay)$maGale
   ## XX tDay$sca <- aggregate (sca~jday, dMeans, FUN=meanNA, subset=year < currentYear)$sca
 
   ## current year under consideration
@@ -387,7 +408,7 @@ for (k in 1:length (wStations)){
   tDay$p365uw <- past365$uw [match (tDay$jday, past365$jday)]
   tDay$p365vw <- past365$vw [match (tDay$jday, past365$jday)]
 
-  tDay$p365galeMA <- past365$galeMA [match (tDay$jday, past365$jday)]
+ # tDay$p365galeMA <- past365$galeMA [match (tDay$jday, past365$jday)] ## what if there are no gales?
   tDay$p365galDay <- past365$gale [match (tDay$jday, past365$jday)]
   tDay$p365wdir <- past365$wdir [match (tDay$jday, past365$jday)]
   tDay$p365scaDay <- past365$sca [match (tDay$jday, past365$jday)]
@@ -477,7 +498,8 @@ for (k in 1:length (wStations)){
   par (mar=c(3,4,1.5,0.1))
   plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab=wCaption
              # , ylim=c(0,25)
-             , ylim=c(0,15) # for spit only
+#             , ylim=c(0,15) # for spit only
+, ylim=c(0,8) # for Homer Airport
              , main=stationL)
 
   oP <- par()

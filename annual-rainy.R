@@ -32,15 +32,18 @@ if (quarterly){
 
 ## load/download/update data
 source ("annualPlotFct.R") # important to call after defining currentCol!
-if (SWMP){                                   # use SWMP data or NOAA homer airport
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
-}else{
-  source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
-  load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
-}
+# if (SWMP){                                   # use SWMP data or NOAA homer airport
+#   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
+# }else{
+#   source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
+#   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
+# }
+load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData") # hmr -- from annual-fetchAirWeather.R
+
+
+
+
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
-
-
 # plot (subset (hmr$totprcp, hmr$year < 2005), type="l")
 # plot (totprcp~datetimestamp, data=hmr, subset=year < 2006, type="l")
 

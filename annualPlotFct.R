@@ -208,7 +208,11 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 
 saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
+
+  ## not sure here -- seems fragile! either of these two lines
+  #nA <- eval (substitute(aggregate (...))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
   nA <- aggregate (...)
+
   nA <- nA [match (refDF$jday, nA$jday),]
   nA
 }
@@ -239,10 +243,17 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
                     , currentYear # =as.integer (format (Sys.Date(), "%Y"))-1  ## force this to be stated explicitly (for troubleshooting)
                     , qntl=c(0.8, 0.9)
 ){
-  if (! all (c("jday", "year", varName) %in% names (dat))){
-    stop (paste ("Data frame must contain the variables jday, year, and", varName))
-  }
   if (length (varName) > 1){stop ("so far can only process one variable at a time")}
+
+  if (! all (c ("datetimestamp", varName) %in% names (dat))){
+    stop (paste ("Date frame must contain the variable 'datetimestamp' and", varName))
+  }else  if (! all (c("jday", "year") %in% names (dat))){
+    dat$jday <- as.numeric (format (as.POSIXct(dat$datetimestamp), "%j"))
+    dat$year <- as.numeric (format (as.POSIXct(dat$datetimestamp), "%Y"))
+  }
+  # if (all (c("jday", "year", varName) %in% names (dat))){
+  #   stop (paste ("Data frame must contain the variables jday, year, and", varName))
+  # }
 
   ## flexible for varName to be a vector!!  -- XXX extra feature
   dat$xVar <- dat [,which (names (dat) == varName)]
@@ -269,15 +280,15 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
                                  return (out)
                                }
   )  # tweak THIS one!
-###########
-# dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
-############
+  ###########
+  # dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
+  ############
 
-## construct long-term climatology, using data excluding the present year
-dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
-tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
-tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
+  ## construct long-term climatology, using data excluding the present year
+  dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
+  tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
+  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
+  tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
   if (0){
@@ -509,6 +520,10 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
   }
   rm (rWn)
   save (rW, file=paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+
+  ## clean-up data/convert units, as appropriate, for compatibility with getNOAA
+
+
   rW
 }
 

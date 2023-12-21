@@ -10,7 +10,7 @@
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
 require ("oce")
 require ("RColorBrewer")
-
+require ("tidyverse")
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -45,10 +45,10 @@ require ("RColorBrewer")
 
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor (physOc$Match_Name)
+pickStn <- 87 # 9-6
 pickStn <- which (levels (physOc$Match_Name) %in%
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
   c("9_6", "AlongBay_3", "AlongBay_9"))
-pickStn <- 87 # 9-6
 # pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 
 
@@ -342,10 +342,7 @@ for (k in pickStn){
                                    , FUN=mean, na.rm=TRUE)$SalDeep
 
 
-
-
-    #  pdf (paste0 (mediaD, stnK, "-TSprofile.pdf"), height = 11, width = 8.5)
-    png (paste0 (mediaD, "2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
+    png (paste0 (mediaD, "/2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
     if (plotRAW){
       par (mfrow=c(5,1))
     }else{
@@ -494,8 +491,7 @@ for (k in pickStn){
             , ...)
     }
 
-    # pdf (paste0 (mediaD, stnK, "-TS_climatology.pdf"), height = 11.5, width = 8)
-    png (paste0 (mediaD, "1-", stnK, "-TS_climatology.png"), height=fDim[2]*pngR, width=fDim[2]*pngR, res=pngR)
+    png (paste0 (mediaD, "/1-", stnK, "-TS_climatology.png"), height=fDim[2]*pngR, width=fDim[2]*pngR, res=pngR)
     par (mfrow=c(2,1))
     clPlot (cT9, which = "temperature"
             , zcol=tCol
@@ -517,8 +513,7 @@ for (k in pickStn){
 
 
     ## fluorescence
-    # pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
-    png (paste0 (mediaD, "3-", stnK, "-fluorescence-climatology.png"), res=pngR
+    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-climatology.png"), res=pngR
          , height=fDim[2]*pngR, width=fDim[1]*pngR)
     par (las = 1, mfrow=c(3,1))
     clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
@@ -575,9 +570,8 @@ for (k in pickStn){
     ##############
     ## buoyancy ##
     ##############
-    #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
     dir.create(paste0 (mediaD, "_experimental/"), showWarnings=FALSE, recursive=TRUE)
-    png (paste0 (mediaD, "_experimental/", "4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
+    png (paste0 (mediaD, "_experimental", "/4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
     par (mfrow=c(3,1))
     ## raw buoyancy profile
     ## bvf climatology
@@ -789,7 +783,6 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 ## add freshwater -- deep
 
-# pdf (paste0 (mediaD, "/T9S6_freshwatercontent.pdf"), height = 9, width = 6)
 png (paste0 (mediaD, "/T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
 par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1))
 ## time series
@@ -822,7 +815,6 @@ dev.off()
 ### timing of freshwater -- panel for each year ###
 if (0){
   require ("lattice")
-  # pdf (paste0 (mediaD, "/T9S6_freshSeason.pdf"), width = 7, height = 9)
   png (paste0 (mediaD, "/T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
   print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
   print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
