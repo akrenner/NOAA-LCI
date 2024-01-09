@@ -206,12 +206,12 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 
 
 
-saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
+saggregate <- function (x, data, FUN, ..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
 
   ## not sure here -- seems fragile! either of these two lines
-  #nA <- eval (substitute(aggregate (...))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
-  nA <- aggregate (...)
+  nA <- eval (substitute(aggregate (x, data, FUN, ..., simplify=FALSE, drop=FALSE))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
+  # nA <- aggregate (...)
 
   nA <- nA [match (refDF$jday, nA$jday),]
   nA
@@ -509,14 +509,16 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
   }else{
     lastD <- "2000-01-01"
   }
-  rWn <- try (riem_measures (station=stationID, date_start=lastD, date_end=as.character(Sys.Date())))
-  if (class (rWn)[1]=="try-error"){rm (rWn)} # if computer is off-line
-  if (exists("rW")){
-    ## remove overlapping data
-    rW <- subset (rW, valid < lastD)
-    rW <- rbind (rW, rWn)
-  }else{
-    rW <- rWn
+  rWn <- try (riem_measures (station=stationID, date_start=lastD, date_end=as.character(Sys.Date()))
+              , silent=TRUE)
+  if (class (rWn)[1]=="try-error"){rm (rWn)}else{ # if computer is off-line
+    if (exists("rW")){
+      ## remove overlapping data
+      rW <- subset (rW, valid < lastD)
+      rW <- rbind (rW, rWn)
+    }else{
+      stop ("Have to be online for initial run fetching NOAA weather data.")
+    }
   }
   rm (rWn)
   save (rW, file=paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))

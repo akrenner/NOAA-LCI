@@ -78,8 +78,8 @@ dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 ## cycle through all wStations
 if (!exists ("wStations")){wStations <- metstation}
-for (k in 1:length (wStations)){
-  ## k <- 1
+# for (k in seq_along(wStations)){
+  k <- 1
   metstation <- wStations [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")
   suppressWarnings(rm (hmr))
@@ -346,6 +346,9 @@ for (k in 1:length (wStations)){
   rm (uw, vw, dMuw, dMvw)
 
   meanWind <- function (u,v){ # weatherclasses.com as above
+    if (any (is.na (c (u,v)))){
+      out <- rep (NA, length (u))
+    }# else
     180+(180/pi*atan2 (u,v))
   }
   dMeans$wdir <- with (dMeans, meanWind (uw, vw))
@@ -375,20 +378,20 @@ for (k in 1:length (wStations)){
   ## annual data                 ## use prepDF instead?? XXX
   sSet <- with (dMeans, (year < currentYear)&(jday < 366))
   tDay <- aggregate (wspd~jday, dMeans, FUN=meanNA, subset=sSet) # exclude current year
-  tDay$sdWind <- saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=sSet, refDF=tDay)$wspd
-  tDay$smoothWindMA <- saggregate (maW~jday, dMeans, FUN=meanNA, subset=sSet, refDF=tDay)$maW
-  tDay$sdMA <- saggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$maW ## it's circular(ish): av across years
-  tDay$lowPerMA <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE, refDF=tDay)$maW
-  tDay$uppPerMA <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE, refDF=tDay)$maW
+  tDay$sdWind <- unlist (saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=sSet, refDF=tDay)$wspd)
+  tDay$smoothWindMA <- unlist (saggregate (maW~jday, dMeans, FUN=meanNA, subset=sSet, refDF=tDay)$maW)
+  tDay$sdMA <- unlist (saggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$maW) ## it's circular(ish): av across years
+  tDay$lowPerMA <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
+  tDay$uppPerMA <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
   lowQ <- 0.8
-  tDay$lowPerMAs <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW
-  tDay$uppPerMAs <- saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW
+  tDay$lowPerMAs <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
+  tDay$uppPerMAs <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
   rm (lowQ)
 
   ## all these aggregates are valuable to break when there are missing data!
-  tDay$uw <- saggregate (uw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$uw
-  tDay$vw <- saggregate (vw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$vw
-  tDay$wdir <- meanWind (tDay$uw, tDay$vw)
+  tDay$uw <- unlist (saggregate (uw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$uw)
+  tDay$vw <- unlist (saggregate (vw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$vw)
+  tDay$wdir <- unlist (meanWind (tDay$uw, tDay$vw))
 
   tDay$gale <- saggregate (gale~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$gale # * maO
 
@@ -810,7 +813,6 @@ for (k in 1:length (wStations)){
     }
     dev.off()
   }
-}
 
 
 
