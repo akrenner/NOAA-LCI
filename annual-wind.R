@@ -377,23 +377,25 @@ if (!exists ("wStations")){wStations <- metstation}
 
   ## annual data                 ## use prepDF instead?? XXX
   sSet <- with (dMeans, (year < currentYear)&(jday < 366))
-  tDay <- aggregate (wspd~jday, dMeans, FUN=meanNA, subset=sSet) # exclude current year
-  tDay$sdWind <- unlist (saggregate (wspd~jday, dMeans, FUN=stats::sd, subset=sSet, refDF=tDay)$wspd)
-  tDay$smoothWindMA <- unlist (saggregate (maW~jday, dMeans, FUN=meanNA, subset=sSet, refDF=tDay)$maW)
-  tDay$sdMA <- unlist (saggregate (maW~jday, dMeans, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$maW) ## it's circular(ish): av across years
-  tDay$lowPerMA <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
-  tDay$uppPerMA <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
+  sSet <- subset (dMeans, (year < currentYear) & (jday < 366))
+  tDay <- aggregate (wspd~jday, sSet, FUN=meanNA) # exclude current year
+  tDay$sdWind <- unlist (saggregate (wspd~jday, sSet, FUN=stats::sd, refDF=tDay)$wspd)
+  tDay$smoothWindMA <- unlist (saggregate (maW~jday, sSet, FUN=meanNA, refDF=tDay)$maW)
+  tDay$sdMA <- unlist (saggregate (maW~jday, sSet, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$maW) ## it's circular(ish): av across years
+  tDay$lowPerMA <- unlist (saggregate (maW~jday, sSet, FUN=quantile, probs=0.5-0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
+  tDay$uppPerMA <- unlist (saggregate (maW~jday, sSet, FUN=quantile, probs=0.5+0.5*qntl, na.rm=TRUE, refDF=tDay)$maW)
   lowQ <- 0.8
-  tDay$lowPerMAs <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
-  tDay$uppPerMAs <- unlist (saggregate (maW~jday, dMeans, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
+  tDay$lowPerMAs <- unlist (saggregate (maW~jday, sSet, FUN=quantile, probs=0.5-0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
+  tDay$uppPerMAs <- unlist (saggregate (maW~jday, sSet, FUN=quantile, probs=0.5+0.5*lowQ, na.rm=TRUE, refDF=tDay)$maW)
   rm (lowQ)
 
   ## all these aggregates are valuable to break when there are missing data!
-  tDay$uw <- unlist (saggregate (uw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$uw)
-  tDay$vw <- unlist (saggregate (vw~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$vw)
+  tDay$uw <- unlist (saggregate (uw~jday, sSet, FUN=meanNA, refDF=tDay)$uw)
+  tDay$vw <- unlist (saggregate (vw~jday, sSet, FUN=meanNA, refDF=tDay)$vw)
   tDay$wdir <- unlist (meanWind (tDay$uw, tDay$vw))
 
-  tDay$gale <- saggregate (gale~jday, dMeans, FUN=meanNA, subset=year < currentYear, refDF=tDay)$gale # * maO
+  tDay$gale <- saggregate (gale~jday, sSet, FUN=meanNA, refDF=tDay)$gale # * maO
+  rm (sSet)
 
   ## galeMA is all NAs -- fix it!
   # if (all (is.na (dMeans$galeMA)))

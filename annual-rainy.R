@@ -56,7 +56,7 @@ tDay <- prepDF (dat=hmr, varName="totprcp", maO=maO, qntl=qntl, currentYear=curr
 
 ## annual vs average precip
 cat ("\n##\n##\nCurrent year precipitation compared to long-term mean\n")
-anR <- aggregate (totprcp~year, subset (hmr, year <= currentYear)
+anR <- aggregate (totprcp~year, data = subset (hmr, year <= currentYear)
                   , sum, na.rm=TRUE)
 summary (subset (anR, year < currentYear)$totprcp)
 subset (anR, year == currentYear)

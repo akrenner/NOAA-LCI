@@ -55,7 +55,8 @@ nWave <- getNOAA(clearcache=FALSE)
 
 ## match noaa to swmp data
 hmr <- with (nAir, data.frame (datetimestamp = valid
-                               # add: jday, year
+                               , jday=as.numeric (format (valid, "%j"))
+                               , year=as.numeric (format (valid, "%Y"))
                                , atemp=(tmpf-32)*5/9
                                , rh=relh
                                , bp=rep (is.na (nrow (nAir)))

@@ -208,11 +208,8 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 
 saggregate <- function (x, data, FUN, ..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
-
-  ## not sure here -- seems fragile! either of these two lines
-  nA <- eval (substitute(aggregate (x, data, FUN, ..., simplify=FALSE, drop=FALSE))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
-  # nA <- aggregate (...)
-
+  # nA <- eval (substitute(aggregate (x, data, FUN, ..., simplify=TRUE, drop=FALSE))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
+  nA <- aggregate (x, data, FUN, ..., simplify=TRUE, drop=FALSE)  # above breaks prepDF below -- not sure why
   nA <- nA [match (refDF$jday, nA$jday),]
   nA
 }
@@ -284,11 +281,11 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   # dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
   ############
 
-  ## construct long-term climatology, using data excluding the present year
-  dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
-  tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-  tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
-  tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
+## construct long-term climatology, using data excluding the present year
+dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
+tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
+tDay$sd <- saggregate (xVar~jday, data=dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
+tDay$MA <- saggregate (MA~jday, data=dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
   if (0){
@@ -317,9 +314,8 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN=max, na.rm=TRUE, refDF=tDay)$MA
   tDay$minMA <- saggregate (MA~jday, dLTmean, FUN=min, na.rm=TRUE, refDF=tDay)$MA
 
-
   # is this critically needed?? -- N years of data per date
-  tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN=sum
+  tDay$yearN <- saggregate ((!is.na (xVar))~jday, data=dMeans, FUN=sum
                             , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
 
   ## previous year
