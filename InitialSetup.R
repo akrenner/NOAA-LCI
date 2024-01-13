@@ -2,7 +2,7 @@
 
 ## ------------------- install required packages ----------------
 r = getOption("repos")
-r["CRAN"] = "https://cran.us.r-project.org"
+r["CRAN"] = "https://cloud.r-project.org/"
 options(repos = r)
 
 

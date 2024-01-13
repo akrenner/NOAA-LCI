@@ -3,6 +3,7 @@
 if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
+  quarterly <- FALSE
 }
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
@@ -16,7 +17,7 @@ currentCol <- c("lightblue", "blue", "black")  ## current and prev
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 # currentCol <- "blue"
 SWMP <- FALSE
-SWMP <- TRUE
+# SWMP <- TRUE
 
 ## what to show
 if (quarterly){
@@ -141,27 +142,27 @@ if (ongoingY){
 ## legend
 bP <- legend ("topleft", bty="n", legend="") # to get coordinates
 # bP <- cLegend ("topleft" # x=140, y=max (tDay$totprcp, na.rm=TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
-bP <- cLegend (x=bP$rect$left + 55, y=bP$rect$top
+bP <- cLegend (x=bP$rect$left *2.2, y=bP$rect$top-0.01
                , qntl=qntl, title=paste (maO, "day moving average")
                , title.adj=0.5, currentYear=currentYear
                , mRange=c (min (hmr$year), currentYear-1)
                , cYcol=currentCol
                , pastYear=pastYear, ongoingYear=ongoingY)
 legend (x=bP$rect$left+3 # png: 4, pdf: 3
-        , y=bP$rect$top-bP$rect$h + 0.20  # +11: align text. +3 looks better (png), 0.20 (pdf)
+        , y=bP$rect$top-bP$rect$h *1.06  # +11: align text. +3 looks better (png), 0.20 (pdf)
         , legend="day with > 10 mm", pch="*", col=currentCol [2]
         , bty="n", pt.cex=cCex)  # add transparent line to fix alignment
 
 ## totals
-xAl <- bP$rect$left - 50; yAl <- bP$rect$top + 0.3
-xAl <- bP$rect$left + 50; yAl <- bP$rect$top + 0.3
+xAl <- bP$rect$left - 50; yAl <- bP$rect$top #+ 0.03
+xAl <- bP$rect$left + 50; yAl <- bP$rect$top # + 0.03
 text (xAl, yAl, paste0 (round (sum (tDay$pY_totprcp, na.rm=TRUE)), " mm")
       , col=currentCol [2], pos=4)
 text (xAl + 35, yAl
       , paste0 (round (sum (tDay$totprcp, na.rm=TRUE)), " mm", " ["
-                , round (as.numeric (ARq [1])), " : "
-                , round (as.numeric (ARq [2])), " mm "
-                , qntl [1]*100, "%-ile]"
+                , qntl [1]*100, "%-ile: "
+                , round (as.numeric (ARq [1])), "—-"
+                , round (as.numeric (ARq [2])), " mm]"
       )
       , col="darkgray", pos=4)
 box()

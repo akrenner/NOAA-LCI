@@ -108,7 +108,8 @@ if (SWMP){title (main="Air Temperature at Homer Spit")}else{title (main="Air Tem
 fAxis (c (-15, 15), mT="air temperature [°F]")
 box()
 ## legend
-cLegend ("bottom", inset=0.05
+cLegend (# "bottom"# , inset=0.07
+         105, 2
          , currentYear=currentYear, mRange=c (min (hmr$year), currentYear-1)
          , cYcol=currentCol
          , title=paste (maO, "day moving average")

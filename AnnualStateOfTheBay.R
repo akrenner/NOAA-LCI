@@ -17,7 +17,7 @@ print (sT <- Sys.time())
 
 
 quarterly <- TRUE
-# quarterly <- FALSE
+ quarterly <- FALSE
 
 ## State of the Bay Report 2019
 

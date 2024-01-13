@@ -66,7 +66,7 @@ hmr <- with (nAir, data.frame (datetimestamp = valid
                                # , wdir=drct
                                , sdwdir=rep (is.na (nrow (nAir)))
                                , totpar=rep (is.na (nrow (nAir)))
-                               , totprcp=p01i  ## need to check on units!!
+                               , totprcp=p01i * 25.4 ## need to check on units -- inches -> mm
                                , totsorad=rep (is.na (nrow (nAir)))
 ))
 rm (nAir)
