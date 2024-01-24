@@ -142,14 +142,14 @@ if (ongoingY){
 ## legend
 bP <- legend ("topleft", bty="n", legend="") # to get coordinates
 # bP <- cLegend ("topleft" # x=140, y=max (tDay$totprcp, na.rm=TRUE) # + 4.2  ## better to use "top" and inset? -- or top on blank, then % shift?
-bP <- cLegend (x=bP$rect$left *2.2, y=bP$rect$top-0.01
+bP <- cLegend (x=bP$rect$left + 55, y=bP$rect$top*0.97
                , qntl=qntl, title=paste (maO, "day moving average")
                , title.adj=0.5, currentYear=currentYear
                , mRange=c (min (hmr$year), currentYear-1)
                , cYcol=currentCol
                , pastYear=pastYear, ongoingYear=ongoingY)
 legend (x=bP$rect$left+3 # png: 4, pdf: 3
-        , y=bP$rect$top-bP$rect$h *1.06  # +11: align text. +3 looks better (png), 0.20 (pdf)
+        , y=bP$rect$top-bP$rect$h * 0.90  # +11: align text. +3 looks better (png), 0.20 (pdf)
         , legend="day with > 10 mm", pch="*", col=currentCol [2]
         , bty="n", pt.cex=cCex)  # add transparent line to fix alignment
 

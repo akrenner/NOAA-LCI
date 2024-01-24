@@ -18,7 +18,11 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-source ("InitialSetup.R")
+
+
+if (0){
+  source ("InitialSetup.R")
+}
 
 
 if (0){
@@ -30,7 +34,7 @@ if (0){
 
 
 
-if (1){
+if (0){
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
   cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
