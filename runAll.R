@@ -34,7 +34,7 @@ if (0){
 
 
 
-if (0){
+if (1){
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
   cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
