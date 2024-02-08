@@ -42,6 +42,16 @@ source ("annualPlotFct.R")
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
+
+
+## QAQC
+homer$temp <- ifelse (homer$month < 3 & homer$temp > 6, NA, homer$temp) ## bad temperature in Jan 2023
+                                                                        ## slipped through SWMP QAQC
+
+
+
+
+
 ####################
 ## Stratification ##
 ####################
