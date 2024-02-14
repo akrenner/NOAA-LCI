@@ -80,7 +80,7 @@ for (i in seq_along(snowsites)){  # c("mcneil canyon", "anchor river divide", "p
     lC <- try (load (paste0 (snowCache, sitePickNo, ".RData")), silent=TRUE)
   )
   if (class (lC)[1] != "try-error"){
-    if (difftime(max (as.Date(snowMc$end)), Sys.Date(), units="days") < 7){
+    if (difftime(max (as.Date(snowMc$date), na.rm=TRUE), Sys.Date(), units="days") < 7){
       fetchNew <- FALSE
     }else{fetchNew <- TRUE}
   }else{fetchNew <- TRUE}

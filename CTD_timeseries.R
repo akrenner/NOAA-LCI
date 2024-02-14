@@ -962,7 +962,7 @@ for (iS in 1:length (tL)){
   }else{
     png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
-    if (tempName=="TempSurface"){
+    if (tempName=="TempSurface" | tempName=="Max"){
       anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
       # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
       yLabt <- "Temperature [°C]"
@@ -1005,12 +1005,13 @@ rm (anomCol, anomL, yLabt)
       aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
         lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
         x <- c (-1, x)
-        if (tempName=="Max"){
-          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
-        }else{
-          x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
-        }
+#        if (tempName=="Max"){
+#          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
+#        }else{
+           x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+#        }
         lD <- ifelse (x4==1, NA, x4)
+        # lD <- ifelse (x4>=364/2, NA, lD)
         as.Date("2000-01-01")+lD
         # last4
       })$TempSN
@@ -1134,6 +1135,69 @@ if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 # plot (Salinity_PSU~Temperature_ITS90_DegC, data=physOc, col=format (physOc$isoTime, "%m"))
 # use oce template for pretty plot
 
+
+
+
+
+## move this to a new chlorophyll script?
+## test correlation between surface and DCM chlorophyll concentration
+surface <- 2
+deep <- c (15,20)
+save.image ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
+
+t96 <- subset (physOc, Match_Name=="9_6")
+chlA <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
+                   , subset=Depth.saltwater..m. <= surface)
+chlAd <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
+                    , subset=(Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
+chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$DateISO, chlAd$DateISO)]
+
+
+
+par (xlog=TRUE, ylog=TRUE)
+plot (Fluorescence_mg_m3~deep, chlA, col="green", pch=19, log="xy")
+summary (lm (Fluorescence_mg_m3~deep, chlA))
+cor (chlA$Fluorescence_mg_m3, chlA$deep, method="spearman", use="pairwise.complete.obs")
+cor (chlA$Fluorescence_mg_m3, chlA$deep, method="pearson", use="pairwise.complete.obs")^2
+
+chlA$DateISO <- as.POSIXct(chlA$DateISO)
+par (ylog="TRUE")
+plot (Fluorescence_mg_m3~DateISO, data=chlA, type="l", log="y", lwd=2, col="lightgreen"
+      , main="Chlorophyll at T9-6")
+lines (chlA$DateISO, chlA$deep, col="darkgreen", lwd=2)
+legend ("topright", lwd=2, col= c("lightgreen", "darkgreen")
+        , legend=c("surface", paste0 (deep [1], "-", deep [2], " m"))
+        , bty="n")
+dev.off()
+rm (t96, chlA, chlAd)
+
+## geographic correlation
+## 2017-04
+## 2018-07 and 09
+## 2019-07
+## AlongBay:  2023-03  2023-05  2023-09
+geoC <- subset (physOc, substr (physOc$DateISO, 1, 7)=="2017-04")
+geoC <- subset (physOc, substr (physOc$DateISO, 1, 7)=="2023-05")
+
+geoC <- subset (physOc, (physOc$Transect=="AlongBay")& (format (physOc$isoTime, "%m")=="05"))
+
+
+chlA <- aggregate (Fluorescence_mg_m3~Match_Name, data=geoC, FUN=mean, na.rm=TRUE
+                   , subset=Depth.saltwater..m. <= surface)
+chlAd <- aggregate (Fluorescence_mg_m3~Match_Name, data=geoC, FUN=mean, na.rm=TRUE
+                    , subset=(Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
+chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$Match_Name, chlAd$Match_Name)]
+chlA$lat <- geoC$latitude_DD [match (chlA$Match_Name, geoC$Match_Name)]
+chlA <- chlA [order (chlA$lat),]
+
+par (ylog=TRUE)
+plot (Fluorescence_mg_m3~lat, chlA, type="l", log="y", lwd=2, col="lightgreen"
+      , main="Chlorophyll in May 2023 on AlongBay transect")
+lines (chlA$lat, chlA$deep, col="darkgreen", lwd=2)
+legend ("topright", lwd=2, col= c("lightgreen", "darkgreen")
+        , legend=c("surface", paste0 (deep [1], "-", deep [2], " m"))
+)
 
 graphics.off()
 cat ("\nEnd of CTD_timeseries.R\n\n")
