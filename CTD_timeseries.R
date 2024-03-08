@@ -1009,6 +1009,10 @@ rm (anomCol, anomL, yLabt)
   if (tempName=="Deep"){
     T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
+    if (FALSE){ ## cut out current year because latest survey is too early in the year
+#      T96f$Year <- ifelse (T96f$year == 2024, NA, T96f$year) # breakage downstream
+    }
+
     springM <- sapply (thTempL, function (y){
       aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
         lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
