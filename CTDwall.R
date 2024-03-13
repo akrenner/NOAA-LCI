@@ -87,12 +87,16 @@ if (0){ ## tests
 }
 
 
+## plot T9 only
+transectC <- which (levels (poAll$Transect) == "9")  # 5  # T9
+
 
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in transectC){  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
+
     cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:  XXX bug here!
@@ -521,24 +525,30 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     t.ramp <- oCol3[[ov]](nCol)
     if (pH > 30){
       yL <- 1.8
-      par (mar=c(14, 1,3,1))
+        par (mar=c(5 , 1,5,1))
+#       par (mar=c(14, 1,3,1))
     }else{
       yL <-1.2
-      par (mar=c(10, 1,3,1))
+#      par (mar=c(10, 1,3,1))
     }
-    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp, border=NA
-                   , ylim=c(0,yL)  # ylim to make bar narrower, less high
+    bp <- barplot (rep (1, nCol), axes=FALSE, space=0, col = t.ramp
+                   , border=NA, ylim=c(-10,yL)  # ylim to make bar narrower, less high
     )
     title (main = oVars [ov], cex=3, line=0.5)
     lVal <-  pretty (c (oRange [ov,1], oRange [ov,2]))
     axis (1, at= (lVal-oRange [ov,1])/(oRange [ov,2]-oRange[ov,1]) * nCol
-          , labels = lVal, lwd = 0)
-    rm (bp, lVal, nCol, yL)
+          , labels = lVal, lwd = 0, line=-13)
 
     ## add date and logos for reference
-    mtext (text=paste ("NOAA Kasitsna Bay Lab and KBNERR\n", Sys.Date())
-           , side=1, line=6, outer=FALSE, cex=0.7, adj=1)
+    text (1, -12, paste ("Kasistna Bay Lab\n", Sys.Date())
+          , adj=1, cex=1)
+    mtext (text=paste ("Kasitsna Bay Lab\n", Sys.Date())
+           , side=1, line=3, outer=FALSE, cex=1, adj=1)
     ## add NCCOS and KBNERR logos
+    require ("jpeg")
+    nccos <- readJPEG ("~/My Pictures/Logos/nccos_logofile.jpg", native=TRUE)
+    rasterImage (nccos, nCol/20, -8, nCol, -4) #xleft, ybottom, xright ytop
+    rm (bp, lVal, nCol, yL, nccos)
 
     ### end of wall poster
     dev.off()

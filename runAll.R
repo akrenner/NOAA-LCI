@@ -74,6 +74,7 @@ source ("CTDwall.R")
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 
 
+## 2017 contract
 if (0){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
@@ -92,6 +93,7 @@ if (0){ ## 2017 contract
 }
 
 
+## 2019 seasonality
 if (0){ # Dec 2019 seasonality
   source ("dataSetup.R")
   source ("zoopCommunity.R")

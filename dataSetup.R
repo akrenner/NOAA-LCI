@@ -149,8 +149,8 @@ rm (physOcT)
 # physOc$densityGradient <- sapply (1:length (levels (cast))
 #                                   , function (i){
 #                                     cst <- subset (physOc, cast == levels (cast)[i])
-#                                     slp <- (lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
-#                                       (lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
+#                                     slp <- (stats::lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
+#                                       (stats::lag (cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
 #                                     #slp <- data.frame (gradient=slp)
 #                                     slp
 #                                   }) %>%
