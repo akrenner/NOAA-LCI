@@ -98,6 +98,7 @@ plotTS (grepl ("^Along", physOc$Match_Name), "month", fn = "along_month")
 
   dirN <- "~/tmp/LCI_noaa/media/CTDcasts/CTDprofiles/"
 dir.create(dirN, showWarnings=FALSE)
+dir.create(paste0 (dirN, "CTD-ts/"), showWarnings=FALSE)
 ## PDF ("CTDprofiles/ALLcasts.pdf")
 require ("oce")
 cat ("\ncount to: ", length (levels (physOc$File.Name)), " \n")
@@ -157,6 +158,15 @@ plotCTDprof <- function (i){
     }, silent=TRUE)
     mtext (levels (physOc$File.Name)[i],side=3, line=-1.25, outer=TRUE)
     dev.off()
+
+    ## extra set of CTD cast plots to match graphics of IOOS model viewer
+    png (paste0 (dirN, "/CTD-ts/", levels (physOc$File.Name)[i], ".png")
+         , res=200, width=2.75*2*200, height=8.5*200)
+    par (mfrow=c(2,1))
+    oce::plotProfile(ctdF, xtype="temperature", ytype="depth", type="l")
+    oce::plotProfile(ctdF, xtype="salinity", ytype="depth", type="l")
+    dev.off()
+
   }else{
     warning (paste (levels (physOc$File.Name)[i]), " has less than 4 records\n\n")
   }
