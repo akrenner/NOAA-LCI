@@ -173,8 +173,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
         pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
         ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
         pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
-        ## for T9/AlongBay, full-width: adjust pH dynamically with N-years
-        yearPP <- diff (range (as.numeric (format (physOcY$DateISO, "%Y"))))+1 # all on one page of expanding length
+        ## for T9/AlongBay, full-width: adjust pH dynamically with N-years; all on one page of expanding length
+        yearPP <- diff (range (as.numeric (format (physOcY$DateISO, "%Y"))))+1 + 1 # extra line for color scale and map
         pW <- 42; pH <- 3.2 * (1+yearPP)
       }
       omcex <- 2   # size of mtext annotations
@@ -434,7 +434,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
         }
       }
       ## covering yearPP years per page. Write out at end of each year
-      mtext (text=levels (physOcY$year)[iY]
+      mtext (text=c(levels (physOcY$year)[iY], "") # blank line for map and scale?
              , side=2, line=1.0,outer=TRUE,cex=omcex
              , at=1-((iY-1)%%yearPP)/yearPP-0.5/yearPP
       )

@@ -206,10 +206,12 @@ cLegend <- function (..., mRange=NULL, currentYear=NULL
 
 
 
-saggregate <- function (..., refDF){ ## account for missing factors in df compared to tdf
+saggregate <- function (x, data, FUN, ..., refDF){ ## account for missing factors in df compared to tdf
   ## safer than aggregate
-  nA <- aggregate (...)
-  nA [match (refDF$jday, nA$jday),]
+  # nA <- eval (substitute(aggregate (x, data, FUN, ..., simplify=TRUE, drop=FALSE))) # see https://stackoverflow.com/questions/68084640/how-to-properly-write-a-wrapper-for-lm-with-dots-only-error-3-used-in-an-i
+  nA <- aggregate (x, data, FUN, ..., simplify=TRUE, drop=FALSE)  # above breaks prepDF below -- not sure why
+  nA <- nA [match (refDF$jday, nA$jday),]
+  nA
 }
 
 seasonalMA <- function (var, jday, width=maO){
@@ -238,10 +240,17 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
                     , currentYear # =as.integer (format (Sys.Date(), "%Y"))-1  ## force this to be stated explicitly (for troubleshooting)
                     , qntl=c(0.8, 0.9)
 ){
-  if (! all (c("jday", "year", varName) %in% names (dat))){
-    stop (paste ("Data frame must contain the variables jday, year, and", varName))
-  }
   if (length (varName) > 1){stop ("so far can only process one variable at a time")}
+
+  if (! all (c ("datetimestamp", varName) %in% names (dat))){
+    stop (paste ("Date frame must contain the variable 'datetimestamp' and", varName))
+  }else  if (! all (c("jday", "year") %in% names (dat))){
+    dat$jday <- as.numeric (format (as.POSIXct(dat$datetimestamp), "%j"))
+    dat$year <- as.numeric (format (as.POSIXct(dat$datetimestamp), "%Y"))
+  }
+  # if (all (c("jday", "year", varName) %in% names (dat))){
+  #   stop (paste ("Data frame must contain the variables jday, year, and", varName))
+  # }
 
   ## flexible for varName to be a vector!!  -- XXX extra feature
   dat$xVar <- dat [,which (names (dat) == varName)]
@@ -268,15 +277,15 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
                                  return (out)
                                }
   )  # tweak THIS one!
-###########
-# dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
-############
+  ###########
+  # dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
+  ############
 
 ## construct long-term climatology, using data excluding the present year
 dLTmean <- subset (dMeans, year < currentYear)  ## climatology excluding current year
 tDay <- aggregate (xVar~jday, dLTmean, FUN=mean, na.rm=TRUE)  # not sumFct here! it's a mean!
-tDay$sd <- saggregate (xVar~jday, dLTmean, FUN=sd, na.rm=TRUE, refDF=tDay)$xVar
-tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
+tDay$sd <- saggregate (xVar~jday, data=dLTmean, FUN=stats::sd, na.rm=TRUE, refDF=tDay)$xVar
+tDay$MA <- saggregate (MA~jday, data=dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
 
   ## testing
   if (0){
@@ -305,9 +314,8 @@ tDay$MA <- saggregate (MA~jday, dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$MA
   tDay$maxMA <- saggregate (MA~jday, dLTmean, FUN=max, na.rm=TRUE, refDF=tDay)$MA
   tDay$minMA <- saggregate (MA~jday, dLTmean, FUN=min, na.rm=TRUE, refDF=tDay)$MA
 
-
   # is this critically needed?? -- N years of data per date
-  tDay$yearN <- saggregate ((!is.na (xVar))~jday, dMeans, FUN=sum
+  tDay$yearN <- saggregate ((!is.na (xVar))~jday, data=dMeans, FUN=sum
                             , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
 
   ## previous year
@@ -411,6 +419,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   dir.create(cacheFolder, showWarnings=FALSE)
+  cacheStation <- paste0 (cacheFolder, station, ".RData")
 
   zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names=TRUE)
   if (length (zF) < 1){stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
@@ -418,27 +427,25 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   rm (zF)
 
   ## delete cacheFolder if zip file is newer
-  if (file.exists(paste0 (cacheFolder, "/kachomet.RData"))){
-    if (file.info (paste0 (cacheFolder, "/kachomet.RData"))$ctime <
-        file.info (SMPfile)$ctime){
-      unlink (cacheFolder, recursive = "TRUE")
+  if (file.exists(cacheStation)){
+    if (file.info (cacheStation)$ctime < file.info (SMPfile)$ctime){
+      unlink (cacheStation)
     }
   }
 
-  suppressWarnings (lT <- try (base::load (paste0 (cacheFolder, "/", station, ".RData"))
-                               , silent=TRUE)) # yields smp
-  if (class (lT)[1] == "try-error"){
-    smp <- import_local(SMPfile, station) ## this is initially required!
+  if (file.exists(cacheStation)){
+    base::load (cacheStation)
+      }else{
+    smp <- import_local(SMPfile, station)
     if (QAQC){
-      smp <- qaqc (smp)  ## scrutinize further? Is this wise here? keep level 1?
+      smp <- qaqc (smp)  ## scrutinize further? Wise to do here? Keep level 1?
     }
   }
   if (any (is.na (smp$datetimestamp))){stop ("NAs in timestamp")}
-  #  ## not sure whyere the bad line is coming from, but it has to go
+  #  ## not sure where the bad line is coming from, but it has to go
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  # if (0){
   if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station
@@ -469,16 +476,65 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   }
   ## fixGap() here??
   ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
-  save (smp, file=paste0 (cacheFolder, "/", station, ".RData"))
+  save (smp, file=cacheStation)
   return (smp)
 }
 
 
+getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
+  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
+  ## using package riem
+  ## data from University of Iowa. Downside: not covering every NOAA station (has Homer airport, but not spit or Flat Island)
+  ##  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+  # rN <- riem_networks()  # AK_ASOS  Alaska ASOS
+  # rS <- riem_stations(network="AK_ASOS")
+  # rS [which (rS$county %in% "Kenai Peninsula"),]
+
+  ## require (pmetar): another package to access data from Iowa State University
+
+  require ("riem")
+  dir.create ("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings=FALSE, recursive=TRUE)
+  if (clearcache){
+    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+  }
+  if (file.exists(paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))){
+    load (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    lastD <- max (rW$valid) # valid = date-time
+    ## fudge to get 1 year overlap
+    lastD <- as.Date (paste0 (as.integer (substr(as.character(lastD), start=1, stop=4))-1, "-01-01"))
+  }else{
+    lastD <- "2000-01-01"
+  }
+  rWn <- try (riem_measures (station=stationID, date_start=lastD, date_end=as.character(Sys.Date()))
+              , silent=TRUE)
+  if (class (rWn)[1]=="try-error"){rm (rWn)}else{ # if computer is off-line
+    if (exists("rW")){
+      ## remove overlapping data
+      rW <- subset (rW, valid < lastD)
+      rW <- rbind (rW, rWn)
+    }else{
+      stop ("Have to be online for initial run fetching NOAA weather data.")
+    }
+  }
+  rm (rWn)
+  save (rW, file=paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+
+  ## clean-up data/convert units, as appropriate, for compatibility with getNOAA
+
+
+  rW
+}
+
 
 getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
+  #  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
+  #  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
+  # 2023-12-08: buoy still working with rnoaa -> use it while it works
+
   require ("rnoaa")
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
+    unlink ("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
     dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
   ## this is slow -- cache as .RData file
@@ -489,15 +545,13 @@ getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default
   }else{
     endD <- max (as.integer (substr (wDB$time, 1, 4)))  # last cached year
   }
-  if (endD < as.integer (format (Sys.Date(), "%Y"))){ # if not updated in a year
-    wB <- lapply (endD:as.integer (format (Sys.Date(), "%Y"))
+  if (as.integer (format (Sys.Date(), "%Y")) - endD > -1){ # if not updated in a year
+    wB <- lapply ((endD-1):as.integer (format (Sys.Date(), "%Y"))
                   , function (i){
                     try (buoy (dataset=set, buoyid=buoyID
                                , year=i), silent=TRUE)
                   }
     )
-
-    # lapply (1:length (wB), function (i){try (ncol (wB[[i]]$data))})
     for (i in 1:length (wB)){
       if (class (wB [[i]]) != "try-error"){
         if (!exists ("wDB")){

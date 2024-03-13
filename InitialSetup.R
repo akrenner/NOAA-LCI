@@ -1,13 +1,19 @@
 #! /usr/bin/env Rscript
 
 ## ------------------- install required packages ----------------
+r = getOption("repos")
+r["CRAN"] = "https://cloud.r-project.org/"
+options(repos = r)
+
+
 if (!require("renv")){
   install.packages("renv")
   require ("renv")
 }
 renv::status()
-# renv::init(bioconductor = TRUE)
+renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
 # renv::init(bioconductor = "3.17")
+
 renv::install (repos="https://cloud.r-project.org/")
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
 require ("conflicted")

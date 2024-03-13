@@ -983,7 +983,7 @@ slot (NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
 require ("maptools")
 require ("zip")
 tD <- tempdir()
-unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
+zip::unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
 
 require ("sf")

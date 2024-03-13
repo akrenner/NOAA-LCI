@@ -17,12 +17,17 @@ print (sT <- Sys.time())
 
 
 quarterly <- TRUE
-# quarterly <- FALSE
+ quarterly <- FALSE
 
 ## State of the Bay Report 2019
 
 ## plot SWMP weather data for annual state of the bay report
-source ("SeldoviaTemp.R")
+
+## get weather data -- SWMP and NOAA
+source ("annual-fetchAirWeather.R")
+
+
+source ("SeldoviaTemp.R") ## fetch SWMP water data
 source ("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 
 # source ("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF

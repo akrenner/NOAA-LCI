@@ -128,7 +128,14 @@ save.image ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## pass this on to annual-sa
 # x <- subset (sldvia, datetimestamp > as.POSIXct("2020-01-01 00:00"))
 # plot (temp~datetimestamp, x)
 
-
+if (0){
+  ## auto-correlation of chlorophyll
+  # min (homerS$datetimestamp)
+  chl <- ts (homerS$chlfluor, start=1)
+  acf (chl, na.action=na.pass, lag.max=8000)
+  # spectrum (chl) # need to deal with NAs
+  rm (chl)
+}
 
 ## aggregate daily, then calculate anomalies and smoothes
 ## reason for aggregation: fix NAs. HOWEVER, up to 3871 consecutive NAs in sldvia (that's 1 month!)

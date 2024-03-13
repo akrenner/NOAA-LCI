@@ -15,7 +15,7 @@ unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoin
 uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
 # uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-07"
 
-## automatically fine the most recent survey based on modification time of notebookTable.csv file
+## automatically find the most recent survey based on modification time of notebookTable.csv file
 notes <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/"
                      , pattern=".csv", full.names=TRUE, recursive=TRUE)
 uneditedD <- dirname(notes [which.max (file.mtime(notes))])
@@ -39,7 +39,8 @@ for (i in seq_along(hexF)){
   fnCast <- hexF [i] %>%
     substr (start=nchar (hexF [i])-6, stop=nchar (hexF [i])-4) %>%
     as.numeric()
-  notR <- noteT [match (headCast, noteT$Cast.),]
+  notR <- noteT [which (noteT$Cast. %in% headCast),]            ## match only returns the first match
+  notR <- notR [which.max((notR$Year + notR$monthNominal/12)),] ## find last survey
   notR$Transect <- ifelse (notR$Transect=="AlongBay", "AB", paste0 ("T", notR$Transect))
 
   ## consistency checks

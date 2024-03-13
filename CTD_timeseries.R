@@ -10,7 +10,7 @@
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
 require ("oce")
 require ("RColorBrewer")
-
+require ("tidyverse")
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -116,7 +116,7 @@ physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through th
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 # print (summary (physOc))
 
-mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections/"
+mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections"
 dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
 
 
@@ -346,10 +346,7 @@ for (k in pickStn){
                                    , FUN=mean, na.rm=TRUE)$SalDeep
 
 
-
-
-    #  pdf (paste0 (mediaD, stnK, "-TSprofile.pdf"), height = 11, width = 8.5)
-    png (paste0 (mediaD, "2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
+    png (paste0 (mediaD, "/2-", stnK, "-TSprofile.png"), height = fDim [2]*pngR, width = fDim [1]*pngR, res=pngR)
     if (plotRAW){
       par (mfrow=c(5,1))
     }else{
@@ -371,7 +368,8 @@ for (k in pickStn){
     if (plotRAW){
       ## time series of raw data
       plot.station (xCS, which="temperature"
-                    , zcol=tCol
+                    , zcol = colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
+                                                      "#bfe1bf", "#a2d7d8")))(9)
                     # , zbreaks=sF (xC$Temperature_ITS90_DecC)
                     , legend.loc="" #legend.text="temperature anomaly [°C]"
                     , mar=c(2.5,4,2.3,1.2)  ## default:  3.0 3.5 1.7 1.2
@@ -497,8 +495,7 @@ for (k in pickStn){
             , ...)
     }
 
-    # pdf (paste0 (mediaD, stnK, "-TS_climatology.pdf"), height = 11.5, width = 8)
-    png (paste0 (mediaD, "1-", stnK, "-TS_climatology.png"), height=fDim[2]*pngR, width=fDim[2]*pngR, res=pngR)
+    png (paste0 (mediaD, "/1-", stnK, "-TS_climatology.png"), height=fDim[2]*pngR, width=fDim[2]*pngR, res=pngR)
     par (mfrow=c(2,1))
     clPlot (cT9, which = "temperature"
             , zcol=tCol
@@ -520,8 +517,7 @@ for (k in pickStn){
 
 
     ## fluorescence
-    # pdf (paste0 (mediaD, stnK, "-fluorescence-climatology.pdf"))
-    png (paste0 (mediaD, "3-", stnK, "-fluorescence-climatology.png"), res=pngR
+    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-climatology.png"), res=pngR
          , height=fDim[2]*pngR, width=fDim[1]*pngR)
     par (las = 1, mfrow=c(3,1))
     clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
@@ -578,8 +574,8 @@ for (k in pickStn){
     ##############
     ## buoyancy ##
     ##############
-    #  pdf (paste0 (mediaD, stnK, "-buoyancy-climatology.pdf"), height=11.5, width=8)
-    png (paste0 (mediaD, "4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
+    dir.create(paste0 (mediaD, "_experimental/"), showWarnings=FALSE, recursive=TRUE)
+    png (paste0 (mediaD, "_experimental", "/4-", stnK, "-buoyancy-climatology.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
     par (mfrow=c(3,1))
     ## raw buoyancy profile
     ## bvf climatology
@@ -655,7 +651,7 @@ for (k in pickStn){
     #########################################
     ## chlorophyll and pycnocline patterns ##
     #########################################
-    png (paste0 (mediaD, "6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
+    png (paste0 (mediaD, "/6-", stnK, "-chlorophyll-buoyancy-climatology.png"), res=pngR
          , height=6*pngR, width=8*pngR)
     par (las = 1, mfrow=c(2,1))
     ## chlorophyll
@@ -777,7 +773,7 @@ fw$year <- as.numeric (format (fw$Date, "%Y"))
 
 ## calc seasonal anomaly -- for starters based on month -- better to use full record in ARIMA as with SWAMP
 fwS <- aggregate (freshCont~month, fw, mean)
-fwS$sd <- aggregate (freshCont~month, fw, sd)$freshCont
+fwS$sd <- aggregate (freshCont~month, fw, stats::sd)$freshCont
 lfw <- fwS; lfw$month <- lfw$month - 12
 ufw <- fwS; ufw$month <- ufw$month + 12
 fwS <- rbind (lfw, fwS, ufw); rm (lfw, ufw)
@@ -791,8 +787,7 @@ fw$fwA <- fw$freshCont - fwS$freshCont [match (fw$month, fwS$month)]
 
 ## add freshwater -- deep
 
-# pdf (paste0 (mediaD, "T9S6_freshwatercontent.pdf"), height = 9, width = 6)
-png (paste0 (mediaD, "T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
+png (paste0 (mediaD, "/T9_freshwatercontent.png"), height=fDim[2]*pngR, width=fDim[1]*pngR, res=pngR)
 par (mfrow = c(3,1), mar = c (5,4, 0.1, 0.1))
 ## time series
 plot (freshCont~Date, fw, type = "l", ylab = "freshwater content")
@@ -824,8 +819,7 @@ dev.off()
 ### timing of freshwater -- panel for each year ###
 if (0){
   require ("lattice")
-  # pdf (paste0 (mediaD, "T9S6_freshSeason.pdf"), width = 7, height = 9)
-  png (paste0 (mediaD, "T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
+  png (paste0 (mediaD, "/T9S6_freshSeason.png"), width=7*100, height=9*100,res=100)
   print (xyplot (freshCont~month| factor (year), data= fw, as.table = TRUE, type = "l"))
   print (xyplot (fwA~month| factor (year), data= fw, as.table = TRUE, type = "l"
                  , xlab = "freshwater anomaly"))
@@ -844,11 +838,10 @@ fw$jday <- as.numeric (format (fw$Date, "%j"))
 fwag <- aggregate (freshCont~month+year, data=fw, FUN=mean)
 fwag$freshDeep <- aggregate (freshDeep~month+year, data=fw, FUN=mean)$freshDeep
 
-png (paste0 (mediaD, "T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
+png (paste0 (mediaD, "/T9_freshwaterSpagettiYears.png"), width=7*100, height=12*100, res=100)
 par (mfrow=c(2,1))
 par (mar=c(4-3,4,4,1))
 plot (freshCont~month, data=fwag, type="n", ylab="", xlab="",axes=FALSE)
-# axis (1, labels=month.abb, at=1:12)
 axis (2)
 for (i in seq_along(levels (fwag$year))){
   lines (freshCont~month, data=fwag, subset=fwag$year==levels (fwag$year)[i]
@@ -880,7 +873,7 @@ legend ("topleft", legend=levels (fwag$year), col=seq_along(levels (fwag$year))
 legend ("topright", legend="deep water", bty="n")
 box()
 
-mtext ("Freshwater content index", side=2, line=-1, outer=TRUE)
+mtext ("Freshwater content index", side=2, line=-1.5, outer=TRUE)
 dev.off()
 fw <- fwX; rm (fwX, fwag)
 
@@ -965,15 +958,15 @@ for (iS in 1:length (tL)){
   rm (tbnorm)
 
   if (tempName == ("Deep")){
-    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+    png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR, width=fDim [1]*pngR)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
   }else{
-    png (paste0 (mediaD, "5-", "temp",tempName ,"TS.png"), res=pngR
+    png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
-    if (tempName=="TempSurface"){
+    if (tempName=="TempSurface" | tempName=="Max"){
       anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
       # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
       yLabt <- "Temperature [°C]"
@@ -1020,12 +1013,13 @@ rm (anomCol, anomL, yLabt)
       aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
         lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
         x <- c (-1, x)
-        if (tempName=="Max"){
-          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
-        }else{
-          x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
-        }
+#        if (tempName=="Max"){
+#          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
+#        }else{
+           x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+#        }
         lD <- ifelse (x4==1, NA, x4)
+        # lD <- ifelse (x4>=364/2, NA, lD)
         as.Date("2000-01-01")+lD
         # last4
       })$TempSN
@@ -1149,6 +1143,69 @@ if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 # plot (Salinity_PSU~Temperature_ITS90_DegC, data=physOc, col=format (physOc$isoTime, "%m"))
 # use oce template for pretty plot
 
+
+
+
+
+## move this to a new chlorophyll script?
+## test correlation between surface and DCM chlorophyll concentration
+surface <- 2
+deep <- c (15,20)
+save.image ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
+
+t96 <- subset (physOc, Match_Name=="9_6")
+chlA <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
+                   , subset=Depth.saltwater..m. <= surface)
+chlAd <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
+                    , subset=(Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
+chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$DateISO, chlAd$DateISO)]
+
+
+
+par (xlog=TRUE, ylog=TRUE)
+plot (Fluorescence_mg_m3~deep, chlA, col="green", pch=19, log="xy")
+summary (lm (Fluorescence_mg_m3~deep, chlA))
+cor (chlA$Fluorescence_mg_m3, chlA$deep, method="spearman", use="pairwise.complete.obs")
+cor (chlA$Fluorescence_mg_m3, chlA$deep, method="pearson", use="pairwise.complete.obs")^2
+
+chlA$DateISO <- as.POSIXct(chlA$DateISO)
+par (ylog="TRUE")
+plot (Fluorescence_mg_m3~DateISO, data=chlA, type="l", log="y", lwd=2, col="lightgreen"
+      , main="Chlorophyll at T9-6")
+lines (chlA$DateISO, chlA$deep, col="darkgreen", lwd=2)
+legend ("topright", lwd=2, col= c("lightgreen", "darkgreen")
+        , legend=c("surface", paste0 (deep [1], "-", deep [2], " m"))
+        , bty="n")
+dev.off()
+rm (t96, chlA, chlAd)
+
+## geographic correlation
+## 2017-04
+## 2018-07 and 09
+## 2019-07
+## AlongBay:  2023-03  2023-05  2023-09
+geoC <- subset (physOc, substr (physOc$DateISO, 1, 7)=="2017-04")
+geoC <- subset (physOc, substr (physOc$DateISO, 1, 7)=="2023-05")
+
+geoC <- subset (physOc, (physOc$Transect=="AlongBay")& (format (physOc$isoTime, "%m")=="05"))
+
+
+chlA <- aggregate (Fluorescence_mg_m3~Match_Name, data=geoC, FUN=mean, na.rm=TRUE
+                   , subset=Depth.saltwater..m. <= surface)
+chlAd <- aggregate (Fluorescence_mg_m3~Match_Name, data=geoC, FUN=mean, na.rm=TRUE
+                    , subset=(Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
+chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$Match_Name, chlAd$Match_Name)]
+chlA$lat <- geoC$latitude_DD [match (chlA$Match_Name, geoC$Match_Name)]
+chlA <- chlA [order (chlA$lat),]
+
+par (ylog=TRUE)
+plot (Fluorescence_mg_m3~lat, chlA, type="l", log="y", lwd=2, col="lightgreen"
+      , main="Chlorophyll in May 2023 on AlongBay transect")
+lines (chlA$lat, chlA$deep, col="darkgreen", lwd=2)
+legend ("topright", lwd=2, col= c("lightgreen", "darkgreen")
+        , legend=c("surface", paste0 (deep [1], "-", deep [2], " m"))
+)
 
 graphics.off()
 cat ("\nEnd of CTD_timeseries.R\n\n")

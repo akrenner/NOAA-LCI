@@ -42,6 +42,16 @@ source ("annualPlotFct.R")
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
+
+
+## QAQC
+homer$temp <- ifelse (homer$month < 3 & homer$temp > 6, NA, homer$temp) ## bad temperature in Jan 2023
+                                                                        ## slipped through SWMP QAQC
+
+
+
+
+
 ####################
 ## Stratification ##
 ####################
@@ -155,7 +165,7 @@ dev.off()
 rm (waterL, hM, i)
 
 ## for troubleshooting annualPlotFct.R::prepDF
-# save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
+save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 

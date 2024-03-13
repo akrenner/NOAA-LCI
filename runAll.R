@@ -31,7 +31,11 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-source ("InitialSetup.R")
+
+
+if (0){
+  source ("InitialSetup.R")
+}
 
 
 if (0){
@@ -64,23 +68,24 @@ source ("datasetup.R")
 #; bathymetry
 #; coastline
 #; CTD data
+
+## set up required work environment and external files/data (bathymetry)
+source ("EnvironmentSetup.R")
+
 ## plot of seasonal-yearly matrix when samples were taken
 source ("CTD_DataAvailability.R")
 graphics.off()
 cat ("\n## \n## finished with basic CTD processing\n##\n##\n")
 
-## only for SoB? -- mv down?
-source ("SeldoviaTemp.R")
-
 ## the Wall
+source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+source ("CTDsections.R")
 source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
 # source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
-source ("CTDsections.R")
 
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
-source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
 
 
 ## 2017 contract
@@ -125,8 +130,8 @@ sink (file="StateOfBay.log", append=FALSE, split=FALSE)
 ## It may be necessary to restart R between above CTD processing and below Annual State of the Bay
 ## scripts? There may be an issue with temp files?
 
-## set up required work environment and external files/data
-source ("EnvironmentSetup.R")
+## only for SoB? -- mv down?
+## source ("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
 
 ## State of the Bay Report
 try (source ("AnnualStateOfTheBay.R"))

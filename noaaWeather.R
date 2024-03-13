@@ -4,8 +4,8 @@
 ## bug?? year shifted by 1?? data doesn't appear current??
 
 
-if (!require("pacman")) install.packages("pacman"
-                                         , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
+# if (!require("pacman")) install.packages("pacman"
+#                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
 require ("rnoaa")
 ## see https://recology.info/2015/07/weather-data-with-rnoaa/
 ## GHCND          daily summaries
@@ -62,20 +62,21 @@ hmr1 <- read.csv ("~/GISdata/LCI/SWMP/HomerAirport3060741.csv") %>%
 
 ## may have to delete cache
 if (.Platform$OS.type=="windows"){
-  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/"
+  cacheD <- "C:/Users/Martin.Renner/AppData/Local/Cache/R/noaa_ghcnd/" ## relative path??
 }else{
   cacheD <- "~/Library/Caches/R/noaa_ghcnd/"
 }
 cF <- list.files(cacheD, "dly", full.names=TRUE)
 rm (cacheD)
 ## delete cache file if older than one month and computer is online
-if (max (file.info (cF)$ctime) < (Sys.time()-30*24*3600)){  # file is older than 1 month
-  require (curl)
-  if (curl::has_internet()){  ## only flush cache if new data can be downloaded
-    unlink (cF)
+if (length (cF) > 0){
+  if (max (file.info (cF)$ctime) < (Sys.time()-30*24*3600)){  # file is older than 1 month
+    require (curl)
+    if (curl::has_internet()){  ## only flush cache if new data can be downloaded
+      unlink (cF)
+    }
   }
 }
-
 hmrL <-  meteo_pull_monitors ("USW00025507"
                               # , date_min = "2022-04-18"  # goes back to 1932-09-01
 #                              , date_min = "1933-01-01"  # goes back to 1932-09-01

@@ -17,32 +17,38 @@ require ("RColorBrewer")
 # currentCol <- brewer.pal (3, "Paired")
 currentCol <- brewer.pal (6, "Paired")[c(7,6,5)]
 SWMP <- TRUE
-SWMP <- FALSE  ## for 2021, but maybe permanent from now on
+# SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
 
 
 ## setup automated parameter and pull data
 source ("annualPlotFct.R")
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
+mediaDex <- "~/tmp/LCI_noaa/media/StateOfTheBay-experimental/"
+
 
 if (quarterly){
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
   currentCol <- currentCol [c(3,1,2)]
   mediaD <- paste0 (mediaD, "update/")
+  mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay-quarterly"
 }else{
   pastYear <- TRUE  # for winter/fall publication schedule
   ongoingY <- FALSE
   currentCol <- rev (currentCol)
 }
 
-## get data from cache or download
-if (SWMP){
-  load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
-}else{
-  source ("noaaWeather.R")
-  load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
-}
+## get data from annual-fetchAirWeather.R
+load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  #hmr,  Homer Airport
+
+
+# if (SWMP){
+#   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
+# }else{
+#   source ("noaaWeather.R")
+#   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
+# }
 
 
 
@@ -59,9 +65,9 @@ if (0){
 ## use atemp or medtemp or mintemp or maxtemp?
 hmr <- subset (hmr, !is.na (atemp))
 
-hmr$atemp <- ifelse (hmr$atemp < -30, NA, hmr$atemp)
-hmr$atemp <- ifelse (hmr$atemp < 0 & hmr$month == 7, NA, hmr$atemp)  # 2005-07-29, -17.8 C
-hmr$atemp <- ifelse (hmr$atemp > 29, NA, hmr$atemp) # 12.8, 13.9, 11.1, 29.4, 8.9, 8.9, 8.3 -- 2002-09-07
+# hmr$atemp <- ifelse (hmr$atemp < -30, NA, hmr$atemp)
+# hmr$atemp <- ifelse (hmr$atemp < 0 & hmr$month == 7, NA, hmr$atemp)  # 2005-07-29, -17.8 C
+# hmr$atemp <- ifelse (hmr$atemp > 29, NA, hmr$atemp) # 12.8, 13.9, 11.1, 29.4, 8.9, 8.9, 8.3 -- 2002-09-07
 
 ## units: use both, C and F (F=2nd axis on the right)
 if (0){  ## plot all years -- rainbow spaghetti
@@ -80,6 +86,8 @@ tDay <- prepDF (varName="atemp", dat=hmr, maO=maO, qntl=qntl, currentYear=curren
 ## plot
 # pdf ("~/tmp/LCI_noaa/media/sa-airTemp.pdf", width=9, height=6)
 dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
+dir.create(mediaDex, showWarnings=FALSE, recursive=TRUE)
+
 # pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-airTemp-"
 #              , ifelse (SWMP, "LE", "AP"), ".pdf"), width=9, height=6)
 png (paste0 (mediaD, "sa-airTemp-"
@@ -100,7 +108,8 @@ if (SWMP){title (main="Air Temperature at Homer Spit")}else{title (main="Air Tem
 fAxis (c (-15, 15), mT="air temperature [°F]")
 box()
 ## legend
-cLegend ("bottom", inset=0.05
+cLegend (# "bottom"# , inset=0.07
+         105, 2
          , currentYear=currentYear, mRange=c (min (hmr$year), currentYear-1)
          , cYcol=currentCol
          , title=paste (maO, "day moving average")
