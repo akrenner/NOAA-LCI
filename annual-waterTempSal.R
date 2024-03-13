@@ -320,5 +320,56 @@ for (j in 1: length (instSite)){
 rm (instSite, tDay)
 
 
+
+
+
+#################################################################################
+## plot raw Seldovia surface temperature from Aug to May (to match Aquaculture) #
+#################################################################################
+
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
+ssT <- subset (sldviaS, datetimestamp >=
+                 # as.POSIXct (paste0 (currentYear-1, "-12-31 23:59"))
+                 as.POSIXct("2020-08-01 00:00:00")
+               )
+ssT$aqY <- ifelse (ssT$datetimestamp < as.POSIXct("2021-05-15 23:59:59")
+                   , "2020"
+                   , ifelse (ssT$datetimestamp >= as.POSIXct ("2021-08-01 00:00:00") &
+                               ssT$datetimestamp < as.POSIXct("2022-05-15 23:59:59")
+                             , "2021"
+                             , ifelse (ssT$datetimestamp >= as.POSIXct ("2022-08-01 00:00:00") &
+                                         ssT$datetimestamp < as.POSIXct("2023-05-15 23:59:59")
+                                       , "2022", NA)))
+## adjust by21 to match by20
+ssT$dateY2 <- as.POSIXct (ssT$datetimestamp - 365.25*24*3600)
+ssT$dateY3 <- as.POSIXct (ssT$datetimestamp - 2*365.25*24*3600)
+
+
+png ("~/tmp/LCI_noaa/media/StateOfTheBay/tutkaTempCompare.png"
+     , height=2.5*300, width=4*300, res=150)
+require ("RColorBrewer")
+lCol <- brewer.pal(8, "Set2")[c(3,2,1)]
+
+## by20: col 2
+plot (temp~datetimestamp, ssT, subset=aqY=="2020", type="l"
+      , ylab = "temperature [°C]", xlab="", col = lCol [3], lwd=2
+      , xaxs="i", yaxs="r", axes=FALSE
+      #, xlim=as.POSIXct(c ("2021-08-01", "2022-05-15"))
+      , main= "Seldovia Surface Water")
+axis (2)
+axis (1, at=as.POSIXct(c (paste0 ("2020-", c("08", "09", "10", "11", "12"), "-01")
+                                             , paste0 ("2021-0", 1:5, "-01")))
+      , labels=month.abb[c(8:12, 1:5)])
+box()
+
+lines (temp~dateY2, ssT, subset=aqY=="2021", col=lCol [2], lwd=2)
+lines (temp~dateY3, ssT, subset=aqY=="2022", col=lCol [1], lwd=2)
+
+legend ("topright", bty="n", col=lCol, lwd=rep (3,3)
+        , legend=c("2022-23", "2021-22", "2020-21"))
+dev.off()
+rm (ssT, lCol)
+
+
 cat ("Finished annual-waterTempSal.R\n")
 # EOF
