@@ -56,11 +56,11 @@ if (test){
   oceanvarC <- 8
  # oceanvarC <- c (4,8)
   oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect))
-  transectC <- 6
+  # transectC <- 1:length (levels (poAll$Transect))
+  # transectC <- 6
 }else{
   oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
+  # transectC <- 1:length (levels (poAll$Transect))# by transect. 5: T9
   # transectC <- c(5,6,7)  ## T9, AB, ABext
 }
 
@@ -93,10 +93,12 @@ if (0){ ## tests
 
 if (1){
   ## plot T9 only
-  transectC <- which (levels (poAll$Transect) == "9")  # 5  # T9
+  transectS <- "9"  #which (levels (poAll$Transect) == "9")  # 5  # T9
+}else{
+  transectS <- levels (poAll$Transect)
 }
 
-transectS <- levels (poAll$Transect)
+
 cat ("\n\n## Begin CTDwall plotting\n\n")
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
   for (tn in seq_along (transectS)){
@@ -565,7 +567,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
 
 physOc <- poAll
-rm (transectN, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
+rm (transectN, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectS)
 
 
 
