@@ -4,23 +4,23 @@
     "Repositories": [
       {
         "Name": "BioCsoft",
-        "URL": "https://bioconductor.org/packages/3.17/bioc"
+        "URL": "https://bioconductor.org/packages/3.18/bioc"
       },
       {
         "Name": "BioCann",
-        "URL": "https://bioconductor.org/packages/3.17/data/annotation"
+        "URL": "https://bioconductor.org/packages/3.18/data/annotation"
       },
       {
         "Name": "BioCexp",
-        "URL": "https://bioconductor.org/packages/3.17/data/experiment"
+        "URL": "https://bioconductor.org/packages/3.18/data/experiment"
       },
       {
         "Name": "BioCworkflows",
-        "URL": "https://bioconductor.org/packages/3.17/workflows"
+        "URL": "https://bioconductor.org/packages/3.18/workflows"
       },
       {
         "Name": "BioCbooks",
-        "URL": "https://bioconductor.org/packages/3.17/books"
+        "URL": "https://bioconductor.org/packages/3.18/books"
       },
       {
         "Name": "CRAN",
@@ -113,7 +113,22 @@
       "Requirements": [
         "R"
       ],
+<<<<<<< Updated upstream
       "Hash": "f7c0d5521799b7b0d0a211143ed0bfcb"
+=======
+      "Hash": "2ecaed86684f5fae76ed5530f9d29c4a"
+    },
+    "CFtime": {
+      "Package": "CFtime",
+      "Version": "1.3.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "methods",
+        "utils"
+      ],
+      "Hash": "80a08de216f62c482bda4d730eb0e549"
+>>>>>>> Stashed changes
     },
     "ConsensusClusterPlus": {
       "Package": "ConsensusClusterPlus",
@@ -168,7 +183,11 @@
     },
     "FactoMineR": {
       "Package": "FactoMineR",
+<<<<<<< Updated upstream
       "Version": "2.8",
+=======
+      "Version": "2.10",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -191,7 +210,11 @@
         "stats",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "1170247f811cc2b8af1abc5dccf0e4d1"
+=======
+      "Hash": "d44690649579ffe364de942a3008878d"
+>>>>>>> Stashed changes
     },
     "KernSmooth": {
       "Package": "KernSmooth",
@@ -387,7 +410,11 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
+<<<<<<< Updated upstream
       "Version": "0.12.6.1.0",
+=======
+      "Version": "0.12.8.1.0",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -397,11 +424,19 @@
         "stats",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "0df0f73e8b5620605e09f2324a800754"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
       "Version": "0.3.3.9.3",
+=======
+      "Hash": "e78bbbb81a5dcd71a4bd3268d6ede0b1"
+    },
+    "RcppEigen": {
+      "Package": "RcppEigen",
+      "Version": "0.3.4.0.0",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -411,7 +446,11 @@
         "stats",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "1e035db628cefb315c571202d70202fe"
+=======
+      "Hash": "df49e3306f232ec28f1604e36a202847"
+>>>>>>> Stashed changes
     },
     "ResourceSelection": {
       "Package": "ResourceSelection",
@@ -522,7 +561,11 @@
     },
     "VGAM": {
       "Package": "VGAM",
+<<<<<<< Updated upstream
       "Version": "1.1-8",
+=======
+      "Version": "1.1-10",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -532,7 +575,11 @@
         "stats",
         "stats4"
       ],
+<<<<<<< Updated upstream
       "Hash": "71619ea0f73b03741c5bc1ed7195ce82"
+=======
+      "Hash": "6754eb5b34d10c9b403d1840b58b5064"
+>>>>>>> Stashed changes
     },
     "XLConnect": {
       "Package": "XLConnect",
@@ -692,7 +739,11 @@
     },
     "bookdown": {
       "Package": "bookdown",
+<<<<<<< Updated upstream
       "Version": "0.35",
+=======
+      "Version": "0.38",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -705,11 +756,19 @@
         "xfun",
         "yaml"
       ],
+<<<<<<< Updated upstream
       "Hash": "c6ff1e408f5f241cbcedc0ae28711163"
     },
     "boot": {
       "Package": "boot",
       "Version": "1.3-28.1",
+=======
+      "Hash": "388b27ab03b34a5c9704fb8cd1dae880"
+    },
+    "boot": {
+      "Package": "boot",
+      "Version": "1.3-30",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -717,7 +776,11 @@
         "graphics",
         "stats"
       ],
+<<<<<<< Updated upstream
       "Hash": "9a052fbcbe97a98ceb18dbfd30ebd96e"
+=======
+      "Hash": "96abeed416a286d4a0f52e550b612343"
+>>>>>>> Stashed changes
     },
     "brio": {
       "Package": "brio",
@@ -1119,24 +1182,40 @@
     },
     "curl": {
       "Package": "curl",
+<<<<<<< Updated upstream
       "Version": "5.0.2",
+=======
+      "Version": "5.2.1",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R"
       ],
+<<<<<<< Updated upstream
       "Hash": "511bacbfa153a15251166b463b4da4f9"
     },
     "data.table": {
       "Package": "data.table",
       "Version": "1.14.8",
+=======
+      "Hash": "411ca2c03b1ce5f548345d2fc2685f7a"
+    },
+    "data.table": {
+      "Package": "data.table",
+      "Version": "1.15.2",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "methods"
       ],
+<<<<<<< Updated upstream
       "Hash": "b4c06e554f33344e044ccd7fdca750a9"
+=======
+      "Hash": "536dfe4ac4093b5d115caed7a1a7223b"
+>>>>>>> Stashed changes
     },
     "dbplyr": {
       "Package": "dbplyr",
@@ -1168,7 +1247,11 @@
     },
     "deldir": {
       "Package": "deldir",
+<<<<<<< Updated upstream
       "Version": "1.0-9",
+=======
+      "Version": "2.0-4",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1176,7 +1259,11 @@
         "grDevices",
         "graphics"
       ],
+<<<<<<< Updated upstream
       "Hash": "81dc74aa2dbe87672a8f73934fcf2dae"
+=======
+      "Hash": "24754fce82729ff85317dd195b6646a8"
+>>>>>>> Stashed changes
     },
     "dendextend": {
       "Package": "dendextend",
@@ -1225,14 +1312,22 @@
     },
     "digest": {
       "Package": "digest",
+<<<<<<< Updated upstream
       "Version": "0.6.33",
+=======
+      "Version": "0.6.35",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "b18a9cf3c003977b0cc49d5e76ebe48d"
+=======
+      "Hash": "698ece7ba5a4fa4559e3d537e7ec3d31"
+>>>>>>> Stashed changes
     },
     "dismo": {
       "Package": "dismo",
@@ -1555,7 +1650,11 @@
     },
     "forecast": {
       "Package": "forecast",
+<<<<<<< Updated upstream
       "Version": "8.21",
+=======
+      "Version": "8.22.0",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1577,7 +1676,11 @@
         "urca",
         "zoo"
       ],
+<<<<<<< Updated upstream
       "Hash": "ef845ee0a60ce95240085d60f6daef02"
+=======
+      "Hash": "74a366d7d4aba6ad715beb9d408b4894"
+>>>>>>> Stashed changes
     },
     "foreign": {
       "Package": "foreign",
@@ -1750,26 +1853,65 @@
     },
     "gganimate": {
       "Package": "gganimate",
-      "Version": "1.0.8",
+      "Version": "1.0.9",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
+        "cli",
         "ggplot2",
         "glue",
         "grDevices",
         "grid",
+        "lifecycle",
         "progress",
         "rlang",
         "scales",
         "stringi",
+        "transformr",
         "tweenr",
-        "utils"
+        "utils",
+        "vctrs"
       ],
-      "Hash": "8e627464910e6bcf6ccb62b0bdbffa35"
+      "Hash": "c6e8a7ff1b78529309cb2186ec1e3d38"
     },
+<<<<<<< Updated upstream
     "ggplot2": {
       "Package": "ggplot2",
       "Version": "3.4.3",
+=======
+    "ggedit": {
+      "Package": "ggedit",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "colourpicker",
+        "dplyr",
+        "ggplot2",
+        "graphics",
+        "grid",
+        "miniUI",
+        "plyr",
+        "purrr",
+        "rlang",
+        "rstudioapi",
+        "scales",
+        "shiny",
+        "shinyAce",
+        "shinyBS",
+        "stats",
+        "tibble",
+        "tidyr",
+        "tools",
+        "utils"
+      ],
+      "Hash": "5329e13d122612ddb277324be964b132"
+    },
+    "ggplot2": {
+      "Package": "ggplot2",
+      "Version": "3.5.0",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1790,7 +1932,11 @@
         "vctrs",
         "withr"
       ],
+<<<<<<< Updated upstream
       "Hash": "85846544c596e71f8f46483ab165da33"
+=======
+      "Hash": "52ef83f93f74833007f193b2d4c159a2"
+>>>>>>> Stashed changes
     },
     "ggpubr": {
       "Package": "ggpubr",
@@ -1839,7 +1985,7 @@
     },
     "ggsci": {
       "Package": "ggsci",
-      "Version": "3.0.0",
+      "Version": "3.0.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1848,7 +1994,7 @@
         "grDevices",
         "scales"
       ],
-      "Hash": "93664e03010c3f4b570c890dda99ade5"
+      "Hash": "178a0ec3106797b702b8079afe3f0f89"
     },
     "ggsignif": {
       "Package": "ggsignif",
@@ -1913,14 +2059,14 @@
     },
     "globals": {
       "Package": "globals",
-      "Version": "0.16.2",
+      "Version": "0.16.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "codetools"
       ],
-      "Hash": "baa9585ab4ce47a9f4618e671778cc6f"
+      "Hash": "2580567908cafd4f187c1e5a91e98b7f"
     },
     "glue": {
       "Package": "glue",
@@ -2640,6 +2786,13 @@
       ],
       "Hash": "c6fafa6cccb1e1dfe7f7d122efd6e6a7"
     },
+    "lpSolve": {
+      "Package": "lpSolve",
+      "Version": "5.6.20",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2801c8082e89ed84cc0dbe43de850d31"
+    },
     "lubridate": {
       "Package": "lubridate",
       "Version": "1.9.2",
@@ -2928,13 +3081,13 @@
     },
     "multcompView": {
       "Package": "multcompView",
-      "Version": "0.1-9",
+      "Version": "0.1-10",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "grid"
       ],
-      "Hash": "a453bb54107d6ff5fb4280729e15a023"
+      "Hash": "bd174e328b679e9a1ce589422002c72b"
     },
     "munsell": {
       "Package": "munsell",
@@ -3123,7 +3276,11 @@
     },
     "openair": {
       "Package": "openair",
+<<<<<<< Updated upstream
       "Version": "2.17-0",
+=======
+      "Version": "2.18-2",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3151,7 +3308,11 @@
         "tidyr",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "d63a1f8c9a7390dff19112f94831d3d9"
+=======
+      "Hash": "725efbc803caacc7a7f72452e0f6d3cf"
+>>>>>>> Stashed changes
     },
     "openssl": {
       "Package": "openssl",
@@ -3203,7 +3364,11 @@
     },
     "parallelly": {
       "Package": "parallelly",
+<<<<<<< Updated upstream
       "Version": "1.36.0",
+=======
+      "Version": "1.37.1",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3211,7 +3376,11 @@
         "tools",
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "bca377e1c87ec89ebed77bba00635b2e"
+=======
+      "Hash": "5410df8d22bd36e616f2a2343dbb328c"
+>>>>>>> Stashed changes
     },
     "pbapply": {
       "Package": "pbapply",
@@ -3677,13 +3846,21 @@
     },
     "renv": {
       "Package": "renv",
+<<<<<<< Updated upstream
       "Version": "1.0.2",
+=======
+      "Version": "1.0.5",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "utils"
       ],
+<<<<<<< Updated upstream
       "Hash": "4b22ac016fe54028b88d0c68badbd061"
+=======
+      "Hash": "32c3f93e8360f667ca5863272ec8ba6a"
+>>>>>>> Stashed changes
     },
     "reprex": {
       "Package": "reprex",
@@ -3807,7 +3984,11 @@
     },
     "rmarkdown": {
       "Package": "rmarkdown",
+<<<<<<< Updated upstream
       "Version": "2.24",
+=======
+      "Version": "2.26",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3820,14 +4001,17 @@
         "jsonlite",
         "knitr",
         "methods",
-        "stringr",
         "tinytex",
         "tools",
         "utils",
         "xfun",
         "yaml"
       ],
+<<<<<<< Updated upstream
       "Hash": "3854c37590717c08c32ec8542a2e0a35"
+=======
+      "Hash": "9b148e7f95d33aac01f31282d49e4f44"
+>>>>>>> Stashed changes
     },
     "rnoaa": {
       "Package": "rnoaa",
@@ -4079,7 +4263,7 @@
     },
     "shape": {
       "Package": "shape",
-      "Version": "1.4.6",
+      "Version": "1.4.6.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4088,7 +4272,7 @@
         "graphics",
         "stats"
       ],
-      "Hash": "9067f962730f58b14d8ae54ca885509f"
+      "Hash": "5c47e84dc0a3ca761ae1d307889e796d"
     },
     "shiny": {
       "Package": "shiny",
@@ -4364,14 +4548,22 @@
     },
     "systemfonts": {
       "Package": "systemfonts",
+<<<<<<< Updated upstream
       "Version": "1.0.4",
+=======
+      "Version": "1.0.6",
+>>>>>>> Stashed changes
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "cpp11"
       ],
+<<<<<<< Updated upstream
       "Hash": "90b28393209827327de889f49935140a"
+=======
+      "Hash": "6d538cff441f0f1f36db2209ac7495ac"
+>>>>>>> Stashed changes
     },
     "tensorA": {
       "Package": "tensorA",
@@ -4513,7 +4705,7 @@
     },
     "tidyselect": {
       "Package": "tidyselect",
-      "Version": "1.2.0",
+      "Version": "1.2.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4525,7 +4717,7 @@
         "vctrs",
         "withr"
       ],
-      "Hash": "79540e5fcd9e0435af547d885f184fd5"
+      "Hash": "829f27b9c4919c16b593794a6344d6c0"
     },
     "tidyverse": {
       "Package": "tidyverse",
@@ -4602,6 +4794,21 @@
       ],
       "Hash": "0c41a73214d982f539c56a7773c7afa5"
     },
+    "transformr": {
+      "Package": "transformr",
+      "Version": "0.1.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "cpp11",
+        "lpSolve",
+        "rlang",
+        "sf",
+        "tweenr",
+        "vctrs"
+      ],
+      "Hash": "584eda9966ed571b3adc75e338116147"
+    },
     "triebeard": {
       "Package": "triebeard",
       "Version": "0.4.1",
@@ -4631,7 +4838,7 @@
     },
     "tweenr": {
       "Package": "tweenr",
-      "Version": "2.0.2",
+      "Version": "2.0.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4642,7 +4849,7 @@
         "rlang",
         "vctrs"
       ],
-      "Hash": "c16efcef4c72d3bff5e65031f3f1f841"
+      "Hash": "82fac2b73e6a1f3874fc000aaf96d8bc"
     },
     "tzdb": {
       "Package": "tzdb",

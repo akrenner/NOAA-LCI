@@ -83,6 +83,7 @@ source ("CTDsections.R")
 source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies.
 
 
+## 2017 contract
 if (0){ ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
@@ -104,6 +105,7 @@ if (0){ ## one-off projects
   source ("archive/OA-temps.R")
 }
 
+## 2019 seasonality
 if (0){ # Dec 2019 seasonality
   source ("dataSetup.R")
   source ("zoopCommunity.R")

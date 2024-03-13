@@ -81,7 +81,9 @@ salCol <- oceColorsSalinity (11)
 #              , maxColorValue=255)
 # tCol <- rev (c ("#de5842", "#fcd059", "#ededea"
 #                 , "#bfe1bf", "#a2d7d8"))
-tCol <- rev (brewer.pal (length (salCol), "RdBu"))
+tCol <- oceColorsTurbo(1000)
+tCol <- rev (brewer.pal (11, "Spectral"))
+tColAn <- rev (brewer.pal (length (salCol), "RdBu"))
 # tCol <- colorRampPalette (tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
 
 
@@ -92,6 +94,8 @@ if (kr){
   tCol <- oceColorsTurbo(1000)
   salCol <- colorRampPalette (col=rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
                               , bias=0.3)(1000) ## ODV colors
+  didntlikeit <-colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
+                                    "#bfe1bf", "#a2d7d8")))(9)
 }
 
 
@@ -390,8 +394,7 @@ for (k in pickStn){
     ## time series of anomalies
     # zB <- sF (xC$anTem), n=9)  XXX fix this
     plot.station (xCS, which = "anTem"
-                  , zcol = colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
-                                                    "#bfe1bf", "#a2d7d8")))(9)
+                  , zcol=tColAn
                   # , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
                   # , zbreaks = zB
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
