@@ -958,13 +958,13 @@ for (iS in 1:length (tL)){
 
   if (tempName == ("Deep")){
     png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
-         , height=fDim [2]*pngR, width=fDim [1]*pngR)
+         , height=fDim [2]*pngR, width=fDim [1]*pngR*1.5)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
   }else{
     png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
-         , height=fDim [2]*pngR/2, width=fDim [1]*pngR)
+         , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
     if (tempName=="TempSurface" | tempName=="Max"){
       anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
       # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
@@ -982,8 +982,8 @@ for (iS in 1:length (tL)){
   if (tempName=="Deep"){
     abline (h=thTempL, lty="dashed") # mark 4 degrees C
   }
-  mLW <- 2
-  nLW <- 2
+  mLW <- 3
+  nLW <- mLW
   legend ("bottomright", lwd=c (nLW,mLW, 3, 3), col=c ("gray", "black", anomCol)
           , legend=c("normal", "30 d moving-average", anomL), bty="o", ncol=2
           , bg="white", box.col="white")
@@ -1041,6 +1041,9 @@ rm (anomCol, anomL, yLabt)
       box()
       abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
       if (tempName=="Max"){xi <-1:length (thTempL)}else{xi <- 1}
+#      if (as.numeric (format (Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
+#       springM <- springM [1:(nrow (springM)-1),]
+#      }
       for (i in xi){
         points (springM [,i]~I(yL+0.5), col=colr [i], pch=19, cex=2)
         for (j in 1:nrow (springM)){
@@ -1150,6 +1153,9 @@ save.image ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
 
 t96 <- subset (physOc, Match_Name=="9_6")
+# t96$Fluorescence_mg_m3 <- log (t96$Fluorescence_mg_m3)
+# plot all fluorescence on log scale?!
+
 chlA <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
                    , subset=Depth.saltwater..m. <= surface)
 chlAd <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
