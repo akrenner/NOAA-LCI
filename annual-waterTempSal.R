@@ -358,7 +358,8 @@ ssT$dateY3 <- as.POSIXct (ssT$datetimestamp - 2*365.25*24*3600)
 png ("~/tmp/LCI_noaa/media/StateOfTheBay/tutkaTempCompare.png"
      , height=2.5*300, width=4*300, res=150)
 require ("RColorBrewer")
-lCol <- brewer.pal(8, "Set2")[c(3,2,1)]
+# lCol <- brewer.pal(8, "Set2")[c(3,2,1)]# old, mismatched
+lCol <- brewer.pal(8, "Set2")[c(6,3,2)]  # new
 
 ## by20: col 2
 plot (temp~datetimestamp, ssT, subset=aqY=="2020", type="l"
@@ -377,6 +378,7 @@ lines (temp~dateY3, ssT, subset=aqY=="2022", col=lCol [1], lwd=2)
 
 legend ("topright", bty="n", col=lCol, lwd=rep (3,3)
         , legend=c("2022-23", "2021-22", "2020-21"))
+
 dev.off()
 rm (ssT, lCol)
 
