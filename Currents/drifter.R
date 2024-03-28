@@ -4,22 +4,31 @@ rm (list=ls())
 
 ## file locations
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"
+# worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
+AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"
 bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # getter to graph from tiling server -- use ETOPO 2022
 # could also try Zimmerman bathymetry here
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
-outpath <- "~/tmp/LCI_noaa/media/drifter/animation.gif"
-
+outpath <- "~/tmp/LCI_noaa/media/drifter/"
 
 
 ## set projection
 projection <- "+init=epsg:3338" ## Alaska Albers EA
-projection <- "+init=epsg:4326" ## WGS84
+# projection <- "+init=epsg:4326" ## WGS84
+
+
+
+## tmaps: works, but animation potential quite limited
+## ggplot -- need to adapt reading in world polygon to existing examples (sub borders) -- do that!
+
+
+
 
 
 # use ggOceanMaps to make map (has nice cartography)
-# gganimate to animate it
+# gganimate to animate it -- don't work together :(
 #
 # products:
 #   1. animation of drifter track (n concurrent drifters)
@@ -40,13 +49,16 @@ dir.create (cacheD, showWarnings=FALSE, recursive=TRUE) ## I set .ggOceanMapsenv
 # {.ggOceanMapsenv <- new.env(); .ggOceanMapsenv$datapath <- "~/tmp/LCI_noaa/cache/ggplot/"} ## not worth the trouble?
 ## increase time-out limit from 60 s -- better to get local bathymetry?
 options(timeout=600) ## double timeout limit
+# if (!file.exists (AKshape)){
+#   dir.create (AKshape, showWarnings=FALSE, recursive=TRUE)
+#   download.file (url="https://dev.nceas.ucsb.edu/knb/d1/mn/v2/object/urn%3Auuid%3Aaceaecb2-1ce0-4d41-a839-d3607d32bb58"
+#                  , destfile=AKshape)
+# }
 
 
 ## load packages
-require ('ggOceanMaps')## uses sf and stars
 # require ('ggOceanMapsLargeData') # of any use here? needed for examples only?
 require ("gganimate")  ## seems to be a convenient package for animation
-require ("basemaps")   ## see https://jakob.schwalb-willmann.de/basemaps/ -- backgrounds!
 require ("dplyr")      ## needed for pipe
 require ("RColorBrewer")
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
@@ -90,27 +102,132 @@ bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150, 58.7)), # E S
                                        st_point (c (-154.3, 60.3)))  # W N
                    , crs=4326) %>%
   st_bbox() %>%
-  st_as_sfc()
-# %>%
-#   st_transform (3338) # AK Alberts EA
+  st_as_sfc()  %>%
+ st_transform (projection) # AK Alberts EA
+
 
 ## or use drP to set bbox
+if (0){
 bbox_new <- st_bbox (drP %>%
                        st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", crs=4326
-                                 ## add GpsQuality
-                                 #, group=, arg
-                                 , agr=c(DeviceName="identity")
-                       )
-)
+                       )) %>%
+  st_as_sfc() # %>% st_transform(projection)
+}
+
 
 ## get shoreline and clip with bbox_new
-world <- sf::st_read (worldP)
-# %>%
-#   s2::s2_rebuild() %>%
-#   st_crop (bbox_new)
-#
-#   st_intersection (st_polygon (bbox_new))
-rm (worldP)
+## for crop, see https://datascience.blog.wzb.eu/2019/04/30/zooming-in-on-maps-with-sf-and-ggplot2/
+world <- sf::st_read (worldP) %>%
+  sf::st_transform(projection)  %>%
+  st_crop (bbox_new)
+
+## also see st_wrap_dateline !!  (for murres!)
+
+
+
+
+
+## revert to tmap
+## it's a pain, but I'm exhausted!
+
+drPp <- st_as_sf (drP, coords=c("Longitude", "Latitude"), crs=4326) %>%
+  st_transform(projection)
+
+
+
+## tmap -- fallback
+if(0){
+tmap_mode ('plot')
+dev.new(width=16, height=12, unit="in")
+
+m <- tm_shape (world, projection=projection, bbox=bbox_new) +
+  tm_polygons(col='goldenrod', alpha=0.3, border.col='black', lwd=0.75)
+
+m <- m +
+  tm_shape (drPp) +
+  tm_dots (col="red", size=.2)  # add legend
+  # tm_graticules(x=seq(-180,180,by=15),y=seq(40,80,by=5), labels.size = 0.4, lwd = 0.25, ticks=FALSE) +
+
+tmap_save(m, paste0 (outpath, "test.png"), scale=1.5)
+
+
+## animate the beast
+# use tm_facets
+m <- m +
+  tm_facets(along="age")
+
+tmap_animation(m, filename=paste0 (outpath, "animation.gif")
+               , width=16, height=8, dpi=100)
+
+rm (bbox_new, world, worldP)
+}
+ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
+
+
+
+## animate with ggplot2 and gganimate
+## https://d4tagirl.com/2017/05/how-to-plot-animated-maps-with-gganimate/
+
+require ("ggplot2")
+basemap <- ggplot2::ggplot (data=world) +
+  ggplot2::geom_sf() +
+  ggplot2::labs(title="drifter") +
+  ggplot2::theme(
+    panel.background=ggplot2::element_blank(),
+    axis.text=ggplot2::element_blank(),
+    axis.ticks=ggplot2::element_blank(),
+    legend.position="none"
+  )
+
+## add drifters
+map <- basemap +
+  ggplot2::geom_sf (data=drPp, color="red", size=2)
+
+## add graticules
+#  sf::st_graticule()  # transform?
+
+## animate
+map3 <- map +
+  transition_time(DeviceDateTime) +
+ # transition_time(age) +
+  shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
+  ggtitle("time: {frame_time}")
+
+anim <- gganimate::animate (map3, nframes = 100, fps=2  # calc nframes!
+                            # , height=8, width=16, res=120
+                            , rewind=FALSE)
+anim_save ("animation.gif", anim, path=outpath)
+
+
+
+## alternative: plot it all in base plots with sf
+
+
+## end of working code
+
+
+
+
+
+
+
+
+
+
+##Create animation with points showing up one by one
+plot_anim <- B +
+  transition_states(states = Y, state_length = 0, wrap = FALSE) +
+  enter_recolor(fill = "#f0f5f9") +
+  shadow_mark(past = TRUE, alpha = 1, fill = "#3a6589")
+
+##Render animation
+animate(plot_anim, end_pause = 60,
+        height = 200, width = 400) # a higher res img would not upload here :(
+
+
+require (ggplot2)
+require (maps)
+require (ggthemes)
 
 
 
@@ -141,8 +258,35 @@ if (0){
 
 
 
+
 ## do some plotting
 ## base on Murre_Figure.R -- ggplot
+
+require ("ggplot2")
+require ("ggthemes")
+require ("maps")
+require ("gganimate")
+require ("dplyr")
+
+## ggmaps == disabled by NOAA
+
+ggplot () +
+  borders ("world", "usa:alaska", colour="gray90", fill="gray85")+
+  theme_map() +
+  geom_point (data=drP, aes (x=Longitude, y=Latitude
+                   # , color=depth
+                   , size=2)) +
+  labs (title="Date: {frame_time}") +
+  transition_time(age) +
+  shadow_wake(wake_length=0.5, alpha=FALSE) +
+  ease_aes ("linear")
+
+
+
+
+
+require ('ggOceanMaps')## uses sf and stars
+require ("basemaps")   ## see https://jakob.schwalb-willmann.de/basemaps/ -- backgrounds!
 
 ## 1. Use ggOceanMaps for bathymetry and drifter
 ## 2. add basemaps::esri usa_topo_maps for land, once above is working
@@ -309,29 +453,3 @@ basemap (data=dt, crs=4326, bathymetry=FALSE, projection.grid=TRUE, glaciers=TRU
   #              , color="red", fill=NA
   #              )
 rm (dt)
-
-
-
-
-
-
-
-# lines (Latitude~Longitude, drP)
-
-plot (Latitude~Longitude, drP
-      , col = drP$col)
-
-
-
-
-
-# world <- ne_countries (scale="large", returnclass="sf", type="countries")
-# plot (world)
-# image (world)
-
-
-## base map
-
-## - Zimmermann bathymetry
-## - coastline
-## - tracks
