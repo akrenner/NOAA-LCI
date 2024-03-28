@@ -20,9 +20,20 @@ projection <- "+init=epsg:3338" ## Alaska Albers EA
 
 
 
-## tmaps: works, but animation potential quite limited
-## ggplot -- need to adapt reading in world polygon to existing examples (sub borders) -- do that!
+## animation options:
+# gganimate: good for ggplot2, but doesn't work with ggOceanMaps (yet). 2024
+# animation: 2.7 2021 , github same age. Requires ImageMagick or GraphicsMagick or avconv or FFmpeg
+# plotly  (also interactive web plots). Version 4.x, 2024
+# gifski in R: convert video frames to GIF. Requires Rust. (2023)
 
+## may need the flexibility of package animation??
+## need to interpolate positions to make better animation
+
+
+
+## tmaps: works, but animation potential quite limited
+## ggplot2 -- need to adapt reading in world polygon to existing examples (sub borders) -- do that!
+## go back to base graphics -- what I know? Want nices graticules.
 
 
 
@@ -200,12 +211,13 @@ anim_save ("animation.gif", anim, path=outpath)
 
 
 
+## refine animation
+## add bathymetry
+
 ## alternative: plot it all in base plots with sf
 
 
 ## end of working code
-
-
 
 
 
