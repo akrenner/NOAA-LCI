@@ -2,10 +2,13 @@
 ## create animations and plots of current drifters
 rm (list=ls())
 
+
+
+## ----------------------------------------------------------
 ## file locations
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
-AKshape <- "GISdata/LCI/shoreline/akshape"
+# AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"
 bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # getter to graph from tiling server -- use ETOPO 2022
 # could also try Zimmerman bathymetry here
@@ -14,28 +17,27 @@ cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
 outpath <- "~/tmp/LCI_noaa/media/drifter/"
 
 
+
+## ----------------------------------------------------------
 ## set projection
 projection <- "+init=epsg:3338" ## Alaska Albers EA
 # projection <- "+init=epsg:4326" ## WGS84
 
 
-
 ## animation options:
 # gganimate: good for ggplot2, but doesn't work with ggOceanMaps (yet). 2024
 # animation: 2.7 2021 , github same age. Requires ImageMagick or GraphicsMagick or avconv or FFmpeg
-# plotly  (also interactive web plots). Version 4.x, 2024
-# gifski in R: convert video frames to GIF. Requires Rust. (2023)
+# plotly: mainly for interactive web graphics. Version 4.x, 2024
+# gifski in R: convert video frames to GIF. Requires Rust. (2023) -- maybe that's the ticket!
+# tmap: too limited options for animation
 
 ## may need the flexibility of package animation??
 ## need to interpolate positions to make better animation
 
 
-
 ## tmaps: works, but animation potential quite limited
 ## ggplot2 -- need to adapt reading in world polygon to existing examples (sub borders) -- do that!
 ## go back to base graphics -- what I know? Want nices graticules.
-
-
 
 
 # use ggOceanMaps to make map (has nice cartography)
@@ -54,6 +56,7 @@ projection <- "+init=epsg:3338" ## Alaska Albers EA
 
 
 
+## ----------------------------------------------------------
 ## set up directories
 dir.create (outpath, showWarnings=FALSE, recursive=TRUE)
 dir.create (cacheD, showWarnings=FALSE, recursive=TRUE) ## I set .ggOceanMapsenv in .Rprofile:
@@ -66,7 +69,6 @@ options(timeout=600) ## double timeout limit
 #                  , destfile=AKshape)
 # }
 
-
 ## load packages
 # require ('ggOceanMapsLargeData') # of any use here? needed for examples only?
 require ("gganimate")  ## seems to be a convenient package for animation
@@ -74,128 +76,122 @@ require ("dplyr")      ## needed for pipe
 require ("RColorBrewer")
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
 require ("stars")
+require ("ggplot2")
 require ("ggspatial")  ## for spatial points in ggplot
 
 
 
-
-## select drifter data
-dr <- read.csv (driftP)
+## ----------------------------------------------------------
+## select drifter data and set-up map layers
+drift <- read.csv (driftP)
 rm (driftP)
 ## ice wave rider and MicroStar are surface devices
-dr$depth <- ifelse (1:nrow (dr) %in% grep ("UAF-SVP", dr$DeviceName), 15, 0)
-## filter out arctic and SE Alaska
-dr <- subset (dr, Longitude < -149)
-levels (factor (dr$DeviceName))
-dr$DeviceDateTime <- as.POSIXct(dr$DeviceDateTime)
+drift$depth <- ifelse (1:nrow (drift) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+drift$DeviceDateTime <- as.POSIXct(drift$DeviceDateTime)
+drift <- drift %>%
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", crs=4326
+            , remove=FALSE
+            ## add GpsQuality
+            #, group=, arg
+            , agr=c(DeviceName="identity")
+  ) %>%
+  st_transform(projection) %>%
+  # filter out arctic and SE Alaska (here to get bbox right)
+  filter (Longitude < -149)
 
+## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
-drP <- dr %>%
-  # filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066"))
-  filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047"))
-# %>%
-#   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", crs=4326
-#             ## add GpsQuality
-#             #, group=, arg
-#             , agr=c(DeviceName="identity")
-#               )
-  #  filter (DeviceName == "UAF-SVPI-0046") %>%
-  #  filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
-  #  filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00"))
-  #  filter (DeviceName == "UAF-MS-0066") # %>%
-drP$DeviceName <- factor (drP$DeviceName)
-drP$col <- brewer.pal (length (levels (drP$DeviceName)), "Set2")[drP$DeviceName]
-drP$age <- as.numeric (drP$DeviceDateTime) - min (as.numeric (drP$DeviceDateTime))
+levels (factor (drift$DeviceName))
+drP <- drift %>%
+  # dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
+  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
+  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
+  #  dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
+  #  dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00"))
+  #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
+  # drP <- drP [order (drP$DeviceName, drP$DeviceDateTime),]
+  dplyr::filter()
+## need to set these after final drifter selection
+## break deployments apart by reporting times -- if more than a day, start a new deployment
+
+drift$DeviceName <- factor (drift$DeviceName)
+drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
+drift$age <- as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
+
+
 
 ## define bounding box
-## map using sf
-bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150, 58.7)), # E S
-                                       st_point (c (-154.3, 60.3)))  # W N
-                   , crs=4326) %>%
-  st_bbox() %>%
-  st_as_sfc()  %>%
- st_transform (projection) # AK Alberts EA
-
-
-## or use drP to set bbox
-if (0){
-bbox_new <- st_bbox (drP %>%
-                       st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", crs=4326
-                       )) %>%
-  st_as_sfc() # %>% st_transform(projection)
+## set bbox manually
+if (1){
+  # bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150,   58.7)),  # E S
+  #                                        st_point (c (-154.3, 60.3)))  # W N
+  bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150,   58.7)),  # E S
+                                         st_point (c (-154.3, 60.3)))  # W N
+                     , crs=4326) %>%
+    st_transform (projection) %>%  # transform first to keep straight lines in projection
+    st_bbox() %>%
+    st_as_sfc()
+  ## use drifter range to set bbox
+}else{
+  bbox_new <- st_bbox (drift) %>%
+    st_as_sfc() %>%
+    st_transform(projection)
 }
 
 
 ## get shoreline and clip with bbox_new
 ## for crop, see https://datascience.blog.wzb.eu/2019/04/30/zooming-in-on-maps-with-sf-and-ggplot2/
-world <- sf::st_read (worldP) %>%
+world <- sf::st_read (worldP, quiet=TRUE) %>%
   sf::st_transform(projection)  %>%
-  st_crop (bbox_new)
+ st_crop (bbox_new)
+
+## should get this to work to expand polygon past bbox of plot
+## or set xlim and ylim on plot
+# st_crop (st_coordinates (bbox_new)[c(1,3), c(1,2)]*c(0.9,1.1,0.9,1.1) %>%  # expand past bbox_new
+#          st_sfc (st_point (.[1,])
+#                  , st_point(.[2,]), crs=projection) %>%
+#            st_bbox() %>%
+#            st_as_sfc()
+#          ) # suppress warning
 
 ## also see st_wrap_dateline !!  (for murres!)
+# ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
+
+## test crop ok
+ggplot2::ggplot (world) + geom_sf()
 
 
 
-
-
-## revert to tmap
-## it's a pain, but I'm exhausted!
-
-drPp <- st_as_sf (drP, coords=c("Longitude", "Latitude"), crs=4326) %>%
-  st_transform(projection)
-
-
-
-## tmap -- fallback
-if(0){
-tmap_mode ('plot')
-dev.new(width=16, height=12, unit="in")
-
-m <- tm_shape (world, projection=projection, bbox=bbox_new) +
-  tm_polygons(col='goldenrod', alpha=0.3, border.col='black', lwd=0.75)
-
-m <- m +
-  tm_shape (drPp) +
-  tm_dots (col="red", size=.2)  # add legend
-  # tm_graticules(x=seq(-180,180,by=15),y=seq(40,80,by=5), labels.size = 0.4, lwd = 0.25, ticks=FALSE) +
-
-tmap_save(m, paste0 (outpath, "test.png"), scale=1.5)
-
-
-## animate the beast
-# use tm_facets
-m <- m +
-  tm_facets(along="age")
-
-tmap_animation(m, filename=paste0 (outpath, "animation.gif")
-               , width=16, height=8, dpi=100)
-
-rm (bbox_new, world, worldP)
-}
-ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
-
-
-
-## animate with ggplot2 and gganimate
+## ----------------------------------------------------------
+## plot and animate with ggplot2 and gganimate
 ## https://d4tagirl.com/2017/05/how-to-plot-animated-maps-with-gganimate/
 
-require ("ggplot2")
-basemap <- ggplot2::ggplot (data=world) +
+basemap <- ggplot2::ggplot (data=bbox_new) +
+#  coord_cartesian(xlim=st_coordinates(bbox_new)[1:2,1]*rev (c(1.2, 0.8))) +  # no effect?
   ggplot2::geom_sf() +
-  ggplot2::labs(title="drifter") +
-  ggplot2::theme(
-    panel.background=ggplot2::element_blank(),
-    axis.text=ggplot2::element_blank(),
-    axis.ticks=ggplot2::element_blank(),
+  ggplot2::geom_sf (data=world, fill = "goldenrod") +
+#  ggplot2::labs(title="") +
+  ggplot2::theme(  ## minor fixes to do here: plot land the way to the edge
+    #panel.background=ggplot2::element_blank(),
     legend.position="none"
   )
+## add bathymetry and decorations
+## add graticules
+#  sf::st_graticule()  # transform? -- or at the end?
+
 
 ## add drifters
-map <- basemap +
-  ggplot2::geom_sf (data=drPp, color="red", size=2)
+drP <- drift %>% filter (DeviceName==levels (DeviceName)[1])
+drL <- dplyr::summarize (drP, do_union=FALSE) %>%
+  st_cast("LINESTRING")
 
-## add graticules
-#  sf::st_graticule()  # transform?
+map <- basemap +
+  ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +
+  ggplot2::geom_sf (data=drP, size=1, pch=3)
+map
+
+
+
 
 ## animate
 map3 <- map +
@@ -222,6 +218,36 @@ anim_save ("animation.gif", anim, path=outpath)
 
 
 
+
+
+
+
+
+## tmap -- fallback
+if(0){
+  tmap_mode ('plot')
+  dev.new(width=16, height=12, unit="in")
+
+  m <- tm_shape (world, projection=projection, bbox=bbox_new) +
+    tm_polygons(col='goldenrod', alpha=0.3, border.col='black', lwd=0.75)
+
+  m <- m +
+    tm_shape (drP) +
+    tm_dots (col="red", size=.2)  # add legend
+  # tm_graticules(x=seq(-180,180,by=15),y=seq(40,80,by=5), labels.size = 0.4, lwd = 0.25, ticks=FALSE) +
+
+  tmap_save(m, paste0 (outpath, "test.png"), scale=1.5)
+
+  ## animate the beast
+  # use tm_facets
+  m <- m +
+    tm_facets(along="age")
+
+  tmap_animation(m, filename=paste0 (outpath, "animation.gif")
+                 , width=16, height=8, dpi=100)
+
+  rm (bbox_new, world, worldP)
+}
 
 
 
