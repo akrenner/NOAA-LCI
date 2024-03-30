@@ -130,9 +130,9 @@ if (0){
 ## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
 drift <- drift %>%
-  # dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
-#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
-  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
+#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
+  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
+#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
 #  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
     # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
     # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
@@ -217,11 +217,13 @@ for (i in seq_along(levels (drift$deploy))){
   drP <- subset (drift, deploy == levels (drift$deploy)[i])
   ## catch error if there's nothing to animate
   if (nrow (drP) > 5){
+    fN <- gsub (":", "_", levels (drift$deploy), fixed=TRUE)
     drL <- dplyr::summarise(drP, do_union=FALSE) %>% st_cast ("LINESTRING")
     map <- basemap +
       ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +
       ggplot2::geom_sf (data=drP, size=1, pch=3)
-    ggsave (levels (drift$deploy)[i], map, device="png", path=outpath)
+    ggsave (paste0 ("s", fN, ".gif"), map, device="png", path=outpath)
+
     map3 <- map +
       transition_time(DeviceDateTime) +
       # transition_time(age) +
@@ -231,7 +233,7 @@ for (i in seq_along(levels (drift$deploy))){
     anim <- gganimate::animate (map3, nframes = 100, fps=2  # calc nframes!
                                 , height=Hi, width=Wi
                                 , rewind=FALSE)
-    anim_save (paste0 (levels (drift$deploy)[i], ".gif"), anim, path=outpath)
+    anim_save (paste0 (fN, ".gif"), anim, path=outpath)
   }
 }
 
@@ -244,6 +246,7 @@ map <- basemap +
   ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +  # animate line somehow
   ggplot2::geom_sf (data=drP, cex=2, pch=3)  # mark positions with a cross
 # map
+ggsave (paste0 ("aMap.gif"), map, device="png", path=outpath)
 
 
 ## animate
