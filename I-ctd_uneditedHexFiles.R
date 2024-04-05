@@ -10,6 +10,11 @@
 
 rm (list=ls())
 
+
+## fix time zone (forgot to change daylight savings time/standard time change)
+
+
+
 ## interactively find folder of new survey
 unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/")
 uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
@@ -56,7 +61,9 @@ for (i in seq_along(hexF)){
   deltaT <- difftime (as.POSIXct(paste (notR$Date_isotxt, notR$Time))
                       , ctdTime, units="min") %>%
     abs()
-  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", hexF [i])}
+  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", hexF [i]
+                        , "\nnotes: ", as.POSIXct(paste (notR$Date_isotxt, notR$Time))
+                        , "\nCTD: ", ctdTime)}
   ## end of checks
 
   ## add geographic coordinates, station match_name, etc. to hex-header
