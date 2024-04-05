@@ -212,6 +212,7 @@ basemap <- ggplot2::ggplot (data=bbox_new) +
 ## separate map per animation/drifter
 ## plot dimensions
 Hi <- 800; Wi <- 800
+require ("gifski")
 
 for (i in seq_along(levels (drift$deploy))){
   drP <- subset (drift, deploy == levels (drift$deploy)[i])
@@ -256,10 +257,22 @@ map3 <- map +
   shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
   ggtitle("time: {frame_time}")
 
+require ("av")  ## for ffmpeg -- smaller file size than gif
 anim <- gganimate::animate (map3, nframes = 100, fps=4  # calc nframes!
                             , height=Hi, width=Wi
-                            , rewind=FALSE)
+                            , rewind=FALSE
+                            # , renderer=av_renderer()  # mp4 render not yet working
+                            )
 anim_save ("animation.gif", anim, path=outpath)
+# anim_save ("animation.mp4", anim, path=outpath)
+
+
+
+## animate drifters manually, for more control
+# save_gif (expressionMakingGraphics
+#           , gif_file=paste0 (outpath, "animationX.gif")
+#           , width=Wi, height=Hi, delay=1
+#           , progress=TRUE) # delay: s time delay (delay = 1/FPS)).
 
 rm (Hi, Wi, drL, drP)
 
