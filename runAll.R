@@ -40,6 +40,7 @@ if (0){
 
 if (0){
   ## to update packages:
+  # renv::restore()
   renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
   renv::snapshot()
   renv::status()
