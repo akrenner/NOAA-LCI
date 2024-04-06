@@ -19,11 +19,6 @@ outpath <- "~/tmp/LCI_noaa/media/drifter/"
 
 
 ## ----------------------------------------------------------
-## set projection
-projection <- "+init=epsg:3338" ## Alaska Albers EA
-# projection <- "+init=epsg:4326" ## WGS84
-
-
 ## animation options:
 # gganimate: good for ggplot2, but doesn't work with ggOceanMaps (yet). 2024
 # animation: 2.7 2021 , github same age. Requires ImageMagick or GraphicsMagick or avconv or FFmpeg
@@ -71,13 +66,17 @@ options(timeout=600) ## double timeout limit
 
 ## load packages
 # require ('ggOceanMapsLargeData') # of any use here? needed for examples only?
-require ("gganimate")  ## seems to be a convenient package for animation
 require ("dplyr")      ## needed for pipe
 require ("RColorBrewer")
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
 require ("stars")
 require ("ggplot2")
 require ("ggspatial")  ## for spatial points in ggplot
+require ("gganimate")  ## seems to be a convenient package for animation
+
+## set projection
+projection <- st_crs (3338) ## Alaska Albers EA
+# projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 
