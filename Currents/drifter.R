@@ -17,6 +17,9 @@ cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
 outpath <- "~/tmp/LCI_noaa/media/drifter/"
 
 
+## set reporting interval ?
+## tricky. Some deployments at 4 h intervals, mostly < 1
+
 
 ## ----------------------------------------------------------
 ## animation options:
@@ -81,51 +84,77 @@ projection <- st_crs (3338) ## Alaska Albers EA
 
 
 ## ----------------------------------------------------------
-## select drifter data and set-up map layers
-drift <- read.csv (driftP)
-rm (driftP)
-## ice wave rider and MicroStar are surface devices
-drift$depth <- ifelse (1:nrow (drift) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
-drift$DeviceDateTime <- as.POSIXct(drift$DeviceDateTime)
-drift <- drift %>%
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", crs=4326
+## select drifter and manage data
+drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct"
+                                        , DeviceName="factor")) %>%
+  .[order (.$DeviceName, .$DeviceDateTime),] %>% ## ensure data is sorted right
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
             , remove=FALSE
             ## add GpsQuality
-            #, group=, arg
-            , agr=c(DeviceName="identity")
+            # , group=deploy    ## define group later, under lines
+            # , agr=c(DeviceName="identity")
+            , crs=4326
   ) %>%
   st_transform(projection) %>%
   # filter out arctic and SE Alaska (here to get bbox right)
   filter (Longitude < -149)
+rm (driftP)
+
+## mark individual drifter deployments
+deploy <- paste (drift$DeviceName, drift$DeviceDateTime)
+dTime <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]
+                        , drift$DeviceDateTime [1:(nrow (drift)-1)]
+                        , units="hours"))
+for (i in 2:nrow (drift)){
+  ## copy deploy from prev record if it's in the same deployment
+  if ((dTime [i] < 5) & # (dTime [i] > 0) &   ## tricky. Some deployments at 4 h intervals, mostly < 1
+      (drift$DeviceName [i] == drift$DeviceName [i-1])){
+    deploy [i] <- deploy [i-1]
+  }# to break lines, insert a blank row at the end with appropriate DeviceDateTime + 1s an DeviceName ?
+}
+drift$deploy <- factor (deploy)
+# levels (factor (drift$DeviceName))
+# drift$deploy |> factor() |> levels() #|> length()
+rm (dTime, deploy)
+
+## deployment summary table showing start dates and deployment length
+# deployment <- aggregate (.~deploy, data=drift, FUN=function (x){x[1]})
+if (0){
+  aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
+    length(x)
+    #  difftime (max (x), min(x), units="hours")
+  })
+}
 
 ## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
-levels (factor (drift$DeviceName))
-drP <- drift %>%
-  # dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
+drift <- drift %>%
+#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
   dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
-  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
-  #  dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
-  #  dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00"))
+#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
+#  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
+    # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
+    # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
-  # drP <- drP [order (drP$DeviceName, drP$DeviceDateTime),]
   dplyr::filter()
-## need to set these after final drifter selection
-## break deployments apart by reporting times -- if more than a day, start a new deployment
 
+## ice wave rider and MicroStar are surface devices
+drift$depth <- ifelse (seq_along(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+## need to set these after final drifter selection
 drift$DeviceName <- factor (drift$DeviceName)
 drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 drift$age <- as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
 
-## define bounding box
+## ----------------------------------------------------------
+## set-up background map layers and define bounding box
 ## set bbox manually
-if (1){
+if (0){
   # bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150,   58.7)),  # E S
   #                                        st_point (c (-154.3, 60.3)))  # W N
-  bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150,   58.7)),  # E S
-                                         st_point (c (-154.3, 60.3)))  # W N
+  bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150.5, 59.2)),  # E S
+                                         st_point (c (-152.5, 59.8)))  # W N
                      , crs=4326) %>%
     st_transform (projection) %>%  # transform first to keep straight lines in projection
     st_bbox() %>%
@@ -157,7 +186,7 @@ world <- sf::st_read (worldP, quiet=TRUE) %>%
 # ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
 
 ## test crop ok
-ggplot2::ggplot (world) + geom_sf()
+# ggplot2::ggplot (world) + geom_sf()
 
 
 
@@ -171,7 +200,7 @@ basemap <- ggplot2::ggplot (data=bbox_new) +
   ggplot2::geom_sf (data=world, fill = "goldenrod") +
 #  ggplot2::labs(title="") +
   ggplot2::theme(  ## minor fixes to do here: plot land the way to the edge
-    #panel.background=ggplot2::element_blank(),
+    panel.background=ggplot2::element_blank(),
     legend.position="none"
   )
 ## add bathymetry and decorations
@@ -179,17 +208,45 @@ basemap <- ggplot2::ggplot (data=bbox_new) +
 #  sf::st_graticule()  # transform? -- or at the end?
 
 
-## add drifters
-drP <- drift %>% filter (DeviceName==levels (DeviceName)[1])
+## separate map per animation/drifter
+## plot dimensions
+Hi <- 800; Wi <- 800
+require ("gifski")
+
+for (i in seq_along(levels (drift$deploy))){
+  drP <- subset (drift, deploy == levels (drift$deploy)[i])
+  ## catch error if there's nothing to animate
+  if (nrow (drP) > 5){
+    fN <- gsub (":", "_", levels (drift$deploy), fixed=TRUE)
+    drL <- dplyr::summarise(drP, do_union=FALSE) %>% st_cast ("LINESTRING")
+    map <- basemap +
+      ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +
+      ggplot2::geom_sf (data=drP, size=1, pch=3)
+    ggsave (paste0 ("s", fN, ".gif"), map, device="png", path=outpath)
+
+    map3 <- map +
+      transition_time(DeviceDateTime) +
+      # transition_time(age) +
+      shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
+      ggtitle("time: {frame_time}")
+
+    anim <- gganimate::animate (map3, nframes = 100, fps=2  # calc nframes!
+                                , height=Hi, width=Wi
+                                , rewind=FALSE)
+    anim_save (paste0 (fN, ".gif"), anim, path=outpath)
+  }
+}
+
+## add drifters, make lines
+drP <- drift# %>% filter (DeviceName==levels (DeviceName)[1])
 drL <- dplyr::summarize (drP, do_union=FALSE) %>%
   st_cast("LINESTRING")
 
 map <- basemap +
-  ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +
-  ggplot2::geom_sf (data=drP, size=1, pch=3)
-map
-
-
+  ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +  # animate line somehow
+  ggplot2::geom_sf (data=drP, cex=2, pch=3)  # mark positions with a cross
+# map
+ggsave (paste0 ("aMap.gif"), map, device="png", path=outpath)
 
 
 ## animate
@@ -199,10 +256,33 @@ map3 <- map +
   shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
   ggtitle("time: {frame_time}")
 
-anim <- gganimate::animate (map3, nframes = 100, fps=2  # calc nframes!
-                            # , height=8, width=16, res=120
-                            , rewind=FALSE)
+require ("av")  ## for ffmpeg -- smaller file size than gif
+anim <- gganimate::animate (map3, nframes = 100, fps=4  # calc nframes!
+                            , height=Hi, width=Wi
+                            , rewind=FALSE
+                            # , renderer=av_renderer()  # mp4 render not yet working
+                            )
 anim_save ("animation.gif", anim, path=outpath)
+# anim_save ("animation.mp4", anim, path=outpath)
+
+
+
+## animate drifters manually, for more control
+# save_gif (expressionMakingGraphics
+#           , gif_file=paste0 (outpath, "animationX.gif")
+#           , width=Wi, height=Hi, delay=1
+#           , progress=TRUE) # delay: s time delay (delay = 1/FPS)).
+
+rm (Hi, Wi, drL, drP)
+
+
+
+## end of current code
+
+
+
+
+
 
 
 
