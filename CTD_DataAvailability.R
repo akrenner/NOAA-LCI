@@ -24,6 +24,11 @@ base::load ("~/tmp/LCI_noaa/cache/CNV1.RData")  ## from CTD_cleanup.R: physOc, s
 # base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")
 
 
+## summary of casts per station
+aggregate(format (isoTime, "%Y-%m-%d")~Match_Name, data=physOc, FUN=function (x){length (unique(x))})
+
+
+
 ## add time variables
 phy <- physOc; rm (physOc)
 phy$year <- factor (format (phy$isoTime, "%Y"))
