@@ -3,6 +3,9 @@
 rm (list=ls())
 
 
+## set interpolation [min] for animation
+interP <- 10
+
 
 ## ----------------------------------------------------------
 ## file locations
@@ -16,9 +19,6 @@ bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # g
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
 outpath <- "~/tmp/LCI_noaa/media/drifter/"
 
-
-## set reporting interval ?
-## tricky. Some deployments at 4 h intervals, mostly < 1
 
 
 ## ----------------------------------------------------------
@@ -76,6 +76,7 @@ require ("stars")
 require ("ggplot2")
 require ("ggspatial")  ## for spatial points in ggplot
 require ("gganimate")  ## seems to be a convenient package for animation
+require ("rnaturalearth") ## for read_csv
 
 ## set projection
 projection <- st_crs (3338) ## Alaska Albers EA
@@ -88,34 +89,113 @@ projection <- st_crs (3338) ## Alaska Albers EA
 drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct"
                                         , DeviceName="factor")) %>%
   .[order (.$DeviceName, .$DeviceDateTime),] %>% ## ensure data is sorted right
+  # filter out arctic and SE Alaska (here to get bbox right)
+  filter (Longitude < -149)
+
+
+
+## interpolate positions to standardice interval
+## define deployment -- include speed?
+
+dT <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]
+         , drift$DeviceDateTime [1:(nrow (drift)-1)]
+         , units="mins"))
+# newTime <- ifelse (dT > 120, TRUE, FALSE)
+# nDev <- !duplicated (drift$DeviceName)
+# newDeploy <- newTime | nDev
+newDeploy <- ifelse (dT > 120, TRUE, FALSE) |
+  !duplicated (drift$DeviceName)
+# cbind (drift [1:20, 1:2], dT [1:20], newDeploy [1:20])
+
+## define deployment bouts
+x <- 0
+depIdx <- character(nrow (drift))
+for (i in 1:length (newDeploy)){
+  if (newDeploy [i]){
+    x <- x+1
+    x <- drift$DeviceDateTime [i]
+  }
+  depIdx [i] <- paste0 (drift$DeviceName [i], "-", x)
+}
+depIdx <- factor (depIdx)
+head (summary (depIdx))
+drift$deploy <- depIdx
+rm (dT, newDeploy, x, depIdx, i, driftP)
+
+## interpolate within bouts
+require ("dplyr")
+# df <- group_by (drift, deploy) # %>% mutate (run=seq (length (deploy)))
+# for (i in 1:length (df)){
+for (i in 1:length (levels (drift$deploy))){
+  df <- subset (drift, deploy == levels (drift$deploy)[i])
+  if (nrow (df)>1){
+    newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
+                                  , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
+                                                        , to=max (DeviceDateTime)
+                                                        , by=paste (interP, "min"))
+    ))
+    newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
+    newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
+    if (exists ("iDF")){
+      iDF <- rbind (iDF, newDF)
+    }else{
+      iDF <- newDF
+    }
+  }
+}
+
+
+## project positions -- can move to earlier?
+drift <- iDF %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
             , remove=FALSE
             ## add GpsQuality
             # , group=deploy    ## define group later, under lines
             # , agr=c(DeviceName="identity")
             , crs=4326
-  ) %>%
-  st_transform(projection) %>%
-  # filter out arctic and SE Alaska (here to get bbox right)
-  filter (Longitude < -149)
-rm (driftP)
+  ) # %>% st_transform(projection)
 
-## mark individual drifter deployments
-deploy <- paste (drift$DeviceName, drift$DeviceDateTime)
-dTime <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]
-                        , drift$DeviceDateTime [1:(nrow (drift)-1)]
-                        , units="hours"))
-for (i in 2:nrow (drift)){
-  ## copy deploy from prev record if it's in the same deployment
-  if ((dTime [i] < 5) & # (dTime [i] > 0) &   ## tricky. Some deployments at 4 h intervals, mostly < 1
-      (drift$DeviceName [i] == drift$DeviceName [i-1])){
-    deploy [i] <- deploy [i-1]
-  }# to break lines, insert a blank row at the end with appropriate DeviceDateTime + 1s an DeviceName ?
+
+
+# bbox <- read.csv("~/GISdata/LCI/KBL_ResearchArea/KBL_ResearchArea.csv") %>%
+#   st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
+#   st_bbox() %>%
+#   st_transform(projection)
+#   st_as_sfc()
+
+
+# driftC <- st_intersection(drift, bbox)
+
+  if (0) {## get more drifter data from NOAA global drifter program
+    df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
+    df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
+, "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
+                      , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
+                      "&time%3E=2018-01-01&time%3C=2019-01-01'))
+
+    # ERDDAP "https://erddap.aoml.noaa.gov/"
+
+  }
+
+
+
+if (0){
+  ## set reporting interval ?
+  ## tricky. Some deployments at 4 h intervals, mostly < 1
+
+  ## standardize by interpolating to xx min time intervals
+  ## summary of reporting intervals:
+  dRep <- difftime(drift$DeviceDateTime [2:nrow (drift)]
+                   , drift$DeviceDateTime [1:(nrow (drift)-1)]
+                   , units="mins")
+  dRep <- subset (dRep, abs (dRep) < 60*24)
+  summary (as.numeric (dRep))
+  sort (summary (factor (round (dRep/5)*5)), decreasing=TRUE)  ## most common: 10min, 30 min, 60 min, 240 min
+  ## => interpolate to 10 min
+  rm (dRep)
 }
-drift$deploy <- factor (deploy)
-# levels (factor (drift$DeviceName))
-# drift$deploy |> factor() |> levels() #|> length()
-rm (dTime, deploy)
+
+
 
 ## deployment summary table showing start dates and deployment length
 # deployment <- aggregate (.~deploy, data=drift, FUN=function (x){x[1]})
@@ -143,7 +223,24 @@ drift$depth <- ifelse (seq_along(nrow (drift)) %in% grep ("UAF-SVP", drift$Devic
 ## need to set these after final drifter selection
 drift$DeviceName <- factor (drift$DeviceName)
 drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
-drift$age <- as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
+drift$age <- difftime(drift$DeviceDateTime, min (drift$DeviceDateTime), units="h")
+
+#   as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -211,7 +308,18 @@ basemap <- ggplot2::ggplot (data=bbox_new) +
 ## separate map per animation/drifter
 ## plot dimensions
 Hi <- 800; Wi <- 800
-require ("gifski")
+
+
+# require ("gifski")
+require ("av")
+## plot many frames into a gif
+## later convert gif to mp4
+
+
+av_encode_video (input=frames, output="output.mp4", framerate=2)
+
+
+
 
 for (i in seq_along(levels (drift$deploy))){
   drP <- subset (drift, deploy == levels (drift$deploy)[i])
