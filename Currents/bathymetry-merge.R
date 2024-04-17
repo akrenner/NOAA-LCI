@@ -13,8 +13,7 @@
 
 
 rm (list=ls())
-
-
+# renv::load("renv/activate.R")
 
 interAct <- FALSE
 
@@ -25,10 +24,11 @@ interAct <- FALSE
 area <- "ResearchAreaBig"
 bbox <- c (-156, -143.5, 56, 62) ## rRes 200 is too much
 
-## KBL research area
-area <- "ResearchArea"
+## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
+area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
 bbox <- c(-155.3, -143.8, 57, 60.7)
 
+if (0){
 ## reduced research area
 area <- "ResearchArea_small"
 bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
@@ -36,12 +36,11 @@ bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
 area <- "GWA-area"
 bbox <- c(-153.5, -150.8, 58.7, 60.1) ## restricted to stay within memory limits
 
-area <- "quarterly"
-bbox <- c(-152.2, -150.9, 59.1, 59.85) ## restricted to stay within memory limits
-if (0){
-
-area <- "KachemakBay"
-bbox <- c(-151.95, -151, 59.38, 59.8) ## restricted to stay within memory limits
+# area <- "quarterly"
+# bbox <- c(-152.2, -150.9, 59.1, 59.85) ## restricted to stay within memory limits
+#
+# area <- "KachemakBay"
+# bbox <- c(-151.95, -151, 59.38, 59.8) ## restricted to stay within memory limits
 }
 
 
@@ -51,6 +50,8 @@ ciF <- "~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf"
 gaF <- "~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf"
 gcF <- "~/GISdata/LCI/bathymetry/GEBCO_26_Mar_2024_b7838035e5db/gebco_2023_n62.0_s55.0_w-157.0_e-143.0.tif" ## no CRS
 # gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
+gcF <- "~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif" ## no CRS
+## add terrestrial DEM: best=2m
 
 
 require ("stars")
@@ -58,7 +59,7 @@ require ("magrittr")
 
 
 
-for (gRes in c(400, 200, 100, 50)){
+for (gRes in c(200, 100, 50)){
 
 
 
