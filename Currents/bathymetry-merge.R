@@ -26,7 +26,7 @@ bbox <- c (-156, -143.5, 56, 62) ## rRes 200 is too much
 
 ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
-bbox <- c(-155.3, -143.8, 57, 60.7)
+bbox <- c(-155.2, -143.9, 57.1, 60.7)
 
 if (0){
 ## reduced research area
@@ -59,18 +59,17 @@ require ("magrittr")
 
 
 
-for (gRes in c(200, 100, 50)){
+# for (gRes in c(200, 100, 50)){
+gRes <- 50
 
 
-
-ci <- read_stars (ciF, package="stars")*-1  ## NA_value = ?
-ga <- read_stars(gaF, package="stars")*-1
-gc <- read_stars(gcF, package="stars")
+# gc <- read_stars(gcF, package="stars")
 # rm (ciF, gaF, gcF)
 
 ## fix bad NA values -- this takes care of those odd edges in Zimmermann files!
+ci <- read_stars (ciF, package="stars")*-1  ## NA_value = ?
 ci [ci > 0] <- NA ## refine? still cutting off useful info in upper Cook Inlet?
-ga [ga > 0] <- NA
+
 if (interAct){
   plot (ci)
   ci
@@ -96,30 +95,40 @@ if (interAct){
   }else{
     ## use manually defined bounding box (study region)
     nG <- data.frame (lon=c(bbox[1], bbox[2]), lat=c(bbox[3], bbox[4])) %>%  ## gebco is -157 -143 55 62
-      st_as_sf (coords=c("lon", "lat"), crs=st_crs(gc)) %>%
+      st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
       st_transform(st_crs (ci)) %>%
       starsExtra::make_grid(res=gRes)
   }
   ## transform grids to new grid and fill in the blanks hierachically
   ci2 <- stars::st_warp(ci, nG)
   rm (ci)
+  ga <- read_stars(gaF, package="stars")*-1
+  ga [ga > 0] <- NA
   ga2 <- stars::st_warp(ga, ci2, method="cubic", use_gdal=TRUE) # or bilinear -- deal with NA!
   rm (ga)
-  gc2 <- stars::st_warp(gc, ci2, method="cubic", use_gdal=TRUE)
-  rm (gc)
-
-
   ## use raster::cover, terra::cover equivalent to merge the rasters
-  zm <- ci2; rm (ci2)
-  zm [[1]] <- ifelse (is.na (zm [[1]]), ga2 [[1]], zm [[1]])
-  zm [[1]] <- ifelse (is.na (zm [[1]]), gc2 [[1]], zm [[1]])
+  ci2 [[1]] <- ifelse (is.na (ci2 [[1]]), ga2 [[1]], ci2 [[1]])
+  rm (ga2)
+  ## check-point
+  save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
+  gc2 <- read_stars (gcF, package="stars") %>%
+    stars::st_warp(gc, ci2, method="cubic", use_gdal=TRUE)
+  rm (gcF)
+  ci2 [[1]] <- ifelse (is.na (ci2 [[1]]), gv2 [[1]], ci2 [[1]])
+  tm (gc2)
+
+  # zm <- ci2; rm (ci2)
+  # zm [[1]] <- ifelse (is.na (zm [[1]]), ga2 [[1]], zm [[1]])
+  # zm [[1]] <- ifelse (is.na (zm [[1]]), gc2 [[1]], zm [[1]])
 
   # zm2 <- st_crop (zm, )
 
   ## save results
-  write_stars (zm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
+  write_stars (ci2, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
                            , gRes, "m_epsg3338.tiff"))
-}
+# }
+
+
 
 # require ("raster")
 # comp <- raster::cover (ci2, ga2, gc2)
