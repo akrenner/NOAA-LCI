@@ -174,7 +174,7 @@ drift <- iDF %>%
                       "&time%3E=2018-01-01&time%3C=2019-01-01'))
 
     # ERDDAP "https://erddap.aoml.noaa.gov/"
-
+    # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
   }
 
 
@@ -230,20 +230,6 @@ drift$age <- difftime(drift$DeviceDateTime, min (drift$DeviceDateTime), units="h
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## ----------------------------------------------------------
 ## set-up background map layers and define bounding box
 ## set bbox manually
@@ -271,6 +257,9 @@ world <- sf::st_read (worldP, quiet=TRUE) %>%
  st_crop (bbox_new)
 
 ## should get this to work to expand polygon past bbox of plot
+## could use st_buffer
+## or use studyArea above
+
 ## or set xlim and ylim on plot
 # st_crop (st_coordinates (bbox_new)[c(1,3), c(1,2)]*c(0.9,1.1,0.9,1.1) %>%  # expand past bbox_new
 #          st_sfc (st_point (.[1,])
@@ -284,6 +273,8 @@ world <- sf::st_read (worldP, quiet=TRUE) %>%
 
 ## test crop ok
 # ggplot2::ggplot (world) + geom_sf()
+
+
 
 
 
