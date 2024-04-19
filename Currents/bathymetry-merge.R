@@ -33,6 +33,7 @@ if (0){
 area <- "ResearchArea_small"
 bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
 
+if (0){
 area <- "GWA-area"
 bbox <- c(-153.5, -150.8, 58.7, 60.1) ## restricted to stay within memory limits
 
@@ -46,6 +47,7 @@ bbox <- c(-153.5, -150.8, 58.7, 60.1) ## restricted to stay within memory limits
 
 ## ----------------------------------------------------------------------------
 
+demF <- "~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc"
 ciF <- "~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf" ## bad numbers, good crs
 gaF <- "~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf"
 gcF <- "~/GISdata/LCI/bathymetry/GEBCO_26_Mar_2024_b7838035e5db/gebco_2023_n62.0_s55.0_w-157.0_e-143.0.tif" ## no CRS
@@ -100,31 +102,33 @@ if (interAct){
       starsExtra::make_grid(res=gRes)
   }
   ## transform grids to new grid and fill in the blanks hierachically
+
+dm <- stars::read_stars(demF, package="stars") %>%
+stars::st_warp(nG)
+rm (demF)
+
   ci2 <- stars::st_warp(ci, nG)
   rm (ci)
+  dm [[1]] <- ifelse (is.na (dm[[1]], ci2[[1]], dm[[1]]))
   ga <- read_stars(gaF, package="stars")*-1
   ga [ga > 0] <- NA
   ga2 <- stars::st_warp(ga, ci2, method="cubic", use_gdal=TRUE) # or bilinear -- deal with NA!
   rm (ga)
   ## use raster::cover, terra::cover equivalent to merge the rasters
-  ci2 [[1]] <- ifelse (is.na (ci2 [[1]]), ga2 [[1]], ci2 [[1]])
+  dm [[1]] <- ifelse (is.na (dm [[1]]), ga2 [[1]], dm [[1]])
   rm (ga2)
   ## check-point
   save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
   gc2 <- read_stars (gcF, package="stars") %>%
     stars::st_warp(gc, ci2, method="cubic", use_gdal=TRUE)
   rm (gcF)
-  ci2 [[1]] <- ifelse (is.na (ci2 [[1]]), gv2 [[1]], ci2 [[1]])
+  dm [[1]] <- ifelse (is.na (dm [[1]]), gc2 [[1]], dm [[1]])
   tm (gc2)
-
-  # zm <- ci2; rm (ci2)
-  # zm [[1]] <- ifelse (is.na (zm [[1]]), ga2 [[1]], zm [[1]])
-  # zm [[1]] <- ifelse (is.na (zm [[1]]), gc2 [[1]], zm [[1]])
 
   # zm2 <- st_crop (zm, )
 
   ## save results
-  write_stars (ci2, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
+  write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
                            , gRes, "m_epsg3338.tiff"))
 # }
 
