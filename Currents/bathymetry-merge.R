@@ -22,7 +22,7 @@ interAct <- FALSE
 
 ## optimistic and big
 area <- "ResearchAreaBig"
-bbox <- c (-156, -143.5, 56, 62) ## rRes 200 is too much
+bbox <- c (-156, -143.5, 56, 62) ## rRes 200 is too much for Dell
 
 ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
@@ -30,13 +30,10 @@ bbox <- c(-155.2, -143.9, 57.1, 60.7)
 
 if (0){
   ## reduced research area
-  area <- "ResearchArea_small"
+  area <- "GWA-area"
   bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
 
-# if (0){
-area <- "GWA-area"
-bbox <- c(-153.5, -150.8, 58.7, 60.1) ## restricted to stay within memory limits
-
+  # if (0){
   # area <- "quarterly"
   # bbox <- c(-152.2, -150.9, 59.1, 59.85) ## restricted to stay within memory limits
   #
