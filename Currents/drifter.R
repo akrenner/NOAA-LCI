@@ -13,7 +13,8 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"
-bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # getter to graph from tiling server -- use ETOPO 2022
+bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # better to graph from tiling server -- use ETOPO 2022
+bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry_ResearchArea_100m_epsg3338.tiff"
 # could also try Zimmerman bathymetry here
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"

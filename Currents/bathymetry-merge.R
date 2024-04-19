@@ -29,19 +29,19 @@ area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but no
 bbox <- c(-155.2, -143.9, 57.1, 60.7)
 
 if (0){
-## reduced research area
-area <- "ResearchArea_small"
-bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
+  ## reduced research area
+  area <- "ResearchArea_small"
+  bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
 
-if (0){
+# if (0){
 area <- "GWA-area"
 bbox <- c(-153.5, -150.8, 58.7, 60.1) ## restricted to stay within memory limits
 
-# area <- "quarterly"
-# bbox <- c(-152.2, -150.9, 59.1, 59.85) ## restricted to stay within memory limits
-#
-# area <- "KachemakBay"
-# bbox <- c(-151.95, -151, 59.38, 59.8) ## restricted to stay within memory limits
+  # area <- "quarterly"
+  # bbox <- c(-152.2, -150.9, 59.1, 59.85) ## restricted to stay within memory limits
+  #
+  # area <- "KachemakBay"
+  # bbox <- c(-151.95, -151, 59.38, 59.8) ## restricted to stay within memory limits
 }
 
 
@@ -62,7 +62,7 @@ require ("magrittr")
 
 
 # for (gRes in c(200, 100, 50)){
-gRes <- 50
+gRes <- 100 # the best MacBook can do (32 GB RAM) with ResearchArea
 
 
 # gc <- read_stars(gcF, package="stars")
