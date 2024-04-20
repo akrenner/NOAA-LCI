@@ -43,9 +43,9 @@ epsg <- 3338
 demF <- "~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc"
 ciF <- "~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf" ## bad numbers, good crs
 gaF <- "~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf"
-gcF <- "~/GISdata/LCI/bathymetry/GEBCO_26_Mar_2024_b7838035e5db/gebco_2023_n62.0_s55.0_w-157.0_e-143.0.tif" ## no CRS
-# gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
-gcF <- "~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif" ## no CRS
+gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
+gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## use ETOPO instead of GEBCO. Better DEM?
+# gcF <- "~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif" ## no CRS
 # gcF <- "/vsizip/~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b.zip/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif"
 
 
@@ -118,6 +118,7 @@ ci [[1]][ci[[1]] < 0] <- NA ## refine? XXX
 ci2 <- stars::st_warp(ci, dm)
 rm (ci)
 dm [[1]] <- ifelse (is.na (dm[[1]]), ci2[[1]]*-1, dm[[1]])  ## zero-out weird data-blocks in Zimmermann files
+rm (ci2)
 
 ga <- read_stars(gaF, package="stars")
 ga [[1]][ga[[1]] < 0.01] <- NA
@@ -128,9 +129,11 @@ dm [[1]] <- ifelse (is.na (dm [[1]]), ga2 [[1]]*-1, dm [[1]])
 rm (ga2)
 ## check-point
 save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
 
 gc2 <- read_stars (gcF, package="stars") %>%
-  stars::st_warp(dm, method="cubic", use_gdal=TRUE, no_data_value=9999)
+   stars::st_warp(dm, method="cubic", use_gdal=TRUE, no_data_value=9999)
+#  stars::st_warp(dm)
 dm [[1]] <- ifelse (is.na (dm [[1]]), gc2 [[1]], dm [[1]])
 rm (gc2, gcF)
 
