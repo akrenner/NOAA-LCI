@@ -21,12 +21,12 @@ interAct <- FALSE
 ## set area for the grid
 
 ## over-sample research area, just in case
-area <- "ResearchAreaBig"
+area <- "ResearchAreaXL"
 bbox <- c (-156, -143.5, 55, 61.5) ## rRes 200 is too much for Dell
 
 ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
-# bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
+bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
 
 if (0){
   ## reduced research area
@@ -44,14 +44,27 @@ demF <- "~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc"
 ciF <- "~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf" ## bad numbers, good crs
 gaF <- "~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf"
 gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
+#gcF <- "~/GISdata/LCI/bathymetry/"
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## use ETOPO instead of GEBCO. Better DEM?
 # gcF <- "~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif" ## no CRS
 # gcF <- "/vsizip/~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b.zip/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif"
+gcF <- "~/GISdata/LCI/bathymetry/ETOPO_2022_v1_15s_surface_SCAK.tiff"
+
+## add terrestrial DEM: best=2m AK from USGS
 
 
-## add terrestrial DEM: best=2m
 
-
+## ensure needed files are present
+if (!exists (gcF)){
+  curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
+                      , destfile=gcF)
+}
+if (!exists (gaF)){
+  ## wayback
+}
+if (!exists (demF)){
+  ## NOAA, City of Homer, PLM, GD?
+}
 
 
 
@@ -69,11 +82,12 @@ if (area == "GWA-area" && ramL > 17e9){
   gRes <- 400                                    # for testing. Works on Dell.
   gRes <- 1000
 }else if (ramL |> as.numeric() > 32e9){
-  gRes <- 100                             # max on Mac (32 GB RAM)
+  gRes <- 100                                    # max on Mac (32 GB RAM)
 }else{
   gRes <- 200
 }
 
+# gRes <- 100
 
 # gc <- read_stars(gcF, package="stars")
 # rm (ciF, gaF, gcF)
