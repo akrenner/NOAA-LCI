@@ -1,5 +1,5 @@
 ## generate unified high-resolution bathymetry for cook inlet and northern GoA
-## merge Zimmermann and GEBCO bathymetries onto a common raster
+## merge DEM, Zimmermann and GMRT bathymetries onto a common raster
 
 ## use Cook Inlet raster parameters. Upsample other rasters.
 ## fill NAs from Cook Inlet with GOA, result with GEBCO
@@ -26,7 +26,7 @@ bbox <- c (-156, -143.5, 55, 61.5) ## rRes 200 is too much for Dell
 
 ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
-bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
+# bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
 
 if (0){
   ## reduced research area
@@ -43,28 +43,27 @@ epsg <- 3338
 demF <- "~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc"
 ciF <- "~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf" ## bad numbers, good crs
 gaF <- "~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf"
+## GEBCO_2023 has issues. The next are all similar, but GMTv4_2 preserves highest resolution
 gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
-#gcF <- "~/GISdata/LCI/bathymetry/"
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## use ETOPO instead of GEBCO. Better DEM?
-# gcF <- "~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif" ## no CRS
-# gcF <- "/vsizip/~/GISdata/LCI/bathymetry/GEBCO_17_Apr_2024_fc045996e23b.zip/GEBCO_17_Apr_2024_fc045996e23b/gebco_2023_n62.0_s54.0_w-159.0_e-143.0.tif"
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO_2022_v1_15s_surface_SCAK.tiff"
+gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240412topo_max_WGS84_EPSG4326.grd"
 
 ## add terrestrial DEM: best=2m AK from USGS
 
 
 
 ## ensure needed files are present
-if (!exists (gcF)){
-  curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
-                      , destfile=gcF)
+  # curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
+  #                     , destfile=gcF)
+if (any (!file.exists (demF, ciF, gaF, gcF))){ # any files missing?
+stop ("Get the necessary bathymetry files from:
+      https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:707/html  (Kachemak DEM)
+      http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/  (Zimmermann's)
+      https://www.gmrt.org/
+      ")
 }
-if (!exists (gaF)){
-  ## wayback
-}
-if (!exists (demF)){
-  ## NOAA, City of Homer, PLM, GD?
-}
+
 
 
 
@@ -72,16 +71,15 @@ require ("stars")
 require ("magrittr")
 
 
-# for (gRes in c(200, 100, 50)){
 ## set gRes depending on available memory
 require ("memuse")
 ramL <- memuse::Sys.meminfo()$totalram |> as.numeric ()
 if (area == "GWA-area" && ramL > 17e9){
-  rRes <- 50 # ok on Mac
+  rRes <- 50                                     # ok on 32 GB Mac
 } else if (ramL |> as.numeric() < 17e9 ){        # have less than 17 GB RAM?
   gRes <- 400                                    # for testing. Works on Dell.
   gRes <- 1000
-}else if (ramL |> as.numeric() > 32e9){
+}else if (ramL |> as.numeric() > 24e9){
   gRes <- 100                                    # max on Mac (32 GB RAM)
 }else{
   gRes <- 200
@@ -89,12 +87,9 @@ if (area == "GWA-area" && ramL > 17e9){
 
 # gRes <- 100
 
-# gc <- read_stars(gcF, package="stars")
-# rm (ciF, gaF, gcF)
 
 
-
-## generate a new all-inclusive raster first -- st_warp will otherwise use ci grid
+## generate a new all-inclusive raster first
 ## port all of this to GrassGIS?
 ## require ("rgrass")
 
@@ -145,35 +140,18 @@ rm (ga2)
 save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
 
+## add terrestrial DEM. Using stars::st_mosaic
+
 gc2 <- read_stars (gcF, package="stars") %>%
    stars::st_warp(dm, method="cubic", use_gdal=TRUE, no_data_value=9999)
 #  stars::st_warp(dm)
 dm [[1]] <- ifelse (is.na (dm [[1]]), gc2 [[1]], dm [[1]])
 rm (gc2, gcF)
-
 # zm2 <- st_crop (zm, )
 
 ## save results
 write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
                         , gRes, "m_EPSG", epsg, ".tiff"))
-# }
-
-
-
-# require ("raster")
-# comp <- raster::cover (ci2, ga2, gc2)
-
-## crop final output:  st_crop
-if (0){
-  ## cut out suitable chunck from gebco!
-  ## old -- for global gebco
-  gc2 <- st_crop(gc
-                 , data.frame (lon=c(-153, -150), lat=c(52, 60)) %>%
-                   st_as_sf (coords=c("lon", "lat"), crs=st_crs(gc))) %>%
-    st_transform(st_crs (gc)) %>%  ## correct for raster??
-    st_warp (ci)  ## this part is slow!!
-}
-
 
 ## EOF
 
