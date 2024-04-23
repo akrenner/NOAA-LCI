@@ -28,7 +28,7 @@ bbox <- c (-156, -143.5, 55, 61.5) ## rRes 200 is too much for Dell
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
 # bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
 
-if (0){
+if (1){
   ## reduced research area
   area <- "GWA-area"
   bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
@@ -48,6 +48,7 @@ gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## use ETOPO instead of GEBCO. Better DEM?
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO_2022_v1_15s_surface_SCAK.tiff"
 gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240412topo_max_WGS84_EPSG4326.grd"
+gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2_20240423topo.tif"
 
 ## add terrestrial DEM: best=2m AK from USGS
 
@@ -56,14 +57,18 @@ gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240412topo_max_WGS84_EP
 ## ensure needed files are present
   # curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
   #                     , destfile=gcF)
-if (any (!file.exists (demF, ciF, gaF, gcF))){ # any files missing?
-stop ("Get the necessary bathymetry files from:
-      https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:707/html  (Kachemak DEM)
-      http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/  (Zimmermann's)
-      https://www.gmrt.org/
-      ")
+mF <- !file.exists (demF, ciF, gaF, gcF)
+if (any (mF)){ # any files missing?
+  sites <- c(DEM="https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:707/html"
+             , Zimmermann="http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CI)"
+             , Zimmermann="http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CGOA)"
+             , gmrt="https://www.gmrt.org/"
+  )
+  stop (paste0 ("Missing files. Get the necessary bathymetry file(s) from: \n"
+  , sites [which (mF)])
+  , "\nand place it in ", c(demF, ciF, gaF, gcF)[mF], " respectively.")
 }
-
+rm (mF)
 
 
 
@@ -75,7 +80,7 @@ require ("magrittr")
 require ("memuse")
 ramL <- memuse::Sys.meminfo()$totalram |> as.numeric ()
 if (area == "GWA-area" && ramL > 17e9){
-  rRes <- 50                                     # ok on 32 GB Mac
+  gRes <- 50                                     # ok on 32 GB Mac
 } else if (ramL |> as.numeric() < 17e9 ){        # have less than 17 GB RAM?
   gRes <- 400                                    # for testing. Works on Dell.
   gRes <- 1000
@@ -84,7 +89,7 @@ if (area == "GWA-area" && ramL > 17e9){
 }else{
   gRes <- 200
 }
-
+rm (ramL)
 # gRes <- 100
 
 
