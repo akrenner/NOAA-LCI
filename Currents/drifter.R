@@ -348,7 +348,7 @@ plotBG <- function(){
         , axes=pA, main="")
   # rm (pA, nbox)
 
-  ## add google/bing map background
+  ## add google/bing map background -- ggmap an option??
 
   ## add bathymetry
   plot (depth, add=TRUE
@@ -369,13 +369,25 @@ plotBG <- function(){
 
 
 
-png (filename=paste0 (outpath, "drifterPlot.png")
+png (filename=paste0 (outpath, "drifterPlot_byID.png")
      , width=1920, height=1080)
-
 plotBG()
-
 ## color by device -- simple
 plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
+dev.off()
+
+
+png (filename=paste0 (outpath, "drifterPlot_speed.png")
+     , width=1920, height=1080)
+plotBG()
+plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=15)
+## speed -- not pretty yet
+plot (st_geometry (drift), add=TRUE, pch=19, cex=1, col=drift$speed_ms, nbreaks=100, pal=heat.colors)
+dev.off()
+
+
+
+
 
 # plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=4)
 ## speed -- not pretty yet
@@ -390,7 +402,6 @@ plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
 #   }
 # }
 
-dev.off()
 
 
 ## animation of drifter tracks
