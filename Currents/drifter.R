@@ -113,6 +113,9 @@ if (projection != st_crs (3338)){
   mar_bathy <- st_warp(mar_bathy, crs=projection)
 }
 names (mar_bathy) <- "topo"
+depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                     , dimensions = attr(mar_bathy, "dimensions"))
+
 
 bbox <- mar_bathy %>%  ## extended Research Area
   st_bbox() %>%
@@ -179,7 +182,7 @@ drift <- dx %>%
 ## retains 21k out of 28 k
 # dim (drift)
 # dim (dx)
-rm (dx, speedTH)
+rm (dx)
 
 newDeploy <- drift$dT > 120 | !duplicated (drift$DeviceName) ## mark new deployments
 ## mark new deployments
@@ -224,6 +227,7 @@ for (i in 1:length (levels (drift$deploy))){
   }
 }
 rm (df, i, newDF, interP)
+iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
 
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
@@ -316,6 +320,7 @@ drift <- drift %>%
     # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
     # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
+  dplyr::filter (speed_ms < speedTH) %>%
   dplyr::filter()
 
 ## need to set these after final drifter selection (days_in_water already per deploy)
@@ -325,34 +330,58 @@ drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
+
 ## -----------------------------------------------------------------------------
 ## revert to R base-graphics -- keep it simple and flexible
 
-nbox <- st_bbox (drift)
-pA <- projection == st_crs (4326)
+## start static device
 
-## static plot of drifter tracks, colored by deployment
-# par()
-plot (st_geometry (worldM), col="white"# , border=NA
-      , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
-      , axes=pA)
-# rm (pA, nbox)
+plotBG <- function(){
+  ## start background details for plot
+  nbox <- st_bbox (drift)
+  pA <- projection == st_crs (4326)
 
-# mar2 <- mar_bathy
-if (0){
-  ## add bathymetric contour lines
+  ## static plot of drifter tracks, colored by deployment
+  par(mar=c(3,3,1,1))
+  plot (st_geometry (worldM), col="white"# , border=NA
+        , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
+        , axes=pA, main="")
+  # rm (pA, nbox)
+
+  ## add google/bing map background
+
   ## add bathymetry
-  mar_bathy$depth <- ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo*-1)
-  plot (mar_bathy, band=2, add=TRUE, compact=TRUE  ## still smothers everyting
-        , col=viridis
-        #      , col=colorRamp(c("gray95", "darkblue"))
+  plot (depth, add=TRUE
+        , nbreaks=100
+        , compact=TRUE  ## still smothers everyting
+        , col=colorRampPalette(c("white", "blue"), interpolate="spline", bias=1)
+        , main=""
   )
-  # plot (st_geometry (worldM), add=TRUE, col="gold")  ## terrible -- overplotting
-}
-bCon <- st_contour (mar_bathy, contour_lines=TRUE
-                    , breaks=seq (-500, -50, by=50))
-plot (bCon, add=TRUE, col="blue")
 
+  ## add land back on
+  plot (st_geometry (worldM), add=TRUE, col="beige") ## find a brewer color -- or satelite BG
+  if (0){
+    plot (st_contour (mar_bathy, contour_lines=TRUE
+                      , breaks=seq (-500, -50, by=50))
+          , add=TRUE, col="blue")
+  }
+}
+
+
+
+png (filename=paste0 (outpath, "drifterPlot.png")
+     , width=1920, height=1080)
+
+plotBG()
+
+## color by device -- simple
+plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
+
+# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=4)
+## speed -- not pretty yet
+# plot (st_geometry (drift), add=TRUE, pch=19, cex=1, col=drift$speed_ms, nbreaks=50, pal=heat.colors)
+
+## plot drifter
 # for (i in 1:seq_along (levels (drift$deploy))){
 #   dr <- subset (drift, deploy==levels (drift$deploy)[i])
 #   if (nrow (dr)>2){
@@ -361,24 +390,10 @@ plot (bCon, add=TRUE, col="blue")
 #   }
 # }
 
-plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
-
-
-# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col
-#       , type="l", lwd=4)
-# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.1) #, col=drift$col)
-# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$speed_ms)
+dev.off()
 
 
 ## animation of drifter tracks
-
-
-
-
-
-
-
-
 
 
 
