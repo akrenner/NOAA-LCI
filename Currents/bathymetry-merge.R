@@ -157,6 +157,11 @@ rm (gc2, gcF)
 ## save results
 write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
                         , gRes, "m_EPSG", epsg, ".tiff"))
+## add metadata, e.g.: gdal_edit.py -mo TIFFTAG_ARTIST="It was me" in.tif
+## or gdal_translate in.tif out.tif -mo TIFFTAG_ARTIST="It was me" -mo TIFFTAG_IMAGEDESCRIPTION="This data my layer"
+## ...: passed to gdal_write
+## options: passed to GDAL
+## there's a function: gdal_metadata -- only for reading
 
 ## EOF
 

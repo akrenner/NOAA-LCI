@@ -3,19 +3,28 @@
 rm (list=ls())
 
 
+## tasks:
+## animate both 2021 drifters on same day
+## fetch all off-shore drifters and animate through seasons (by jday -- or monthly plots)
+
+## get OpenDrift to work on jupyter notebook -- check-point raw book in here.
+
+
+
+
 ## set interpolation [min] for animation
 interP <- 10
+speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
 
 ## ----------------------------------------------------------
 ## file locations
-worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"
+worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## full resolution
+worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"
-bathyP <- "~/GISdata/LCI/bathymetry/CookInletETOPO-bathymetry-ncei.noaa.tif" # better to graph from tiling server -- use ETOPO 2022
-bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry_ResearchArea_100m_epsg3338.tiff"
-# could also try Zimmerman bathymetry here
+bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
 outpath <- "~/tmp/LCI_noaa/media/drifter/"
@@ -79,38 +88,102 @@ require ("ggspatial")  ## for spatial points in ggplot
 require ("gganimate")  ## seems to be a convenient package for animation
 require ("rnaturalearth") ## for read_csv
 
+## add snapbox for basemap? -- all seem to require a token
+# require ("snapbox")
+
 ## set projection
-projection <- st_crs (3338) ## Alaska Albers EA
-# projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
+projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 
 ## ----------------------------------------------------------
-## select drifter and manage data
+## load needed GIS data
+
+# bbox <- read.csv("~/GISdata/LCI/KBL_ResearchArea/KBL_ResearchArea.csv") %>%
+#   st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
+#   st_bbox() %>%
+#   st_as_sfc() %>%
+#   st_transform(projection) %>%
+#   st_as_sfc()
+
+
+mar_bathy <- stars::read_stars (bathyP) ; rm (bathyP)
+if (projection != st_crs (3338)){
+  mar_bathy <- st_warp(mar_bathy, crs=projection)
+}
+names (mar_bathy) <- "topo"
+
+bbox <- mar_bathy %>%  ## extended Research Area
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_transform(projection)
+
+
+worldM <- sf::st_read (worldP, quiet=TRUE) %>%
+  st_geometry()
+worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
+  st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) %>%   ## or could use bbox above
+  sf::st_transform(projection)
+## somehow, polygon 2245 is not valid and cannot be made valid
+## it's at Lon:43.83, Lat:-69.75 -- ideally fixed in gshhs source!
+# summary (st_is_valid(st_make_valid(worldM)))
+
+
+
+## ----------------------------------------------------------
+## prepare drifter data:
+## select drifter
+## define deployment bouts
+## interpolate within bouts to standardize time intervals
+## turn into geographic sf and project
+
 drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct"
                                         , DeviceName="factor")) %>%
   .[order (.$DeviceName, .$DeviceDateTime),] %>% ## ensure data is sorted right
   # filter out arctic and SE Alaska (here to get bbox right)
   filter (Longitude < -149)
 
-
-
-## interpolate positions to standardice interval
-## define deployment -- include speed?
-
-dT <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]
+## define deployment bouts
+## include speed between positions? XXX
+drift$dT <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]  # time lag
          , drift$DeviceDateTime [1:(nrow (drift)-1)]
          , units="mins"))
-# newTime <- ifelse (dT > 120, TRUE, FALSE)
-# nDev <- !duplicated (drift$DeviceName)
-# newDeploy <- newTime | nDev
-newDeploy <- ifelse (dT > 120, TRUE, FALSE) |
-  !duplicated (drift$DeviceName)
-# cbind (drift [1:20, 1:2], dT [1:20], newDeploy [1:20])
+dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
+                , remove=FALSE, crs=4326) %>%
+  st_transform(projection)
+# dx$distance_m <- c (0, st_distance (dx [2:nrow (drift),],  # distance -- verify that it's correct
+#                          dx [1:(nrow(drift)-1),]
+#                          , by_element=TRUE) %>%
+#                       units::drop_units ()
+#                     )
+require ('oce')
+oceDist <- oce::geodDist (dx$Longitude, dx$Latitude, alongPath=TRUE)*1e3  ## simpler and faster than st_distance
+dx$distance_m <- c (0, diff (dx$oceDist)) ## not identical to st_distance, but close enough?
+rm (oceDist)
+# dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 
-## define deployment bouts
-x <- 0
-depIdx <- character(nrow (drift))
+dx$speed_ms <- dx$distance_m / (dx$dT*60) ## filter out speeds > 6 (11 knots) -- later
+dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
+dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut?
+  apply (2, min)
+
+
+## ----------------------------------------------------------------------------
+## filter out unrealistic speeds and records too close to shore/on land? XXX
+drift <- dx %>%
+  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
+  filter (depth > 1) %>%
+  filter (LandDistance_m > 50) %>%
+  st_drop_geometry()  ## drop spatial part
+## retains 21k out of 28 k
+# dim (drift)
+# dim (dx)
+rm (dx, speedTH)
+
+newDeploy <- drift$dT > 120 | !duplicated (drift$DeviceName) ## mark new deployments
+## mark new deployments
+x <- 0; depIdx <- character(nrow (drift)) # declare variables
 for (i in 1:length (newDeploy)){
   if (newDeploy [i]){
     x <- x+1
@@ -119,14 +192,14 @@ for (i in 1:length (newDeploy)){
   depIdx [i] <- paste0 (drift$DeviceName [i], "-", x)
 }
 depIdx <- factor (depIdx)
-head (summary (depIdx))
+# head (summary (depIdx))
 drift$deploy <- depIdx
-rm (dT, newDeploy, x, depIdx, i, driftP)
+rm (newDeploy, x, depIdx, i, driftP)
+
 
 ## interpolate within bouts
 require ("dplyr")
-# df <- group_by (drift, deploy) # %>% mutate (run=seq (length (deploy)))
-# for (i in 1:length (df)){
+if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 for (i in 1:length (levels (drift$deploy))){
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
@@ -137,16 +210,22 @@ for (i in 1:length (levels (drift$deploy))){
     ))
     newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
     newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
-    if (exists ("iDF")){
+    newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+    ## calc distance from point to point
+    x <- newDF %>% st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
+                             , remove=FALSE, crs=4326) # %>% st_transform(projection)
+    newDF$dist_m <- c (0,st_distance(x[2:nrow (x),], x[1:(nrow(x)-1),], by_element=TRUE))
+    newDF$speed_ms <- newDF$dist_m / (interP*60) ## convention to use m/s, not knots
+    if (exists ("iDF")){  ## careful if rerunning!
       iDF <- rbind (iDF, newDF)
     }else{
       iDF <- newDF
     }
   }
 }
+rm (df, i, newDF, interP)
 
-
-## project positions -- can move to earlier?
+## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
             , remove=FALSE
@@ -154,20 +233,30 @@ drift <- iDF %>%
             # , group=deploy    ## define group later, under lines
             # , agr=c(DeviceName="identity")
             , crs=4326
-  ) # %>% st_transform(projection)
+  ) %>% st_transform(projection)
+rm (iDF)
+# drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
+## ice wave rider and MicroStar are surface devices
+drift$depth <- ifelse (seq_along(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
 
 
+## testing
+if (0){
+  sort (summary (drift$deploy), decreasing=TRUE) |> head()
+  x <- subset (drift, deploy=="UAF-SVPI-0047-2022-07-21 18:30:10")
+  plot (x)
+  summary (x$DeviceDateTime)
+  summary (x$days_in_water)
+  levels (factor (x$DeviceName))
+}
 
-# bbox <- read.csv("~/GISdata/LCI/KBL_ResearchArea/KBL_ResearchArea.csv") %>%
-#   st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
-#   st_bbox() %>%
-#   st_transform(projection)
-#   st_as_sfc()
 
 
 # driftC <- st_intersection(drift, bbox)
 
-  if (0) {## get more drifter data from NOAA global drifter program
+## get more drifter data from NOAA global drifter program
+if (0) {
+    ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
     df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
     df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
 , "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
@@ -179,7 +268,7 @@ drift <- iDF %>%
   }
 
 
-
+## summarise reporting interval ?? still needed? -- move up if to be used
 if (0){
   ## set reporting interval ?
   ## tricky. Some deployments at 4 h intervals, mostly < 1
@@ -198,13 +287,23 @@ if (0){
 
 
 
+
+
+
+save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
+
+## -----------------------------------------------------------------------------
+## select drifters to plot
+
 ## deployment summary table showing start dates and deployment length
 # deployment <- aggregate (.~deploy, data=drift, FUN=function (x){x[1]})
 if (0){
   aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
     length(x)
     #  difftime (max (x), min(x), units="hours")
-  })
+  }) %>%
+    arrange (desc (DeviceDateTime))
 }
 
 ## subset drifter database
@@ -219,19 +318,82 @@ drift <- drift %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   dplyr::filter()
 
-## ice wave rider and MicroStar are surface devices
-drift$depth <- ifelse (seq_along(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
-## need to set these after final drifter selection
+## need to set these after final drifter selection (days_in_water already per deploy)
 drift$DeviceName <- factor (drift$DeviceName)
+drift$deploy <- factor (drift$deploy)
 drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
-drift$age <- difftime(drift$DeviceDateTime, min (drift$DeviceDateTime), units="h")
-
-#   as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
+# as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
+## -----------------------------------------------------------------------------
+## revert to R base-graphics -- keep it simple and flexible
+
+nbox <- st_bbox (drift)
+pA <- projection == st_crs (4326)
+
+## static plot of drifter tracks, colored by deployment
+# par()
+plot (st_geometry (worldM), col="white"# , border=NA
+      , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
+      , axes=pA)
+# rm (pA, nbox)
+
+# mar2 <- mar_bathy
+if (0){
+  ## add bathymetric contour lines
+  ## add bathymetry
+  mar_bathy$depth <- ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo*-1)
+  plot (mar_bathy, band=2, add=TRUE, compact=TRUE  ## still smothers everyting
+        , col=viridis
+        #      , col=colorRamp(c("gray95", "darkblue"))
+  )
+  # plot (st_geometry (worldM), add=TRUE, col="gold")  ## terrible -- overplotting
+}
+bCon <- st_contour (mar_bathy, contour_lines=TRUE
+                    , breaks=seq (-500, -50, by=50))
+plot (bCon, add=TRUE, col="blue")
+
+# for (i in 1:seq_along (levels (drift$deploy))){
+#   dr <- subset (drift, deploy==levels (drift$deploy)[i])
+#   if (nrow (dr)>2){
+#   plot (st_geometry (dr), add=TRUE, type="l", lwd=3, col=dr$col)
+#   plot (st_geometry (dr), add=TRUE, pch=20, cex=0.1)
+#   }
+# }
+
+plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
 
 
-## ----------------------------------------------------------
+# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col
+#       , type="l", lwd=4)
+# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.1) #, col=drift$col)
+# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$speed_ms)
+
+
+## animation of drifter tracks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## end of new code -- below: ggplot and related attempts going nowhere
+
+
+## -----------------------------------------------------------------------------
 ## set-up background map layers and define bounding box
 ## set bbox manually
 if (0){
@@ -251,11 +413,6 @@ if (0){
 }
 
 
-## get shoreline and clip with bbox_new
-## for crop, see https://datascience.blog.wzb.eu/2019/04/30/zooming-in-on-maps-with-sf-and-ggplot2/
-world <- sf::st_read (worldP, quiet=TRUE) %>%
-  sf::st_transform(projection)  %>%
- st_crop (bbox_new)
 
 ## should get this to work to expand polygon past bbox of plot
 ## could use st_buffer
@@ -273,7 +430,7 @@ world <- sf::st_read (worldP, quiet=TRUE) %>%
 # ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
 
 ## test crop ok
-# ggplot2::ggplot (world) + geom_sf()
+# ggplot2::ggplot (worldM) + geom_sf()
 
 
 
@@ -286,7 +443,7 @@ world <- sf::st_read (worldP, quiet=TRUE) %>%
 basemap <- ggplot2::ggplot (data=bbox_new) +
 #  coord_cartesian(xlim=st_coordinates(bbox_new)[1:2,1]*rev (c(1.2, 0.8))) +  # no effect?
   ggplot2::geom_sf() +
-  ggplot2::geom_sf (data=world, fill = "goldenrod") +
+  ggplot2::geom_sf (data=worldM, fill = "goldenrod") +
 #  ggplot2::labs(title="") +
   ggplot2::theme(  ## minor fixes to do here: plot land the way to the edge
     panel.background=ggplot2::element_blank(),
@@ -407,7 +564,7 @@ if(0){
   tmap_mode ('plot')
   dev.new(width=16, height=12, unit="in")
 
-  m <- tm_shape (world, projection=projection, bbox=bbox_new) +
+  m <- tm_shape (worldM, projection=projection, bbox=bbox_new) +
     tm_polygons(col='goldenrod', alpha=0.3, border.col='black', lwd=0.75)
 
   m <- m +
@@ -425,7 +582,7 @@ if(0){
   tmap_animation(m, filename=paste0 (outpath, "animation.gif")
                  , width=16, height=8, dpi=100)
 
-  rm (bbox_new, world, worldP)
+  rm (bbox_new, worldM, worldP)
 }
 
 
@@ -488,7 +645,7 @@ require ("dplyr")
 ## ggmaps == disabled by NOAA
 
 ggplot () +
-  borders ("world", "usa:alaska", colour="gray90", fill="gray85")+
+  borders ("worldM", "usa:alaska", colour="gray90", fill="gray85")+
   theme_map() +
   geom_point (data=drP, aes (x=Longitude, y=Latitude
                    # , color=depth
@@ -633,7 +790,7 @@ p
 
 tmap_mode('plot')
 dev.new(width=16, height=12, unit="in")
-m <- tm_shape (world, projection=3338, bbox=bbox_new)
+m <- tm_shape (worldM, projection=3338, bbox=bbox_new)
 
 ## plot drifter onto map
 m <- m +
