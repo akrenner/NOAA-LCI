@@ -15,6 +15,8 @@ rm (list=ls())
 
 ## set interpolation [min] for animation
 interP <- 10 # interpolation interval (min)
+interP <- 0
+
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
 wRes <- 1920; hRes <- 1080   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
@@ -31,7 +33,6 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## h
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"  ## smaller, only local data
-# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv.zip/drifter-03_14_24-21_58.csv" ## should be able to read from zip!
 # driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv"  ## full drifter archive
 bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
@@ -164,7 +165,7 @@ save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
 # drift <- read.csv (unz (driftP, "drifter-03_14_24-21_58.csv"), colClasses=c(DeviceDateTime="POSIXct"
 #                                         , DeviceName="factor")) %>%
 drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct", DeviceName="factor")) %>%
-#  arrange (DeviceName, DeviceDateTime) %>%   ## test that this is working!
+  #  arrange (DeviceName, DeviceDateTime) %>%   ## test that this is working!
   filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
 drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 rm (driftP)
@@ -179,7 +180,8 @@ dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
                 , remove=FALSE, crs=4326) %>%
   st_transform(projection)
 ## use morph..
-dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
+# dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
+dx$topo <- st_extract(mar_bathy, at=dx)$topo
 dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut?
   apply (2, min)
 
@@ -191,7 +193,7 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
 drift <- dx %>%
   filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter (depth > 0.1) %>%         ## to make sure none are on land
+  filter (topo < 3) %>%         ## to make sure none are on land
   filter (LandDistance_m > 50) %>%
   st_drop_geometry()  ## drop spatial part
 ## retains 21k out of 28 k
@@ -227,21 +229,30 @@ rm (newDeploy, x, depIdx, i)
 
 ## interpolate within bouts
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
+
 for (i in seq_along (levels (drift$deploy))){
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
-    newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
-                                  , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
-                                                        , to=max (DeviceDateTime)
-                                                        , by=paste (interP, "min"))
-    ))
-    newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
-    newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
-
+    if (interP > 0){
+      newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
+                                    , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
+                                                                , to=max (DeviceDateTime)
+                                                                , by=paste (interP, "min"))
+      ))
+      newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
+      newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
+      newDF$dT <- interP
+    }else{
+      newDF <- df
+    }
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
     newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-    newDF$speed_ms <- newDF$dist_m / (interP*60) ## convention to use m/s, not knots
-    if (exists ("iDF")){  ## careful if rerunning!
+    newDF$speed_ms <- newDF$dist_m / (newDF$dT*60) ## convention to use m/s, not knots
+    ## trim newDF XXXX  -- cut bad stuff front and back
+    ## at the very least: first and last
+    newDF <- newDF [2:(nrow (newDF)-1),]
+
+    if (exists ("iDF")){
       iDF <- rbind (iDF, newDF)
     }else{
       iDF <- newDF
@@ -259,12 +270,11 @@ iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/p
 drift <- iDF %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
             , remove=FALSE
-            ## add GpsQuality
-            # , group=deploy    ## define group later, under lines
-            # , agr=c(DeviceName="identity")
             , crs=4326
   ) %>% st_transform(projection)
 rm (iDF)
+
+
 # drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
 ## ice wave rider and MicroStar are surface devices
 drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
@@ -286,16 +296,16 @@ if (0){
 
 ## get more drifter data from NOAA global drifter program
 if (0) {
-    ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
-    df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
-    df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
+  ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
+  df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
+  df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
 , "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
                       , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
                       "&time%3E=2018-01-01&time%3C=2019-01-01'))
 
-    # ERDDAP "https://erddap.aoml.noaa.gov/"
-    # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
-  }
+  # ERDDAP "https://erddap.aoml.noaa.gov/"
+  # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
+}
 
 
 ## summarise reporting interval ?? still needed? -- move up if to be used
@@ -334,7 +344,7 @@ depL <- aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
   length(x)
   #  difftime (max (x), min(x), units="hours")
 }) %>%
-#  arrange (desc (DeviceDateTime))
+  #  arrange (desc (DeviceDateTime))
   arrange (DeviceDateTime)
 drift$depOrder <- (1:nrow (depL))[match (drift$deploy, depL$deploy)]
 rm (depL)
@@ -343,12 +353,12 @@ rm (depL)
 ## Port Graham to Cook Inlet: SVPI-0047
 drift <- drift %>%
   dplyr::arrange (depOrder, DeviceDateTime) %>%
-#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
-###  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
-#  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
-#  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
-    # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
-    # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
+  #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
+  ###  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
+  #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
+  #  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
+  # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
+  # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   dplyr::filter (speed_ms < speedTH) %>%
   dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
@@ -381,9 +391,9 @@ add.alpha <- function(col, alpha=1){
 ## revert to R base-graphics -- keep it simple and flexible
 
 
-plotBG <- function(downsample=0){
+plotBG <- function(downsample=0, dr=drift){
   ## start background details for plot
-  nbox <- st_bbox (drift)
+  nbox <- st_bbox (dr)
   pA <- projection == st_crs (4326)
 
   ## static plot of drifter tracks, colored by deployment
@@ -457,28 +467,24 @@ png (filename=paste0 (outpath, "drifterPlot_speed.png")
 par (mfrow =c(1,2))
 plotBG()
 
-
 x <- subset (drift, (speed_ms < 3))$speed_ms
-x <- log (x)
-brks <- exp (seq (min (x), max (x), length.out=20))
-
-brks <-
-rm (x)
+brks <- seq (min (x), max (x), length.out=20)
+x <- sqrt (x)
+brks2 <- (seq (min (x), max (x), length.out=20))^2
 
 drift %>%
   filter (speed_ms < 3) %>%
   filter (speed_ms > 0) %>%
   filter (deployDepth < 5) %>%
   select (speed_ms) %>%
-plot (add=TRUE
-      , pch=19  ## by deployDepth
-      , cex=1
-      , type="p"
-      , alpha=0.5
-      , breaks=brks
-      ## key for colors
-      # ,graticule=TRUE
-      )
+  plot (add=TRUE
+        , pch=19  ## by deployDepth
+        , type="p"
+        , alpha=0.5
+        , breaks=brks
+        ## key for colors
+        # ,graticule=TRUE
+  )
 title (main = "speed: surface")
 
 plotBG()
@@ -489,7 +495,6 @@ drift %>%
   select (speed_ms) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
-        , cex=1
         , type="p"
         , alpha=0.5
         , breaks=brks
@@ -498,7 +503,7 @@ drift %>%
   )
 title (main = "speed: 15 m depth")
 dev.off()
-rm (brks)
+rm (brks, x)
 
 
 ## age of deployment
@@ -507,7 +512,7 @@ png (filename=paste0 (outpath, "drifterPlot_age.png")
 plotBG()
 drift %>%
   filter (speed_ms < 3) %>%
-#  filter (deployDepth < 5) %>%
+  #  filter (deployDepth < 5) %>%
   select (days_in_water) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
@@ -515,12 +520,51 @@ drift %>%
         , type="p"
         , alpha=0.5
         , nbreaks=100
-#        , key.pos=
-#        , breaks=brks
+        #        , key.pos=
+        #        , breaks=brks
   )
 title (main="time")
 dev.off()
 # rm (brks)
+
+
+
+## plot each individual deployment
+dir.create(paste0 (outpath, "/deployment/"), recursive=TRUE, showWarnings=FALSE)
+
+plotDrift <- function (i){
+  png (filename=paste0 (outpath, "/deployment/", levels (drift$deploy)[i], ".png")
+       , width=wRes, height=hRes)
+  dR <- drift %>%
+    #  filter (speed_ms < 3) %>%
+    filter (deploy == levels (drift$deploy)[i]) %>%
+    # select (days_in_water)
+    select (speed_ms)
+
+  plotBG(dr=dR)
+  plot (dR, add=TRUE
+        , pch=19  ## by deployDepth
+        , cex=1, type="p"
+        , alpha=0.5
+        , nbreaks=100
+        #        , key.pos=
+        #        , breaks=brks
+  )
+  title (main=levels (drift$deploy)[i])
+  dev.off()
+}
+
+
+for (i in seq_along(levels (drift$deploy))){
+  print (i)
+  plotDrift (i)
+}
+
+# library (parallels)
+# require ('parallelly')
+
+
+
 
 
 ## plot drifter
@@ -566,7 +610,7 @@ dev.off()
 # setTimeLimit (elapsed=60*10
 #               , transient=TRUE) # 10 min limit
 
-
+if (0){
 tD <- tempdir()
 png (paste0 (tD, "/frame%04d.png"), width = wRes, height=hRes, res=120)
 par (ask=FALSE)
@@ -603,7 +647,9 @@ av::av_capture_graphics({
 }, video_file, wRes, hRes, res=144, vfilter='framerate=fps=10')
 utils::browseURL(video_file)
 
+}
 
+for (i in 1:5) alarm()
 
 ## -----------------------------------------------------------------------------
 ## EOF
