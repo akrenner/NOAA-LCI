@@ -13,8 +13,17 @@ rm (list=ls())
 
 
 ## set interpolation [min] for animation
-interP <- 10
+interP <- 10 # interpolation interval (min)
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
+
+wRes <- 1920; hRes <- 1080   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+wRes <- 1024; hRes <-  576   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+frameR <- 24 ## frames/s
+
+
+## set projection for output map
+# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 ## ----------------------------------------------------------
@@ -23,7 +32,9 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## f
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
-driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"
+driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"  ## smaller, only local data
+# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv.zip" ## should be able to read from zip!
+# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv"  ## full drifter archive
 bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
@@ -83,17 +94,14 @@ require ("dplyr")      ## needed for pipe
 require ("RColorBrewer")
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
 require ("stars")
-require ("ggplot2")
-require ("ggspatial")  ## for spatial points in ggplot
-require ("gganimate")  ## seems to be a convenient package for animation
+# require ("ggplot2")
+# require ("ggspatial")  ## for spatial points in ggplot
+# require ("gganimate")  ## seems to be a convenient package for animation
 require ("rnaturalearth") ## for read_csv
 
 ## add snapbox for basemap? -- all seem to require a token
 # require ("snapbox")
 
-## set projection
-projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
-projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 
@@ -107,7 +115,7 @@ projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 #   st_transform(projection) %>%
 #   st_as_sfc()
 
-
+## bathymetry/topography
 mar_bathy <- stars::read_stars (bathyP) ; rm (bathyP)
 if (projection != st_crs (3338)){
   mar_bathy <- st_warp(mar_bathy, crs=projection)
@@ -116,13 +124,13 @@ names (mar_bathy) <- "topo"
 depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
                      , dimensions = attr(mar_bathy, "dimensions"))
 
-
+## bounding box -- redundant?
 bbox <- mar_bathy %>%  ## extended Research Area
   st_bbox() %>%
   st_as_sfc() %>%
   st_transform(projection)
 
-
+## coastline
 worldM <- sf::st_read (worldP, quiet=TRUE) %>%
   st_geometry()
 worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
@@ -143,10 +151,9 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 
 drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct"
                                         , DeviceName="factor")) %>%
-  .[order (.$DeviceName, .$DeviceDateTime),] %>% ## ensure data is sorted right
-  # filter out arctic and SE Alaska (here to get bbox right)
-  filter (Longitude < -149)
-
+  arrange (DeviceName, DeviceDateTime) %>%
+  filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
+rm (driftP)
 ## define deployment bouts
 ## include speed between positions? XXX
 drift$dT <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]  # time lag
@@ -184,7 +191,7 @@ drift <- dx %>%
 # dim (dx)
 rm (dx)
 
-newDeploy <- drift$dT > 120 | !duplicated (drift$DeviceName) ## mark new deployments
+newDeploy <- drift$dT > 60*24*1.5 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments
 ## mark new deployments
 x <- 0; depIdx <- character(nrow (drift)) # declare variables
 for (i in 1:length (newDeploy)){
@@ -197,15 +204,15 @@ for (i in 1:length (newDeploy)){
 depIdx <- factor (depIdx)
 # head (summary (depIdx))
 drift$deploy <- depIdx
-rm (newDeploy, x, depIdx, i, driftP)
+rm (newDeploy, x, depIdx, i)
 
 
 ## interpolate within bouts
 require ("dplyr")
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
-for (i in 1:length (levels (drift$deploy))){
+for (i in seq_along(length (levels (drift$deploy)))){
   df <- subset (drift, deploy == levels (drift$deploy)[i])
-  if (nrow (df)>1){
+  if (nrow (df)>2){
     newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
                                   , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
                                                         , to=max (DeviceDateTime)
@@ -295,32 +302,38 @@ if (0){
 
 
 save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 ## -----------------------------------------------------------------------------
 ## select drifters to plot
 
 ## deployment summary table showing start dates and deployment length
 # deployment <- aggregate (.~deploy, data=drift, FUN=function (x){x[1]})
-if (0){
-  aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
-    length(x)
-    #  difftime (max (x), min(x), units="hours")
-  }) %>%
-    arrange (desc (DeviceDateTime))
-}
+
+## sort short to long deployments to plot short ones first
+depL <- aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
+  length(x)
+  #  difftime (max (x), min(x), units="hours")
+}) %>%
+#  arrange (desc (DeviceDateTime))
+  arrange (DeviceDateTime)
+drift$depOrder <- (1:nrow (depL))[match (drift$deploy, depL$deploy)]
+rm (depL)
 
 ## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
 drift <- drift %>%
+  dplyr::arrange (depOrder, DeviceDateTime) %>%
 #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
-  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
+###  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
 #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0048")) %>%  # many deploys?
 #  dplyr::filter (DeviceName == "UAF-SVPI-0046") %>%
     # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
     # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   dplyr::filter (speed_ms < speedTH) %>%
+  dplyr::filter (speed_ms > 0.0001) %>%      ## remove stationary positions
+  dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   dplyr::filter()
 
 ## need to set these after final drifter selection (days_in_water already per deploy)
@@ -331,10 +344,23 @@ drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 
 
 
+
+## -----------------------------------------------------------------------------
+## define some colors
+
+## from https://www.magesblog.com/post/2013-04-30-how-to-change-alpha-value-of-colours-in/
+add.alpha <- function(col, alpha=1){
+  if(missing(col))
+    stop("Please provide a vector of colours.")
+  apply(sapply(col, col2rgb)/255, 2,
+        function(x)
+          rgb(x[1], x[2], x[3], alpha=alpha))
+}
+
+
 ## -----------------------------------------------------------------------------
 ## revert to R base-graphics -- keep it simple and flexible
 
-## start static device
 
 plotBG <- function(){
   ## start background details for plot
@@ -342,24 +368,40 @@ plotBG <- function(){
   pA <- projection == st_crs (4326)
 
   ## static plot of drifter tracks, colored by deployment
-  par(mar=c(3,3,1,1))
-  plot (st_geometry (worldM), col="white"# , border=NA
+  par(mar=c(3,3,3,1))
+  plot (st_geometry (worldM), col="beige", border=NA
         , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
-        , axes=pA, main="")
+        , axes=pA
+        , main="")
   # rm (pA, nbox)
 
-  ## add google/bing map background -- ggmap an option??
+  ## add google/bing map background -- ggmap an option?? needs token :(
 
-  ## add bathymetry
-  plot (depth, add=TRUE
-        , nbreaks=100
-        , compact=TRUE  ## still smothers everyting
-        , col=colorRampPalette(c("white", "blue"), interpolate="spline", bias=1)
-        , main=""
-  )
+  ## add bathymetry/topography
+  if (0){
+    plot (depth, add=TRUE
+          , nbreaks=100
+          , compact=TRUE  ## still smothers everyting
+          , col=colorRampPalette(c("lightblue", "darkblue"), interpolate="spline", bias=1)
+          , main=""
+    )
+    ## add land back on
+    plot (st_geometry (worldM), add=TRUE, col="beige") ## find a brewer color -- or satelite BG
+  }else{
+    ## see https://www.benjaminbell.co.uk/2019/08/bathymetric-maps-in-r-colour-palettes.html
+    ## use topo colors for mar_bathy
+    plot (mar_bathy, add=TRUE
+          , downsample=0
+          , col=c(colorRampPalette (c("darkblue", "lightblue"))(80)
+                  , add.alpha (terrain.colors(100), 0.15))
+          , breaks=c(seq (-400, 0, by=5), seq (0, 1000, by=10))
+          , main=""
+    )
+    ## add land back on -- to tone down land
+    # plot (st_geometry (worldM), add=TRUE, col=add.alpha("beige", 0.8), border=NA) ## find a brewer color -- or satelite BG
+  }
 
-  ## add land back on
-  plot (st_geometry (worldM), add=TRUE, col="beige") ## find a brewer color -- or satelite BG
+  ## add bathymetry contours -- don't
   if (0){
     plot (st_contour (mar_bathy, contour_lines=TRUE
                       , breaks=seq (-500, -50, by=50))
@@ -369,29 +411,37 @@ plotBG <- function(){
 
 
 
+## color by device -- simple
 png (filename=paste0 (outpath, "drifterPlot_byID.png")
      , width=1920, height=1080)
 plotBG()
-## color by device -- simple
-plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col=drift$col)
+# plot (st_geometry (drift), add=TRUE, type="l", lwd=2, col="yellow")  ## lines -- trouble between deploys
+## cross/x: pch=4,  plus+: pch=3
+plot (st_geometry (drift), add=TRUE, pch=19, cex=1.0
+      # , col=add.alpha ("#FFBB00", 0.4)
+        , col=add.alpha (drift$col, 0.5)
+      )
 dev.off()
 
 
+
+
+
+## color by speed (or age of deployment)
 png (filename=paste0 (outpath, "drifterPlot_speed.png")
-     , width=1920, height=1080)
+     , width=wRes, height=hRes)
 plotBG()
-plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=15)
+# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=15)
 ## speed -- not pretty yet
-plot (st_geometry (drift), add=TRUE, pch=19, cex=1, col=drift$speed_ms, nbreaks=100, pal=heat.colors)
+dr <- subset (drift, speed_ms < 3)
+plot (st_geometry (dr), add=TRUE, pch=19, cex=1
+      , col=dr$speed_ms, nbreaks=100
+      , pal=heat.colors(99), main="Drifter speed"
+      ## key for colors
+      # ,graticule=TRUE
+      )
 dev.off()
 
-
-
-
-
-# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=4)
-## speed -- not pretty yet
-# plot (st_geometry (drift), add=TRUE, pch=19, cex=1, col=drift$speed_ms, nbreaks=50, pal=heat.colors)
 
 ## plot drifter
 # for (i in 1:seq_along (levels (drift$deploy))){
@@ -405,451 +455,76 @@ dev.off()
 
 
 ## animation of drifter tracks
+# see https://hansenjohnson.org/post/animate-movement-in-r/
+
+## plotly: interactive, but restrictive
+## gganimate: easy, but restrictive
+## googleVis: interactive? Needs flash
+## animate:  flexible, but web-based. Not it! https://kcf-jackson.github.io/animate/
+
+require ("animate") ## simply combine frames -- most flexible
+## output to HTML (with controls), mp4, gif, LaTeX
+
+## animation tasks:
+# 1. plot point by point
+# 2. point by point, building up a tail from start
+# 3. point by point with x-day long tail
+
+# device <- animate$new()  ## real-time animation on html?
+
+## or require ("gifski") (part of animate?) or require ("av")
+
+## see https://cran.r-project.org/web/packages/animate/vignettes/introduction.html -- NO
+
+
+
+## subset to min example
+## start with small test! This takes time.
 
 
 
 
+# setTimeLimit (elapsed=60*10
+#               , transient=TRUE) # 10 min limit
+
+
+tD <- tempdir()
+png (paste0 (tD, "/frame%04d.png"), width = wRes, height=hRes, res=120)
+par (ask=FALSE)
+for (i in 1:nrow (drift)){
+  plotBG()
+  plot (subset (drift, 1:nrow (drift) <= i), add=TRUE)
+  # arrows (x, y, ...)
+}
+dev.off()
+png_files <- list.files(tD, "*.png")
+gif_file <- paste0 (outpath, "driftAnimation.gif")
+gifski (png_files, gif_file, width=wRes, height=hRes
+        , delay=1/frameR, loop=0)
+unlink(tD, recursive=TRUE)
+utils::browseURL(gif_file)
+
+require ("av")
+av_encode_video (input=gif_file
+                 , output=paste0 (outpath, "driftAnimation.mp4")
+                 , framerate=frameR)
 
 
 
 
+## bare av
+video_file <- paste0 (outpath, "driftAnimationAV.mp4")
+av::av_capture_graphics({
+  par (ask=FALSE)
+  for (i in 1:nrow (drift)){
+    plotBG()
+    plot (subset (drift, 1:nrow (drift) <= i), add=TRUE)
+    # arrows (x, y, ...)
+  }
+}, video_file, wRes, hRes, res=144, vfilter='framerate=fps=10')
+utils::browseURL(video_file)
 
-
-
-## end of new code -- below: ggplot and related attempts going nowhere
 
 
 ## -----------------------------------------------------------------------------
-## set-up background map layers and define bounding box
-## set bbox manually
-if (0){
-  # bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150,   58.7)),  # E S
-  #                                        st_point (c (-154.3, 60.3)))  # W N
-  bbox_new <- st_sf (a=1:2, geom=st_sfc (st_point (c (-150.5, 59.2)),  # E S
-                                         st_point (c (-152.5, 59.8)))  # W N
-                     , crs=4326) %>%
-    st_transform (projection) %>%  # transform first to keep straight lines in projection
-    st_bbox() %>%
-    st_as_sfc()
-  ## use drifter range to set bbox
-}else{
-  bbox_new <- st_bbox (drift) %>%
-    st_as_sfc() %>%
-    st_transform(projection)
-}
-
-
-
-## should get this to work to expand polygon past bbox of plot
-## could use st_buffer
-## or use studyArea above
-
-## or set xlim and ylim on plot
-# st_crop (st_coordinates (bbox_new)[c(1,3), c(1,2)]*c(0.9,1.1,0.9,1.1) %>%  # expand past bbox_new
-#          st_sfc (st_point (.[1,])
-#                  , st_point(.[2,]), crs=projection) %>%
-#            st_bbox() %>%
-#            st_as_sfc()
-#          ) # suppress warning
-
-## also see st_wrap_dateline !!  (for murres!)
-# ak <- sf::st_read ("~/GISdata/LCI/AKregions/ak_regions_simp.shp")  ## may not need it any longer?
-
-## test crop ok
-# ggplot2::ggplot (worldM) + geom_sf()
-
-
-
-
-
-## ----------------------------------------------------------
-## plot and animate with ggplot2 and gganimate
-## https://d4tagirl.com/2017/05/how-to-plot-animated-maps-with-gganimate/
-
-basemap <- ggplot2::ggplot (data=bbox_new) +
-#  coord_cartesian(xlim=st_coordinates(bbox_new)[1:2,1]*rev (c(1.2, 0.8))) +  # no effect?
-  ggplot2::geom_sf() +
-  ggplot2::geom_sf (data=worldM, fill = "goldenrod") +
-#  ggplot2::labs(title="") +
-  ggplot2::theme(  ## minor fixes to do here: plot land the way to the edge
-    panel.background=ggplot2::element_blank(),
-    legend.position="none"
-  )
-## add bathymetry and decorations
-## add graticules
-#  sf::st_graticule()  # transform? -- or at the end?
-
-
-## separate map per animation/drifter
-## plot dimensions
-Hi <- 800; Wi <- 800
-
-
-# require ("gifski")
-require ("av")
-## plot many frames into a gif
-## later convert gif to mp4
-
-
-av_encode_video (input=frames, output="output.mp4", framerate=2)
-
-
-
-
-for (i in seq_along(levels (drift$deploy))){
-  drP <- subset (drift, deploy == levels (drift$deploy)[i])
-  ## catch error if there's nothing to animate
-  if (nrow (drP) > 5){
-    fN <- gsub (":", "_", levels (drift$deploy), fixed=TRUE)
-    drL <- dplyr::summarise(drP, do_union=FALSE) %>% st_cast ("LINESTRING")
-    map <- basemap +
-      ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +
-      ggplot2::geom_sf (data=drP, size=1, pch=3)
-    ggsave (paste0 ("s", fN, ".gif"), map, device="png", path=outpath)
-
-    map3 <- map +
-      transition_time(DeviceDateTime) +
-      # transition_time(age) +
-      shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
-      ggtitle("time: {frame_time}")
-
-    anim <- gganimate::animate (map3, nframes = 100, fps=2  # calc nframes!
-                                , height=Hi, width=Wi
-                                , rewind=FALSE)
-    anim_save (paste0 (fN, ".gif"), anim, path=outpath)
-  }
-}
-
-## add drifters, make lines
-drP <- drift# %>% filter (DeviceName==levels (DeviceName)[1])
-drL <- dplyr::summarize (drP, do_union=FALSE) %>%
-  st_cast("LINESTRING")
-
-map <- basemap +
-  ggplot2::geom_sf (data=drL, color="yellow", lwd=0.7) +  # animate line somehow
-  ggplot2::geom_sf (data=drP, cex=2, pch=3)  # mark positions with a cross
-# map
-ggsave (paste0 ("aMap.gif"), map, device="png", path=outpath)
-
-
-## animate
-map3 <- map +
-  transition_time(DeviceDateTime) +
- # transition_time(age) +
-  shadow_wake(wake_length=0.5, alpha=FALSE) +   ## or add trails
-  ggtitle("time: {frame_time}")
-
-require ("av")  ## for ffmpeg -- smaller file size than gif
-anim <- gganimate::animate (map3, nframes = 100, fps=4  # calc nframes!
-                            , height=Hi, width=Wi
-                            , rewind=FALSE
-                            # , renderer=av_renderer()  # mp4 render not yet working
-                            )
-anim_save ("animation.gif", anim, path=outpath)
-# anim_save ("animation.mp4", anim, path=outpath)
-
-
-
-## animate drifters manually, for more control
-# save_gif (expressionMakingGraphics
-#           , gif_file=paste0 (outpath, "animationX.gif")
-#           , width=Wi, height=Hi, delay=1
-#           , progress=TRUE) # delay: s time delay (delay = 1/FPS)).
-
-rm (Hi, Wi, drL, drP)
-
-
-
-## end of current code
-
-
-
-
-
-
-
-
-## refine animation
-## add bathymetry
-
-## alternative: plot it all in base plots with sf
-
-
-## end of working code
-
-
-
-
-
-
-
-
-
-## tmap -- fallback
-if(0){
-  tmap_mode ('plot')
-  dev.new(width=16, height=12, unit="in")
-
-  m <- tm_shape (worldM, projection=projection, bbox=bbox_new) +
-    tm_polygons(col='goldenrod', alpha=0.3, border.col='black', lwd=0.75)
-
-  m <- m +
-    tm_shape (drP) +
-    tm_dots (col="red", size=.2)  # add legend
-  # tm_graticules(x=seq(-180,180,by=15),y=seq(40,80,by=5), labels.size = 0.4, lwd = 0.25, ticks=FALSE) +
-
-  tmap_save(m, paste0 (outpath, "test.png"), scale=1.5)
-
-  ## animate the beast
-  # use tm_facets
-  m <- m +
-    tm_facets(along="age")
-
-  tmap_animation(m, filename=paste0 (outpath, "animation.gif")
-                 , width=16, height=8, dpi=100)
-
-  rm (bbox_new, worldM, worldP)
-}
-
-
-
-
-##Create animation with points showing up one by one
-plot_anim <- B +
-  transition_states(states = Y, state_length = 0, wrap = FALSE) +
-  enter_recolor(fill = "#f0f5f9") +
-  shadow_mark(past = TRUE, alpha = 1, fill = "#3a6589")
-
-##Render animation
-animate(plot_anim, end_pause = 60,
-        height = 200, width = 400) # a higher res img would not upload here :(
-
-
-require (ggplot2)
-require (maps)
-require (ggthemes)
-
-
-
-## load bathymetry
-# bathyP
-mar_bathy <- read_stars (bathyP)
-
-
-if (0){
-  plot (ne_states (geounit="alaska"))
-  ak <- ne_download (scale=110, type="countries")
-}
-
-if (0){
-  ## NC4 version -- gives trouble with projection?
-  ## st_mosaic not working for this. Try nc4 files again?
-
-  ## trouble: blending the two rasters into one
-
-  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")  ## define NA_value ?
-  bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
-  ## combine with st_mosaic (if same offset and delta), or st_wrap
-  ba <- st_mosaic (bathyZ, bathyZ2)
-
-  bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
-  # bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))
-}
-
-
-
-
-## do some plotting
-## base on Murre_Figure.R -- ggplot
-
-require ("ggplot2")
-require ("ggthemes")
-require ("maps")
-require ("gganimate")
-require ("dplyr")
-
-## ggmaps == disabled by NOAA
-
-ggplot () +
-  borders ("worldM", "usa:alaska", colour="gray90", fill="gray85")+
-  theme_map() +
-  geom_point (data=drP, aes (x=Longitude, y=Latitude
-                   # , color=depth
-                   , size=2)) +
-  labs (title="Date: {frame_time}") +
-  transition_time(age) +
-  shadow_wake(wake_length=0.5, alpha=FALSE) +
-  ease_aes ("linear")
-
-
-
-
-
-require ('ggOceanMaps')## uses sf and stars
-require ("basemaps")   ## see https://jakob.schwalb-willmann.de/basemaps/ -- backgrounds!
-
-## 1. Use ggOceanMaps for bathymetry and drifter
-## 2. add basemaps::esri usa_topo_maps for land, once above is working
-map <- ggOceanMaps::basemap(drP
-                     # , bathymetry=TRUE, bathy.style='rcb' # use better bathymetry
-                     # , glaciers=TRUE
-                     , legends=TRUE
-                     # , downsample=2
-                     # , base_size=....?
-                       , projection.grid=FALSE
-                     , expand.factor=1.2 # expand map based tracks
-                     , rotate=TRUE
-                     )
-# map <- map + stars::geom_stars(data=mar_bathy)+
-#   ggplot2::scale_fill_gradientn(
-#     name="Depth [m]"
-#     # , breaks=seq(0,5e3,1e2), limits=c(0,NA)
-#     , colors=colorRampPalette(c("#F7FBFF", "#DEEBF7", "#9ECAE1", "#4292C6", "#08306B"))(8)
-#   )
-#   reorder_layers (map)
-
-map <- map +
-  geom_spatial_point (data=drP, aes (x=Longitude, y=Latitude, color=depth, size=2)
-                      , crs=4326, show.legend=FALSE)
-# map + transition_time(DeviceDateTime) +
-map + transition_time(age) +
-  shadow_wake(wake_length=0.5, alpha=FALSE)
-  # shadow_mark (alpha=0.3, size=0.5)
-map
-
-
-
-## experimentail
-###
-gganimate::animate (map, nframes=200, fps=5)  ## calculate this better -- not working
-# anim_save()
-# view_step.... ?
-
-
-## remaining issues:
-# low-res of bathymetry
-# low-res of shoreline
-# replace land with satellite image (basemaps)
-# animate by time steps
-
-
-
-
-
-
-if (0){
-map <- map +
-  stars::geom_stars(data=mar_bathy) +
-  ggplot2::scale_fill_gradientn(
-    name="Depth [m]"
-    # , breaks=seq(0,5e3,1e2), limits=c(0,NA)
-    , colors=colorRampPalette(c("#F7FBFF", "#DEEBF7", "#9ECAE1", "#4292C6", "#08306B"))(8)
-  )
-# + drP here still fails
-reorder_layers(map)
-}
-
-## add drifter -- and animate
-map +
-  geom_spatial_point(data=drP, aes(x=x,y=y,color=col))
-
-
-  geom_path (data=drP,
-                 aes(x=long, y=lat, group=group, color=type)
-)
-
-
-# map +
-#   geom_point()
-#   geom_line(drP)
-#
-#
-#   geom_line(data=transform_coord(drP))
-#
-# ggplot2() +
-#   map +
-#   geom_line(drP)
-
-
-
-## for basemaps
-## set boundaries interactively:
-# or use draw_ext()
-
-# view available maptypes
-get_maptypes()
-## set defaults for basemap
-## osm, carto, and esri are free without token
-# set_defaults (map_service="osm", map_type="topographic")  ## nice dierke-like topography
-set_defaults (map_service="esri", map_type="world_ocean_base")    ## too pale
-# set_defaults (map_service="esri", map_type="natgeo_world_map") ## like usa_topo_maps but labled :(
-set_defaults (map_service="esri", map_type="world_shaded_relief")    ## simple, non-distracting
-set_defaults (map_service="esri", map_type="world_imagery")    ## like google (a bit dark?)
-set_defaults (map_service="esri", map_type="usa_topo_maps")    ## like shaded relief, but color
-
-## can now use any of these:
-# basemap_plot(ext)
-# basemap_ggplot(ext)
-basemap_ggplot (bbox_new)
-# +
-#   geom_point (data=transform (drP, proj.out=4326)
-#               , aes (x=Longitude, y=Latitude))
-# transition_states .....
-
-
-require (ggplot2)
-ggplot()+
-basemap_gglayer(bbox_new) +
-   scale_fill_identity() +
-   coord_sf() +
-  drP
-
-# basemap_stars(ext)
-# basemap_mapview(ext)  ## life map!
-
-## ggOceanMaps
-p <- basemap (limits=bbox_new
-              , shapefiles=list(land=bs_land, glacier=bs_glacier, bathy=bs_bathy)
-              , bathymetry=TRUE, glaciers=TRUE, legends=FALSE
-              )
-p
-
-tmap_mode('plot')
-dev.new(width=16, height=12, unit="in")
-m <- tm_shape (worldM, projection=3338, bbox=bbox_new)
-
-## plot drifter onto map
-m <- m +
-  geom_point (data=transform (drP, proj.out=4326)
-              , aes (x=Longitude, y=Latitude))
-## .... more plotting
-
-tmap_save(m, outpath, scale=1.5)
-
-
-
-
-q()
-
-
-
-## could work, but still not there with these plots and adding elements -- revisit
-## ggOceanMaps -- sounds good, but puzzled -- uses natrual earth, etopo 2022
-require ("ggOceanMaps")  ## uses sf and stars
-.ggOceanMapsenv <- new.env()
-.ggOceanMapsenv$datapath <- '~/tmp/LCI_noaa/cache/ggOceanMapsLargeData'
-## get ggOceanMapsLargeData ??
-
-dt <- data.frame (lon=rep (range (drP$Longitude), each=2)
-                  , lat=c(range (drP$Latitude), rev (range (drP$Latitude)))
-)
-basemap (data=dt, crs=4326, bathymetry=FALSE, projection.grid=TRUE, glaciers=TRUE) +
-  geom_point(data=transform (drP, proj.out=4326), aes(x=Longitude, y=Latidue)
-)
-#  geom_line(data=transform (drP, proj.out=4326), aes(x=Longitude, y=Latitude)
-
-  # geom_polygon(data=transform_coord(dt, proj.out=4326)
-  #              , mappping aes(x=lon,y=lat)
-  #              , color="red", fill=NA
-  #              )
-rm (dt)
+## EOF
