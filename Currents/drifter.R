@@ -351,7 +351,7 @@ drift <- drift %>%
     # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   dplyr::filter (speed_ms < speedTH) %>%
-#  dplyr::filter (speed_ms > 0.0001) %>%      ## remove stationary positions
+  dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   dplyr::filter()
 
@@ -387,7 +387,7 @@ plotBG <- function(downsample=0){
   pA <- projection == st_crs (4326)
 
   ## static plot of drifter tracks, colored by deployment
-  par(mar=c(3,3,3,1))
+  par(mar=c(3,3,4,1))
   plot (st_geometry (worldM), col="beige", border=NA
         , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
         , axes=pA
@@ -430,9 +430,11 @@ plotBG <- function(downsample=0){
 
 
 
+wRes <- 800
+
 ## color by device -- simple
- png (filename=paste0 (outpath, "drifterPlot_byID.png")
-      , width=800, height=hRes)
+png (filename=paste0 (outpath, "drifterPlot_byID.png")
+     , width=wRes, height=hRes)
 # , width=wRes, height=hRes)
 # pdf (filename=paste0 (outpath, "drifterPlot_byID.png")
 #      , width=16, height=9)
@@ -441,28 +443,84 @@ plotBG(2)
 ## cross/x: pch=4,  plus+: pch=3
 plot (st_geometry (drift), add=TRUE, pch=19, cex=0.5
       # , col=add.alpha ("#FFBB00", 0.4)
-        , col=add.alpha (drift$col, 0.5)
-      )
+      , col=add.alpha (drift$col, 0.5)
+)
 dev.off()
 
 
 
 
-
+## -----------------------------------------------------------------------------
 ## color by speed (or age of deployment)
 png (filename=paste0 (outpath, "drifterPlot_speed.png")
      , width=wRes, height=hRes)
+par (mfrow =c(1,2))
 plotBG()
-# plot (st_geometry (drift), add=TRUE, pch=20, cex=0.5, col="yellow", type="l", lwd=15)
-## speed -- not pretty yet
-dr <- subset (drift, speed_ms < 3)
-plot (st_geometry (dr), add=TRUE, pch=19, cex=1
-      , col=dr$speed_ms, nbreaks=100
-      , pal=heat.colors(99), main="Drifter speed"
+
+
+x <- subset (drift, (speed_ms < 3))$speed_ms
+x <- log (x)
+brks <- exp (seq (min (x), max (x), length.out=20))
+
+brks <-
+rm (x)
+
+drift %>%
+  filter (speed_ms < 3) %>%
+  filter (speed_ms > 0) %>%
+  filter (deployDepth < 5) %>%
+  select (speed_ms) %>%
+plot (add=TRUE
+      , pch=19  ## by deployDepth
+      , cex=1
+      , type="p"
+      , alpha=0.5
+      , breaks=brks
       ## key for colors
       # ,graticule=TRUE
       )
+title (main = "speed: surface")
+
+plotBG()
+drift %>%
+  filter (speed_ms < 3) %>%
+  filter (speed_ms > 0) %>%
+  filter (deployDepth > 5) %>%
+  select (speed_ms) %>%
+  plot (add=TRUE
+        , pch=19  ## by deployDepth
+        , cex=1
+        , type="p"
+        , alpha=0.5
+        , breaks=brks
+        ## key for colors
+        # ,graticule=TRUE
+  )
+title (main = "speed: 15 m depth")
 dev.off()
+rm (brks)
+
+
+## age of deployment
+png (filename=paste0 (outpath, "drifterPlot_age.png")
+     , width=wRes, height=hRes)
+plotBG()
+drift %>%
+  filter (speed_ms < 3) %>%
+#  filter (deployDepth < 5) %>%
+  select (days_in_water) %>%
+  plot (add=TRUE
+        , pch=19  ## by deployDepth
+        , cex=1
+        , type="p"
+        , alpha=0.5
+        , nbreaks=100
+#        , key.pos=
+#        , breaks=brks
+  )
+title (main="time")
+dev.off()
+# rm (brks)
 
 
 ## plot drifter
