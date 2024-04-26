@@ -470,7 +470,7 @@ plotBG()
 x <- subset (drift, (speed_ms < 3))$speed_ms
 brks <- seq (min (x), max (x), length.out=20)
 x <- sqrt (x)
-brks2 <- (seq (min (x), max (x), length.out=20))^2
+# brks <- (seq (min (x), max (x), length.out=20))^2
 
 drift %>%
   filter (speed_ms < 3) %>%
@@ -564,8 +564,12 @@ for (i in seq_along(levels (drift$deploy))){
 # require ('parallelly')
 
 
-
-
+if (0){
+plot (speed_ms~topo, drift, pch=19, col = add.alpha("black", 0.1))
+lS <- loess(speed_ms~topo, drift)
+nD <- data.frame (topo=seq(-200, 0, length.out=100))
+lines (nD$topo, predict (lS, newdata=nD), col = "red")
+}
 
 ## plot drifter
 # for (i in 1:seq_along (levels (drift$deploy))){
