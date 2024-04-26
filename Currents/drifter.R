@@ -1,6 +1,7 @@
 ## analyse drifter tracks
 ## create animations and plots of current drifters
 rm (list=ls())
+# renv::restore()
 
 
 ## tasks:
@@ -21,24 +22,45 @@ wRes <- 1024; hRes <-  576   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
 frameR <- 24 ## frames/s
 
 
-## set projection for output map
-# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
-projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 ## ----------------------------------------------------------
-## file locations
+## set file locations
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## full resolution
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"  ## smaller, only local data
-# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv.zip" ## should be able to read from zip!
+# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv.zip/drifter-03_14_24-21_58.csv" ## should be able to read from zip!
 # driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv"  ## full drifter archive
 bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
 outpath <- "~/tmp/LCI_noaa/media/drifter/"
+
+
+## -----------------------------------------------------------
+## load packages
+# require ('ggOceanMapsLargeData') # of any use here? needed for examples only?
+require ('dplyr')      ## needed for pipe
+require ('RColorBrewer')
+require ("sf")         ## apparently not auto-loaded by ggOceanMaps
+require ("stars")
+require ('oce')
+# require ("ggplot2")
+# require ("ggspatial")  ## for spatial points in ggplot
+# require ("gganimate")  ## seems to be a convenient package for animation
+# require ("readr") ## for read_csv
+# require ("rnaturalearth")
+# require ('tidyverse')
+
+## add snapbox for basemap? -- all seem to require a token
+# require ("snapbox")
+
+
+## set projection for output map
+# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 
@@ -88,21 +110,6 @@ options(timeout=600) ## double timeout limit
 #                  , destfile=AKshape)
 # }
 
-## load packages
-# require ('ggOceanMapsLargeData') # of any use here? needed for examples only?
-require ("dplyr")      ## needed for pipe
-require ("RColorBrewer")
-require ("sf")         ## apparently not auto-loaded by ggOceanMaps
-require ("stars")
-# require ("ggplot2")
-# require ("ggspatial")  ## for spatial points in ggplot
-# require ("gganimate")  ## seems to be a convenient package for animation
-require ("rnaturalearth") ## for read_csv
-
-## add snapbox for basemap? -- all seem to require a token
-# require ("snapbox")
-
-
 
 
 ## ----------------------------------------------------------
@@ -149,41 +156,42 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 ## interpolate within bouts to standardize time intervals
 ## turn into geographic sf and project
 
-drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct"
-                                        , DeviceName="factor")) %>%
-  arrange (DeviceName, DeviceDateTime) %>%
+
+save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
+# drift <- read.csv (unz (driftP, "drifter-03_14_24-21_58.csv"), colClasses=c(DeviceDateTime="POSIXct"
+#                                         , DeviceName="factor")) %>%
+drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct", DeviceName="factor")) %>%
+#  arrange (DeviceName, DeviceDateTime) %>%   ## test that this is working!
   filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
+drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 rm (driftP)
 ## define deployment bouts
 ## include speed between positions? XXX
-drift$dT <- c (0, difftime(drift$DeviceDateTime [2:nrow (drift)]  # time lag
-         , drift$DeviceDateTime [1:(nrow (drift)-1)]
-         , units="mins"))
+drift$dT <- c (0, diff (drift$DeviceDateTime, units="mins")) |> as.numeric()
+drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
+# dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
+drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
+
 dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
                 , remove=FALSE, crs=4326) %>%
   st_transform(projection)
-# dx$distance_m <- c (0, st_distance (dx [2:nrow (drift),],  # distance -- verify that it's correct
-#                          dx [1:(nrow(drift)-1),]
-#                          , by_element=TRUE) %>%
-#                       units::drop_units ()
-#                     )
-require ('oce')
-oceDist <- oce::geodDist (dx$Longitude, dx$Latitude, alongPath=TRUE)*1e3  ## simpler and faster than st_distance
-dx$distance_m <- c (0, diff (dx$oceDist)) ## not identical to st_distance, but close enough?
-rm (oceDist)
-# dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
-
-dx$speed_ms <- dx$distance_m / (dx$dT*60) ## filter out speeds > 6 (11 knots) -- later
+## use morph..
 dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
 dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut?
   apply (2, min)
 
 
+save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
 ## ----------------------------------------------------------------------------
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
 drift <- dx %>%
   filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter (depth > 1) %>%
+  filter (depth > 0.1) %>%         ## to make sure none are on land
   filter (LandDistance_m > 50) %>%
   st_drop_geometry()  ## drop spatial part
 ## retains 21k out of 28 k
@@ -191,28 +199,37 @@ drift <- dx %>%
 # dim (dx)
 rm (dx)
 
-newDeploy <- drift$dT > 60*24*1.5 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments
+
+## redundant, but better safe
+# is.unsorted(drift$DeviceName)
+drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
+
+## define new deployment XXXX  review!!! XXXX
+newDeploy <- drift$dT > 120 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments XXX test!! 2h
+# newDeploy <- drift$dT > 60*14 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments   14 h (840 min)
 ## mark new deployments
 x <- 0; depIdx <- character(nrow (drift)) # declare variables
 for (i in 1:length (newDeploy)){
   if (newDeploy [i]){
-    x <- x+1
+    x <- x + 1
     x <- drift$DeviceDateTime [i]
   }
   depIdx [i] <- paste0 (drift$DeviceName [i], "-", x)
 }
-depIdx <- factor (depIdx)
-# head (summary (depIdx))
-drift$deploy <- depIdx
+drift$deploy <- factor (depIdx)
+# head (summary (drift$deploy))
 rm (newDeploy, x, depIdx, i)
+
+# plot (Latitude~Longitude, drift)
+# summary (drift$dT)
+# for (i in 1:5) alarm()
 
 
 ## interpolate within bouts
-require ("dplyr")
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
-for (i in seq_along(length (levels (drift$deploy)))){
+for (i in seq_along (levels (drift$deploy))){
   df <- subset (drift, deploy == levels (drift$deploy)[i])
-  if (nrow (df)>2){
+  if (nrow (df)>1){
     newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
                                   , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
                                                         , to=max (DeviceDateTime)
@@ -220,11 +237,9 @@ for (i in seq_along(length (levels (drift$deploy)))){
     ))
     newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
     newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
+
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
-    ## calc distance from point to point
-    x <- newDF %>% st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
-                             , remove=FALSE, crs=4326) # %>% st_transform(projection)
-    newDF$dist_m <- c (0,st_distance(x[2:nrow (x),], x[1:(nrow(x)-1),], by_element=TRUE))
+    newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
     newDF$speed_ms <- newDF$dist_m / (interP*60) ## convention to use m/s, not knots
     if (exists ("iDF")){  ## careful if rerunning!
       iDF <- rbind (iDF, newDF)
@@ -233,8 +248,12 @@ for (i in seq_along(length (levels (drift$deploy)))){
     }
   }
 }
+
 rm (df, i, newDF, interP)
 iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
+
+# plot (Latitude~Longitude, iDF)
+
 
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
@@ -248,7 +267,7 @@ drift <- iDF %>%
 rm (iDF)
 # drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
 ## ice wave rider and MicroStar are surface devices
-drift$depth <- ifelse (seq_along(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
 
 
 ## testing
@@ -332,7 +351,7 @@ drift <- drift %>%
     # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   dplyr::filter (speed_ms < speedTH) %>%
-  dplyr::filter (speed_ms > 0.0001) %>%      ## remove stationary positions
+#  dplyr::filter (speed_ms > 0.0001) %>%      ## remove stationary positions
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   dplyr::filter()
 
@@ -362,7 +381,7 @@ add.alpha <- function(col, alpha=1){
 ## revert to R base-graphics -- keep it simple and flexible
 
 
-plotBG <- function(){
+plotBG <- function(downsample=0){
   ## start background details for plot
   nbox <- st_bbox (drift)
   pA <- projection == st_crs (4326)
@@ -391,7 +410,7 @@ plotBG <- function(){
     ## see https://www.benjaminbell.co.uk/2019/08/bathymetric-maps-in-r-colour-palettes.html
     ## use topo colors for mar_bathy
     plot (mar_bathy, add=TRUE
-          , downsample=0
+          , downsample=downsample
           , col=c(colorRampPalette (c("darkblue", "lightblue"))(80)
                   , add.alpha (terrain.colors(100), 0.15))
           , breaks=c(seq (-400, 0, by=5), seq (0, 1000, by=10))
@@ -412,12 +431,15 @@ plotBG <- function(){
 
 
 ## color by device -- simple
-png (filename=paste0 (outpath, "drifterPlot_byID.png")
-     , width=1920, height=1080)
-plotBG()
+ png (filename=paste0 (outpath, "drifterPlot_byID.png")
+      , width=800, height=hRes)
+# , width=wRes, height=hRes)
+# pdf (filename=paste0 (outpath, "drifterPlot_byID.png")
+#      , width=16, height=9)
+plotBG(2)
 # plot (st_geometry (drift), add=TRUE, type="l", lwd=2, col="yellow")  ## lines -- trouble between deploys
 ## cross/x: pch=4,  plus+: pch=3
-plot (st_geometry (drift), add=TRUE, pch=19, cex=1.0
+plot (st_geometry (drift), add=TRUE, pch=19, cex=0.5
       # , col=add.alpha ("#FFBB00", 0.4)
         , col=add.alpha (drift$col, 0.5)
       )
@@ -461,8 +483,7 @@ dev.off()
 ## gganimate: easy, but restrictive
 ## googleVis: interactive? Needs flash
 ## animate:  flexible, but web-based. Not it! https://kcf-jackson.github.io/animate/
-
-require ("animate") ## simply combine frames -- most flexible
+# require ("animate") ## simply combine frames -- most flexible
 ## output to HTML (with controls), mp4, gif, LaTeX
 
 ## animation tasks:
