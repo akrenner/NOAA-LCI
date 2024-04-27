@@ -529,6 +529,21 @@ dev.off()
 
 
 
+
+## test whether a legend can be shown
+if (0){
+#  require ("ggmap")
+# m <- get_map ("Alaska" #, zoom=1
+#               , source="osm"
+#               , color="color")
+drift %>% select (days_in_water) %>%
+  plot(axes=TRUE
+       , graticule=TRUE
+       , col_graticule="gray"
+       #, bgMap= ## class ggmap, e.g. googlex
+       )
+}
+
 ## plot each individual deployment
 dir.create(paste0 (outpath, "/deployment/"), recursive=TRUE, showWarnings=FALSE)
 
