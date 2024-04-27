@@ -166,7 +166,7 @@ save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
 #                                         , DeviceName="factor")) %>%
 drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct", DeviceName="factor")) %>%
   #  arrange (DeviceName, DeviceDateTime) %>%   ## test that this is working!
-  filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
+  dplyr::filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
 drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 rm (driftP)
 ## define deployment bouts
@@ -192,9 +192,9 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## ----------------------------------------------------------------------------
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
 drift <- dx %>%
-  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter (topo < 3) %>%         ## to make sure none are on land
-  filter (LandDistance_m > 50) %>%
+  dplyr::filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
+  dplyr::filter (topo < 3) %>%         ## to make sure none are on land
+  dplyr::filter (LandDistance_m > 50) %>%
   st_drop_geometry()  ## drop spatial part
 ## retains 21k out of 28 k
 # dim (drift)
@@ -473,10 +473,10 @@ x <- sqrt (x)
 # brks <- (seq (min (x), max (x), length.out=20))^2
 
 drift %>%
-  filter (speed_ms < 3) %>%
-  filter (speed_ms > 0) %>%
-  filter (deployDepth < 5) %>%
-  select (speed_ms) %>%
+  dplyr::filter (speed_ms < 3) %>%
+  dplyr::filter (speed_ms > 0) %>%
+  dplyr::filter (deployDepth < 5) %>%
+  dplyr::select (speed_ms) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
         , type="p"
@@ -489,9 +489,9 @@ title (main = "speed: surface")
 
 plotBG()
 drift %>%
-  filter (speed_ms < 3) %>%
-  filter (speed_ms > 0) %>%
-  filter (deployDepth > 5) %>%
+  dplyr::filter (speed_ms < 3) %>%
+  dplyr::filter (speed_ms > 0) %>%
+  dplyr::filter (deployDepth > 5) %>%
   select (speed_ms) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
@@ -511,8 +511,8 @@ png (filename=paste0 (outpath, "drifterPlot_age.png")
      , width=wRes, height=hRes)
 plotBG()
 drift %>%
-  filter (speed_ms < 3) %>%
-  #  filter (deployDepth < 5) %>%
+  dplyr::filter (speed_ms < 3) %>%
+  #  dplyr::filter (deployDepth < 5) %>%
   select (days_in_water) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
@@ -551,8 +551,8 @@ plotDrift <- function (i){
   png (filename=paste0 (outpath, "/deployment/", levels (drift$deploy)[i], ".png")
        , width=wRes, height=hRes)
   dR <- drift %>%
-    #  filter (speed_ms < 3) %>%
-    filter (deploy == levels (drift$deploy)[i]) %>%
+    #  dplyr::filter (speed_ms < 3) %>%
+    dplyr::filter (deploy == levels (drift$deploy)[i]) %>%
     # select (days_in_water)
     select (speed_ms)
 

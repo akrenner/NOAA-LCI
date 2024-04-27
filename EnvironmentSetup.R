@@ -24,15 +24,15 @@ options (timeout=max (1200, getOption("timeout")))
 # }
 # rm (outF)
 
-## Zimmermann Cook Inlet Bathymetry
-outF <- "~/GISdata/LCI/Cook_Bathymetry_Grid.zip"
-# unlink (outF)
-if (!file.exists(outF)){
-  download.file(url="http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/Cook_bathymetry_grid.zip"
-              , destfile=outF, method="auto")
-}
-
-## gebco
+# ## Zimmermann Cook Inlet Bathymetry
+# outF <- "~/GISdata/LCI/Cook_Bathymetry_Grid.zip"
+# # unlink (outF)
+# if (!file.exists(outF)){
+#   download.file(url="http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/Cook_bathymetry_grid.zip"
+#               , destfile=outF, method="auto")
+# }
+#
+# ## gebco
 
 
 

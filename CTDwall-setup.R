@@ -24,7 +24,6 @@ if (length (grep ("darwin", version$os)) >0 ){
 }
 
 
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") ## this contains poSS -- CTD summaries
 ## link physOc and stn
 ## should be poSS and stn -- check!
 
@@ -48,68 +47,22 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 
 ## get coastline and bathymetry
-## bathymetry and coastline
-
-## reproject?  crop? -- review!!
-# nGrid <- .... ## define new grid -- the missing link
-
-useSF <- TRUE
-useSF <- FALSE  ## marmap still depends on sp/raster -- temp work-around
+## bathymetry and coastline  --  they should come from dataSetup.R
 
 
-require ("marmap")  ## replace with Zimmermann's GOA bathymetry -- require (sp) legacy
-bfer <- 0.5
-cFile <- "~/tmp/LCI_noaa/cache/bathymetryZ.RData"
-# unlink (cFile)
-bathyNoaa <- try (suppressMessages (getNOAA.bathy (min (physOc$longitude_DD)-bfer, max (physOc$longitude_DD)+bfer
-                                               , min (physOc$latitude_DD)-bfer, max (physOc$latitude_DD)+bfer
-                                               , keep=TRUE, resolution=1, path="~/tmp/LCI_noaa/cache/")))
 
-if (class (bathyNoaa)=="try-error"){
-  base::load (cFile)
-}else{
-  save (bathyNoaa, file=cFile)
+## bahymetry -- already here from dataSetup.R in load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData"), but apparently not
+load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+if (!exists ("bathyZ")){  # should already come from dataSetup.R
+  mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  names (mar_bathy) <- "topo"
+  names (mar_bathy) <- "topo"
+  bathyZ <- st_as_stars(depth = ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                        , dimensions = attr(mar_bathy, "dimensions"))
+  rm (mar_bathy)
 }
 
-if (useSF){
-  detach_package <- function(pkg, character.only = FALSE)  ## see https://stackoverflow.com/questions/6979917/how-to-unload-a-package-without-restarting-r
-  {
-    if(!character.only)
-    {
-      pkg <- deparse(substitute(pkg))
-    }
-    search_item <- paste("package", pkg, sep = ":")
-    while(search_item %in% search())
-    {
-      detach(search_item, unload = TRUE, character.only = TRUE)
-    }
-  }
 
-  detach_package ("marmap")
-  detach_package ("adehabitatMA")
-  detach_package ("raster")
-  detach_package ("sp") ## needed as long as marmap depends on sp and raster. Still need to convert bathyNaa?
-  rm (detach_Package)
-  ## Zimmermann bathymetry
-   ("stars")
-  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  ## Zimmermann bathymetry
-  require ("raster")
-  ## FIX !!  -- already in prepData? -- migrate to prepData!
-    if (.Platform$OS.type == "windows"){
-      bathyZ <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-    }else{
-      bathyZ <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-    }
-    rm (bfer)
-}
-
-## more bathymetry to fill in parts Zimmerman bathymetry missses
-## here or in CTDwall.R??
-# positive depth -- need to turn to negatives elevations? --- topo has neg values = depth
-# bathyL <- as.topo (getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
-# try (bathyL <- getNOAA.bathy (-154, -150, 58.5, 60.3, resolution = 1, keep = TRUE)) # too coarse for KBay
 
 
 

@@ -123,27 +123,29 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
 
+
     ## extract from bathyZ. then fill-in the missing values from get.depth
-    if (useSF){
+    # if (useSF){
       require ("sf")
       sect <- st_as_sf(sect, coords=c("loni", "lati"))
       sf::st_crs(sect) <- 4326  ## WGS84 definition
       require ("stars")
       sectP <- sf::st_transform(sect, st_crs (bathyZ))
-      bottomZ <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
-    }else{
-      require ("sp")
-      require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
-      coordinates (sect) <- ~loni+lati
-      proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
-      sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
-      bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
-    }
-    require ("marmap")
-    ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
-    bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
-    bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
-    rm (sect, sectP, bottomZ)
+      bottom <- stars::st_extract(bathyZ, at=sectP)  # $depth  -- bottom needs to be sf point?
+    # }else{
+    #   require ("sp")
+    #   require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
+    #   coordinates (sect) <- ~loni+lati
+    #   proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
+    #   sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
+    #   bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
+    # }
+    # require ("marmap")
+    # ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
+    # bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
+    # bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
+    # names (bottom) <- "depth"
+    rm (sect, sectP)
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
@@ -356,14 +358,21 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
                                                               , bottom=stnT$Depth_m))
           ## sectionSort--is now in sectionPad. Still need to do same to bottom
           if (xC$Transect [1] == "AlongBay"){
-            bottom <- bottom [order (bottom$lat, decreasing = FALSE),]
+            bottom <- bottom [order (st_coordinates (bottom)[,1], decreasing = FALSE),]
           }else if (xC$Transect [1] %in% c("4", "9")){
-            bottom <- bottom [order (bottom$lat, decreasing = TRUE),]
+            bottom <- bottom [order (st_coordinates (bottom)[,2], decreasing = TRUE),]   ## XXX bottom wrong for T4!
           }else{
-            bottom <- bottom [order (bottom$lon),]
+            bottom <- bottom [order (st_coordinates (bottom)[,1]),]
           }
-          bottom$dist <- with (bottom, geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)) # [km]
-
+          if (names (as.data.frame (st_coordinates(bottom)))[1] == "X"){
+            ## bottom is now projected AEA, not geographic coordinates!
+            bG <- bottom %>% st_transform(crs=4326)
+            bottom$dist <- geodDist (longitude1=st_coordinates (bG)[,1]
+                      , latitude1=st_coordinates (bG)[,2], alongPath=TRUE) # [km]
+          }else{
+            bottom$dist <- geodDist (longitude1=st_coordinates (bottom)[,1]
+                                     , latitude1=st_coordinates (bottom)[,2], alongPath=TRUE) # [km]
+          }
           ## test, QAQC
           if (0){
             sapply (1:length (xCo@data$station), function (i){
@@ -391,7 +400,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           )
           tgray <- rgb (t (col2rgb ("lightgray")), max=255, alpha=0.5*255) ## transparent
           with (bottom, polygon(c(min (dist), dist, max(dist))
-                                , c(10000, -depthHR, 10000)
+                                , c(10000, depth, 10000)
                                 , col=tgray))
           rm (tgray)
           if (test){   ## for QAQC: add station labels to x-axis
@@ -515,7 +524,7 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
       #       # , span=50
       # )
     }
-    rm (xMap, bottom)
+    rm (xMap)
 
     ###############################################
     ## draw palette, color scale into next panel ##

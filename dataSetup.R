@@ -514,13 +514,16 @@ save.image ("~/tmp/LCI_noaa/cache/troublesPO.RData")
 
 ## bad geographic positions: on land, too far south, .. -- move this into CTD processing scripts
 ## calc distance between actual and planned station position
-SCo <- stn[match (poSS$Match_Name, stn$Match_Name), names (stn) %in% c("Lon_decDegree"
-                                                                     , "Lat_decDegree")]
+SCo <- stn[match (poSS$Match_Name, stn$Match_Name)
+           , names (stn) %in% c("Lon_decDegree", "Lat_decDegree")]
 SCo <- as.matrix (cbind (SCo, cbind (poSS$longitude_DD, poSS$latitude_DD)))
-require ("fields")
-StDis <- sapply (1:nrow (SCo), FUN = function (i){
-    rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
-})
+require ("oce") ## reduce number of dependencies
+StDis <- geodDist (SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
+# require ("fields")  ## use oce here instead?
+# StDis <- sapply (1:nrow (SCo), FUN = function (i){
+#     rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
+# })
+# The two are close but not as identical as they should be
 StDis <- ifelse (is.na (StDis), 0, StDis) # NAs are being weird, ignore them!
 StDisA <- data.frame (poSS$File.Name, StDis)[StDis > 1,]
 StDisA [order (StDisA$StDis, decreasing = TRUE),]
@@ -1019,7 +1022,7 @@ save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 
 
 slot (coast, "proj4string") <- slot (poSS, "proj4string")   ## migrate to sf
-badPO <- !is.na (over (poSS, coast)$id)                     ## migrate to sf
+badPO <- !is.na (sp::over (poSS, coast)$id)                     ## migrate to sf
 PDF ("testSamplesites")
 plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
 # plot (NPPSD2, pch = 1, add = TRUE)
@@ -1053,28 +1056,22 @@ rm (badPO)
 
 
 
-
-## bathymetry from AOOS, Zimmerman
-require ("raster")
-require ("rgdal")
-if (.Platform$OS.type == "windows"){
-  bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}
+## bathymetry from AOOS, Zimmerman/KBL
 
 require ("stars")
-## NC4 version -- gives trouble with projection?
-## st_mosaic not working for this. Try nc4 files again?
-# bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-#                      , read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CGOA_BATHY.nc4"))
-bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
+## use custom bathymetry layer, merged from Kachemak Bay DEM, Zimmermann files, and GMRT
+mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+names (mar_bathy) <- "topo"
+bathyZ <- st_as_stars(depth=ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                      , dimensions = attr(mar_bathy, "dimensions"))
+rm (mar_bathy)
+#  bathCont <- stars::st_contour(bathyZ, contour_lines=TRUE, breaks=c(0, 50, 100, 200, 500)*-1) ## seems to plot only one level
+## still need to follow through with stars and sf, implementing it downstream
 
-bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
-# bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))
 
-
+## temporarily disable all bird code -- need to migrate to sf
+if (0){
+require ("sp")
 ch <- chull(coordinates (NPPSD2))
 chCoor <- coordinates (NPPSD2)[c(ch, ch[1]), ]  # closed polygon
 sp_poly <- SpatialPolygons(list(Polygons(list(Polygon(chCoor)), ID=1))
@@ -1182,7 +1179,7 @@ rm (stnB)
 ## these are specific to samples! Samples may not be independent, i.e. may contain overlapping
 ## bird observations, if sample sites within buffer distance of each other!  Do NOT use this for
 ## spatial interpolation.
-
+}
 
 ## fix up poSS to essential variables
 poSS@data <- poSS@data [,-which ((names (poSS) %in% c("lonM", "latM", "distOff")))]
@@ -1203,7 +1200,7 @@ print (ls())
 
 write.csv (poSS@data, file="~/tmp/LCI_noaa/data-products/CTDcastSummaries.csv")
 ## save CTD data for oceanographic processing. poSS = summary data -> signatureData
-save (stn, physOc, poSS, coast, bath  ## bath = Zimmerman bathymetry
+save (stn, physOc, poSS, coast, bathyZ  ## bath = Zimmerman bathymetry
       , file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
 rm (physOc)                             # no needed any more, poSS takes it place
 
