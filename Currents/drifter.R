@@ -502,10 +502,16 @@ drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
-
+## interactive mapping
+## can/should supply own basemap?
 require ('mapview')  ## also see rMaps on GitHub
-mapview::mapview (drift)
-
+require ('webshot')
+mymap <- mapview::mapview (drift, zcol="speed_ms"
+                           , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron"))
+mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
+rm (mymap)
+## save for others  (ggplotly)
+## saveWidget(object_name, file="map.html")
 
 ## -----------------------------------------------------------------------------
 ## define some colors
