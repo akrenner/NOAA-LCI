@@ -32,8 +32,8 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## f
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
-driftP <- "~/GISdata/LCI/drifter/drifter-04_05_23-18_23.csv"  ## smaller, only local data
-# driftP <- "~/GISdata/LCI/drifter/drifter-03_14_24-21_58.csv"  ## full drifter archive
+# # driftP <- "~/GISdata/LCI/drifter/drifter-2024-03_14-21_58.csv"  ## full drifter archive
+driftP <- "~/GISdata/LCI/drifter/"
 bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
 cacheD <- "~/tmp/LCI_noaa/cache/ggplot/"
@@ -102,6 +102,7 @@ projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 ## set up directories
 dir.create (outpath, showWarnings=FALSE, recursive=TRUE)
 dir.create (cacheD, showWarnings=FALSE, recursive=TRUE) ## I set .ggOceanMapsenv in .Rprofile:
+dir.create (driftP, showWarnings=FALSE, recursive=TRUE) ## for drifter downloads
 # {.ggOceanMapsenv <- new.env(); .ggOceanMapsenv$datapath <- "~/tmp/LCI_noaa/cache/ggplot/"} ## not worth the trouble?
 ## increase time-out limit from 60 s -- better to get local bathymetry?
 options(timeout=600) ## double timeout limit
@@ -150,8 +151,10 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 
 
 
+
 ## ----------------------------------------------------------
 ## prepare drifter data:
+## download/update to latest data
 ## select drifter
 ## define deployment bouts
 ## interpolate within bouts to standardize time intervals
@@ -161,17 +164,91 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
+### still to check:
+## IWR: useful data for Cook Inlet?
+## SVP -- are they here?
 
-# drift <- read.csv (unz (driftP, "drifter-03_14_24-21_58.csv"), colClasses=c(DeviceDateTime="POSIXct"
-#                                         , DeviceName="factor")) %>%
-drift <- read.csv (driftP, colClasses=c(DeviceDateTime="POSIXct", DeviceName="factor")) %>%
-  #  arrange (DeviceName, DeviceDateTime) %>%   ## test that this is working!
-  filter (Longitude < -149)   # filter out arctic and SE Alaska (here to get bbox right)
-drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
-rm (driftP)
+## do not rely on API yet -- will silently drop devices if too many are selected!
+## instead: manually select MS and SVP and I devices, one batch at a time
+## also check: on manually downloaded data: column names did not line up (fixed manually)
+## got everything until 2021-04-29
+
+if (0){
+  ## load drifter data from https://data.pacificgyre.com/data#data-download-tab
+  ## https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300534062420180,300534062420200,300534062422170,300534062422180,300534062423170,300534062423180,300534062425170,300534062426160,300534062426170,300534062427160,300534062428160,300534062428170,300534062429170,300534062429190&startDate=2010-07-07%2000:00&endDate=2023-12-31%2023:59&fileFormat=csv&download=Yes&compression=zip
+  driftF <- paste0 (driftP, "drifter-data_2023-12-31.csv")
+  if (!file.exists(driftF)){
+    download.file(url="https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300234011165870,300234011166850,300234011166870,300234011167870,300234011168740,300234011168850,300234011168870,300234011169850,300234011169860,300234011169870,300234010881880,300234010885880,300234011162850,300234011162860,300234011163860,300234011163910,300234011165850,300234011165910,300234011166910,300234011167850,300234060450150,300234060452160,300234060453200,300234060458190,300234063583800,300234063586790,300234063588790,300234063588800,300234063589800,300234063751840,300234063758240,300234063951310,300234063958290,300234063682000,300234064730070,300234064730080,300234064730090,300234064732090,300234064738080,300234065354740,300234065455870,300234065458880,300234065652330,300234067990710,300234067991710,300234067992440,300234067992650,300234067994440,300234067996390,300234067996680,300234067997380,300234067998360,300234067998660,300234067998710,300234067999430,300234067999710,300234068004100,300234068009090,300534060523320,300534061804910,300534061900630,300534061901610,300534061902380,300534061904620,300534061905610,300534061905680,300534060053580,300534060055710,300534060057640,300534060058980,300534060159230,300534060251190,300534060253340,300534060358280,300534060529430,300534060946980,300234063580800,300234063580810,300234063581810,300234063582800,300234063582810,300234063583790,300234064731100,300234064732080,300234064732100,300234064735090,300234064736080,300234064942330,300534060052710,300534060055360,300534060057020,300534060151090&startDate=2010-01-01%2000:00&endDate=2023-12-31%2023:59&fileFormat=csv&download=Yes"
+                  , destfile=driftF)
+  }
+  ## update to the latest data
+  updateFN <- gsub ("2023-12-31", "latest", driftF)
+  if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, units="days") < 7)){
+    message ("Drifter data downloaded within the last week: skipping update")
+  }else{
+    download.file(url="https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300234011165870,300234011166850,300234011166870,300234011167870,300234011168740,300234011168850,300234011168870,300234011169850,300234011169860,300234011169870,300234010881880,300234010885880,300234011162850,300234011162860,300234011163860,300234011163910,300234011165850,300234011165910,300234011166910,300234011167850,300234060450150,300234060452160,300234060453200,300234060458190,300234063583800,300234063586790,300234063588790,300234063588800,300234063589800,300234063751840,300234063758240,300234063951310,300234063958290,300234063682000,300234064730070,300234064730080,300234064730090,300234064732090,300234064738080,300234065354740,300234065455870,300234065458880,300234065652330,300234067990710,300234067991710,300234067992440,300234067992650,300234067994440,300234067996390,300234067996680,300234067997380,300234067998360,300234067998660,300234067998710,300234067999430,300234067999710,300234068004100,300234068009090,300534060523320,300534061804910,300534061900630,300534061901610,300534061902380,300534061904620,300534061905610,300534061905680,300534060053580,300534060055710,300534060057640,300534060058980,300534060159230,300534060251190,300534060253340,300534060358280,300534060529430,300534060946980,300234063580800,300234063580810,300234063581810,300234063582800,300234063582810,300234063583790,300234064731100,300234064732080,300234064732100,300234064735090,300234064736080,300234064942330,300534060052710,300534060055360,300534060057020,300534060151090&startDate=2024-01-01%2000:00&endDate=2035-12-31%2023:59&fileFormat=csv&download=Yes"
+                  , destfile=updateFN)
+  }
+}
+
+## combine archive and latest drifter download (weed out duplicates)
+
+
+
+## combine manually downloaded batches
+require ("purrr");
+require ("readr")
+dFs <- list.files (path=driftP, pattern="\\.csv$", full.names=TRUE)
+# for (i in 1:length (dFs)){
+#   nD <- read.csv (dFs[i])
+#   if (i == 1){
+#     drift <- nD
+#   }else{
+#     drift <- rbind (drift, nD)
+#   }
+# }
+
+## elegant, but doesn't work
+# read_plus <- function(fn){read_csv(fn, show_col_types=FALSE) %>% mutate (filename=fn)}
+# drift <- dFs [c(1,3)] %>%
+#   purrr::map_df (read_csv(.)) # %>%
+##drift <- purrr::map_df (read_csv (dFs))
+
+## trying to be elegant, but fails
+# drift <- dFs |> map (\(dFs) function (x){
+#   read_csv (x, show_col_types=FALSE) %>%
+#     mutate (filename=x)
+#   })
+
+## map_df = deprecated? usage = ?? map_df, map_dfr??
+drift <- purrr::map_df (dFs,
+                        read_csv, show_col_types=FALSE) %>%
+## filter and sort
+# drift <- drift %>%
+   filter (Longitude < -149) %>%    # filter out arctic and SE Alaska (here to get bbox right) -- and AI
+#  filter (DeviceName)
+  arrange (DeviceName, DeviceDateTime) %>% ## test that it's working
+  filter()
+
+if (0){  ## remove duplicates
+  fl <- list.files (driftP, pattern="\\.csv$", full.names=TRUE)
+  for (i in 1:length (fl)){cn <-  read.csv (fl[i]) %>% colnames(); print (cn)}
+  ddrift <- duplicated (drift [,which (names (drift) %in%
+                                         c("DeviceName", "DeviceDateTime"
+                                           # , "Latitude", "Longitude"
+                                         ) )])
+  driftc <- subset (drift, !ddrift) %>%
+    arrange (DeviceName, desc (DeviceDateTime)) %>% ## test that it's working
+    filter()
+  rm (ddrift)
+}
+rm (driftP, dFs)
+
+
 ## define deployment bouts
 ## include speed between positions? XXX
 drift$dT <- c (0, diff (drift$DeviceDateTime, units="mins")) |> as.numeric()
+# drift$year <- format
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 # dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
@@ -363,6 +440,7 @@ drift <- drift %>%
   dplyr::filter (speed_ms < speedTH) %>%
   dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
+  # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
 
 ## need to set these after final drifter selection (days_in_water already per deploy)
