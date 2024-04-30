@@ -11,6 +11,9 @@ rm (list=ls())
 ## get OpenDrift to work on jupyter notebook -- check-point raw book in here.
 
 
+## Define the whole drifter import and data processing as a function (it's slow).
+## On re-runs, only reprocess new data
+
 
 
 ## set interpolation [min] for animation
@@ -32,7 +35,6 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## f
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
-# # driftP <- "~/GISdata/LCI/drifter/drifter-2024-03_14-21_58.csv"  ## full drifter archive
 driftP <- "~/GISdata/LCI/drifter/"
 bathyP <- "~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff" # large-scale bathymetry
 # bingP <- "bingaddress -- find a way to get bing satellite imagery on the fly"
@@ -152,104 +154,70 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 
 
 
-## ----------------------------------------------------------
+## ----------------------------------------------------------------------------
 ## prepare drifter data:
 ## download/update to latest data
 ## select drifter
 ## define deployment bouts
 ## interpolate within bouts to standardize time intervals
 ## turn into geographic sf and project
+## could manually get drifter data from https://data.pacificgyre.com/data#data-download-tab
+## see http://api.pacificgyre.com/ for API syntax
 
 
 save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-### still to check:
-## IWR: useful data for Cook Inlet?
-## SVP -- are they here?
-
-## do not rely on API yet -- will silently drop devices if too many are selected!
-## instead: manually select MS and SVP and I devices, one batch at a time
-## also check: on manually downloaded data: column names did not line up (fixed manually)
-## got everything until 2021-04-29
-
-## migrate from .csv file to .zip for direct download
+## migrate from .csv file to .zip for direct download  XXX
 
 
-## load drifter data from https://data.pacificgyre.com/data#data-download-tab
-## https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300534062420180,300534062420200,300534062422170,300534062422180,300534062423170,300534062423180,300534062425170,300534062426160,300534062426170,300534062427160,300534062428160,300534062428170,300534062429170,300534062429190&startDate=2010-07-07%2000:00&endDate=2023-12-31%2023:59&fileFormat=csv&download=Yes&compression=zip
 ## build up API-url
 key="6A6BEAD8-4961-4FE5-863A-721A16E54C1C"
 startDate="2010-01-01%2000:00"
 endDate="2023-12-31%2023:59"
 endDate="2023-12-31"
-FieldList="DeviceName,DeviceDateTime,AgeInSeconds,BatteryVoltage,CommId,Latitude,Longitude,SubmergedPercent,Temperature0cm"
+# FieldList="DeviceName,DeviceDateTime,AgeInSeconds,BatteryVoltage,CommId,Latitude,Longitude,SubmergedPercent,Temperature0cm"
+FieldList="DeviceName,DeviceDateTime,CommId,Latitude,Longitude"  ## make sure all fields are covered by all devices
 driftF <- paste0 (driftP, "drifter-data_", endDate, ".csv")
+updateFN <- gsub ("2023-12-31", "latest", driftF)
 
 if (!file.exists(driftF)){
   urlC <- paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
-                  # "commID=", commIDs,
-                  "&FieldList=", FieldList,
-                  "&startDate=", startDate,
-                  "&endDate=", endDate,
-                  "&fileFormat=csv&download=Yes"
+                  "&FieldList=", FieldList,"&startDate=", startDate,
+                  "&endDate=", endDate, "&fileFormat=csv&download=Yes"
   )
-  download.file(url=urlC, destfile=driftF)
-  # download.file(url="https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300234011165870,300234011166850,300234011166870,300234011167870,300234011168740,300234011168850,300234011168870,300234011169850,300234011169860,300234011169870,300234010881880,300234010885880,300234011162850,300234011162860,300234011163860,300234011163910,300234011165850,300234011165910,300234011166910,300234011167850,300234060450150,300234060452160,300234060453200,300234060458190,300234063583800,300234063586790,300234063588790,300234063588800,300234063589800,300234063751840,300234063758240,300234063951310,300234063958290,300234063682000,300234064730070,300234064730080,300234064730090,300234064732090,300234064738080,300234065354740,300234065455870,300234065458880,300234065652330,300234067990710,300234067991710,300234067992440,300234067992650,300234067994440,300234067996390,300234067996680,300234067997380,300234067998360,300234067998660,300234067998710,300234067999430,300234067999710,300234068004100,300234068009090,300534060523320,300534061804910,300534061900630,300534061901610,300534061902380,300534061904620,300534061905610,300534061905680,300534060053580,300534060055710,300534060057640,300534060058980,300534060159230,300534060251190,300534060253340,300534060358280,300534060529430,300534060946980,300234063580800,300234063580810,300234063581810,300234063582800,300234063582810,300234063583790,300234064731100,300234064732080,300234064732100,300234064735090,300234064736080,300234064942330,300534060052710,300534060055360,300534060057020,300534060151090&startDate=2010-01-01%2000:00&endDate=2023-12-31%2023:59&fileFormat=csv&download=Yes", destfile=driftF)
+  options(timeout=300)
+  download.file(url=urlC, destfile=driftF); rm (urlC)
 }
 ## update to the latest data
-updateFN <- gsub ("2023-12-31", "latest", driftF)
 if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, units="days") < 7)){
   message ("Drifter data downloaded within the last week: skipping update")
 }else{
-  # download.file(url="https://api.pacificgyre.com/api2/getData.aspx?apiKey=6A6BEAD8-4961-4FE5-863A-721A16E54C1C&commIDs=300234011165870,300234011166850,300234011166870,300234011167870,300234011168740,300234011168850,300234011168870,300234011169850,300234011169860,300234011169870,300234010881880,300234010885880,300234011162850,300234011162860,300234011163860,300234011163910,300234011165850,300234011165910,300234011166910,300234011167850,300234060450150,300234060452160,300234060453200,300234060458190,300234063583800,300234063586790,300234063588790,300234063588800,300234063589800,300234063751840,300234063758240,300234063951310,300234063958290,300234063682000,300234064730070,300234064730080,300234064730090,300234064732090,300234064738080,300234065354740,300234065455870,300234065458880,300234065652330,300234067990710,300234067991710,300234067992440,300234067992650,300234067994440,300234067996390,300234067996680,300234067997380,300234067998360,300234067998660,300234067998710,300234067999430,300234067999710,300234068004100,300234068009090,300534060523320,300534061804910,300534061900630,300534061901610,300534061902380,300534061904620,300534061905610,300534061905680,300534060053580,300534060055710,300534060057640,300534060058980,300534060159230,300534060251190,300534060253340,300534060358280,300534060529430,300534060946980,300234063580800,300234063580810,300234063581810,300234063582800,300234063582810,300234063583790,300234064731100,300234064732080,300234064732100,300234064735090,300234064736080,300234064942330,300534060052710,300534060055360,300534060057020,300534060151090&startDate=2024-01-01%2000:00&endDate=2035-12-31%2023:59&fileFormat=csv&download=Yes", destfile=updateFN)
+  options(timeout=180)
   download.file (url=paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
-                             # "commID=", commIDs,
                              "&FieldList=", FieldList,
-                             "&startDate=", as.character (as.Date(endDate)+1), "%2000:00", ## skipped endDate = Sys.time()
-                             "&fileFormat=csv&download=Yes")
+                             "&startDate=", as.character (as.Date(endDate)+1), "%2000:00",
+                             "&fileFormat=csv&download=Yes")## endDate defaults to now
                  , destfile=updateFN)
 }
-rm (key, startDate, endDate,FieldList)
+rm (key, startDate, endDate, FieldList)
 
 
 ## combine archive and latest drifter download
-require ("purrr");require ("readr")
-drift <- purrr::map_df (list.files (path=driftP, pattern="\\.csv$", full.names=TRUE),
-                        read_csv, show_col_types=FALSE) %>%
-  ## filter and sort
+readC <- function (x){read_csv (x, show_col_types=FALSE, lazy=TRUE)}  ## XXX read from zip file
+drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\\.csv$", full.names=TRUE)
+                        , readC) %>%
   filter (Longitude < -149) %>%            # filter out arctic and SE Alaska (here to get bbox right) -- and AI
-  arrange (DeviceName, DeviceDateTime) %>% # test that this working
+  arrange (DeviceName, DeviceDateTime) %>% # test that this working -- crash on Windows
   filter()
+rm (readC, driftF, updateFN)
 
+
+save.image ("~/tmp/LCI_noaa/cache/drifter5.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter5.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 if (0){
-dFs <- list.files (path=driftP, pattern="\\.csv$", full.names=TRUE)
-df <- read_csv(unzip("my_data.zip", "data1.csv"))
-drift <- read_csv (unzip (driftF))
-
-
-# for (i in 1:length (dFs)){
-#   nD <- read.csv (dFs[i])
-#   if (i == 1){
-#     drift <- nD
-#   }else{
-#     drift <- rbind (drift, nD)
-#   }
-# }
-
-## elegant, but doesn't work
-# read_plus <- function(fn){read_csv(fn, show_col_types=FALSE) %>% mutate (filename=fn)}
-# drift <- dFs [c(1,3)] %>%
-#   purrr::map_df (read_csv(.)) # %>%
-##drift <- purrr::map_df (read_csv (dFs))
-
-## trying to be elegant, but fails
-# drift <- dFs |> map (\(dFs) function (x){
-#   read_csv (x, show_col_types=FALSE) %>%
-#     mutate (filename=x)
-#   })
-
+  ## read from zip file
 require ('zip')
 dFs <- zip::zip_list (paste0 (driftP, "UAF_Data.zip/"))
 readC <- function (fn){
@@ -264,25 +232,7 @@ readC <- function (fn){
     select (as.expression (FieldList))
 }
 
-
-# drift <- purrr::map_df (dFs$filename, readC)
-
-
-# drift <- purrr::map_df (dFs, reads_csv, show_col_types=FALSE)
-
-
-
-## map_df = deprecated? usage = ?? map_df, map_dfr??  -- this works
-drift <- purrr::map_df (dFs,
-                        read_csv, show_col_types=FALSE) %>%
-## filter and sort
-# drift <- drift %>%
-   filter (Longitude < -149) %>%    # filter out arctic and SE Alaska (here to get bbox right) -- and AI
-#  filter (DeviceName)
-  arrange (DeviceName, DeviceDateTime) %>% ## test that it's working
-  filter()
-
-if (0){  ## remove duplicates
+  ## remove duplicates
   fl <- list.files (driftP, pattern="\\.csv$", full.names=TRUE)
   for (i in 1:length (fl)){cn <-  read.csv (fl[i]) %>% colnames(); print (cn)}
   ddrift <- duplicated (drift [,which (names (drift) %in%
@@ -294,13 +244,12 @@ if (0){  ## remove duplicates
     filter()
   rm (ddrift)
 }
-}
 
 ## ----------------------------------------------------------
 ## define deployment bouts
 ## include speed between positions? XXX
-drift$dT <- c (0, diff (drift$DeviceDateTime, units="mins")) |> as.numeric()
-# drift$year <- format
+drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
+drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 # dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
@@ -311,8 +260,8 @@ dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
 ## use morph..
 # dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
 dx$topo <- st_extract(mar_bathy, at=dx)$topo
-dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut?
-  apply (2, min)
+# dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut? parallelize!
+#   apply (2, min)
 
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
@@ -323,7 +272,8 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 drift <- dx %>%
   filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
   filter (topo < 3) %>%         ## to make sure none are on land
-  filter (LandDistance_m > 50) %>%
+#  filter (LandDistance_m > 50) %>%
+#  filter (year > 2020) %>%  ## only last few years?
   st_drop_geometry()  ## drop spatial part
 ## retains 21k out of 28 k
 # dim (drift)
@@ -359,7 +309,7 @@ rm (newDeploy, x, depIdx, i)
 ## interpolate within bouts
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
-for (i in seq_along (levels (drift$deploy))){
+for (i in seq_along (levels (drift$deploy))){               ## very slow! parallelize? cache?
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
     if (interP > 0){
@@ -391,9 +341,6 @@ for (i in seq_along (levels (drift$deploy))){
 
 rm (df, i, newDF, interP)
 iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
-
-# plot (Latitude~Longitude, iDF)
-
 
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
@@ -462,6 +409,11 @@ if (0){
 save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
+
+
+
+
+
 ## -----------------------------------------------------------------------------
 ## select drifters to plot
 
@@ -489,8 +441,8 @@ drift <- drift %>%
   # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
   # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
-  dplyr::filter (speed_ms < speedTH) %>%
-  dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
+#  dplyr::filter (speed_ms < speedTH) %>%
+#  dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
@@ -502,6 +454,8 @@ drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
+
+## -----------------------------------------------------------------------------
 ## interactive mapping
 ## can/should supply own basemap?
 require ('mapview')  ## also see rMaps on GitHub
@@ -739,6 +693,12 @@ lines (nD$topo, predict (lS, newdata=nD), col = "red")
 
 
 
+
+
+
+
+
+## -----------------------------------------------------------------------------
 ## animation of drifter tracks
 # see https://hansenjohnson.org/post/animate-movement-in-r/
 
