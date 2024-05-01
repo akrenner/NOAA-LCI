@@ -258,10 +258,9 @@ dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
                 , remove=FALSE, crs=4326) %>%
   st_transform(projection)
 ## use morph..
-# dx$depth <- st_extract (mar_bathy, at=dx)$topo * -1 # depth
 dx$topo <- st_extract(mar_bathy, at=dx)$topo
-# dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut? parallelize!
-#   apply (2, min)
+dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut? parallelize!
+  apply (2, min)
 
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
@@ -270,11 +269,11 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## ----------------------------------------------------------------------------
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
 drift <- dx %>%
+  st_drop_geometry() %>%  ## drop spatial part
   filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
   filter (topo < 3) %>%         ## to make sure none are on land
-#  filter (LandDistance_m > 50) %>%
-#  filter (year > 2020) %>%  ## only last few years?
-  st_drop_geometry()  ## drop spatial part
+  filter (LandDistance_m > 50) %>%
+  filter()
 ## retains 21k out of 28 k
 # dim (drift)
 # dim (dx)
@@ -322,7 +321,7 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
       newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
       newDF$dT <- interP
     }else{
-      newDF <- df
+      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "dT"))
     }
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
     newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
@@ -442,7 +441,6 @@ drift <- drift %>%
   # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
 #  dplyr::filter (speed_ms < speedTH) %>%
-#  dplyr::filter (speed_ms > 0.00001) %>%      ## remove stationary positions
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
@@ -450,8 +448,9 @@ drift <- drift %>%
 ## need to set these after final drifter selection (days_in_water already per deploy)
 drift$DeviceName <- factor (drift$DeviceName)
 drift$deploy <- factor (drift$deploy)
-drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
+
+
 
 
 
@@ -460,12 +459,31 @@ drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 ## can/should supply own basemap?
 require ('mapview')  ## also see rMaps on GitHub
 require ('webshot')
-mymap <- mapview::mapview (drift, zcol="speed_ms"
-                           , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron"))
+mymap <- drift %>%
+  filter (year==2022) %>%
+  filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%  #, "UAF-MS-0066")) %>%
+  filter (DeviceDateTime < as.POSIXct("2022-08-20 07:00")) %>%
+  filter (DeviceDateTime > as.POSIXct("2022-07-21 18:00")) %>%
+  #  filter (CommId != "300534060052710") %>%
+  filter ((DeviceDateTime < as.POSIXct ("2022-08-10") | DeviceName == "UAF-SVPI-0047")) %>%  ## remove redeployment
+  mutate (month=as.numeric (format (DeviceDateTime, "%m"))) %>%
+  mutate (depth=topo * -1) %>%
+  # group_by (DeviceName) %>%
+  # summarize(m=mean(attr_data)) %>% st_cast ("LINESTRING") %>%  ## making a string from this?? not working
+  mapview::mapview (zcol= c ("days_in_water", "speed_ms", "depth")
+    , col.regions=colorRampPalette(heat.colors(20))
+    , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
+  )
+mymap
 mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
+## zip up mapview.htlm + folder
 rm (mymap)
 ## save for others  (ggplotly)
 ## saveWidget(object_name, file="map.html")
+
+
+
+
 
 ## -----------------------------------------------------------------------------
 ## define some colors
@@ -501,6 +519,8 @@ plotBG <- function(downsample=0, dr=drift){
 
   ## add bathymetry/topography
   if (0){
+    depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                         , dimensions = attr(mar_bathy, "dimensions"))  ## move up if actually using!
     plot (depth, add=TRUE
           , nbreaks=100
           , compact=TRUE  ## still smothers everyting
@@ -542,14 +562,13 @@ png (filename=paste0 (outpath, "drifterPlot_byID.png")
 # pdf (filename=paste0 (outpath, "drifterPlot_byID.png")
 #      , width=16, height=9)
 plotBG(2)
-# plot (st_geometry (drift), add=TRUE, type="l", lwd=2, col="yellow")  ## lines -- trouble between deploys
-## cross/x: pch=4,  plus+: pch=3
-plot (st_geometry (drift), add=TRUE, pch=19, cex=0.5
+x <- drift %>% mutate (col=brewer.pal (8, "Set2")[.$DeviceName])
+plot (st_geometry (x), add=TRUE, pch=19, cex=0.5
       # , col=add.alpha ("#FFBB00", 0.4)
       , col=add.alpha (drift$col, 0.5)
 )
+rm (x)
 dev.off()
-
 
 
 
