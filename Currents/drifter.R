@@ -574,13 +574,11 @@ png (filename=paste0 (outpath, "drifterPlot_byID.png")
 #      , width=16, height=9)
 plotBG(2)
 drift %>%
-  filter (year>2021) %>%
+  filter (year==2022) %>%
   #  mutate (col=brewer.pal (8, "Set2")[.$DeviceName]) %>%
   select (DeviceName) %>%
   mutate (DeviceName = factor (DeviceName)) %>%
   plot (add=TRUE, pch=19, cex=0.5
-        # , col=add.alpha ("#FFBB00", 0.4)
-        , col=add.alpha (brewer.pal(length (levels (.$DeviceName)), "Set1"), 0.5)
   )
 dev.off()
 
