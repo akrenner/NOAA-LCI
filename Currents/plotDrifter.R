@@ -1,7 +1,7 @@
 ## plot Drifter tracks
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter8.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 

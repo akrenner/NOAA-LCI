@@ -53,7 +53,7 @@ require ('oce')
 # require ("ggplot2")
 # require ("ggspatial")  ## for spatial points in ggplot
 # require ("gganimate")  ## seems to be a convenient package for animation
-# require ("readr") ## for read_csv
+require ("readr") ## for read_csv
 # require ("rnaturalearth")
 # require ('tidyverse')
 
@@ -212,10 +212,6 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
   filter()
 rm (readC, driftF, updateFN)
 
-
-save.image ("~/tmp/LCI_noaa/cache/drifter5.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter5.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
 if (0){
   ## read from zip file
 require ('zip')
@@ -244,6 +240,12 @@ readC <- function (fn){
     filter()
   rm (ddrift)
 }
+save.image ("~/tmp/LCI_noaa/cache/drifter5.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter5.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
+
+
 
 ## ----------------------------------------------------------
 ## define deployment bouts
@@ -264,6 +266,51 @@ dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of ea
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
+
+
+## -------------------------------------------------------------------------------------------
+## build reference map to identify human-transported drifter positions
+
+## add GSHHS nodes at zero?
+
+## built intermediate map to filter out human-assisted positions
+if (0){
+## tides
+require ('rtide')  ## calculates tide height--not quite what's needed here
+tStn <- tide_stations("Seldovia*")
+timetable <- data.frame (Station = tStn, DateTime = drift$DeviceDateTime)  ## imperative to parallelize. Enough?
+drift$B$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
+
+## move tide functions into function script, load that
+## combine with TideTables ?? (TideTables needs raw data? as does oce)
+
+# https://towardsdatascience.com/building-kriging-models-in-r-b94d7c9750d8
+## kriging a map
+require ('automap')
+require ("gstat")
+
+drift_sf <- drift %>%
+  filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"  # sf points
+            , remove=FALSE, crs=4326)
+v_mod_OK = autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
+
+
+grd <- drift %>%
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"  # sf points
+                  , remove=FALSE, crs=4326) %>%
+    st_bbox () |>
+  st_as_stars (dx=1000) |>
+  st_crop (drift)
+
+# https://r-spatial.org/book/12-Interpolation.html
+require ('gstat')
+v <- variogram (speed_ms~1, drift)
+
+}
+
 
 ## ----------------------------------------------------------------------------
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
@@ -556,7 +603,7 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifter8.Rdata")
+save.image ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter8.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
