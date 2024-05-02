@@ -249,7 +249,6 @@ readC <- function (fn){
 ## define deployment bouts
 ## include speed between positions? XXX
 drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
-drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 # dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
@@ -321,7 +320,7 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
       newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
       newDF$dT <- interP
     }else{
-      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "dT"))
+      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT"))
     }
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
     newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
@@ -338,6 +337,7 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
   }
 }
 
+
 rm (df, i, newDF, interP)
 iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
 
@@ -353,6 +353,9 @@ rm (iDF)
 # drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
 ## ice wave rider and MicroStar are surface devices
 drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()  ## above should be piped and mapped XXX
+drift$topo <- st_extract(mar_bathy, at=drift)$topo
+
 
 
 ## testing
@@ -474,7 +477,7 @@ mymap <- drift %>%
     , col.regions=colorRampPalette(heat.colors(20))
     , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
   )
-mymap
+# mymap
 mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
 ## zip up mapview.htlm + folder
 rm (mymap)
@@ -553,6 +556,14 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 
+save.image ("~/tmp/LCI_noaa/cache/drifter8.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter8.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
+
+
+
+
 wRes <- 800
 
 ## color by device -- simple
@@ -562,13 +573,19 @@ png (filename=paste0 (outpath, "drifterPlot_byID.png")
 # pdf (filename=paste0 (outpath, "drifterPlot_byID.png")
 #      , width=16, height=9)
 plotBG(2)
-x <- drift %>% mutate (col=brewer.pal (8, "Set2")[.$DeviceName])
-plot (st_geometry (x), add=TRUE, pch=19, cex=0.5
-      # , col=add.alpha ("#FFBB00", 0.4)
-      , col=add.alpha (drift$col, 0.5)
-)
-rm (x)
+drift %>%
+  filter (year>2021) %>%
+  #  mutate (col=brewer.pal (8, "Set2")[.$DeviceName]) %>%
+  select (DeviceName) %>%
+  mutate (DeviceName = factor (DeviceName)) %>%
+  plot (add=TRUE, pch=19, cex=0.5
+        # , col=add.alpha ("#FFBB00", 0.4)
+        , col=add.alpha (brewer.pal(length (levels (.$DeviceName)), "Set1"), 0.5)
+  )
 dev.off()
+
+
+
 
 
 
