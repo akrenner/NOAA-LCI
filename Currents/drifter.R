@@ -292,6 +292,7 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
   tu <- unique (timetable)
 
   if (0){  require(parallel)
+    ## need to pre-allocate to cores -- don't use parLapplyLB
     nCores <- detectCores()-1
     cl <- makeCluster(nCores)
     clusterExport (cl, varlist=c("timetable"))
@@ -354,6 +355,9 @@ drift_sf <- worldM %>%
 
 ## fast IDW
 # https://geobrinkmann.com/post/iwd/
+## not accelerated under windows -- worth the installation trouble?
+## revert to gstat IDW?
+## should use kriging for data-product output
 p <- require ('GVI')  ## for sf_to_rast
 if (!p){
   require ("remotes")
