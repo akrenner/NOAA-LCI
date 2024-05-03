@@ -290,6 +290,20 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
   timetable <- data.frame (Station = tStn
                            , DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
   tu <- unique (timetable)
+
+  if (0){  require(parallel)
+    nCores <- detectCores()-1
+    cl <- makeCluster(nCores)
+    clusterExport (cl, varlist=c("timetable"))
+    clusterEvalQ(cl, require ("rtide"))
+    pT <- parLapply (cl, 1:nrow (timetable), function (i){tide_slack_data (timetable [i,])})
+    stopCluster (cl); rm (cl)
+
+    # XXXX  need to rbind pT XXX
+  }
+
+  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")
+
   tSlack <- tide_slack_data(timetable)  ## need to parallelize?
   drift <- cbind (drift, tSlack [match (tu$DateTime, timetable$DateTime),3:5])
   # drift$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
