@@ -308,14 +308,14 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 # https://github.com/guzmanlopez/parallelizingAndClusteringInR/blob/master/parallel-kriging-function.R
 
 ## kriging a map
-require ('automap')
-require ("gstat")
+# require ('automap')
+# require ("gstat")
 
 drift_sf <- dx %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
   filter (speed_ms > 0.01) %>%
   filter (distance_m > 0.1) %>%
-  filter (!is.na {onLand}) %>%
+  filter (!is.na (onLand)) %>%
   filter (dT > 1) %>%     ## some zero-values!
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
 #  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
