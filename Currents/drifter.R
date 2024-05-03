@@ -62,9 +62,9 @@ require ("readr") ## for read_csv
 
 
 ## set projection for output map
-projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
 # projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
-
+projection <- st_crs (32605) # UTM 5N
 
 
 ## ----------------------------------------------------------
@@ -266,6 +266,7 @@ dx$LandDistance_m <- worldM %>%
   st_union() %>%
   st_distance(dx, by_element=FALSE) %>%
   as.numeric()
+dx$onLand <- st_join (worldM, dx, join=st_within)
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
@@ -351,12 +352,21 @@ speedO <- sf_to_rast (observer=drift_sf, v="speed_ms"
   st_warp(crs=projection)
 save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
 
+## look-up drift
+
 
 if (0){
-  plot (speedO)
+  plot (mar_bathy)
+  plot (speedO, add=TRUE)
   plot (worldM, add=TRUE, col="beige", alpha=0.5)
   plot (drift_sf %>% st_transform(projection), add=TRUE)
+  # speedO == worldM and drifter_sf > st_trans, but not mar_bathy
 }
+
+
+
+
+
 
 
 if (0){
