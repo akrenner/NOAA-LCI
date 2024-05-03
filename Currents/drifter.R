@@ -62,8 +62,8 @@ require ("readr") ## for read_csv
 
 
 ## set projection for output map
-# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
-projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
+projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+# projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
 
 
 
@@ -127,7 +127,7 @@ options(timeout=600) ## double timeout limit
 #   st_as_sfc()
 
 ## bathymetry/topography
-mar_bathy <- stars::read_stars (bathyP) ; rm (bathyP)
+mar_bathy <- stars::read_stars (bathyP, crs=3338) ; rm (bathyP)
 if (projection != st_crs (3338)){
   mar_bathy <- st_warp(mar_bathy, crs=projection)
 }
@@ -138,11 +138,11 @@ depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
 ## bounding box -- redundant?
 bbox <- mar_bathy %>%  ## extended Research Area
   st_bbox() %>%
-  st_as_sfc() %>%
-  st_transform(projection)
+  st_as_sfc()
+
 
 ## coastline
-worldM <- sf::st_read (worldP, quiet=TRUE) %>%
+worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>%
   st_geometry()
 worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
   st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) %>%   ## or could use bbox above
@@ -150,6 +150,12 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 ## somehow, polygon 2245 is not valid and cannot be made valid
 ## it's at Lon:43.83, Lat:-69.75 -- ideally fixed in gshhs source!
 # summary (st_is_valid(st_make_valid(worldM)))
+seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
+
+save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
 
 
 
@@ -165,11 +171,7 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 ## see http://api.pacificgyre.com/ for API syntax
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
 ## migrate from .csv file to .zip for direct download  XXX
-
 
 ## build up API-url
 key="6A6BEAD8-4961-4FE5-863A-721A16E54C1C"
@@ -248,21 +250,22 @@ save.image ("~/tmp/LCI_noaa/cache/drifter5.Rdata")
 
 
 ## ----------------------------------------------------------
-## define deployment bouts
+## add additional information to drifter
 ## include speed between positions? XXX
 drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 # dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
 
-dx <- st_as_sf (drift, coords=c("Longitude", "Latitude"), dim="XY"  # sf points
-                , remove=FALSE, crs=4326) %>%
+dx <- st_as_sf (drift
+                , coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
 ## use morph..
 dx$topo <- st_extract(mar_bathy, at=dx)$topo
-dx$LandDistance_m <- st_distance(worldM, dx) %>%  ## slow. Extract the min of each column. Is there a shortcut? parallelize!
-  apply (2, min)
-
+dx$LandDistance_m <- worldM %>%
+  st_union() %>%
+  st_distance(dx, by_element=FALSE) %>%
+  as.numeric()
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
@@ -277,38 +280,131 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 
 ## built intermediate map to filter out human-assisted positions
 if (0){
-## tides
-require ('rtide')  ## calculates tide height--not quite what's needed here
-tStn <- tide_stations("Seldovia*")
-timetable <- data.frame (Station = tStn, DateTime = drift$DeviceDateTime)  ## imperative to parallelize. Enough?
-drift$B$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
-
+  ## tides
+  require ('rtide')  ## calculates tide height--not quite what's needed here
+  tStn <- tide_stations("Seldovia*")
+  timetable <- data.frame (Station = tStn, DateTime = drift$DeviceDateTime)  ## imperative to parallelize. Enough?
+  drift$B$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
+}
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
 
 # https://towardsdatascience.com/building-kriging-models-in-r-b94d7c9750d8
+# https://gis.stackexchange.com/questions/411556/how-to-set-up-a-target-grid-for-kriging-in-r
+# parallel:
+# https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
+# https://github.com/guzmanlopez/parallelizingAndClusteringInR/blob/master/parallel-kriging-function.R
+
 ## kriging a map
 require ('automap')
 require ("gstat")
 
 drift_sf <- drift %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"  # sf points
-            , remove=FALSE, crs=4326)
-v_mod_OK = autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
+  filter (speed_ms > 0.01) %>%
+  filter (distance_m > 0.1) %>%
+  filter (dT > 1) %>%     ## some zero-values!
+  #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
+  # st_transform (32605) %>% # UTM zone 5N
+  select (speed_ms) %>%
+  filter()
+
+# shoreline -- assume and force shoreline speed to be 0
+# add shoreline to drifter speeds
+drift_sf <- worldM %>%
+  st_sf () %>%
+  st_simplify(dTolerance=0.00001) %>%
+  st_cast ("MULTIPOLYGON") %>%
+  sf::st_coordinates() %>%
+  as.data.frame() %>%
+  st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
+  st_transform(projection) %>%
+  mutate (speed_ms = 0) %>%
+  select (speed_ms) %>%
+  rbind (drift_sf)
+
+## fast IDW
+# https://geobrinkmann.com/post/iwd/
+p <- require ('GVI')  ## for sf_to_rast
+if (!p){
+  require ("remotes")
+  remotes::install_github("STBrinkmann/GVI")
+}; rm (p)
 
 
-grd <- drift %>%
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"  # sf points
-                  , remove=FALSE, crs=4326) %>%
-    st_bbox () |>
-  st_as_stars (dx=1000) |>
-  st_crop (drift)
+# save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
 
-# https://r-spatial.org/book/12-Interpolation.html
-require ('gstat')
-v <- variogram (speed_ms~1, drift)
+require ('parallel')
+nCores <- detectCores()-1
 
+## consider using gstat to specify aggregating function = max
+speedO <- sf_to_rast (observer=drift_sf, v="speed_ms"
+                      , aoi=st_sf (seaA)
+                      , max_distance=100e3
+                      , raster_res=5e3
+                      , progress=TRUE
+                      , cores=nCores
+) %>%
+  st_as_stars () %>%  ## terra raster to stars
+  st_warp(crs=projection)
+save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
+
+
+if (0){
+  plot (speedO)
+  plot (worldM, add=TRUE, col="beige", alpha=0.5)
+  plot (drift_sf %>% st_transform(projection), add=TRUE)
+}
+
+
+if (0){
+  ## variogram = excruciatingly slow -- subsample input?!  Parallelize
+  v_mod_OK <- autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
+  # plot (v_mod_OK)
+
+  # Create grid
+  grid <- st_as_stars(st_bbox(st_buffer(drift_sf, 0.001)))  ## set resolution ?
+
+  # Interpolation model
+  g = gstat(formula = speed_ms~1, model = v_mod_OK$var_model, data = drift_sf)
+  # plot (v_mod_OK, g) ## parameter cutoff needs to be specified
+
+
+  if(0){
+    require ('parallel')
+    nCores <- detectCores()-1
+    cl <- makeCluster (nCores)
+    parts <- split (x=1:length (grid), f=1:nCores)
+    clusterExport (cl=cl, varlist=c("drift_sf", "grid", "v_mod_OK", "g"), envir = .GlobalEnv)
+    clusterEvalQ(cl = cl, expr = c(library('sf'), library('gstat')))
+    parallelX <- parLapply(cl = cl, X = 1:no_cores, fun = function(x){
+      krige(formula=log(zinc)~1, locations = drift_sf, newdata=grid[parts[[x]],], model = g)
+    })
+    stopCluster(cl)
+  }
+
+  # Interpolate
+  z = predict(g, grid)  ## slow -- go back to parallel version?
+  ## just do an IDW from the start -- for simplicity!
+
+  # Plot
+  plot(z, col = hcl.colors(12, "Spectral"), reset = FALSE)
+  plot(st_geometry(drift_sf), add = TRUE)
+  # text(st_coordinates(kerpensample_sf), as.character(round(kerpensample_sf$Z, 1)), pos = 3, add = TRUE)
+
+  # grd <- drift %>%
+  #   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  #     st_bbox () |>
+  #   st_as_stars (dx=1000) |>
+  #   st_crop (drift)
+  #
+  # # https://r-spatial.org/book/12-Interpolation.html
+  # require ('gstat')
+  # v <- variogram (speed_ms~1, drift)
+  save.image("~/tmp/LCI_noaa/cache/drifterKrige.RData")
+  # load ("~/tmp/LCI_noaa/cache/drifterKrige.RData")
 }
 
 
@@ -390,10 +486,8 @@ iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/p
 
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY"
-            , remove=FALSE
-            , crs=4326
-  ) %>% st_transform(projection)
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection)
 rm (iDF)
 
 

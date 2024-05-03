@@ -49,7 +49,7 @@ gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## u
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO_2022_v1_15s_surface_SCAK.tiff"
 gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240412topo_max_WGS84_EPSG4326.grd"
 gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2_20240423topo.tif"
-
+gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2/GMRTv4_2_20240423topo.tif"
 ## add terrestrial DEM: best=2m AK from USGS
 
 
