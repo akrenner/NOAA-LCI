@@ -2,7 +2,7 @@
 ## create animations and plots of current drifters
 rm (list=ls())
 # renv::restore()
-
+print (startTime <- Sys.time())
 
 ## tasks:
 ## animate both 2021 drifters on same day
@@ -266,7 +266,9 @@ dx$LandDistance_m <- worldM %>%
   st_union() %>%
   st_distance(dx, by_element=FALSE) %>%
   as.numeric()
-dx$onLand <- st_join (worldM, dx, join=st_within)
+# dx$onLand <- st_join (dx, st_sf (worldM), join=st_within)
+dx$onLand <- st_intersects(dx, worldM) |> as.numeric()
+# dx <- st_filter (dx, seaA)  ## supposed to filter out points on land
 
 save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
@@ -280,13 +282,22 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## add GSHHS nodes at zero?
 
 ## built intermediate map to filter out human-assisted positions
-if (0){
   ## tides
   require ('rtide')  ## calculates tide height--not quite what's needed here
   tStn <- tide_stations("Seldovia*")
-  timetable <- data.frame (Station = tStn, DateTime = drift$DeviceDateTime)  ## imperative to parallelize. Enough?
-  drift$B$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
-}
+  # drift <- slice_sample(drift, n=5000)
+
+  timetable <- data.frame (Station = tStn
+                           , DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
+  tu <- unique (timetable)
+  tSlack <- tide_slack_data(timetable)  ## need to parallelize?
+  drift <- cbind (drift, tSlack [match (tu$DateTime, timetable$DateTime),3:5])
+  # drift$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
+  drift <- cbind (drift, tide_slack_data (timetable)[,3:5])  # add SlackDateTime, SlackTideHeight, SlackType
+  drift$dT_flood <- difftime(drift$SloackDateTime, drift$DeviceDateTime) |> as.numeric()*3600
+
+  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")
+
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
 
@@ -300,14 +311,15 @@ if (0){
 require ('automap')
 require ("gstat")
 
-drift_sf <- drift %>%
+drift_sf <- dx %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
   filter (speed_ms > 0.01) %>%
   filter (distance_m > 0.1) %>%
+  filter (!is.na {onLand}) %>%
   filter (dT > 1) %>%     ## some zero-values!
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
+#  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+#  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
   # st_transform (32605) %>% # UTM zone 5N
   select (speed_ms) %>%
   filter()
@@ -708,11 +720,12 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 save.image ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter8.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
+print (difftime(Sys.time(), startTime))
 
 ## call plotting code here?
-source ("Currents/plotDrifter.R")
+# source ("Currents/plotDrifter.R")
 
 
 for (i in 1:5) alarm()
