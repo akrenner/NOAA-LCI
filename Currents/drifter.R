@@ -62,9 +62,9 @@ require ("readr") ## for read_csv
 
 
 ## set projection for output map
-# projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
+projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
 # projection <- st_crs (4326)  # "+init=epsg:4326" ## WGS84
-projection <- st_crs (32605) # UTM 5N
+# projection <- st_crs (32605) # UTM 5N
 
 
 ## ----------------------------------------------------------
@@ -152,9 +152,6 @@ worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
 # summary (st_is_valid(st_make_valid(worldM)))
 seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
 
-save.image ("~/tmp/LCI_noaa/cache/drifter2.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
 
 
 
@@ -211,6 +208,7 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
                         , readC) %>%
   filter (Longitude < -149) %>%            # filter out arctic and SE Alaska (here to get bbox right) -- and AI
   arrange (DeviceName, DeviceDateTime) %>% # test that this working -- crash on Windows
+  mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC
   filter()
 rm (readC, driftF, updateFN)
 
@@ -242,9 +240,6 @@ readC <- function (fn){
     filter()
   rm (ddrift)
 }
-save.image ("~/tmp/LCI_noaa/cache/drifter5.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter5.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
 
 
 
@@ -279,40 +274,69 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## -------------------------------------------------------------------------------------------
 ## build reference map to identify human-transported drifter positions
 
-## add GSHHS nodes at zero?
-
+if (1){
 ## built intermediate map to filter out human-assisted positions
   ## tides
   require ('rtide')  ## calculates tide height--not quite what's needed here
+  ## for testing:  drift <- slice_sample(drift, n=10000)
+  # n=5000 on dell, serial: 215 usr = 3.5 min
+  # n=1000 on dell, serial:  46 usr = s
+  # n=5000 on dell, parall: 131 usr = 2 min
+  # n=10e3 on dell, parall: 209 usr = 3.5 min
+  # 345635  -- expect: 2 h   209/10e3*345635/3600 -- for all
+  # 38105   (tu) -- a rather modest 209/10e3*38105/60 = 15 min
+
+
   tStn <- tide_stations("Seldovia*")
-  # drift <- slice_sample(drift, n=5000)
-
-  timetable <- data.frame (Station = tStn
+  ttbl <- data.frame (Station = tStn
                            , DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
-  tu <- unique (timetable)
+   tu <- unique (ttbl)
 
-  if (0){  require(parallel)
+   system.time ({
+ if (1){
+   require(parallel)
     ## need to pre-allocate to cores -- don't use parLapplyLB
     nCores <- detectCores()-1
     cl <- makeCluster(nCores)
-    clusterExport (cl, varlist=c("timetable"))
+    clusterExport (cl, varlist=c("tu"))
     clusterEvalQ(cl, require ("rtide"))
-    pT <- parLapply (cl, 1:nrow (timetable), function (i){tide_slack_data (timetable [i,])})
+    pT <- parLapply (cl, 1:nrow (tu), function (i){tide_slack_data (tu [i,])})
     stopCluster (cl); rm (cl)
+    tSlack <- as.data.frame (do.call (rbind, pT))
+  }else{
+    ## serial processing
+    tSlack <- tide_slack_data(tu)  ## must parallelize
+  }
+   })
+  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")  ## checkpoint for safety
 
-    # XXXX  need to rbind pT XXX
+  ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
+                  # , DateTimeT=ttbl$DateTime
+                  , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
+
+  ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in min
+  ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
+  ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
+
+  if (0){
+    hist (ttbl$dT, main = "", xlab="hours from slack tide")
+    hist (abs (ttbl$dT), main = "", xlab = "|hours| from slack tide")
+    hist (subset (ttbl, SlackType=="high")$dT)
+    hist (format (ttbl$DeviceDatetime, "%H") |> as.numeric(), xlab="hour of day")
+    # hist (sin (runif(10e3)*2*pi))
   }
 
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")
+  ## categorize tide: within 2 h: high/low,
+  # drift$tide <- ifelse (difftime (drift$DeviceDateTime, drift$))
+  drift$tide <- factor (ttbl$tide)
+  rm (tu, ttbl, tSn, tSlack)
 
-  tSlack <- tide_slack_data(timetable)  ## need to parallelize?
-  drift <- cbind (drift, tSlack [match (tu$DateTime, timetable$DateTime),3:5])
   # drift$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
   drift <- cbind (drift, tide_slack_data (timetable)[,3:5])  # add SlackDateTime, SlackTideHeight, SlackType
   drift$dT_flood <- difftime(drift$SloackDateTime, drift$DeviceDateTime) |> as.numeric()*3600
 
   save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")
-
+}
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
 
@@ -740,7 +764,7 @@ plotBG <- function(downsample=0, dr=drift){
 save.image ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-print (difftime(Sys.time(), startTime))
+cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
 
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
