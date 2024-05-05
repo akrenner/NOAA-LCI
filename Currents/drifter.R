@@ -271,14 +271,19 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 
 
 
+
+
+
 ## -------------------------------------------------------------------------------------------
-## build reference map to identify human-transported drifter positions
+## calculate state of the tide to subset data for maps, separating flood/slack/ebb
+
+## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics
 
 if (1){
 ## built intermediate map to filter out human-assisted positions
   ## tides
   require ('rtide')  ## calculates tide height--not quite what's needed here
-  ## for testing:  drift <- slice_sample(drift, n=10000)
+  ## for testing:  drift <- slice_sample(drift, n=1000)
   # n=5000 on dell, serial: 215 usr = 3.5 min
   # n=1000 on dell, serial:  46 usr = s
   # n=5000 on dell, parall: 131 usr = 2 min
@@ -287,8 +292,8 @@ if (1){
   # 38105   (tu) -- a rather modest 209/10e3*38105/60 = 15 min
 
 
-  tStn <- tide_stations("Seldovia*")
-  ttbl <- data.frame (Station = tStn
+#  tStn <- tide_stations("Seldovia*")
+  ttbl <- data.frame (Station=tide_stations ("Seldovia*") ## find better harmonics?!
                            , DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
    tu <- unique (ttbl)
 
@@ -309,11 +314,13 @@ if (1){
   }
    })
   save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")  ## checkpoint for safety
+  # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
   ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
                   # , DateTimeT=ttbl$DateTime
                   , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
 
+  ## categorize tide: within 1.5 h: high/low,
   ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in min
   ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
   ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
@@ -326,19 +333,20 @@ if (1){
     # hist (sin (runif(10e3)*2*pi))
   }
 
-  ## categorize tide: within 2 h: high/low,
-  # drift$tide <- ifelse (difftime (drift$DeviceDateTime, drift$))
+  drift <- cbind (drift, ttbl [, c(3,4,6)])
+
+  drift$dT_flood <- difftime(drift$SlackDateTime, drift$DeviceDateTime) |> as.numeric()*3600 * 1.5
   drift$tide <- factor (ttbl$tide)
-  rm (tu, ttbl, tSn, tSlack)
-
-  # drift$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
-  drift <- cbind (drift, tide_slack_data (timetable)[,3:5])  # add SlackDateTime, SlackTideHeight, SlackType
-  drift$dT_flood <- difftime(drift$SloackDateTime, drift$DeviceDateTime) |> as.numeric()*3600
-
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")
+  rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
+
+
+
+
+## -------------------------------------------------------------------------------------------
+## build reference map to identify human-transported drifter positions
 
 # https://towardsdatascience.com/building-kriging-models-in-r-b94d7c9750d8
 # https://gis.stackexchange.com/questions/411556/how-to-set-up-a-target-grid-for-kriging-in-r
