@@ -208,7 +208,7 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
                         , readC) %>%
   filter (Longitude < -149) %>%            # filter out arctic and SE Alaska (here to get bbox right) -- and AI
   arrange (DeviceName, DeviceDateTime) %>% # test that this working -- crash on Windows
-  mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC
+# mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC -- on Mac, already recognized as UTC
   filter()
 rm (readC, driftF, updateFN)
 
@@ -278,11 +278,11 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## calculate state of the tide to subset data for maps, separating flood/slack/ebb
 
 ## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics
-
 if (1){
-## built intermediate map to filter out human-assisted positions
+  ## built intermediate map to filter out human-assisted positions
+
   ## tides
-  require ('rtide')  ## calculates tide height--not quite what's needed here
+  require ('rtide')  ## calculates tides from harmonics
   ## for testing:  drift <- slice_sample(drift, n=1000)
   # n=5000 on dell, serial: 215 usr = 3.5 min
   # n=1000 on dell, serial:  46 usr = s
@@ -291,28 +291,36 @@ if (1){
   # 345635  -- expect: 2 h   209/10e3*345635/3600 -- for all
   # 38105   (tu) -- a rather modest 209/10e3*38105/60 = 15 min
 
+  #  tStn <- tide_stations("Seldovia*")
+  tStn <- "Anchor Point, Cook Inlet, Alaska"
+  tSn <- "Bear Cove, Kachemak Bay, Cook Inlet, Alaska"
+  tSn <- "Kasitsna Bay, Kachemak Bay, Alaska"
+  ttbl <- data.frame (# Station=tide_stations ("Seldovia*") ## find better harmonics?!
+    Station=tSn, DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
+  tu <- unique (ttbl)
 
-#  tStn <- tide_stations("Seldovia*")
-  ttbl <- data.frame (Station=tide_stations ("Seldovia*") ## find better harmonics?!
-                           , DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
-   tu <- unique (ttbl)
-
-   system.time ({
- if (1){
-   require(parallel)
-    ## need to pre-allocate to cores -- don't use parLapplyLB
-    nCores <- detectCores()-1
-    cl <- makeCluster(nCores)
-    clusterExport (cl, varlist=c("tu"))
-    clusterEvalQ(cl, require ("rtide"))
-    pT <- parLapply (cl, 1:nrow (tu), function (i){tide_slack_data (tu [i,])})
-    stopCluster (cl); rm (cl)
-    tSlack <- as.data.frame (do.call (rbind, pT))
-  }else{
-    ## serial processing
-    tSlack <- tide_slack_data(tu)  ## must parallelize
-  }
-   })
+  system.time ({
+    if (1){  ## parallel (or serial)
+      require(parallel)
+      if (.Platform$OS.type=="unix"){
+        pT <- mclapply (1:nrow (tu), function (i){tide_slack_data(tu [i,])}
+                        , mc.cores=detectCores()-1)
+      }else{
+        require(parallel)
+        ## need to pre-allocate to cores -- don't use parLapplyLB
+        nCores <- detectCores()-1
+        cl <- makeCluster(nCores)
+        clusterExport (cl, varlist=c("tu"))
+        clusterEvalQ(cl, require ("rtide"))
+        pT <- parLapply (cl, 1:nrow (tu), function (i){tide_slack_data (tu [i,])})
+        stopCluster (cl); rm (cl)
+      }
+      tSlack <- as.data.frame (do.call (rbind, pT))
+    }else{
+      ## serial processing
+      tSlack <- tide_slack_data(tu)  ## must parallelize
+    }
+  })
   save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")  ## checkpoint for safety
   # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
@@ -333,10 +341,12 @@ if (1){
     # hist (sin (runif(10e3)*2*pi))
   }
 
-  drift <- cbind (drift, ttbl [, c(3,4,6)])
 
-  drift$dT_flood <- difftime(drift$SlackDateTime, drift$DeviceDateTime) |> as.numeric()*3600 * 1.5
-  drift$tide <- factor (ttbl$tide)
+  drift <- cbind (drift, ttbl [, c(3,4,6)])
+  save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
+
+  # drift$dT_flood <- difftime(drift$SlackDateTime, drift$DeviceDateTime) |> as.numeric()*3600 * 1.5
+  # drift$tide <- factor (ttbl$tide)
   rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
