@@ -22,8 +22,8 @@ interP <- 0  # no interepolation
 
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
-wRes <- 1920; hRes <- 1080   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
-wRes <- 1024; hRes <-  576   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+resW <- 1920; resH <- 1080   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+resW <- 1024; resH <-  576   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
 frameR <- 24 ## frames/s
 
 
@@ -113,6 +113,7 @@ options(timeout=600) ## double timeout limit
 #   download.file (url="https://dev.nceas.ucsb.edu/knb/d1/mn/v2/object/urn%3Auuid%3Aaceaecb2-1ce0-4d41-a839-d3607d32bb58"
 #                  , destfile=AKshape)
 # }
+
 
 
 
@@ -277,8 +278,8 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## -------------------------------------------------------------------------------------------
 ## calculate state of the tide to subset data for maps, separating flood/slack/ebb
 
-## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics
-if (1){
+## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics?
+if (0){
   ## built intermediate map to filter out human-assisted positions
 
   ## tides
@@ -368,11 +369,15 @@ if (1){
 # require ('automap')
 # require ("gstat")
 
+
+## all this filtering -- now or later?
+
 drift_sf <- dx %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
-  filter (speed_ms > 0.01) %>%
-  filter (distance_m > 0.1) %>%
-  filter (!is.na (onLand)) %>%
+#  filter (speed_ms > 0.01) %>%
+  filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots
+#  filter (distance_m > 0.1) %>%  # no effect?
+#  filter (!is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
   filter (dT > 1) %>%     ## some zero-values!
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
 #  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
@@ -380,6 +385,8 @@ drift_sf <- dx %>%
   # st_transform (32605) %>% # UTM zone 5N
   select (speed_ms) %>%
   filter()
+# nrow (drift_sf)
+rm (dx)
 
 # shoreline -- assume and force shoreline speed to be 0
 # add shoreline to drifter speeds
@@ -395,36 +402,105 @@ drift_sf <- worldM %>%
   select (speed_ms) %>%
   rbind (drift_sf)
 
-## fast IDW
-# https://geobrinkmann.com/post/iwd/
-## not accelerated under windows -- worth the installation trouble?
-## revert to gstat IDW?
-## should use kriging for data-product output
-p <- require ('GVI')  ## for sf_to_rast
-if (!p){
-  require ("remotes")
-  remotes::install_github("STBrinkmann/GVI")
-}; rm (p)
 
 
-# save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
+## -----------------------------------------------------------------------------------
+## spatial interpolation
 
-require ('parallel')
-nCores <- detectCores()-1
-
-## consider using gstat to specify aggregating function = max
-speedO <- sf_to_rast (observer=drift_sf, v="speed_ms"
-                      , aoi=st_sf (seaA)
-                      , max_distance=100e3
-                      , raster_res=5e3
-                      , progress=TRUE
-                      , cores=nCores
-) %>%
-  st_as_stars () %>%  ## terra raster to stars
-  st_warp(crs=projection)
 save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
 
-## look-up drift
+seaAEx <- st_bbox (drift_sf) %>%
+  st_as_sfc() # %>%
+  # st_difference(st_union (worldM))[1,]
+
+## for data filtering, aggregate over grid (rather than IDW, etc) -- see:
+# https://stackoverflow.com/questions/66907012/aggregate-values-in-raster-using-sf
+## later make prediction using kriging
+
+grid_spacing <- 10e3
+pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
+  st_sf () %>%
+  mutate (ID=row_number())
+A <- st_intersection (pgon, seaA)
+pointsID <- st_join (drift_sf, A)
+pointsID <- pointsID %>%
+  as.data.frame () %>%
+  group_by (ID) %>%
+  summarize (avg_speed=quantile(speed_ms, 0.9))
+A <- left_join(A, pointsID, by="ID")
+# plot (A ["avg_speed"])
+
+## extract avg_speed from A
+drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>%
+  apply (1, sum)
+
+drift_sfS <- filter (drift_sf, inSpeedcov==1)
+# drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
+#   st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
+#   st_drop_geometry() #%>%
+  # select ("avg_speed") %>%
+  # as.numeric ()
+x <- st_rasterize (A ["avg_speed"]) %>%
+  st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
+  st_drop_geometry() #%>%
+drift_sfS$avg_speed <- x$avg_speed; rm (x)
+## flag records more than 2 SD from predicted grid speed (only above, not below)
+rSp <- with (drift_sfS, speed_ms-avg_speed)
+drift_sfS$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE); rm (rSp)
+
+pdf ("~/tmp/LCI_noaa/media/drifter/speedResiduals.pdf")
+hist (rSp, xlab="speed residual [m/s]", main="")
+abline (v=2*sd (rSp, na.rm=TRUE))
+axis (1, tick=FALSE, at=2*sd (rSp, na.rm=TRUE), labels="2 SD")
+dev.off()
+
+rm (grid_spacing, pgon, A, pointsID)
+
+## merge drift_sfS with drift_sf, or abandone the latter?
+drift_sf <- drift_sfS; rm (drift_sfS)
+
+save.image ("~/tmp/LCI_noaa/cache/driftSped.RData")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/driftSped.RData"))
+
+
+## EOF for now
+
+
+
+
+
+
+
+seaBB <- st_bbox(seaA) %>%
+  st_as_sfc()
+dSx <- st_filter (drift_sf, seaBB)
+dSx$gridSpeed <- st_extract (speed1, dSx)$lyr.1
+
+require ("viridisLite")
+plot (seaA, col="white")
+plot (speed1, col=plasma(100), add=TRUE)
+plot (worldM, add=TRUE, col="gray")
+plot (seaA, add=TRUE)
+
+
+
+dSx %>%
+  filter (speed_ms < 20) %>%
+  st_drop_geometry() %>%
+  plot (gridSpeed ~ speed_ms-gridSpeed, data=.)  ## residual vs predicted
+abline (a=0, b=1)
+
+hist (with (dSx, speed_ms-gridSpeed))
+
+
+
+plot (speed_ms~gridSpeed, data=dSx)
+# drift$gridSpeed <- st_extract (speedO, st_geometry(drift_sf)) %>%
+#   st_drop_geometry()
+
+
+
 
 
 if (0){
@@ -633,6 +709,89 @@ if (0){
 
 save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+
+
+
+
+
+
+
+
+
+
+
+if (0){
+if (0){  ## fast IDW or gstat?
+  ## fast IDW
+  # https://geobrinkmann.com/post/iwd/
+  ## not accelerated under windows -- worth the installation trouble?
+  ## should use kriging for data-product output
+  ## ideally, grid would be 95%-ile -- revert to gstat?
+  p <- require ('GVI')  ## for sf_to_rast
+  if (!p){
+    require ("remotes")
+    remotes::install_github("STBrinkmann/GVI")
+  }; rm (p)
+
+  # save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
+  require ('parallel')
+  nCores <- detectCores()-1
+
+  speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
+                        , aoi=st_sf (seaA)
+                        , max_distance=10e3
+                        , raster_res=5e3
+                        , beta=3
+                        , progress=TRUE
+                        , cores=nCores  # no effect on windows? uses openMP?
+  ) %>%
+    st_as_stars () %>%  ## terra raster to stars
+    st_warp(crs=projection)
+}else{
+  ## consider using gstat to specify aggregating function = max
+  require ("gstat")
+  ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
+  ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
+  require ("starsExtra")
+  grd <- starsExtra::make_grid (drift_sf, res=20e3)  # 1 km grid -- takes a while
+
+  if (0){ ## serial processing?
+    speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
+                          # , nmax=10e3
+                          ,
+    )
+    ## clip to seaA
+  }else{
+    ## parallel interpolation
+    ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
+    vg <- variogram (speed_ms~1, drift_sf)
+    mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
+    # plot (vg, model=mdl)
+
+    require ("parallel")
+    nCores <- detectCores ()-1
+    parts <- split (x=1:length (grd), f=1:nCores)
+
+    if (.Platform$OS.type=="unix"){
+      speedP <- mclapply(1:nCores, FUN=function (x){
+        # gstat::idw (speed_ms~1, drift_sf, newdata=grd [parts[[x]],], idp=2.0, nmax=10e3)  ## requires sp class?
+        krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
+      })
+    }else{
+      cl <- makeCluster (nCores)
+      clusterExport(cl=cl, varlist = c("grd", "drift_sf"), envir = .GlobalEnv)
+      clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
+      pX <- parLapply(cl=cl, X=1:nCores, FUN=function (x){
+        krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
+      })
+      stopCluster (cl)
+    }
+    ## rbind grid--stars version of maptools
+  }
+}
+}
+
 
 
 
