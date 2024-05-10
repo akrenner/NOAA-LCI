@@ -330,64 +330,80 @@ yL <- levels (drift$year)
 
 if (file.exists("~/tmp/LCI_noaa/cache/tideCache.csv")){
   tide <- read.csv ("~/tmp/LCI_noaa/cache/tideCache.csv")
+  tide$Date.Time <- tide$Date.Time |> as.POSIXct(tz="GMT")
   ## fetch only the missing ones
-  nL <- format (tide$Date.Time, "%Y") |> factor () |> levels ()
-  if (length (yL) > length (nL)){
-    yL <- yL [-which (yL %in% nL)]
-  }
+  nL <- tide$Date.Time |> format ("%Y") |> factor () |> levels()
+  yL <- yL [-which (yL %in% nL)]
 }
 
-for (i in seq_along(yL)){
-  begin_date=paste0 (yL [i], "0101")
-  end_date=paste0 (yL [i], "1231")
-  url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
-                 , begin_date, "&end_date=", end_date, "&station=", station,
-                 "&product=predictions&datum=MLLW&time_zone=gmt",
-                 "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
-  tide <- read.csv (url)
-  if (!exists ("tideX")){
-    tideX <- tide
-  }else{
-    tideX <- rbind (tideX, tide)
+if (length (yL) > 0){
+  for (i in seq_along(yL)){
+    begin_date=paste0 (yL [i], "0101")
+    end_date=paste0 (yL [i], "1231")
+    url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
+                   , begin_date, "&end_date=", end_date, "&station=", station,
+                   "&product=predictions&datum=MLLW&time_zone=gmt",
+                   "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
+    tideT <- read.csv (url)
+    tideT$Date.Time <- as.POSIXct (tideT$Date.Time, tz="GMT")
+    if (!exists ("tide")){
+      tide <- tideT
+    }else{
+      tide <- rbind (tide, tideT)
+    }
   }
+  rm (tideT, station, end_date, begin_date, url, yL, nL, i)
+  ## find closest date for each moment
+  write.csv (tide, file="~/tmp/LCI_noaa/cache/tideCache.csv", row.names=FALSE)
 }
-rm (tideX, station, end_date, begin_date, url)
-## find closest date for each moment
-write.csv (tide, file="~/tmp/LCI_noaa/cache/tideCache.csv", row.names=FALSE)
 
-if (.Platform$OS.type=="unix"){
-  require ("parallel")
-  tIdx <- mclapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
-    drift$DeviceDateTime[i] |>
-      difftime (tide$Date.Time) |>
-      abs() |>
-      which.min ()
-  }
-  , mc.cores=detectCores()-1)
-  tIdx <- do.call ("rbind", tIdx)
-}else{
-  tIdx <- sapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
-    drift$DeviceDateTime[i] |>
-      difftime (tide$Date.Time) |>
-      abs() |>
-      which.min ()
-  })
-}
+## find better solution to the nearest point problem? -- divide and conquer
+## https://www.statology.org/r-find-closest-value/
+## using mclapply takes minutes. Using cut is instantaneous!
+# sapply:  227 s elapsed, 153 user
+# mclapply: 62 s elapsed, 347 user
+# cut:     0.1 s elapsed, 0.1 user
+drift <- drift [order (drift$DeviceDateTime),]
+tide <- tide [order (tide$Date.Time),]
+v1 <- as.numeric(drift$DeviceDateTime)
+v2 <- as.numeric (tide$Date.Time)
+cuts <- c(-Inf, v2 [-1]-diff (v2)/2, Inf)
+tIdx <- cut (v1, breaks=cuts, labels=1:length (v2)) %>% as.numeric (levels (.))[.]
+rm (v1, v2, cuts)
+# system.time({
+#   require ("parallel")  ## keep for reference. Brute-force method to nearest point problem. Slow!
+#   if (.Platform$OS.type=="unix"){
+#     tIdx <- mclapply (1:nrow (drift), function (i){
+#       which.min (abs (drift$DeviceDateTime [i] - tide$Date.Time))
+#     }
+#     , mc.cores=detectCores()-1)
+#     tIdx <- do.call ("rbind", tIdx)
+#   }else{
+#     tIdx <- sapply (1:nrow (drift), function (i){
+#       which.min (abs (drift$DeviceDateTime [i] - tide$Date.Time))
+#     })
+#   }
+# })
+
 drift$slackTide <- tide$Date.Time [tIdx]
 drift$tideLevel <- tide$Prediction [tIdx]
 drift$hilo <- tide$Type [tIdx]
 rm (tIdx)
 
-# #  interval="hilo"
-#
-# url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
-#                , begin_date, "&end_date=", end_date, "&station=", station,
-#                "&product=predictions&datum=MLLW&time_zone=gmt",
-#                "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
-# tide <- read.csv (url)
-#
-# rm (url, station, begin_date, end_date)
+## categorize tides (as below)
+## categorize tide: within 1.5 h: high/low,
+# categorize tides into:  slack, flood, slack, ebb
 
+dT <- difftime (drift$DeviceDateTime, drift$slackTide) |> as.numeric()/3600  # time in hours
+drift$tide <- ifelse (abs (dT) < 1.5, "slack", NA)
+drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "H") & (dT < 0), "flood", drift$tide)
+drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "L") & (dT > 0), "flood", drift$tide)
+drift$tide [is.na (drift$tide)] <- "ebb"
+drift$tide <- factor (drift$tide)
+rm (dT)
+# barplot (summary (drift$tide))
+
+## now obsolete (and currently unreliable) tide calculations using package rtide. Revive?
 if (0){
   ## tides
   require ('rtide')  ## calculates tides from harmonics
@@ -429,7 +445,7 @@ if (0){
                   # , DateTimeT=ttbl$DateTime
                   , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
 
-  ## categorize tide: within 1.5 h: high/low,
+  ## categorize tide: within 1.5 h: high/low -- incorrect XXX see above
   ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in min
   ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
   ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
@@ -443,11 +459,12 @@ if (0){
   }
 
   drift <- cbind (drift, ttbl [, c(3,4,6)])
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
   rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
+save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
+#  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -469,6 +486,7 @@ if (0){
 ## all this filtering -- now or later?
 
 drift_sf <- dx %>%
+  arrange (DeviceName, DeviceDateTime)  ## imperative after sorted by time for tides
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
   #  filter (speed_ms > 0.01) %>%
   filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots
@@ -542,15 +560,14 @@ x <- st_rasterize (A ["avg_speed"]) %>%
 drift_sfS$avg_speed <- x$avg_speed; rm (x)
 ## flag records more than 2 SD from predicted grid speed (only above, not below)
 rSp <- with (drift_sfS, speed_ms-avg_speed)
-drift_sfS$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE); rm (rSp)
+drift_sfS$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE) #; rm (rSp)
 
 pdf ("~/tmp/LCI_noaa/media/drifter/speedResiduals.pdf")
 hist (rSp, xlab="speed residual [m/s]", main="")
 abline (v=2*sd (rSp, na.rm=TRUE))
 axis (1, tick=FALSE, at=2*sd (rSp, na.rm=TRUE), labels="2 SD")
 dev.off()
-
-rm (grid_spacing, pgon, A, pointsID)
+rm (grid_spacing, pgon, A, pointsID, rSp)
 
 ## merge drift_sfS with drift_sf, or abandone the latter?
 drift_sf <- drift_sfS; rm (drift_sfS)
