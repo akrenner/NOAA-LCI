@@ -104,6 +104,7 @@ projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
 ## set up directories
 dir.create (outpath, showWarnings=FALSE, recursive=TRUE)
 dir.create (cacheD, showWarnings=FALSE, recursive=TRUE) ## I set .ggOceanMapsenv in .Rprofile:
+dir.create ("~/tmp/LCI_noaa/cache/drifter/", showWarnings=FALSE, recursive=TRUE)
 dir.create (driftP, showWarnings=FALSE, recursive=TRUE) ## for drifter downloads
 # {.ggOceanMapsenv <- new.env(); .ggOceanMapsenv$datapath <- "~/tmp/LCI_noaa/cache/ggplot/"} ## not worth the trouble?
 ## increase time-out limit from 60 s -- better to get local bathymetry?
@@ -160,7 +161,7 @@ seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
 
 ## ----------------------------------------------------------------------------
 ## prepare drifter data:
-## download/update to latest data
+## download/update to latest data from PacificGyre.com
 ## select drifter
 ## define deployment bouts
 ## interpolate within bouts to standardize time intervals
@@ -266,8 +267,8 @@ dx$LandDistance_m <- worldM %>%
 dx$onLand <- st_intersects(dx, worldM) |> as.numeric()
 # dx <- st_filter (dx, seaA)  ## supposed to filter out points on land
 
-save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -328,8 +329,8 @@ drift$year <- factor (format (drift$DeviceDateTime, "%Y"))
 station=9455517  # Kasitsna Bay
 yL <- levels (drift$year)
 
-if (file.exists("~/tmp/LCI_noaa/cache/tideCache.csv")){
-  tide <- read.csv ("~/tmp/LCI_noaa/cache/tideCache.csv")
+if (file.exists("~/tmp/LCI_noaa/cache/drifter/tideCache.csv")){
+  tide <- read_csv ("~/tmp/LCI_noaa/cache/drifter/tideCache.csv", show_col_types=FALSE)
   tide$Date.Time <- tide$Date.Time |> as.POSIXct(tz="GMT")
   ## fetch only the missing ones
   nL <- tide$Date.Time |> format ("%Y") |> factor () |> levels()
@@ -354,7 +355,7 @@ if (length (yL) > 0){
   }
   rm (tideT, station, end_date, begin_date, url, yL, nL, i)
   ## find closest date for each moment
-  write.csv (tide, file="~/tmp/LCI_noaa/cache/tideCache.csv", row.names=FALSE)
+  write.csv (tide, file="~/tmp/LCI_noaa/cache/drifter/tideCache.csv", row.names=FALSE)
 }
 
 ## find better solution to the nearest point problem? -- divide and conquer
@@ -385,22 +386,37 @@ rm (v1, v2, cuts)
 #   }
 # })
 
-drift$slackTide <- tide$Date.Time [tIdx]
-drift$tideLevel <- tide$Prediction [tIdx]
-drift$hilo <- tide$Type [tIdx]
-rm (tIdx)
 
-## categorize tides (as below)
-## categorize tide: within 1.5 h: high/low,
-# categorize tides into:  slack, flood, slack, ebb
+drX <- data.frame (
+  slackTide=tide$Date.Time [tIdx],
+  tideLevel=tide$Prediction [tIdx],
+  hilo=tide$Type [tIdx]
+)
+drX$dT <- difftime (drift$DeviceDateTime, drX$slackTide) |> as.numeric()/3600
 
-dT <- difftime (drift$DeviceDateTime, drift$slackTide) |> as.numeric()/3600  # time in hours
-drift$tide <- ifelse (abs (dT) < 1.5, "slack", NA)
-drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "H") & (dT < 0), "flood", drift$tide)
-drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "L") & (dT > 0), "flood", drift$tide)
+drift$tide <- ifelse (abs (drX$dT) < 1.5, "slack", NA)
+drift$tide <- ifelse (is.na (drift$tide) & (drX$hilo == "H") & (drX$dT < 0), "flood", drift$tide)
+drift$tide <- ifelse (is.na (drift$tide) & (drX$hilo == "L") & (drX$dT > 0), "flood", drift$tide)
 drift$tide [is.na (drift$tide)] <- "ebb"
 drift$tide <- factor (drift$tide)
-rm (dT)
+rm (drX)
+
+# drift$slackTide <- tide$Date.Time [tIdx]
+# drift$tideLevel <- tide$Prediction [tIdx]
+# drift$hilo <- tide$Type [tIdx]
+# rm (tIdx)
+#
+# ## categorize tides (as below)
+# ## categorize tide: within 1.5 h: high/low,
+# # categorize tides into:  slack, flood, slack, ebb
+# dT <- difftime (drift$DeviceDateTime, drift$slackTide) |> as.numeric()/3600  # time in hours
+# drift$tide <- ifelse (abs (dT) < 1.5, "slack", NA)
+# drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "H") & (dT < 0), "flood", drift$tide)
+# drift$tide <- ifelse (is.na (drift$tide) & (drift$hilo == "L") & (dT > 0), "flood", drift$tide)
+# drift$tide [is.na (drift$tide)] <- "ebb"
+# drift$tide <- factor (drift$tide)
+# rm (dT)
+
 # barplot (summary (drift$tide))
 
 ## now obsolete (and currently unreliable) tide calculations using package rtide. Revive?
@@ -438,8 +454,8 @@ if (0){
       tSlack <- tide_slack_data(tu)  ## must parallelize
     }
   })
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")  ## checkpoint for safety
-  # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+  # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata")  ## checkpoint for safety
+  ##  rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
   ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
                   # , DateTimeT=ttbl$DateTime
@@ -463,8 +479,8 @@ if (0){
 }
 ## move tide functions into function script, load that
 ## combine with TideTables ?? (TideTables needs raw data? as does oce)
-save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
-#  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")
+#  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -486,7 +502,7 @@ save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
 ## all this filtering -- now or later?
 
 drift_sf <- dx %>%
-  arrange (DeviceName, DeviceDateTime)  ## imperative after sorted by time for tides
+  arrange (DeviceName, DeviceDateTime) %>%  ## imperative after sorted by time for tides
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
   #  filter (speed_ms > 0.01) %>%
   filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots
@@ -515,65 +531,68 @@ drift_sf <- worldM %>%
   mutate (speed_ms = 0) %>%
   select (speed_ms) %>%
   rbind (drift_sf)
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+
+
 
 
 
 ## -----------------------------------------------------------------------------------
 ## spatial interpolation/aggregation
 
-save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
-## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
-
-seaAEx <- st_bbox (drift_sf) %>%
-  st_as_sfc() # %>%
-# st_difference(st_union (worldM))[1,]
-
+## make grid
+## aggregate quantile speed over grid, then look-up aggregated values
 ## for data filtering, aggregate over grid (rather than IDW, etc) -- see:
 # https://stackoverflow.com/questions/66907012/aggregate-values-in-raster-using-sf
 ## later make prediction using kriging
+
+seaAEx <- st_bbox (drift_sf) %>%
+  st_as_sfc() # %>%
 
 grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
   st_sf () %>%
   mutate (ID=row_number())
-A <- st_intersection (pgon, seaA)
-pointsID <- st_join (drift_sf, A)
-pointsID <- pointsID %>%
-  as.data.frame () %>%
+A <- st_intersection (pgon, seaA)  ## grid
+
+pointsID <- drift_sf %>%
+  st_join (A) %>%
+  as.data.frame() %>%
   group_by (ID) %>%
-  summarize (avg_speed=quantile(speed_ms, 0.9))
+  summarize (avg_speed=quantile (speed_ms, 0.9))
 A <- left_join(A, pointsID, by="ID")
 # plot (A ["avg_speed"])
+rm (pointsID)
 
 ## extract avg_speed from A
+## need to subset to drifters within study area
 drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
+drift_sfS <- filter (drift_sf, inSpeedcov==1) ## subset to within grid or st_extract fails
+drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
+  st_extract (drift_sfS) %>%
+  st_drop_geometry() %>%
+  pull (avg_speed)
 
-drift_sfS <- filter (drift_sf, inSpeedcov==1) ## subset of drift_sf, using only positions within grid
-# drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%  # unknown how this works
-#   st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
-#   st_drop_geometry() #%>%
-# select ("avg_speed") %>%
-# as.numeric ()
-x <- st_rasterize (A ["avg_speed"]) %>%
-  st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
-  st_drop_geometry() #%>%
-drift_sfS$avg_speed <- x$avg_speed; rm (x)
+
+
 ## flag records more than 2 SD from predicted grid speed (only above, not below)
 rSp <- with (drift_sfS, speed_ms-avg_speed)
 drift_sfS$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE) #; rm (rSp)
 
-pdf ("~/tmp/LCI_noaa/media/drifter/speedResiduals.pdf")
+pdf (paste0(outpath, "speedResiduals.pdf"))
 hist (rSp, xlab="speed residual [m/s]", main="")
 abline (v=2*sd (rSp, na.rm=TRUE))
 axis (1, tick=FALSE, at=2*sd (rSp, na.rm=TRUE), labels="2 SD")
 dev.off()
 rm (grid_spacing, pgon, A, pointsID, rSp)
 
+## ---------------------------------------------------------------------------------
 ## merge drift_sfS with drift_sf, or abandone the latter?
 drift_sf <- drift_sfS; rm (drift_sfS)
 
-save.image ("~/tmp/LCI_noaa/cache/driftSped.RData")
-## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/driftSped.RData"))
+save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
 
 ## EOF for now
@@ -776,8 +795,8 @@ if (0){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -803,7 +822,7 @@ if (0){
       remotes::install_github("STBrinkmann/GVI")
     }; rm (p)
 
-    # save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
+    # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap0.Rdata")
     require ('parallel')
     nCores <- detectCores()-1
 
@@ -907,8 +926,8 @@ if (0){  ## redundant -- more kriging??
   # # https://r-spatial.org/book/12-Interpolation.html
   # require ('gstat')
   # v <- variogram (speed_ms~1, drift)
-  save.image("~/tmp/LCI_noaa/cache/drifterKrige.RData")
-  # load ("~/tmp/LCI_noaa/cache/drifterKrige.RData")
+  save.image("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
+  # load ("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
 }
 
 
@@ -979,7 +998,7 @@ mymap <- drift %>%
                     , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
   )
 # mymap
-mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
+mapshot (mymap, url=paste0 (outpath, "mapview.html"))
 ## zip up mapview.htlm + folder
 rm (mymap)
 ## save for others  (ggplotly)
@@ -1057,8 +1076,8 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
 
