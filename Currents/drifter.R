@@ -209,25 +209,25 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
                         , readC) %>%
   filter (Longitude < -149) %>%            # filter out arctic and SE Alaska (here to get bbox right) -- and AI
   arrange (DeviceName, DeviceDateTime) %>% # test that this working -- crash on Windows
-# mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC -- on Mac, already recognized as UTC
+  # mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC -- on Mac, already recognized as UTC
   filter()
 rm (readC, driftF, updateFN)
 
 if (0){
   ## read from zip file
-require ('zip')
-dFs <- zip::zip_list (paste0 (driftP, "UAF_Data.zip/"))
-readC <- function (fn){
-  require ('readr')
-#  read_csv(unzip("my_data.zip", "data1.csv"))
-  con <- unz (paste0 (drifP, "UAF_Data.zip"))
-  readr::read_csv (con, fn) %>%
-    select (as.expression (FieldList))
-  close (con)
-  readr::read_csv (utils::unzip (paste0 (driftP, "UAF_Data.zip"), fn)
-            , show_col_types=FALSE) %>%
-    select (as.expression (FieldList))
-}
+  require ('zip')
+  dFs <- zip::zip_list (paste0 (driftP, "UAF_Data.zip/"))
+  readC <- function (fn){
+    require ('readr')
+    #  read_csv(unzip("my_data.zip", "data1.csv"))
+    con <- unz (paste0 (drifP, "UAF_Data.zip"))
+    readr::read_csv (con, fn) %>%
+      select (as.expression (FieldList))
+    close (con)
+    readr::read_csv (utils::unzip (paste0 (driftP, "UAF_Data.zip"), fn)
+                     , show_col_types=FALSE) %>%
+      select (as.expression (FieldList))
+  }
 
   ## remove duplicates
   fl <- list.files (driftP, pattern="\\.csv$", full.names=TRUE)
@@ -278,12 +278,29 @@ save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
 ## -------------------------------------------------------------------------------------------
 ## calculate state of the tide to subset data for maps, separating flood/slack/ebb
 
-## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics?
+## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics
+## tide test
 if (0){
-  ## built intermediate map to filter out human-assisted positions
+  # tide_slack_data_station (tide_station ("Seldovia*", Sys.time()))
+  # tide_slack_data_datetime (as.POSIXct ("2020-05-01 15:00", tz= "GMT"), tide_station("Seldovia*"))
+  # hist ((runif (1e6) - runif (1e6)))
+  require ('rtide')
+  tide_slack_data (as.POSIXct ("2020-05-01 15:00", tz= "GMT"), tide_stations("Kasitsna*"))
 
-  ## tides
-  require ('rtide')  ## calculates tides from harmonics
+  times <-  tide_datetimes(
+    minutes = 60L,
+    from = as.Date("2015-01-01"),
+    to = as.Date("2015-01-01"),
+    #    tz="-0800"
+    #    tz = "PST8PDT"
+  )
+  tide_height()  # tide heigth at station and times to-from
+  tide_height_data(data.frame (DateTime=as.POSIXct("2015-01-01 00:00"), Station=tide_stations ("Monterey Harbor*")))
+  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00"), Station=tide_stations ("Monterey Harbor*")))
+
+  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00"), Station=tide_stations ("Seldovia*")))
+
+
   ## for testing:  drift <- slice_sample(drift, n=1000)
   # n=5000 on dell, serial: 215 usr = 3.5 min
   # n=1000 on dell, serial:  46 usr = s
@@ -292,6 +309,89 @@ if (0){
   # 345635  -- expect: 2 h   209/10e3*345635/3600 -- for all
   # 38105   (tu) -- a rather modest 209/10e3*38105/60 = 15 min
 
+  tDF <- data.frame (Station=tide_stations("Kasitsna*"), DateTime=as.POSIXct(c("2015-01-01 00:00", "2015-01-01 6:00"
+                                                                               , "2015-01-01 12:00", "2015-01-01 18:00"
+                                                                               , "2015-01-01 23:00"), tz="GMT"))
+  tide_slack_data (tDF)
+
+  tide_slack_data (data.frame (Station=tide_stations ("The Battery, New York Harbor, New York")
+                               , DateTime=(as.POSIXct (c("2015-01-01 00:00", "2015-01-01 6:00"
+                                                         , "2015-01-01 12:00", "2015-01-01 18:00"
+                                                         , "2015-01-01 23:00"), tz="GMT"))))
+}
+
+## pull fresh tide data from NOAA API
+## https://api.tidesandcurrents.noaa.gov/mdapi/prod/
+## https://tidesandcurrents.noaa.gov/web_services_info.html
+
+drift$year <- factor (format (drift$DeviceDateTime, "%Y"))
+station=9455517  # Kasitsna Bay
+yL <- levels (drift$year)
+
+if (file.exists("~/tmp/LCI_noaa/cache/tideCache.csv")){
+  tide <- read.csv ("~/tmp/LCI_noaa/cache/tideCache.csv")
+  ## fetch only the missing ones
+  nL <- format (tide$Date.Time, "%Y") |> factor () |> levels ()
+  if (length (yL) > length (nL)){
+    yL <- yL [-which (yL %in% nL)]
+  }
+}
+
+for (i in seq_along(yL)){
+  begin_date=paste0 (yL [i], "0101")
+  end_date=paste0 (yL [i], "1231")
+  url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
+                 , begin_date, "&end_date=", end_date, "&station=", station,
+                 "&product=predictions&datum=MLLW&time_zone=gmt",
+                 "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
+  tide <- read.csv (url)
+  if (!exists ("tideX")){
+    tideX <- tide
+  }else{
+    tideX <- rbind (tideX, tide)
+  }
+}
+rm (tideX, station, end_date, begin_date, url)
+## find closest date for each moment
+write.csv (tide, file="~/tmp/LCI_noaa/cache/tideCache.csv", row.names=FALSE)
+
+if (.Platform$OS.type=="unix"){
+  require ("parallel")
+  tIdx <- mclapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
+    drift$DeviceDateTime[i] |>
+      difftime (tide$Date.Time) |>
+      abs() |>
+      which.min ()
+  }
+  , mc.cores=detectCores()-1)
+  tIdx <- do.call ("rbind", tIdx)
+}else{
+  tIdx <- sapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
+    drift$DeviceDateTime[i] |>
+      difftime (tide$Date.Time) |>
+      abs() |>
+      which.min ()
+  })
+}
+drift$slackTide <- tide$Date.Time [tIdx]
+drift$tideLevel <- tide$Prediction [tIdx]
+drift$hilo <- tide$Type [tIdx]
+rm (tIdx)
+
+# #  interval="hilo"
+#
+# url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
+#                , begin_date, "&end_date=", end_date, "&station=", station,
+#                "&product=predictions&datum=MLLW&time_zone=gmt",
+#                "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
+# tide <- read.csv (url)
+#
+# rm (url, station, begin_date, end_date)
+
+if (0){
+  ## tides
+  require ('rtide')  ## calculates tides from harmonics
+  ## find closest station: Seldovia/Kasitsna, Nikiski, Kodiak, Anchorage, Seward
   #  tStn <- tide_stations("Seldovia*")
   tStn <- "Anchor Point, Cook Inlet, Alaska"
   tSn <- "Bear Cove, Kachemak Bay, Cook Inlet, Alaska"
@@ -342,12 +442,8 @@ if (0){
     # hist (sin (runif(10e3)*2*pi))
   }
 
-
   drift <- cbind (drift, ttbl [, c(3,4,6)])
   save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
-
-  # drift$dT_flood <- difftime(drift$SlackDateTime, drift$DeviceDateTime) |> as.numeric()*3600 * 1.5
-  # drift$tide <- factor (ttbl$tide)
   rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
@@ -374,14 +470,14 @@ if (0){
 
 drift_sf <- dx %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
-#  filter (speed_ms > 0.01) %>%
+  #  filter (speed_ms > 0.01) %>%
   filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots
-#  filter (distance_m > 0.1) %>%  # no effect?
-#  filter (!is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
+  #  filter (distance_m > 0.1) %>%  # no effect?
+  #  filter (!is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
   filter (dT > 1) %>%     ## some zero-values!
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
-#  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-#  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
+  #  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  #  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
   # st_transform (32605) %>% # UTM zone 5N
   select (speed_ms) %>%
   filter()
@@ -405,20 +501,20 @@ drift_sf <- worldM %>%
 
 
 ## -----------------------------------------------------------------------------------
-## spatial interpolation
+## spatial interpolation/aggregation
 
 save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
 
 seaAEx <- st_bbox (drift_sf) %>%
   st_as_sfc() # %>%
-  # st_difference(st_union (worldM))[1,]
+# st_difference(st_union (worldM))[1,]
 
 ## for data filtering, aggregate over grid (rather than IDW, etc) -- see:
 # https://stackoverflow.com/questions/66907012/aggregate-values-in-raster-using-sf
 ## later make prediction using kriging
 
-grid_spacing <- 10e3
+grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
   st_sf () %>%
   mutate (ID=row_number())
@@ -432,15 +528,14 @@ A <- left_join(A, pointsID, by="ID")
 # plot (A ["avg_speed"])
 
 ## extract avg_speed from A
-drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>%
-  apply (1, sum)
+drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
 
-drift_sfS <- filter (drift_sf, inSpeedcov==1)
-# drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
+drift_sfS <- filter (drift_sf, inSpeedcov==1) ## subset of drift_sf, using only positions within grid
+# drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%  # unknown how this works
 #   st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
 #   st_drop_geometry() #%>%
-  # select ("avg_speed") %>%
-  # as.numeric ()
+# select ("avg_speed") %>%
+# as.numeric ()
 x <- st_rasterize (A ["avg_speed"]) %>%
   st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
   st_drop_geometry() #%>%
@@ -465,6 +560,10 @@ save.image ("~/tmp/LCI_noaa/cache/driftSped.RData")
 
 
 ## EOF for now
+
+
+
+
 
 
 
@@ -504,66 +603,19 @@ plot (speed_ms~gridSpeed, data=dSx)
 
 
 if (0){
-  plot (mar_bathy)
+  plot (bbox)
+  plot (mar_bathy, add=TRUE)
   plot (speedO, add=TRUE)
   plot (worldM, add=TRUE, col="beige", alpha=0.5)
-  plot (drift_sf %>% st_transform(projection), add=TRUE)
+  plot (bbox, add=TRUE)
+  plot (seaA, add=TRUE, col="lightblue", alpha=0.5)
+  plot (drift_sf %>% st_transform(projection), add=TRUE)  ##
   # speedO == worldM and drifter_sf > st_trans, but not mar_bathy
 }
 
 
 
 
-
-
-
-if (0){
-  ## variogram = excruciatingly slow -- subsample input?!  Parallelize
-  v_mod_OK <- autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
-  # plot (v_mod_OK)
-
-  # Create grid
-  grid <- st_as_stars(st_bbox(st_buffer(drift_sf, 0.001)))  ## set resolution ?
-
-  # Interpolation model
-  g = gstat(formula = speed_ms~1, model = v_mod_OK$var_model, data = drift_sf)
-  # plot (v_mod_OK, g) ## parameter cutoff needs to be specified
-
-
-  if(0){
-    require ('parallel')
-    nCores <- detectCores()-1
-    cl <- makeCluster (nCores)
-    parts <- split (x=1:length (grid), f=1:nCores)
-    clusterExport (cl=cl, varlist=c("drift_sf", "grid", "v_mod_OK", "g"), envir = .GlobalEnv)
-    clusterEvalQ(cl = cl, expr = c(library('sf'), library('gstat')))
-    parallelX <- parLapply(cl = cl, X = 1:no_cores, fun = function(x){
-      krige(formula=log(zinc)~1, locations = drift_sf, newdata=grid[parts[[x]],], model = g)
-    })
-    stopCluster(cl)
-  }
-
-  # Interpolate
-  z = predict(g, grid)  ## slow -- go back to parallel version?
-  ## just do an IDW from the start -- for simplicity!
-
-  # Plot
-  plot(z, col = hcl.colors(12, "Spectral"), reset = FALSE)
-  plot(st_geometry(drift_sf), add = TRUE)
-  # text(st_coordinates(kerpensample_sf), as.character(round(kerpensample_sf$Z, 1)), pos = 3, add = TRUE)
-
-  # grd <- drift %>%
-  #   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-  #     st_bbox () |>
-  #   st_as_stars (dx=1000) |>
-  #   st_crop (drift)
-  #
-  # # https://r-spatial.org/book/12-Interpolation.html
-  # require ('gstat')
-  # v <- variogram (speed_ms~1, drift)
-  save.image("~/tmp/LCI_noaa/cache/drifterKrige.RData")
-  # load ("~/tmp/LCI_noaa/cache/drifterKrige.RData")
-}
 
 
 ## ----------------------------------------------------------------------------
@@ -722,74 +774,124 @@ save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
 
 
 if (0){
-if (0){  ## fast IDW or gstat?
-  ## fast IDW
-  # https://geobrinkmann.com/post/iwd/
-  ## not accelerated under windows -- worth the installation trouble?
-  ## should use kriging for data-product output
-  ## ideally, grid would be 95%-ile -- revert to gstat?
-  p <- require ('GVI')  ## for sf_to_rast
-  if (!p){
-    require ("remotes")
-    remotes::install_github("STBrinkmann/GVI")
-  }; rm (p)
+  if (0){  ## fast IDW or gstat?
+    ## fast IDW
+    # https://geobrinkmann.com/post/iwd/
+    ## not accelerated under windows -- worth the installation trouble?
+    ## should use kriging for data-product output
+    ## ideally, grid would be 95%-ile -- revert to gstat?
+    p <- require ('GVI')  ## for sf_to_rast
+    if (!p){
+      require ("remotes")
+      remotes::install_github("STBrinkmann/GVI")
+    }; rm (p)
 
-  # save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
-  require ('parallel')
-  nCores <- detectCores()-1
+    # save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
+    require ('parallel')
+    nCores <- detectCores()-1
 
-  speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
-                        , aoi=st_sf (seaA)
-                        , max_distance=10e3
-                        , raster_res=5e3
-                        , beta=3
-                        , progress=TRUE
-                        , cores=nCores  # no effect on windows? uses openMP?
-  ) %>%
-    st_as_stars () %>%  ## terra raster to stars
-    st_warp(crs=projection)
-}else{
-  ## consider using gstat to specify aggregating function = max
-  require ("gstat")
-  ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
-  ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
-  require ("starsExtra")
-  grd <- starsExtra::make_grid (drift_sf, res=20e3)  # 1 km grid -- takes a while
-
-  if (0){ ## serial processing?
-    speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
-                          # , nmax=10e3
-                          ,
-    )
-    ## clip to seaA
+    speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
+                          , aoi=st_sf (seaA)
+                          , max_distance=10e3
+                          , raster_res=5e3
+                          , beta=3
+                          , progress=TRUE
+                          , cores=nCores  # no effect on windows? uses openMP?
+    ) %>%
+      st_as_stars () %>%  ## terra raster to stars
+      st_warp(crs=projection)
   }else{
-    ## parallel interpolation
-    ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
-    vg <- variogram (speed_ms~1, drift_sf)
-    mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
-    # plot (vg, model=mdl)
+    ## consider using gstat to specify aggregating function = max
+    require ("gstat")
+    ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
+    ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
+    require ("starsExtra")
+    grd <- starsExtra::make_grid (drift_sf, res=20e3)  # 1 km grid -- takes a while
 
-    require ("parallel")
-    nCores <- detectCores ()-1
-    parts <- split (x=1:length (grd), f=1:nCores)
-
-    if (.Platform$OS.type=="unix"){
-      speedP <- mclapply(1:nCores, FUN=function (x){
-        # gstat::idw (speed_ms~1, drift_sf, newdata=grd [parts[[x]],], idp=2.0, nmax=10e3)  ## requires sp class?
-        krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-      })
+    if (0){ ## serial processing?
+      speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
+                            # , nmax=10e3
+                            ,
+      )
+      ## clip to seaA
     }else{
-      cl <- makeCluster (nCores)
-      clusterExport(cl=cl, varlist = c("grd", "drift_sf"), envir = .GlobalEnv)
-      clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
-      pX <- parLapply(cl=cl, X=1:nCores, FUN=function (x){
-        krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-      })
-      stopCluster (cl)
+      ## parallel interpolation
+      ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
+      vg <- variogram (speed_ms~1, drift_sf)
+      mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
+      # plot (vg, model=mdl)
+
+      require ("parallel")
+      nCores <- detectCores ()-1
+      parts <- split (x=1:length (grd), f=1:nCores)
+
+      if (.Platform$OS.type=="unix"){
+        speedP <- mclapply(1:nCores, FUN=function (x){
+          # gstat::idw (speed_ms~1, drift_sf, newdata=grd [parts[[x]],], idp=2.0, nmax=10e3)  ## requires sp class?
+          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
+        })
+      }else{
+        cl <- makeCluster (nCores)
+        clusterExport(cl=cl, varlist = c("grd", "drift_sf"), envir = .GlobalEnv)
+        clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
+        pX <- parLapply(cl=cl, X=1:nCores, FUN=function (x){
+          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
+        })
+        stopCluster (cl)
+      }
+      ## rbind grid--stars version of maptools
     }
-    ## rbind grid--stars version of maptools
   }
 }
+
+
+
+if (0){  ## redundant -- more kriging??
+  ## variogram = excruciatingly slow -- subsample input?!  Parallelize
+  v_mod_OK <- autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
+  # plot (v_mod_OK)
+
+  # Create grid
+  grid <- st_as_stars(st_bbox(st_buffer(drift_sf, 0.001)))  ## set resolution ?
+
+  # Interpolation model
+  g = gstat(formula = speed_ms~1, model = v_mod_OK$var_model, data = drift_sf)
+  # plot (v_mod_OK, g) ## parameter cutoff needs to be specified
+
+
+  if(0){
+    require ('parallel')
+    nCores <- detectCores()-1
+    cl <- makeCluster (nCores)
+    parts <- split (x=1:length (grid), f=1:nCores)
+    clusterExport (cl=cl, varlist=c("drift_sf", "grid", "v_mod_OK", "g"), envir = .GlobalEnv)
+    clusterEvalQ(cl = cl, expr = c(library('sf'), library('gstat')))
+    parallelX <- parLapply(cl = cl, X = 1:no_cores, fun = function(x){
+      krige(formula=log(zinc)~1, locations = drift_sf, newdata=grid[parts[[x]],], model = g)
+    })
+    stopCluster(cl)
+  }
+
+  # Interpolate
+  z = predict(g, grid)  ## slow -- go back to parallel version?
+  ## just do an IDW from the start -- for simplicity!
+
+  # Plot
+  plot(z, col = hcl.colors(12, "Spectral"), reset = FALSE)
+  plot(st_geometry(drift_sf), add = TRUE)
+  # text(st_coordinates(kerpensample_sf), as.character(round(kerpensample_sf$Z, 1)), pos = 3, add = TRUE)
+
+  # grd <- drift %>%
+  #   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  #     st_bbox () |>
+  #   st_as_stars (dx=1000) |>
+  #   st_crop (drift)
+  #
+  # # https://r-spatial.org/book/12-Interpolation.html
+  # require ('gstat')
+  # v <- variogram (speed_ms~1, drift)
+  save.image("~/tmp/LCI_noaa/cache/drifterKrige.RData")
+  # load ("~/tmp/LCI_noaa/cache/drifterKrige.RData")
 }
 
 
@@ -825,7 +927,7 @@ drift <- drift %>%
   # dplyr::filter (DeviceDateTime < as.POSIXct("2022-07-30 00:00::00")) %>%
   # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
-#  dplyr::filter (speed_ms < speedTH) %>%
+  #  dplyr::filter (speed_ms < speedTH) %>%
   dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
@@ -856,8 +958,8 @@ mymap <- drift %>%
   # group_by (DeviceName) %>%
   # summarize(m=mean(attr_data)) %>% st_cast ("LINESTRING") %>%  ## making a string from this?? not working
   mapview::mapview (zcol= c ("days_in_water", "speed_ms", "depth")
-    , col.regions=colorRampPalette(heat.colors(20))
-    , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
+                    , col.regions=colorRampPalette(heat.colors(20))
+                    , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
   )
 # mymap
 mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
