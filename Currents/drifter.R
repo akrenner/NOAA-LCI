@@ -104,6 +104,7 @@ projection <- st_crs (3338) ## Alaska Albers EA  ## can't be 4326 I guess :(
 ## set up directories
 dir.create (outpath, showWarnings=FALSE, recursive=TRUE)
 dir.create (cacheD, showWarnings=FALSE, recursive=TRUE) ## I set .ggOceanMapsenv in .Rprofile:
+dir.create ("~/tmp/LCI_noaa/cache/drifter/", showWarnings=FALSE, recursive=TRUE)
 dir.create (driftP, showWarnings=FALSE, recursive=TRUE) ## for drifter downloads
 # {.ggOceanMapsenv <- new.env(); .ggOceanMapsenv$datapath <- "~/tmp/LCI_noaa/cache/ggplot/"} ## not worth the trouble?
 ## increase time-out limit from 60 s -- better to get local bathymetry?
@@ -133,8 +134,8 @@ if (projection != st_crs (3338)){
   mar_bathy <- st_warp(mar_bathy, crs=projection)
 }
 names (mar_bathy) <- "topo"
-depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
-                     , dimensions = attr(mar_bathy, "dimensions"))
+# depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+#                      , dimensions = attr(mar_bathy, "dimensions"))
 
 ## bounding box -- redundant?
 bbox <- mar_bathy %>%  ## extended Research Area
@@ -160,7 +161,7 @@ seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
 
 ## ----------------------------------------------------------------------------
 ## prepare drifter data:
-## download/update to latest data
+## download/update to latest data from PacificGyre.com
 ## select drifter
 ## define deployment bouts
 ## interpolate within bouts to standardize time intervals
@@ -178,13 +179,13 @@ endDate="2023-12-31%2023:59"
 endDate="2023-12-31"
 # FieldList="DeviceName,DeviceDateTime,AgeInSeconds,BatteryVoltage,CommId,Latitude,Longitude,SubmergedPercent,Temperature0cm"
 FieldList="DeviceName,DeviceDateTime,CommId,Latitude,Longitude"  ## make sure all fields are covered by all devices
-driftF <- paste0 (driftP, "drifter-data_", endDate, ".csv")
+driftF <- paste0 (driftP, "drifter-data_", endDate, ".zip")
 updateFN <- gsub ("2023-12-31", "latest", driftF)
 
 if (!file.exists(driftF)){
   urlC <- paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
                   "&FieldList=", FieldList,"&startDate=", startDate,
-                  "&endDate=", endDate, "&fileFormat=csv&download=Yes"
+                  "&endDate=", endDate, "&fileFormat=csv&compression=zip&download=Yes"
   )
   options(timeout=300)
   download.file(url=urlC, destfile=driftF); rm (urlC)
@@ -197,7 +198,7 @@ if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, 
   download.file (url=paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
                              "&FieldList=", FieldList,
                              "&startDate=", as.character (as.Date(endDate)+1), "%2000:00",
-                             "&fileFormat=csv&download=Yes")## endDate defaults to now
+                             "&fileFormat=csv&compression=zip&download=Yes")## endDate defaults to now
                  , destfile=updateFN)
 }
 rm (key, startDate, endDate, FieldList)
@@ -207,39 +208,34 @@ rm (key, startDate, endDate, FieldList)
 readC <- function (x){read_csv (x, show_col_types=FALSE, lazy=TRUE)}  ## XXX read from zip file
 drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\\.csv$", full.names=TRUE)
                         , readC) %>%
-  filter (Longitude < -149) %>%            # filter out arctic and SE Alaska (here to get bbox right) -- and AI
+  filter (Longitude < -149) %>%            # remove SE Alaska (here to get bbox right) -- and AI
+  filter (Latitude < 70) %>%               # remove Arctic Ocean
   arrange (DeviceName, DeviceDateTime) %>% # test that this working -- crash on Windows
-  # mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # all drifter data are in UTC -- on Mac, already recognized as UTC
+  # mutate (DeviceDateTime = DeviceDateTime %>% as.character %>% as.POSIXct(tz = "GMT")) %>% # already recognized as UTC
+  arrange (DeviceName, DeviceDateTime) %>%
+  mutate (IDn=1:nrow (.)) %>%
   filter()
 rm (readC, driftF, updateFN)
 
-if (0){
-  ## read from zip file
-  require ('zip')
-  dFs <- zip::zip_list (paste0 (driftP, "UAF_Data.zip/"))
-  readC <- function (fn){
-    require ('readr')
-    #  read_csv(unzip("my_data.zip", "data1.csv"))
-    con <- unz (paste0 (drifP, "UAF_Data.zip"))
-    readr::read_csv (con, fn) %>%
-      select (as.expression (FieldList))
-    close (con)
-    readr::read_csv (utils::unzip (paste0 (driftP, "UAF_Data.zip"), fn)
-                     , show_col_types=FALSE) %>%
-      select (as.expression (FieldList))
-  }
+## remove duplicates (about 80 in contiguous download)
+# ddrift <- duplicated (drift [,which (names (drift) %in% c("DeviceName", "DeviceDateTime"
+#                                          # , "Latitude", "Longitude"
+#                                        ) )])
+drift <- drift %>%
+  filter (!duplicated (drift [,which (names (drift) %in%
+                                        c("DeviceName", "DeviceDateTime") )])) %>%
+  filter()
+## get more drifter data from NOAA global drifter program
+if (0) {
+  ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
+  df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
+  df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
+, "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
+                      , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
+                      "&time%3E=2018-01-01&time%3C=2019-01-01'))
 
-  ## remove duplicates
-  fl <- list.files (driftP, pattern="\\.csv$", full.names=TRUE)
-  for (i in 1:length (fl)){cn <-  read.csv (fl[i]) %>% colnames(); print (cn)}
-  ddrift <- duplicated (drift [,which (names (drift) %in%
-                                         c("DeviceName", "DeviceDateTime"
-                                           # , "Latitude", "Longitude"
-                                         ) )])
-  driftc <- subset (drift, !ddrift) %>%
-    arrange (DeviceName, desc (DeviceDateTime)) %>% ## test that it's working
-    filter()
-  rm (ddrift)
+  # ERDDAP "https://erddap.aoml.noaa.gov/"
+  # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
 }
 
 
@@ -248,26 +244,45 @@ if (0){
 ## ----------------------------------------------------------
 ## add additional information to drifter
 ## include speed between positions? XXX
+## interpolated positions = potentially dangerous (on land)? But, is a more accurate position for the speed
+dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
+                               DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
+                               Latitude=Latitude[-1]-diff (Latitude),
+                               Longitude=Longitude[-1]-diff (Longitude),
+                               dT=diff (DeviceDateTime) %>% as.numeric()/60,
+                               distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
+)) %>%
+  mutate (speed_ms=distance_m/(dT*60)) %>%
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection)
+## to replace drift, would still need direction of shift (velocity)
+
 drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
-# dx [,which (names (dx)%in%c("distance_m","oceDdist", "oceDist"))] %>% st_drop_geometry() %>% head(n=30)
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
 
-dx <- st_as_sf (drift
-                , coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+# consider: using dI here instead of drift
+drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
+                , dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
 ## use morph..
-dx$topo <- st_extract(mar_bathy, at=dx)$topo
-dx$LandDistance_m <- worldM %>%
+drift$topo <- st_extract(mar_bathy, at=drift)$topo
+drift$LandDistance_m <- worldM %>%
   st_union() %>%
-  st_distance(dx, by_element=FALSE) %>%
+  st_distance(drift, by_element=FALSE) %>%
   as.numeric()
+# drift$onLand <- !is.na (st_intersects(dx, st_union (worldM)) |> as.numeric()) ## not pretty, not reliable. Skip for now
+drift$onLand <- st_intersects(drift, worldM) %>% as.numeric () ## not pretty, not reliable. Skip for now
 # dx$onLand <- st_join (dx, st_sf (worldM), join=st_within)
-dx$onLand <- st_intersects(dx, worldM) |> as.numeric()
 # dx <- st_filter (dx, seaA)  ## supposed to filter out points on land
+# rm (dx)
 
-save.image ("~/tmp/LCI_noaa/cache/drifter3.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+## ice wave rider and MicroStar are surface devices
+drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+drift$year <- format (drift$DeviceDateTime, "%Y") |> factor()  ## above should be piped and mapped XXX
+
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -324,70 +339,85 @@ if (0){
 ## https://api.tidesandcurrents.noaa.gov/mdapi/prod/
 ## https://tidesandcurrents.noaa.gov/web_services_info.html
 
-drift$year <- factor (format (drift$DeviceDateTime, "%Y"))
 station=9455517  # Kasitsna Bay
 yL <- levels (drift$year)
 
-if (file.exists("~/tmp/LCI_noaa/cache/tideCache.csv")){
-  tide <- read.csv ("~/tmp/LCI_noaa/cache/tideCache.csv")
+if (file.exists("~/tmp/LCI_noaa/cache/drifter/tideCache.csv")){
+  tide <- read_csv ("~/tmp/LCI_noaa/cache/drifter/tideCache.csv", show_col_types=FALSE)
+  tide$Date.Time <- tide$Date.Time |> as.POSIXct(tz="GMT")
   ## fetch only the missing ones
-  nL <- format (tide$Date.Time, "%Y") |> factor () |> levels ()
-  if (length (yL) > length (nL)){
-    yL <- yL [-which (yL %in% nL)]
-  }
+  nL <- tide$Date.Time |> format ("%Y") |> factor () |> levels()
+  yL <- yL [-which (yL %in% nL)]
 }
 
-for (i in seq_along(yL)){
-  begin_date=paste0 (yL [i], "0101")
-  end_date=paste0 (yL [i], "1231")
-  url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
-                 , begin_date, "&end_date=", end_date, "&station=", station,
-                 "&product=predictions&datum=MLLW&time_zone=gmt",
-                 "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
-  tide <- read.csv (url)
-  if (!exists ("tideX")){
-    tideX <- tide
-  }else{
-    tideX <- rbind (tideX, tide)
+if (length (yL) > 0){
+  for (i in seq_along(yL)){
+    begin_date=paste0 (yL [i], "0101")
+    end_date=paste0 (yL [i], "1231")
+    url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
+                   , begin_date, "&end_date=", end_date, "&station=", station,
+                   "&product=predictions&datum=MLLW&time_zone=gmt",
+                   "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
+    tideT <- read.csv (url)
+    tideT$Date.Time <- as.POSIXct (tideT$Date.Time, tz="GMT")
+    if (!exists ("tide")){
+      tide <- tideT
+    }else{
+      tide <- rbind (tide, tideT)
+    }
   }
+  rm (tideT, station, end_date, begin_date, url, yL, nL, i)
+  ## find closest date for each moment
+  write.csv (tide, file="~/tmp/LCI_noaa/cache/drifter/tideCache.csv", row.names=FALSE)
 }
-rm (tideX, station, end_date, begin_date, url)
-## find closest date for each moment
-write.csv (tide, file="~/tmp/LCI_noaa/cache/tideCache.csv", row.names=FALSE)
 
-if (.Platform$OS.type=="unix"){
-  require ("parallel")
-  tIdx <- mclapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
-    drift$DeviceDateTime[i] |>
-      difftime (tide$Date.Time) |>
-      abs() |>
-      which.min ()
-  }
-  , mc.cores=detectCores()-1)
-  tIdx <- do.call ("rbind", tIdx)
-}else{
-  tIdx <- sapply (1:nrow (drift), function (i){  ## slow -- run in parallel? in stages?
-    drift$DeviceDateTime[i] |>
-      difftime (tide$Date.Time) |>
-      abs() |>
-      which.min ()
-  })
-}
-drift$slackTide <- tide$Date.Time [tIdx]
-drift$tideLevel <- tide$Prediction [tIdx]
-drift$hilo <- tide$Type [tIdx]
-rm (tIdx)
+## find better solution to the nearest point problem? -- divide and conquer
+## https://www.statology.org/r-find-closest-value/
+## using mclapply takes minutes. Using cut is instantaneous!
+# sapply:  227 s elapsed, 153 user
+# mclapply: 62 s elapsed, 347 user
+# cut:     0.1 s elapsed, 0.1 user
 
-# #  interval="hilo"
-#
-# url <- paste0 ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date="
-#                , begin_date, "&end_date=", end_date, "&station=", station,
-#                "&product=predictions&datum=MLLW&time_zone=gmt",
-#                "&interval=hilo&units=metric&application=DataAPI_Sample&format=csv")
-# tide <- read.csv (url)
-#
-# rm (url, station, begin_date, end_date)
+# drift <- drift [order (drift$DeviceDateTime),]
+tide <- tide [order (tide$Date.Time),]
+v1 <- as.numeric(drift$DeviceDateTime)
+v2 <- as.numeric (tide$Date.Time)
+cuts <- c(-Inf, v2 [-1]-diff (v2)/2, Inf)
+tIdx <- cut (v1, breaks=cuts, labels=1:length (v2)) %>% as.numeric (levels (.))[.]  # conv factor after pipe
+rm (v1, v2, cuts)
+# system.time({
+#   require ("parallel")  ## keep for reference. Brute-force method to nearest point problem. Slow!
+#   if (.Platform$OS.type=="unix"){
+#     tIdx <- mclapply (1:nrow (drift), function (i){
+#       which.min (abs (drift$DeviceDateTime [i] - tide$Date.Time))
+#     }
+#     , mc.cores=detectCores()-1)
+#     tIdx <- do.call ("rbind", tIdx)
+#   }else{
+#     tIdx <- sapply (1:nrow (drift), function (i){
+#       which.min (abs (drift$DeviceDateTime [i] - tide$Date.Time))
+#     })
+#   }
+# })
 
+## parse tide data back into drift
+drX <- data.frame (
+  DeviceDateTime=drift$DeviceDateTime,
+  slackTide=tide$Date.Time [tIdx],
+  tideLevel=tide$Prediction [tIdx],
+  hilo=tide$Type [tIdx]
+)
+drX$dT <- difftime (drX$DeviceDateTime, drX$slackTide) |> as.numeric()/3600
+drX$tide <- ifelse (abs (drX$dT) < 1.5, "slack", NA)
+drX$tide <- ifelse (is.na (drX$tide) & (drX$hilo == "H") & (drX$dT < 0), "flood", drX$tide)
+drX$tide <- ifelse (is.na (drX$tide) & (drX$hilo == "L") & (drX$dT > 0), "flood", drX$tide)
+drX$tide [is.na (drX$tide)] <- "ebb"
+drift$tide <- factor (drX$tide)
+## add more tide information to drifter tracks??
+rm (drX, tide, tIdx)
+# barplot (summary (drift$tide))
+
+## now obsolete (and currently unreliable) tide calculations using package rtide. Revive?
 if (0){
   ## tides
   require ('rtide')  ## calculates tides from harmonics
@@ -422,17 +452,17 @@ if (0){
       tSlack <- tide_slack_data(tu)  ## must parallelize
     }
   })
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide.Rdata")  ## checkpoint for safety
-  # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+  # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata")  ## checkpoint for safety
+  ##  rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
   ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
                   # , DateTimeT=ttbl$DateTime
                   , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
 
-  ## categorize tide: within 1.5 h: high/low,
+  ## categorize tide: within 1.5 h: high/low -- incorrect XXX see above
   ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in min
   ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
-  ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
+  # ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
 
   if (0){
     hist (ttbl$dT, main = "", xlab="hours from slack tide")
@@ -443,11 +473,11 @@ if (0){
   }
 
   drift <- cbind (drift, ttbl [, c(3,4,6)])
-  save.image ("~/tmp/LCI_noaa/cache/drifterTide2.Rdata")
   rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
-## combine with TideTables ?? (TideTables needs raw data? as does oce)
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")
+#  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -466,97 +496,115 @@ if (0){
 # require ("gstat")
 
 
-## all this filtering -- now or later?
+## filter == only for drifter speed map
 
-drift_sf <- dx %>%
+drift_sf <- drift %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
-  #  filter (speed_ms > 0.01) %>%
-  filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots
+  filter (speed_ms > 0.0001) %>%   ## negatives -- go
+  filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots -- generous to avoid it messing with mean
   #  filter (distance_m > 0.1) %>%  # no effect?
-  #  filter (!is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
-  filter (dT > 1) %>%     ## some zero-values!
+  #  filter (is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
+  filter (dT != 0) %>%     ## some zero-values
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
   #  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
   #  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
   # st_transform (32605) %>% # UTM zone 5N
-  select (speed_ms) %>%
+#  select (speed_ms, IDn) %>%  ## only needed to match extra points from shoreline below
   filter()
 # nrow (drift_sf)
-rm (dx)
 
-# shoreline -- assume and force shoreline speed to be 0
-# add shoreline to drifter speeds
-drift_sf <- worldM %>%
-  st_sf () %>%
-  st_simplify(dTolerance=0.00001) %>%
-  st_cast ("MULTIPOLYGON") %>%
-  sf::st_coordinates() %>%
-  as.data.frame() %>%
-  st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
-  st_transform(projection) %>%
-  mutate (speed_ms = 0) %>%
-  select (speed_ms) %>%
-  rbind (drift_sf)
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+
+
 
 
 
 ## -----------------------------------------------------------------------------------
 ## spatial interpolation/aggregation
 
-save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
-## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSpeedMap.Rdata")
-
-seaAEx <- st_bbox (drift_sf) %>%
-  st_as_sfc() # %>%
-# st_difference(st_union (worldM))[1,]
-
+## make grid
+## aggregate quantile speed over grid, then look-up aggregated values
 ## for data filtering, aggregate over grid (rather than IDW, etc) -- see:
 # https://stackoverflow.com/questions/66907012/aggregate-values-in-raster-using-sf
 ## later make prediction using kriging
 
+
+## define grid
+seaAEx <- st_bbox (drift_sf) %>%
+  st_as_sfc() # %>%
 grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
   st_sf () %>%
   mutate (ID=row_number())
-A <- st_intersection (pgon, seaA)
-pointsID <- st_join (drift_sf, A)
-pointsID <- pointsID %>%
-  as.data.frame () %>%
+A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
+rm (seaAEx)
+
+# do this for classes: tide==flood, tide==ebb, deployDepth=0, depolyDepth==15
+## ok to lump deployDepth here -- only for filtering. Separate them later
+pointsID <- drift_sf %>%
+#  group_split (tide, deployDepth) %>%
+  filter (tide!="slack") %>%
+  st_join (A) %>%
+  as.data.frame() %>%
   group_by (ID) %>%
-  summarize (avg_speed=quantile(speed_ms, 0.9))
+  summarize (avg_speed=quantile (speed_ms, 0.5))
 A <- left_join(A, pointsID, by="ID")
 # plot (A ["avg_speed"])
+rm (pointsID, pgon)
 
 ## extract avg_speed from A
-drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
+## need to subset to drifters within study area
+### no longer needed if useing seaAEx?
+# drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
+# drift_sf <- filter (drift_sf, inSpeedcov==1) ## subset to within grid or st_extract fails
 
-drift_sfS <- filter (drift_sf, inSpeedcov==1) ## subset of drift_sf, using only positions within grid
-# drift_sfS$avg_speed <- st_rasterize (A ["avg_speed"]) %>%  # unknown how this works
-#   st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
-#   st_drop_geometry() #%>%
-# select ("avg_speed") %>%
-# as.numeric ()
-x <- st_rasterize (A ["avg_speed"]) %>%
-  st_extract (drift_sfS) %>%   #filter (drift_sf, inSpeedcov==1))
-  st_drop_geometry() #%>%
-drift_sfS$avg_speed <- x$avg_speed; rm (x)
+sdTh <- 3
+
+drift_sf$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
+  st_extract (drift_sf) %>%
+  st_drop_geometry() %>%
+  pull (avg_speed)
 ## flag records more than 2 SD from predicted grid speed (only above, not below)
-rSp <- with (drift_sfS, speed_ms-avg_speed)
-drift_sfS$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE); rm (rSp)
+rSp <- with (drift_sf, speed_ms-avg_speed)
 
-pdf ("~/tmp/LCI_noaa/media/drifter/speedResiduals.pdf")
-hist (rSp, xlab="speed residual [m/s]", main="")
-abline (v=2*sd (rSp, na.rm=TRUE))
-axis (1, tick=FALSE, at=2*sd (rSp, na.rm=TRUE), labels="2 SD")
+pdf (paste0(outpath, "speedResiduals.pdf"))
+hist (rSp, breaks=500, xlab="speed residual [m/s]", main="")
+abline (v=sdTh*sd (rSp, na.rm=TRUE))
+axis (3, tick=FALSE, at=sdTh*sd (rSp, na.rm=TRUE), labels=paste (sdTh,"SD"))
+
+drift_sf %>%
+  filter (speed_ms < 20) %>%
+  st_drop_geometry() %>%
+  plot (speed_ms ~ speed_ms-avg_speed, data=.)  ## residual vs predicted
+abline (a=0, b=1)
 dev.off()
 
-rm (grid_spacing, pgon, A, pointsID)
+png (paste0 (outpath, "Speed-Aggregate.png"), width=resW, height=resH)
+## map of A -- speed aggregate
+require ("viridisLite")
+plot (seaA, col="white", border="white")
+A ["avg_speed"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100))
+plot (worldM, add=TRUE, col="gray")
+dev.off()
 
-## merge drift_sfS with drift_sf, or abandone the latter?
-drift_sf <- drift_sfS; rm (drift_sfS)
+drift_sf$badSpeed <- ifelse (rSp > sdTh*sd (rSp, na.rm=TRUE), TRUE, FALSE)
+rm (grid_spacing, A, rSp, sdTh)
 
-save.image ("~/tmp/LCI_noaa/cache/driftSped.RData")
-## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/driftSped.RData"))
+
+## ---------------------------------------------------------------------------------
+## merge drift_sf with drift
+
+if (1){ ## revert to drift or stay with drift_sf (which is restricted to study area)
+  drift <- cbind (drift, drift_sf [match (drift$IDn, drift_sf$IDn),
+                                   which (!names (drift_sf) %in% names (drift))])
+}else{
+  drift_sf <- cbind (drift_sf, drift [match (drift_sf$IDn, drift$IDn),
+                                      which (!names (drift)%in%names (drift_sf))])
+}
+
+save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
 
 ## EOF for now
@@ -569,68 +617,8 @@ save.image ("~/tmp/LCI_noaa/cache/driftSped.RData")
 
 
 
-
-
-seaBB <- st_bbox(seaA) %>%
-  st_as_sfc()
-dSx <- st_filter (drift_sf, seaBB)
-dSx$gridSpeed <- st_extract (speed1, dSx)$lyr.1
-
-require ("viridisLite")
-plot (seaA, col="white")
-plot (speed1, col=plasma(100), add=TRUE)
-plot (worldM, add=TRUE, col="gray")
-plot (seaA, add=TRUE)
-
-
-
-dSx %>%
-  filter (speed_ms < 20) %>%
-  st_drop_geometry() %>%
-  plot (gridSpeed ~ speed_ms-gridSpeed, data=.)  ## residual vs predicted
-abline (a=0, b=1)
-
-hist (with (dSx, speed_ms-gridSpeed))
-
-
-
-plot (speed_ms~gridSpeed, data=dSx)
-# drift$gridSpeed <- st_extract (speedO, st_geometry(drift_sf)) %>%
-#   st_drop_geometry()
-
-
-
-
-
-if (0){
-  plot (bbox)
-  plot (mar_bathy, add=TRUE)
-  plot (speedO, add=TRUE)
-  plot (worldM, add=TRUE, col="beige", alpha=0.5)
-  plot (bbox, add=TRUE)
-  plot (seaA, add=TRUE, col="lightblue", alpha=0.5)
-  plot (drift_sf %>% st_transform(projection), add=TRUE)  ##
-  # speedO == worldM and drifter_sf > st_trans, but not mar_bathy
-}
-
-
-
-
-
-
-## ----------------------------------------------------------------------------
-## filter out unrealistic speeds and records too close to shore/on land? XXX
-drift <- dx %>%
-  st_drop_geometry() %>%  ## drop spatial part
-  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter (topo < 3) %>%         ## to make sure none are on land
-  filter (LandDistance_m > 50) %>%
-  filter()
-## retains 21k out of 28 k
-# dim (drift)
-# dim (dx)
-rm (dx)
-
+# ----------------------------------------------------------------------------
+## define individual drifter deployments
 
 ## redundant, but better safe
 # is.unsorted(drift$DeviceName)
@@ -694,6 +682,22 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
 rm (df, i, newDF, interP)
 iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
 
+
+## filter out unrealistic speeds and records too close to shore/on land? XXX
+driftX <- drift %>%
+  # st_drop_geometry() %>%  ## drop spatial part
+  #  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
+  filter ((badSpeed != TRUE) | (is.na (badSpeed)) ) %>%
+  filter (topo < 1) %>%         ## to make sure none are on land  XXX
+  #  filter (LandDistance_m > 50) %>%
+  filter()
+## retains 21k out of 28 k
+nrow (drift)
+nrow (driftX)
+
+
+
+
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
@@ -701,11 +705,13 @@ drift <- iDF %>%
 rm (iDF)
 
 
-# drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
-## ice wave rider and MicroStar are surface devices
-drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
-drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()  ## above should be piped and mapped XXX
-drift$topo <- st_extract(mar_bathy, at=drift)$topo
+
+# ### -- old -- did this already
+# # drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
+# ## ice wave rider and MicroStar are surface devices
+# drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+# drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()  ## above should be piped and mapped XXX
+# drift$topo <- st_extract(mar_bathy, at=drift)$topo
 
 
 
@@ -723,18 +729,6 @@ if (0){
 
 # driftC <- st_intersection(drift, bbox)
 
-## get more drifter data from NOAA global drifter program
-if (0) {
-  ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
-  df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
-  df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
-, "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
-                      , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
-                      "&time%3E=2018-01-01&time%3C=2019-01-01'))
-
-  # ERDDAP "https://erddap.aoml.noaa.gov/"
-  # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
-}
 
 
 ## summarise reporting interval ?? still needed? -- move up if to be used
@@ -759,8 +753,8 @@ if (0){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifter0.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
 
@@ -780,13 +774,32 @@ if (0){
     ## not accelerated under windows -- worth the installation trouble?
     ## should use kriging for data-product output
     ## ideally, grid would be 95%-ile -- revert to gstat?
+
+    # shoreline -- assume and force shoreline speed to be 0  -- only needed for interpolation, not for averaging
+    # add shoreline to drifter speeds
+    if (0){
+      drift_sf <- worldM %>%
+        st_sf () %>%
+        st_simplify(dTolerance=0.01) %>%  ## in meters
+        st_cast ("MULTIPOLYGON") %>%
+        sf::st_coordinates() %>%
+        as.data.frame() %>%
+        st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
+        st_transform(projection) %>%
+        mutate (speed_ms = 0) %>%
+        mutate (IDn = -1) %>%
+        select (speed_ms, IDn) %>%
+        rbind (drift_sf)
+    }
+
+
     p <- require ('GVI')  ## for sf_to_rast
     if (!p){
       require ("remotes")
       remotes::install_github("STBrinkmann/GVI")
     }; rm (p)
 
-    # save.image ("~/tmp/LCI_noaa/cache/drifterSpeedMap0.Rdata")
+    # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap0.Rdata")
     require ('parallel')
     nCores <- detectCores()-1
 
@@ -890,8 +903,8 @@ if (0){  ## redundant -- more kriging??
   # # https://r-spatial.org/book/12-Interpolation.html
   # require ('gstat')
   # v <- variogram (speed_ms~1, drift)
-  save.image("~/tmp/LCI_noaa/cache/drifterKrige.RData")
-  # load ("~/tmp/LCI_noaa/cache/drifterKrige.RData")
+  save.image("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
+  # load ("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
 }
 
 
@@ -957,12 +970,13 @@ mymap <- drift %>%
   mutate (depth=topo * -1) %>%
   # group_by (DeviceName) %>%
   # summarize(m=mean(attr_data)) %>% st_cast ("LINESTRING") %>%  ## making a string from this?? not working
-  mapview::mapview (zcol= c ("days_in_water", "speed_ms", "depth")
+  mapview::mapview (zcol= c (# "DeviceName",
+                             "days_in_water", "speed_ms", "depth")
                     , col.regions=colorRampPalette(heat.colors(20))
                     , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
   )
 # mymap
-mapshot (mymap, url="~/tmp/LCI_noaa/media/drifter/mapview.html")
+mapshot (mymap, url=paste0 (outpath, "mapview.html"))
 ## zip up mapview.htlm + folder
 rm (mymap)
 ## save for others  (ggplotly)
@@ -1040,8 +1054,8 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
 

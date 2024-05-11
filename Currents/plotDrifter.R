@@ -1,10 +1,18 @@
 ## plot Drifter tracks
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+rm (list=ls())
+
+require ("stars")
+require ("RColorBrewer")
+require ("dplyr")
+
+load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
 
 
-
+## products:
+## interactive map of select drifters
+## interactive map of drifter max speed (one for surface, one of sub-surface)
 
 
 
