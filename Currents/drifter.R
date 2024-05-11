@@ -244,10 +244,24 @@ if (0) {
 ## ----------------------------------------------------------
 ## add additional information to drifter
 ## include speed between positions? XXX
+## interpolated positions = potentially dangerous (on land)?
+dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
+                               DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
+                               Latitude=Latitude[-1]-diff (Latitude),
+                               Longitude=Longitude[-1]-diff (Longitude),
+                               dT=diff (DeviceDateTime) %>% as.numeric()/60,
+                               distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
+)) %>%
+  mutate (speed_ms=distance_m/(dT*60)) %>%
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection)
+## to replace drift, would still need direction of shift (velocity)
+
 drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
 
+# consider: using dI here instead of drift
 drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
                 , dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
@@ -534,7 +548,7 @@ pointsID <- drift_sf %>%
   st_join (A) %>%
   as.data.frame() %>%
   group_by (ID) %>%
-  summarize (avg_speed=quantile (speed_ms, 0.75))
+  summarize (avg_speed=quantile (speed_ms, 0.5))
 A <- left_join(A, pointsID, by="ID")
 # plot (A ["avg_speed"])
 rm (pointsID, pgon)
@@ -545,21 +559,37 @@ rm (pointsID, pgon)
 # drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
 # drift_sf <- filter (drift_sf, inSpeedcov==1) ## subset to within grid or st_extract fails
 
+sdTh <- 3
+
 drift_sf$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
   st_extract (drift_sf) %>%
   st_drop_geometry() %>%
   pull (avg_speed)
 ## flag records more than 2 SD from predicted grid speed (only above, not below)
 rSp <- with (drift_sf, speed_ms-avg_speed)
-drift_sf$badSpeed <- ifelse (rSp > 2*sd (rSp, na.rm=TRUE), TRUE, FALSE) #; rm (rSp)
-
 
 pdf (paste0(outpath, "speedResiduals.pdf"))
-hist (rSp, xlab="speed residual [m/s]", main="")
-abline (v=2*sd (rSp, na.rm=TRUE))
-axis (1, tick=FALSE, at=2*sd (rSp, na.rm=TRUE), labels="2 SD")
+hist (rSp, breaks=500, xlab="speed residual [m/s]", main="")
+abline (v=sdTh*sd (rSp, na.rm=TRUE))
+axis (3, tick=FALSE, at=sdTh*sd (rSp, na.rm=TRUE), labels=paste (sdTh,"SD"))
+
+drift_sf %>%
+  filter (speed_ms < 20) %>%
+  st_drop_geometry() %>%
+  plot (speed_ms ~ speed_ms-avg_speed, data=.)  ## residual vs predicted
+abline (a=0, b=1)
 dev.off()
-rm (grid_spacing, A, rSp)
+
+png (paste0 (outpath, "Speed-Aggregate.png"), width=resW, height=resH)
+## map of A -- speed aggregate
+require ("viridisLite")
+plot (seaA, col="white", border="white")
+A ["avg_speed"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100))
+plot (worldM, add=TRUE, col="gray")
+dev.off()
+
+drift_sf$badSpeed <- ifelse (rSp > sdTh*sd (rSp, na.rm=TRUE), TRUE, FALSE)
+rm (grid_spacing, A, rSp, sdTh)
 
 
 ## ---------------------------------------------------------------------------------
@@ -587,55 +617,10 @@ save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
 
 
-if (0){
-seaBB <- st_bbox(seaA) %>%
-  st_as_sfc()
-dSx <- st_filter (drift_sf, seaBB)
-dSx$gridSpeed <- st_extract (speed1, dSx)$lyr.1
-
-require ("viridisLite")
-plot (seaA, col="white")
-plot (speed1, col=plasma(100), add=TRUE)
-plot (worldM, add=TRUE, col="gray")
-plot (seaA, add=TRUE)
+# ----------------------------------------------------------------------------
+## define individual drifter deployments
 
 
-
-dSx %>%
-  filter (speed_ms < 20) %>%
-  st_drop_geometry() %>%
-  plot (gridSpeed ~ speed_ms-gridSpeed, data=.)  ## residual vs predicted
-abline (a=0, b=1)
-
-hist (with (dSx, speed_ms-gridSpeed))
-
-
-
-plot (speed_ms~gridSpeed, data=dSx)
-# drift$gridSpeed <- st_extract (speedO, st_geometry(drift_sf)) %>%
-#   st_drop_geometry()
-}
-
-
-
-
-if (0){
-  plot (bbox)
-  plot (mar_bathy, add=TRUE)
-  plot (speedO, add=TRUE)
-  plot (worldM, add=TRUE, col="beige", alpha=0.5)
-  plot (bbox, add=TRUE)
-  plot (seaA, add=TRUE, col="lightblue", alpha=0.5)
-  plot (drift_sf %>% st_transform(projection), add=TRUE)  ##
-  # speedO == worldM and drifter_sf > st_trans, but not mar_bathy
-}
-
-
-
-
-
-
-## ----------------------------------------------------------------------------
 ## filter out unrealistic speeds and records too close to shore/on land? XXX
 driftX <- drift %>%
   # st_drop_geometry() %>%  ## drop spatial part
