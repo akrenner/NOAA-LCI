@@ -244,7 +244,7 @@ if (0) {
 ## ----------------------------------------------------------
 ## add additional information to drifter
 ## include speed between positions? XXX
-## interpolated positions = potentially dangerous (on land)?
+## interpolated positions = potentially dangerous (on land)? But, is a more accurate position for the speed
 dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
                                DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
                                Latitude=Latitude[-1]-diff (Latitude),
@@ -620,20 +620,6 @@ save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 # ----------------------------------------------------------------------------
 ## define individual drifter deployments
 
-
-## filter out unrealistic speeds and records too close to shore/on land? XXX
-driftX <- drift %>%
-  # st_drop_geometry() %>%  ## drop spatial part
-#  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter ((badSpeed != TRUE) | (is.na (badSpeed)) ) %>%
-  filter (topo < 1) %>%         ## to make sure none are on land  XXX
-#  filter (LandDistance_m > 50) %>%
-  filter()
-## retains 21k out of 28 k
-nrow (drift)
-nrow (driftX)
-
-
 ## redundant, but better safe
 # is.unsorted(drift$DeviceName)
 drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
@@ -695,6 +681,22 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
 
 rm (df, i, newDF, interP)
 iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
+
+
+## filter out unrealistic speeds and records too close to shore/on land? XXX
+driftX <- drift %>%
+  # st_drop_geometry() %>%  ## drop spatial part
+  #  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
+  filter ((badSpeed != TRUE) | (is.na (badSpeed)) ) %>%
+  filter (topo < 1) %>%         ## to make sure none are on land  XXX
+  #  filter (LandDistance_m > 50) %>%
+  filter()
+## retains 21k out of 28 k
+nrow (drift)
+nrow (driftX)
+
+
+
 
 ## project positions -- don't move earlier to allow interpolations
 drift <- iDF %>%
@@ -968,7 +970,8 @@ mymap <- drift %>%
   mutate (depth=topo * -1) %>%
   # group_by (DeviceName) %>%
   # summarize(m=mean(attr_data)) %>% st_cast ("LINESTRING") %>%  ## making a string from this?? not working
-  mapview::mapview (zcol= c ("days_in_water", "speed_ms", "depth")
+  mapview::mapview (zcol= c (# "DeviceName",
+                             "days_in_water", "speed_ms", "depth")
                     , col.regions=colorRampPalette(heat.colors(20))
                     , map.types = c("Esri.WorldImagery", "Esri.WorldShadedRelief", "CartoDB.Positron")
   )
