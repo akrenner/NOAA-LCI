@@ -249,17 +249,17 @@ dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
                                DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
                                Latitude=Latitude[-1]-diff (Latitude),
                                Longitude=Longitude[-1]-diff (Longitude),
-                               dT=diff (DeviceDateTime) %>% as.numeric()/60,
+                               dT_min=diff (DeviceDateTime) %>% as.numeric()/60,
                                distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
 )) %>%
-  mutate (speed_ms=distance_m/(dT*60)) %>%
+  mutate (speed_ms=distance_m/(dT_min*60)) %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
 ## to replace drift, would still need direction of shift (velocity)
 
-drift$dT <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
+drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
-drift$speed_ms <- with (drift, distance_m / (dT*60)) ## filter out speeds > 6 (11 knots) -- later
+drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
 
 # consider: using dI here instead of drift
 drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
@@ -460,7 +460,7 @@ if (0){
                   , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
 
   ## categorize tide: within 1.5 h: high/low -- incorrect XXX see above
-  ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in min
+  ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in hours
   ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
   # ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
 
@@ -504,7 +504,7 @@ drift_sf <- drift %>%
   filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots -- generous to avoid it messing with mean
   #  filter (distance_m > 0.1) %>%  # no effect?
   #  filter (is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
-  filter (dT != 0) %>%     ## some zero-values
+  filter (dT_min != 0) %>%     ## some zero-values
   #  slice_sample (n=10e3) %>% #, order_by=speed_ms, na_rm=TRUE  ## balance spatially?
   #  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
   #  st_transform(projection) %>%  ## or UTM? -- sf_to_rast requires projection
@@ -625,8 +625,8 @@ save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 
 ## define new deployment XXXX  review!!! XXXX
-newDeploy <- drift$dT > 120 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments XXX test!! 2h
-# newDeploy <- drift$dT > 60*14 | !duplicated (drift$DeviceName) ## dT in min. mark new deployments   14 h (840 min)
+newDeploy <- drift$dT_min > 120 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 2h
+# newDeploy <- drift$dT_min > 60*14 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments   14 h (840 min)
 ## mark new deployments
 x <- 0; depIdx <- character(nrow (drift)) # declare variables
 for (i in 1:length (newDeploy)){
@@ -641,14 +641,14 @@ drift$deploy <- factor (depIdx)
 rm (newDeploy, x, depIdx, i)
 
 # plot (Latitude~Longitude, drift)
-# summary (drift$dT)
+# summary (drift$dT_min)
 # for (i in 1:5) alarm()
 
 
 ## interpolate within bouts
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
-for (i in seq_along (levels (drift$deploy))){               ## very slow! parallelize? cache?
+for (i in seq_along (levels (drift$deploy))){               ## very slow! parallelize? cache?; use dplyr split/group
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
     if (interP > 0){
@@ -659,13 +659,15 @@ for (i in seq_along (levels (drift$deploy))){               ## very slow! parall
       ))
       newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
       newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
-      newDF$dT <- interP
+      newDF$dT_min <- interP
+      ## fill in the rest -- interpolate if numeric, find nearest if categorical
+
     }else{
-      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT"))
+      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
     }
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
     newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-    newDF$speed_ms <- newDF$dist_m / (newDF$dT*60) ## convention to use m/s, not knots
+    newDF$speed_ms <- newDF$dist_m / (newDF$dT_min*60) ## convention to use m/s, not knots
     ## trim newDF XXXX  -- cut bad stuff front and back
     ## at the very least: first and last
     newDF <- newDF [2:(nrow (newDF)-1),]
