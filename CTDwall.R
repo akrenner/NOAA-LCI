@@ -88,7 +88,7 @@ if (0){ ## tests
 
 
 ## plot T9 only
-transectC <- which (levels (poAll$Transect) == "9")  # 5  # T9
+# transectC <- which (levels (poAll$Transect) == "9")  # 5  # T9
 
 
 for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)

@@ -45,11 +45,11 @@ require ("tidyverse")
 
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor (physOc$Match_Name)
-pickStn <- 87 # 9-6
 pickStn <- which (levels (physOc$Match_Name) %in%
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
   c("9_6", "AlongBay_3", "AlongBay_9"))
 # pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
+pickStn <- 87 # 9-6
 
 
 deepThd <- 20   ## deep vs surface layer

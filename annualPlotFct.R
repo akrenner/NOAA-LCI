@@ -492,6 +492,12 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
 
   ## require (pmetar): another package to access data from Iowa State University
 
+  ## better?  fetch data directly from NOAA buoy network using wget
+  ## see https://medium.com/@holtan.chase/retrieving-data-from-national-data-buoy-center-api-f94d262c7ea7
+  ## https://www.ndbc.noaa.gov/faq/rt_data_access.shtml  -- at least some archived data available
+
+
+
   require ("riem")
   dir.create ("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings=FALSE, recursive=TRUE)
   if (clearcache){

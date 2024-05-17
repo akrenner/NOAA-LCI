@@ -27,6 +27,11 @@
 ## clean-up: if doing binning by depth in R, here or in CTD_cnv-Import.R?
 
 
+## need to ensure that Seabird software is present
+## better: migrate to new python version:
+## https://github.com/Sea-BirdScientific/seabirdscientific
+## also consider: https://github.com/castelao/seabird (??)
+
 
 rm (list=ls())
 cWD <- getwd()
@@ -97,7 +102,7 @@ if (0){
 ## create and call batch files
 ## great if this could run in parallel -- probably not on Windows?
 for (i in 1:length (conF)){
-  ## for (i in 2){ # XXX
+# for (i in 8){  # restore 2_edited_hex/2024 from local git and test
   #sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
@@ -112,10 +117,11 @@ for (i in 1:length (conF)){
   ##
   if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
     psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
-  }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve attenuation/turbidity
-    psa <- psaL [grep ("4141", psaL)]
   }else{
-    psa <- psaL [grep ("5028", psaL)]
+    ctdS <- gsub (paste0 (dirname(conF [i]), "/SBE19plus_"), "", conF [i]) |>  ## isolate serial #
+      substr(1,4)
+    psa <- psaL [grep (ctdS, psaL)]
+    rm (ctdS)
   }
 
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
@@ -134,6 +140,7 @@ for (i in 1:length (conF)){
   # bT <- paste (l1, l2, sep = "\n")
   # bT <- paste (l1, sep = "\n")
 
+  ## call batch processing using old SBEbatch.exe
   if (.Platform$OS.type=="windows"){
     write (bT, file = "~/CTDbatch.txt")
     # write (paste (l1, l2, sep = "\n"))## XXX TEST
@@ -144,13 +151,51 @@ for (i in 1:length (conF)){
     # unlink (tL, recursive=TRUE, force=TRUE)  ## need this or next batch will get files from wrong CTD
     unlink ("~/CTDbatch.txt")
   }else{
-    ## ensure that wine64 is installed
+    ## ensure that wine64 is installed -- or move to modern python version from GitHub
     write (bT, file = "~/Documents/CTDbatch.txt") ## is symlinked to .wine/dosdevices/c:/users/crossover/My\\ Documents
     x <- system (paste0 ("wine64 ~/.wine/dosdevices/c:/Program\\ Files \\(x86\\)/Sea-Bird/SBEDataProcessing-Win32/SBEBatch.exe"))
     unlink ("~/Documents/CTDbatch.txt")
   }
-}
+  if (0){
+    ## new phython programs by Sea-Bird
+    require ("reticulate")
+    # os <- import ('os')
+    # use_condaenv ("base")
+    reticulate::install_python()  ## use only once?
+    if (virtualenv_exists("fathom")){
+      use_virtualenv("fathom")
+    }else{
+      ## automatically install seabirdscientific using pip into virtual environment
+      virtualenv_create("fathom")
+      virtualenv_install("fathom", "seabirdscientific")
+    }
+    ## set up fathom processing
+    import (sbs)
+    import ("sbs.process.conversion", as="conv")
+    import ("sbs.process.processing", as="proc")
+    # import ("multiprocessing", "Pool")
 
+    # import sbs
+    # from sbs.process import contour
+    # import sbs.process.conversion as conv
+    # import sbs.process.processing as proc
+
+    ## parallel processing, see https://www.sitepoint.com/python-multiprocessing-parallel-programming/
+    py <- paste0 ("import sbs
+                  import sbs.process.conversion as conv
+                  import sbs.process.processing as proc
+
+                  from multiprocessing import Pool
+                  import time
+                  import
+
+                  ")
+    write (py, file="script.py")
+    py_run_file ("script.py")
+    unlink ("script.py")
+
+  }
+}
 
 ## replicate loop-edit here in R.
 ## run BinAvg again in SEABIRD and/or in R.

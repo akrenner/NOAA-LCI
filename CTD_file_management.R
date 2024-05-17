@@ -15,31 +15,24 @@
 
 
 cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
-
-if (!exists ("hexFileD")){hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"}
-
-
-# TESTrun <- TRUE
-# TESTrun <- FALSE
-
-
-## process only latest new survey to speed things up -- make this a parameter for ctd_workflow.R
-latestonly <- FALSE
-# latestonly <- TRUE  ## not everything is working yet
-
-
-
-
-
 ## make this independent from ctd_workflow.R
 if (!exists ("hexFileD")){
   rm (list = ls())
   hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 }
 
+
+
+## process only latest new survey to speed things up -- make this a parameter for ctd_workflow.R
+latestonly <- FALSE
+# latestonly <- TRUE  ## not everything is working yet
+
+smallTest <- FALSE
+
+
 ## PRO: leave it here: a better file structure
 ## CON: move it: it will never happen, making these cache files
-hexCache <- "~/GISdata/LCI/CTD-processing/allCTD/"
+# hexCache <- "~/GISdata/LCI/CTD-processing/allCTD/"
 hexCache <- "~/tmp/LCI_noaa/CTD-cache/allCTD/"
 
 
@@ -51,13 +44,7 @@ set.seed (8)
 ## define new destinations
 nD <- paste0 (hexCache, "edited_hex/")
 instL <- c ("4141", "5028", "8138")  # do this from data?
-instL <- c ("4141", "5028")  # do this from data?
-# XXX add new CTD to this list!!!
-## clean slate -- do this by hand!
-
-# x <- unlink (nD, recursive = TRUE, force = TRUE) # not working on Win??
-x <- c (unlink (paste0 (nD, instL [1], "/"))
-        , unlink (paste0 (nD, instL [2], "/")))
+x <- lapply (1:length (instL), FUN=function (i){unlink (paste0 (nD, instL [i], "/"), recursive=TRUE)})
 # print (x)
 for (i in 1:length (instL)){
  dir.create (paste0 (nD, instL [i]), recursive = TRUE)
@@ -97,6 +84,7 @@ rm (rL)
 
 ## bad files out
 bF <- grep ("Troubleshooting", fL)
+bF <- c (bF, grep (".zip$", fL))   ## remove any .zip files. Not sure why picked up.
 if (length (bF) > 0){
   cat ("removing ", length (bF), " bad files\n")
   fL <- fL [-bF]
@@ -112,20 +100,20 @@ rm (fL)
 ## check duplicates by name or sha256
 ## check file content
 # if (0){ ## for whatever reason, this is now causing trouble under windows (but not MacOS)
-  ## redundant (see below)
-  require ("cli")
-  fDB$sha <- sapply (1:nrow (fDB), function (i){
-    hash_file_sha256(fDB$file [i])
-  })
-  dF <- duplicated (fDB$sha)
-  cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
-  # print (fDB$fN [which (dF)])
-  fDB <- subset (fDB, !dF)
-  rm (dF)
+## redundant (see below)
+require ("cli")
+fDB$sha <- sapply (1:nrow (fDB), function (i){
+  hash_file_sha256(fDB$file [i])
+})
+dF <- duplicated (fDB$sha)
+cat ("\n##  Duplicate files removed: ", sum (dF), "\n\n")
+# print (fDB$fN [which (dF)])
+fDB <- subset (fDB, !dF)
+rm (dF)
 # }
 ## check that fDB isn't empty now
 if (!nrow (fDB)>0){
- stop ("fDB has zero (0) rows\n")
+  stop ("fDB has zero (0) rows\n")
 }
 
 
@@ -171,7 +159,10 @@ fDB <- subset (fDB, batteryOK)
 
 
 if (latestonly){
-  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
+  year <- suppressWarnings({substr (fDB$fN, 1, 4) |> as.numeric()}) ## NAs hopefully all old
+  fDB <- subset (fDB, year >= as.numeric (format (Sys.Date(), "%Y"))-1)
+  rm (year)
+#  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
 }
 
 
@@ -192,7 +183,7 @@ for (i in 1:nrow (fDB)){
                               , recursive = FALSE
              , overwrite = FALSE, copy.date = TRUE)
 }
-rm (hF)
+rm (hF, hx, i)
 cat ("\n\nfactor (fDB$copy\n")
 print (summary (factor (fDB$copy)))
 
@@ -215,7 +206,7 @@ print (nrow(fDB))
 iN <- list.files (nD, pattern = "bad", ignore.case = TRUE, recursive = TRUE, full.names = TRUE)
 iN <- c (iN, list.files (nD, pattern = "air", ignore.case = TRUE, recursive = TRUE, full.names = TRUE))
 unlink (iN)
-rm (iN, i, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
+rm (iN, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
 
 ## end of first, main step
 ## next step:
@@ -534,6 +525,9 @@ summary (fDB$tErr)
 fDB$file [which.max (abs (fDB$tErr))]
 fDB$metDate [which.max (abs (fDB$tErr))]
 
+fDB$metDate [which (abs (fDB$tErr) > 1)]
+
+
 if (any (abs (fDB$tErr) > 1)){
   x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
   #  stop ("fix date discrepancies between metadata and file names")
@@ -542,6 +536,7 @@ if (any (abs (fDB$tErr) > 1)){
   print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
   ## 2021-05-01 seems right -- was this a make-up cruise?! was metadata fixed?
   ## 2017-12-14 to 2018-01-17: File names are correct! Dates are off after changing from DLT to winter.
+  ## edit metadata???
 
 #  for (i in 1:nrow (fDB))
 #    if (fDB$tErr[i] > 1){
@@ -591,10 +586,15 @@ for (i in 1:nrow (cFDB)){ # copy config files to their folders
   dir.create (cFDB$dir [i], showWarnings = FALSE, recursive = TRUE)
   file.copy (from = paste0 (cDir, cFDB$file [i]), to = cFDB$dir [i]) #, copy.date = TRUE)
 }
-cFDB$date <- gsub ("^SBE19plus_(4141|5028)_", "", cFDB$date)
-cFDB$date <- as.POSIXct (paste0 ("1-", cFDB$date), format = "%d-%b-%Y")
+cFDB$date <- gsub (paste0 ("^SBE19plus_(",
+                           paste (levels (factor (fDB$instN)), collapse="|"),
+                                          ")_")
+                   , "", cFDB$date)
+cFDB$date <- as.POSIXct (paste0 ("1-", gsub ("_", "-", cFDB$date)) # for xmlcon inconsistency
+                         , format = "%d-%b-%Y")
 cFDB$inst <- substr (cFDB$file, start = 11, 14)
 cFDB <- cFDB [order (cFDB$date),]
+rm (i, cDir)
 
 if (0){ ## read calibration date
 for (i in 1:nrow (cFDB)){
@@ -647,8 +647,9 @@ if (any (!cpCk)){
   print (summary (cpCk))
   stop ("copy of hex files failed")
 }
-rm (cpCk)
+rm (cpCk, i)
 unlink (nD, recursive = TRUE, force = TRUE)
+rm (nD)
 
 
 ## delete conf file, if it has not yet been used to prevent processing to hang
@@ -663,21 +664,20 @@ for (i in seq_along(cFDB$dir)){
 
 
 ## make small dataset for testing
-if (!latestonly){
+if (smallTest){
   x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
                , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
   xmlC <- list.files (paste0 (hexCache, "hex2process"), ".xmlcon"
                       , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
   ## remove 8138 and 2021 callibration until they've been used!
   # xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
-  xmlC <- xmlC [-grep ("2021", xmlC)]
-
   file.copy (paste0 (hexCache, "hex2process/", xmlC)
              , paste0 (hexCache, "hex2test/", xmlC))
   rm (xmlC)
 
   fDB2 <- list.files (paste0 (hexCache, "hex2process/"), ".HEX"
                       , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+  # fDB2 <- subset (fDB2)
   set.seed (8)
   fDB2 <- sample (fDB2, 30) ## better to force distribution, but good for now -- happens to work
   file.copy (paste0 (hexCache, "hex2process/", fDB2)
