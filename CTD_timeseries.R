@@ -928,7 +928,7 @@ save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
 ## move up to plot for each station?
 ## could also do this for Seldovia Air and water temperatures.
 
-T96 <- subset (poSS@data, Match_Name=="9_6")  ## migrate to sf
+T96 <- subset (poSS, Match_Name=="9_6")  ## migrate to sf
 T96 <- T96 [order (T96$timeStamp),]
 require ("tidyr")
 

@@ -48,7 +48,7 @@ sink()
 
 
 sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
-
+sink()
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source ("datasetup.R")
@@ -71,7 +71,6 @@ source ("CTDwall-setup.R")
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
 # source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
-
 # source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 
 
@@ -96,13 +95,11 @@ if (0){ ## 2017 contract
 
 ## 2019 seasonality
 if (0){ # Dec 2019 seasonality
-  source ("dataSetup.R")
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
 
   ## missing parts for EVOS 2023 final report
   source ("Nutrients_seasonality.R")
-
 
   source ("physOcean.R")
   q()
@@ -110,9 +107,6 @@ if (0){ # Dec 2019 seasonality
 }
 
 
-
-## It may be necessary to restart R between above CTD processing and below Annual State of the Bay
-## scripts? There may be an issue with temp files?
 
 ## only for SoB? -- mv down?
 ## source ("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
@@ -134,5 +128,3 @@ sink()
 cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
 
 ## EOF
-
-
