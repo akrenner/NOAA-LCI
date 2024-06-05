@@ -129,7 +129,7 @@ options(timeout=600) ## double timeout limit
 #   st_as_sfc()
 
 ## bathymetry/topography
-mar_bathy <- stars::read_stars (bathyP, crs=3338) ; rm (bathyP)
+mar_bathy <- stars::read_stars (bathyP); rm (bathyP)  # , crs=3338) ; rm (bathyP)
 if (projection != st_crs (3338)){
   mar_bathy <- st_warp(mar_bathy, crs=projection)
 }
@@ -267,6 +267,8 @@ drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep i
   st_transform(projection)
 ## use morph..
 drift$topo <- st_extract(mar_bathy, at=drift)$topo
+
+## using LandDistance_m <- st_distance(worldM, dx) %>% apply (2, min) is slow by orders of magnitude
 drift$LandDistance_m <- worldM %>%
   st_union() %>%
   st_distance(drift, by_element=FALSE) %>%
@@ -731,6 +733,18 @@ if (0){
 
 # driftC <- st_intersection(drift, bbox)
 
+## get more drifter data from NOAA global drifter program
+if (0) {
+  ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
+  df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
+  df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
+, "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
+                      , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
+                      "&time%3E=2018-01-01&time%3C=2019-01-01'))
+
+  # ERDDAP "https://erddap.aoml.noaa.gov/"
+  # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
+}
 
 
 ## summarise reporting interval ?? still needed? -- move up if to be used
@@ -950,6 +964,7 @@ drift <- drift %>%
 ## need to set these after final drifter selection (days_in_water already per deploy)
 drift$DeviceName <- factor (drift$DeviceName)
 drift$deploy <- factor (drift$deploy)
+drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 

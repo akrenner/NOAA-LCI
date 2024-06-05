@@ -243,6 +243,10 @@ readCNV <- function (i){
   if (!"turbidity" %in% names (ctdF@data)){
     ctdF@data$turbidity <- meta (NA)
   }
+  ## temporary fix for 8138 until par translation is working XXXX
+  if (!"par" %in% names (ctdF@data)){
+    ctdF@data$par <- meta (NA)
+  }
 
   # print (ctdF@metadata$units)
   cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
@@ -304,6 +308,8 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.
 
 # ---------- extract date, transect, station, cast-# from file names --------- #
 ## goal: simplify R code
+## move this into CTD_cleanup.R? as well as manually cleaning file names?
+
 require ("stringr")
 ## date
 fileDB$FN_date <- substring(fileDB$file, 1, 10) %>%

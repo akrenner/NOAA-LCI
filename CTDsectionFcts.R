@@ -10,27 +10,26 @@ getBathy <- function (transect, stn){
   ## stn is the master list of stations used in Kachemak Bay/lower Cook Inlet
   require ("oce")  # for geoDist
   require ("sf")
+  require ("dplyr")
+  require ("stars")
+
+  mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  names (mar_bathy) <- "topo"
+  names (mar_bathy) <- "topo"
+  bathyZ <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                       , dimensions = attr(mar_bathy, "dimensions"))
+  rm (mar_bathy)
 
   stnT <- subset (stn, stn$Line==transect)
   lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
   loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule=2)$y)
   dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
-  sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
-
-  sect <- st_as_sf(sect, coords=c("loni", "lati"))
-  sf::st_crs(sect) <- 4326  ## WGS84 definition
-  require ("stars")
-  bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-  sectP <- sf::st_transform(sect, st_crs (bathyZ))
-  sectP$bottom <- stars::st_extract(bathyZ, at=sectP)$w001001.adf
-  # st_mosaic does not seem to work here -- no worth the trouble at this place
-  if (any (is.na (sectP$bottom))){
-    bCI <- read_stars("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
-    sectP$bottom <- ifelse (is.na (sectP$bottom)
-                            , stars::st_extract (bCI, at=sectP)$w001001.adf
-                            , sectP$bottom)
-  }
-  bProf <- with (sectP, data.frame (dist, bottom))
+  sect <- data.frame (loni, lati, dist) %>%
+    st_as_sf (coords=c("loni", "lati"), crs=4326) %>%
+    st_transform(crs=st_crs (bathyZ))
+  sect$bottom <- stars::st_extract(bathyZ, at=sectP)$topo*-1 ## depth now negative
+  rm (loni, lati, dist)
+  bProf <- with (sect, data.frame (dist, bottom))
   bProf
 }
 

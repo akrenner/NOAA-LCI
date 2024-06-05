@@ -73,7 +73,6 @@ PDF <- function (fN, ...){
 }
 
 
-require ("sp")  ## move to sf
 
 Seasonal <- function (month){           # now using breaks from zoop analysis -- sorry for the circularity
     month <- as.numeric (month)
@@ -514,13 +513,16 @@ save.image ("~/tmp/LCI_noaa/cache/troublesPO.RData")
 
 ## bad geographic positions: on land, too far south, .. -- move this into CTD processing scripts
 ## calc distance between actual and planned station position
-SCo <- stn[match (poSS$Match_Name, stn$Match_Name), names (stn) %in% c("Lon_decDegree"
-                                                                     , "Lat_decDegree")]
+SCo <- stn[match (poSS$Match_Name, stn$Match_Name)
+           , names (stn) %in% c("Lon_decDegree", "Lat_decDegree")]
 SCo <- as.matrix (cbind (SCo, cbind (poSS$longitude_DD, poSS$latitude_DD)))
-require ("fields")
-StDis <- sapply (1:nrow (SCo), FUN = function (i){
-    rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
-})
+require ("oce") ## reduce number of dependencies
+StDis <- geodDist (SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
+# require ("fields")  ## use oce here instead?
+# StDis <- sapply (1:nrow (SCo), FUN = function (i){
+#     rdist.earth (matrix (SCo [i,1:2], nrow = 1), matrix (SCo [i,3:4], nrow = 1), miles = FALSE)
+# })
+# The two are close but not as identical as they should be
 StDis <- ifelse (is.na (StDis), 0, StDis) # NAs are being weird, ignore them!
 StDisA <- data.frame (poSS$File.Name, StDis)[StDis > 1,]
 StDisA [order (StDisA$StDis, decreasing = TRUE),]
@@ -910,9 +912,10 @@ if (printSampleDates){
 stnB <- c (1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
-require ("sp")
+# require ("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
-LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+# LLprj <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+LLprj <- 4326
 
 
 ## bounding-box for LCI
@@ -921,16 +924,17 @@ latL <- c(58.8,60.6)
 
 
 # require ("sp"); require ("rgdal"); require ("rgeos") # for gBuffer
-require ("sp")
+# require ("sp")
 require ("sf")
 
 
 spTran <- function (x, p4){
-    # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
-#    require ("rgdal")
+  # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
+  #    require ("rgdal")
+  #  suppressWarnings (y <- spTransform (x, CRS (p4)))
   require ("sf")
-  suppressWarnings (y <- spTransform (x, CRS (p4)))
-    return (y)
+  suppressWarnings (y <- st_transform(x, p4))
+  return (y)
 }
 
 
@@ -964,117 +968,99 @@ if (any (is.na (poSS$longitude_DD) | any (is.na (poSS$latitude_DD)))){
   print (poSS [which (is.na (poSS$longitude_DD) | is.na (poSS$latitude_DD)),])
 }
 
+
+## migrate to sf from sp
 stnP <- stn
-coordinates (stnP) <- ~Lon_decDegree+Lat_decDegree
-coordinates (poSS) <- ~longitude_DD+latitude_DD
-coordinates (phyCenv) <- ~lon+lat
-coordinates (zooCenv) <- ~Lon_decDegree+Lat_decDegree
-coordinates (NPPSD2) <- ~lon+lat
-slot (stnP, "proj4string") <- LLprj
-slot (poSS, "proj4string") <- LLprj
-slot (phyCenv, "proj4string") <- LLprj
-slot (zooCenv, "proj4string") <- LLprj
-slot (NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
+stnP <- st_as_sf (stnP, coords=c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)  ## add LLprj
+poSS <- st_as_sf (poSS, coords=c("longitude_DD", "latitude_DD"), crs=LLprj, remove=FALSE)
+phyCenv <- st_as_sf (phyCenv, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
+zooCenv <- st_as_sf (zooCenv, coords= c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)
+NPPSD2 <- st_as_sf (NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
+
+# stnP <- stn
+# coordinates (stnP) <- ~Lon_decDegree+Lat_decDegree
+# coordinates (poSS) <- ~longitude_DD+latitude_DD
+# coordinates (phyCenv) <- ~lon+lat
+# coordinates (zooCenv) <- ~Lon_decDegree+Lat_decDegree
+# coordinates (NPPSD2) <- ~lon+lat
+# slot (stnP, "proj4string") <- LLprj
+# slot (poSS, "proj4string") <- LLprj
+# slot (phyCenv, "proj4string") <- LLprj
+# slot (zooCenv, "proj4string") <- LLprj
+# slot (NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
 
 
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-require ("maptools")
 require ("zip")
 tD <- tempdir()
 zip::unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
-
 require ("sf")
-coastSF <- read_sf (dsn = tD, layer = "GSHHS_f_L1") ## select f, h, i, l, c
-## clip to bounding box: larger Cook Inlet area
-b <- st_bbox (coastSF)
-b[c(1,3)] <- lonL+c(-8,11)
-b[c(2,4)] <- latL+c(-5,2)
-bP <- as (st_as_sfc (b), "Spatial") # get spatial polygon for intersect
+require ("dplyr")
 
-coastSP <- as (coastSF, "Spatial")
-# require ("stars")
-# coast <- st_intersection (coastSP, bP)
-# coast <- st_intersects (coastSP, bP)
-
-if (1){
-require ("raster")
-# require ("rgeos")
-coast <- raster::intersect(coastSP, bP)
-}else{
- #  require ("terra") # replacement for raster
- # coast <- terra::intersect(coastSP, bP)
- require ("stars")
- coast <- st_intersects (coastSP, bP)
-}
-# plot (coastC)
+coast <- read_sf (dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
+  dplyr::filter (st_is_valid (.)) %>%  # there's a bad polygon
+  st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
 unlink (tD, TRUE); rm (tD)
-rm (b, bP, coastSP, coastSF)
 
 save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
 
 
 
-slot (coast, "proj4string") <- slot (poSS, "proj4string")   ## migrate to sf
-badPO <- !is.na (over (poSS, coast)$id)                     ## migrate to sf
-PDF ("testSamplesites")
-plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
-# plot (NPPSD2, pch = 1, add = TRUE)
-plot (stnP, col = "red", pch =2, add = TRUE)
-plot (poSS, col = ifelse (badPO, "red", "yellow")
-    , pch = ifelse (badPO, 19, 1)
-    , cex = ifelse (badPO, 2, 1), add = TRUE)
-plot (zooCenv , col = "blue", pch = 3, add = TRUE)
-## plot (coast, col = "beige", add = TRUE)
-dev.off()
+if (0){ # migrate this to elsewhere -- compare stns to CTD locations -- somewhere in processing! XXX
+  badPO <- !is.na (sp::over (poSS, coast)$id)                     ## migrate to sf
+  PDF ("testSamplesites")
+  plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
+  # plot (NPPSD2, pch = 1, add = TRUE)
+  plot (stnP, col = "red", pch =2, add = TRUE)
+  plot (poSS, col = ifelse (badPO, "red", "yellow")
+        , pch = ifelse (badPO, 19, 1)
+        , cex = ifelse (badPO, 2, 1), add = TRUE)
+  plot (zooCenv , col = "blue", pch = 3, add = TRUE)
+  ## plot (coast, col = "beige", add = TRUE)
+  dev.off()
 
-PDF ("badPositions")
-## new plot -- bad positions
-plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
-for (i in (1:nrow (poSS))[order (poSS$distOff, decreasing = TRUE)]){
-  lines (c (poSS$longitude_DD [i], poSS$lonM [i])
-         , c (poSS$latitude_DD [i], poSS$latM [i])
-         , lwd = sqrt (poSS$distOff [i]) * 2
-         , col = ifelse (poSS$distOff [i] > 1, "red", "blue")
-  )
+  PDF ("badPositions")
+  ## new plot -- bad positions
+  plot (coast, col = "beige", axes = TRUE, xaxs = "i", yaxs = "i", xlim = lonL, ylim = latL)
+  for (i in (1:nrow (poSS))[order (poSS$distOff, decreasing = TRUE)]){
+    lines (c (poSS$longitude_DD [i], poSS$lonM [i])
+           , c (poSS$latitude_DD [i], poSS$latM [i])
+           , lwd = sqrt (poSS$distOff [i]) * 2
+           , col = ifelse (poSS$distOff [i] > 1, "red", "blue")
+    )
+  }
+  dev.off()
+  rm (i)
+
+  if (any (badPO)){
+    poSS <- subset (poSS, !badPO)
+  }
+  rm (badPO)
+  # still have 16 records of 3_1 in poSS. lost where??
+  # nrow (subset (poSS, Match_Name == "3_1"))
 }
-dev.off()
-rm (i)
-
-if (any (badPO)){
-  poSS <- subset (poSS, !badPO)
-}
-rm (badPO)
-# still have 16 records of 3_1 in poSS. lost where??
-# nrow (subset (poSS, Match_Name == "3_1"))
 
 
-
-
-## bathymetry from AOOS, Zimmerman
-require ("raster")
-require ("rgdal")
-if (.Platform$OS.type == "windows"){
-  bath <- raster ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}else{
-  bath <- raster ("/Users/martin/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-}
+## bathymetry from AOOS, Zimmerman/KBL
 
 require ("stars")
-## NC4 version -- gives trouble with projection?
-## st_mosaic not working for this. Try nc4 files again?
-# bathyZ <- st_mosaic (read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CI_BATHY.nc4") # Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-#                      , read_stars ("~/GISdata/LCI/bathymetry/Zimmermann/CGOA_BATHY.nc4"))
-bathyZ <- read_stars ("~/GISdata/LCI/bathymetry/Cook_bathymetry_grid/ci_bathy_grid/w001001.adf")
-bathyZ2 <- read_stars ("~/GISdata/LCI/bathymetry/CGOA_bathymetry_grid/cgoa_bathy/w001001.adf")
+## use custom bathymetry layer, merged from Kachemak Bay DEM, Zimmermann files, and GMRT
+mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+names (mar_bathy) <- "topo"
+bathyZ <- st_as_stars(depth=ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+                      , dimensions = attr(mar_bathy, "dimensions"))
+rm (mar_bathy)
+#  bathCont <- stars::st_contour(bathyZ, contour_lines=TRUE, breaks=c(0, 50, 100, 200, 500)*-1) ## seems to plot only one level
+## still need to follow through with stars and sf, implementing it downstream
 
-bathCont <- rasterToContour (bath, levels = c(50, 100, 200, 500))
-# bathCont <- st_contour (bathyZ, contour_lines=TRUE, na.rm=TRUE, breaks=c(-50, -100, -200, -500))
 
-
+## temporarily disable all bird code -- need to migrate to sf
+if (0){
+require ("sp")
 ch <- chull(coordinates (NPPSD2))
 chCoor <- coordinates (NPPSD2)[c(ch, ch[1]), ]  # closed polygon
 sp_poly <- SpatialPolygons(list(Polygons(list(Polygon(chCoor)), ID=1))
@@ -1182,16 +1168,16 @@ rm (stnB)
 ## these are specific to samples! Samples may not be independent, i.e. may contain overlapping
 ## bird observations, if sample sites within buffer distance of each other!  Do NOT use this for
 ## spatial interpolation.
-
+}
 
 ## fix up poSS to essential variables
-poSS@data <- poSS@data [,-which ((names (poSS) %in% c("lonM", "latM", "distOff")))]
+poSS <- poSS [,-which ((names (poSS) %in% c("lonM", "latM", "distOff")))]
 
 ## main data sets now:
 #  poSS, zooC (and zooCenv), birdS, NPPSD2, grd, coast, bath
 
 
-print (dim (poSS@data))
+print (dim (poSS))
 print (summary (poSS))
 ## print (summary (physOc@data))
 print (ls())
@@ -1201,9 +1187,9 @@ print (ls())
 ### save data for future processing ###
 #######################################
 
-write.csv (poSS@data, file="~/tmp/LCI_noaa/data-products/CTDcastSummaries.csv")
+write.csv (st_drop_geometry(poSS), file="~/tmp/LCI_noaa/data-products/CTDcastSummaries.csv")
 ## save CTD data for oceanographic processing. poSS = summary data -> signatureData
-save (stn, physOc, poSS, coast, bath  ## bath = Zimmerman bathymetry
+save (stn, physOc, poSS, coast, bathyZ  ## bath = Zimmerman bathymetry
       , file="~/tmp/LCI_noaa/cache/CTDcasts.RData") ## for the wall, etc. -- add coastline and bathymetry
 rm (physOc)                             # no needed any more, poSS takes it place
 
