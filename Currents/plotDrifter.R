@@ -11,8 +11,8 @@ load ("~/tmp/LCI_noaa/cache/drifterSetup.Rdata")
 
 
 ## products:
+## geoTIFF (for QGIS): grid of max speed (one for surface, one for sub-surface)
 ## interactive map of select drifters
-## interactive map of drifter max speed (one for surface, one of sub-surface)
 
 
 

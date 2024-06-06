@@ -4,15 +4,22 @@ rm (list=ls())
 # renv::restore()
 print (startTime <- Sys.time())
 
-## tasks:
-## animate both 2021 drifters on same day
-## fetch all off-shore drifters and animate through seasons (by jday -- or monthly plots)
 
+
+## tasks:
+## fetch all drifter data from PacificGyre.com
+## also add off-shore drifters?
+## clean data: identify positions over land or transported by boat
+## produce two versions: raw positions and interpolated values for animation
+
+# and animate through seasons (by jday -- or monthly plots)
 ## get OpenDrift to work on jupyter notebook -- check-point raw book in here.
 
 
 ## Define the whole drifter import and data processing as a function (it's slow).
 ## On re-runs, only reprocess new data
+
+## animate both 2021 drifters on same day
 
 
 
@@ -50,9 +57,6 @@ require ('RColorBrewer')
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
 require ("stars")
 require ('oce')
-# require ("ggplot2")
-# require ("ggspatial")  ## for spatial points in ggplot
-# require ("gganimate")  ## seems to be a convenient package for animation
 require ("readr") ## for read_csv
 # require ("rnaturalearth")
 # require ('tidyverse')
@@ -172,7 +176,7 @@ seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
 
 ## migrate from .csv file to .zip for direct download  XXX
 
-## build up API-url
+## build up API-url to download drifters from PacificGyre.com
 key="6A6BEAD8-4961-4FE5-863A-721A16E54C1C"
 startDate="2010-01-01%2000:00"
 endDate="2023-12-31%2023:59"
@@ -181,6 +185,10 @@ endDate="2023-12-31"
 FieldList="DeviceName,DeviceDateTime,CommId,Latitude,Longitude"  ## make sure all fields are covered by all devices
 driftF <- paste0 (driftP, "drifter-data_", endDate, ".zip")
 updateFN <- gsub ("2023-12-31", "latest", driftF)
+dM <- ifelse (version$platform=="unix", "w", "wd")
+
+
+## could do annual downloads?
 
 if (!file.exists(driftF)){
   urlC <- paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
@@ -188,7 +196,7 @@ if (!file.exists(driftF)){
                   "&endDate=", endDate, "&fileFormat=csv&compression=zip&download=Yes"
   )
   options(timeout=300)
-  download.file(url=urlC, destfile=driftF); rm (urlC)
+  download.file(url=urlC, destfile=driftF, mode=dM); rm (urlC)
 }
 ## update to the latest data
 if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, units="days") < 7)){
@@ -199,7 +207,7 @@ if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, 
                              "&FieldList=", FieldList,
                              "&startDate=", as.character (as.Date(endDate)+1), "%2000:00",
                              "&fileFormat=csv&compression=zip&download=Yes")## endDate defaults to now
-                 , destfile=updateFN)
+                 , destfile=updateFN, mode=dM)
 }
 rm (key, startDate, endDate, FieldList)
 
@@ -217,10 +225,8 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
   filter()
 rm (readC, driftF, updateFN)
 
+
 ## remove duplicates (about 80 in contiguous download)
-# ddrift <- duplicated (drift [,which (names (drift) %in% c("DeviceName", "DeviceDateTime"
-#                                          # , "Latitude", "Longitude"
-#                                        ) )])
 drift <- drift %>%
   filter (!duplicated (drift [,which (names (drift) %in%
                                         c("DeviceName", "DeviceDateTime") )])) %>%
@@ -245,17 +251,19 @@ if (0) {
 ## add additional information to drifter
 ## include speed between positions? XXX
 ## interpolated positions = potentially dangerous (on land)? But, is a more accurate position for the speed
-dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
-                               DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
-                               Latitude=Latitude[-1]-diff (Latitude),
-                               Longitude=Longitude[-1]-diff (Longitude),
-                               dT_min=diff (DeviceDateTime) %>% as.numeric()/60,
-                               distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
-)) %>%
-  mutate (speed_ms=distance_m/(dT_min*60)) %>%
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-  st_transform(projection)
-## to replace drift, would still need direction of shift (velocity)
+
+# ## new dataframe for interpolated positions -- move down?
+# dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
+#                                DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
+#                                Latitude=Latitude[-1]-diff (Latitude),
+#                                Longitude=Longitude[-1]-diff (Longitude),
+#                                dT_min=diff (DeviceDateTime) %>% as.numeric()/60,
+#                                distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
+# )) %>%
+#   mutate (speed_ms=distance_m/(dT_min*60)) %>%
+#   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+#   st_transform(projection)
+# ## to replace drift, would still need direction of shift (velocity)
 
 drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
@@ -650,7 +658,7 @@ rm (newDeploy, x, depIdx, i)
 ## interpolate within bouts
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
-for (i in seq_along (levels (drift$deploy))){               ## very slow! parallelize? cache?; use dplyr split/group
+for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize? cache?; use dplyr split/group
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
     if (interP > 0){
@@ -962,9 +970,15 @@ drift <- drift %>%
   dplyr::filter()
 
 ## need to set these after final drifter selection (days_in_water already per deploy)
-drift$DeviceName <- factor (drift$DeviceName)
-drift$deploy <- factor (drift$deploy)
-drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
+drift <- drift %>%
+  mutate (DeviceName=factor (DeviceName)) %>%
+  mutate (deploy = factor (deploy)) %>%
+  mutate (col=brewer.pal (8, "Set2")[drift$DeviceName]) %>% # 8 is max of Set2
+  mutate (year=as.numeric (format (DeviceDateTime, "%Y"))) %>%
+  dplyr::filter()
+# drift$DeviceName <- factor (drift$DeviceName)
+# drift$deploy <- factor (drift$deploy)
+# drift$col <- brewer.pal (8, "Set2")[drift$DeviceName] # 8 is max of Set2
 # as.numeric (drift$DeviceDateTime) - min (as.numeric (drift$DeviceDateTime))/3600 # in hrs
 
 
