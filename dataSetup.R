@@ -929,9 +929,6 @@ require ("sf")
 
 
 spTran <- function (x, p4){
-  # proj4string (x) <- CRS ("+proj=longlat +datum=WGS84 +ellps=WGS84")
-  #    require ("rgdal")
-  #  suppressWarnings (y <- spTransform (x, CRS (p4)))
   require ("sf")
   suppressWarnings (y <- st_transform(x, p4))
   return (y)
@@ -1123,6 +1120,7 @@ bDist <- function (stnL){
 stnT <- subset (stnP, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
 stnT <- subset (stnP, stnP$Plankton) ## better subset here from stnT? XX
 
+## XXX sf replacement for gBuffer! 
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
 ## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
 rm (stnT)

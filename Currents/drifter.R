@@ -4,7 +4,8 @@ rm (list=ls())
 # renv::restore()
 print (startTime <- Sys.time())
 
-
+test <- TRUE
+test <- FALSE
 
 ## tasks:
 ## fetch all drifter data from PacificGyre.com
@@ -25,7 +26,7 @@ print (startTime <- Sys.time())
 
 ## set interpolation [min] for animation
 interP <- 10 # interpolation interval (min)
-interP <- 0  # no interepolation
+# interP <- 0  # no interepolation
 
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
@@ -558,12 +559,12 @@ pointsID <- drift_sf %>%
   st_join (A) %>%
   as.data.frame() %>%
   group_by (ID) %>%
-  summarize (avg_speed=quantile (speed_ms, 0.5))
+  summarize (mapped_speed=quantile (speed_ms, 0.5))
 A <- left_join(A, pointsID, by="ID")
-# plot (A ["avg_speed"])
+# plot (A ["mapped_speed"])
 rm (pointsID, pgon)
 
-## extract avg_speed from A
+## extract mapped_speed from A
 ## need to subset to drifters within study area
 ### no longer needed if useing seaAEx?
 # drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
@@ -571,12 +572,12 @@ rm (pointsID, pgon)
 
 sdTh <- 3
 
-drift_sf$avg_speed <- st_rasterize (A ["avg_speed"]) %>%
+drift_sf$mapped_speed <- st_rasterize (A ["mapped_speed"]) %>%
   st_extract (drift_sf) %>%
   st_drop_geometry() %>%
-  pull (avg_speed)
+  pull (mapped_speed)
 ## flag records more than 2 SD from predicted grid speed (only above, not below)
-rSp <- with (drift_sf, speed_ms-avg_speed)
+rSp <- with (drift_sf, speed_ms-mapped_speed)
 
 pdf (paste0(outpath, "speedResiduals.pdf"))
 hist (rSp, breaks=500, xlab="speed residual [m/s]", main="")
@@ -586,7 +587,7 @@ axis (3, tick=FALSE, at=sdTh*sd (rSp, na.rm=TRUE), labels=paste (sdTh,"SD"))
 drift_sf %>%
   filter (speed_ms < 20) %>%
   st_drop_geometry() %>%
-  plot (speed_ms ~ speed_ms-avg_speed, data=.)  ## residual vs predicted
+  plot (speed_ms ~ speed_ms-mapped_speed, data=.)  ## residual vs predicted
 abline (a=0, b=1)
 dev.off()
 
@@ -594,7 +595,7 @@ png (paste0 (outpath, "Speed-Aggregate.png"), width=resW, height=resH)
 ## map of A -- speed aggregate
 require ("viridisLite")
 plot (seaA, col="white", border="white")
-A ["avg_speed"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100))
+A ["mapped_speed"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100))
 plot (worldM, add=TRUE, col="gray")
 dev.off()
 
@@ -606,22 +607,37 @@ rm (grid_spacing, A, rSp, sdTh)
 ## merge drift_sf with drift
 
 if (1){ ## revert to drift or stay with drift_sf (which is restricted to study area)
-  drift <- cbind (drift, drift_sf [match (drift$IDn, drift_sf$IDn),
-                                   which (!names (drift_sf) %in% names (drift))])
+  ds <- st_drop_geometry(drift_sf)
+  drift <- cbind (drift, ds [match (drift$IDn, ds$IDn)
+                             , which (!names (ds) %in% names (drift))])
+  rm (ds)
 }else{
-  drift_sf <- cbind (drift_sf, drift [match (drift_sf$IDn, drift$IDn),
-                                      which (!names (drift)%in%names (drift_sf))])
+  dr <- st_drop_geometry(drift)
+  drift_sf <- cbind (drift_sf, dr [match (drift_sf$IDn, dr$IDn),
+                                      which (!names (dr)%in%names (drift_sf))])
+  rm (dr)
 }
+
+
+
+## filter out unrealistic speeds and records too close to shore/on land? XXX
+driftX <- drift %>%
+  # st_drop_geometry() %>%  ## drop spatial part
+  #  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
+  filter ((badSpeed != TRUE) | (is.na (badSpeed)) ) %>%
+  filter (topo < 1) %>%         ## to make sure none are on land  XXX
+  #  filter (LandDistance_m > 50) %>%
+  filter()
+## retains 21k out of 28 k
+nrow (drift)
+nrow (driftX)
+
+
+
+
 
 save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
-
-
-## EOF for now
-
-
-
-
 
 
 
@@ -650,14 +666,67 @@ drift$deploy <- factor (depIdx)
 # head (summary (drift$deploy))
 rm (newDeploy, x, depIdx, i)
 
+
+
+if (test){
+  drift <- subset (drift, deploy %in% sample (levels (drift$deploy), 5))
+  drift$deploy <- factor (drift$deploy)  ## reset levels
+}
+
+
 # plot (Latitude~Longitude, drift)
 # summary (drift$dT_min)
 # for (i in 1:5) alarm()
 
 
+# ----------------------------------------------------------------------------
 ## interpolate within bouts
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
+
+if (0){
+  require ("parallel")
+  require ('data.table')
+  nCores <- detectCores()-1
+  cl <- makeCluster(nCores, type="PSOCK")
+  clusterExport(cl, varlist=c("drift", "interP"))
+  ## not a valid cluster?
+  iDF <- parLapply (seq_along(levels (drift$deploy)), fun=function (i){
+    df <- subset (drift, deploy == levels (drift$deploy)[i])
+    if (nrow (df)>1){
+      if (interP > 0){
+        newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
+                                      , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
+                                                                  , to=max (DeviceDateTime)
+                                                                  , by=paste (interP, "min"))
+        ))
+        newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
+        newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
+        newDF$dT_min <- interP
+        ## fill in the rest -- interpolate if numeric, find nearest if categorical
+        newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
+        newDF$speed_ms <- newDF$distance_m / (newDF$dT_min*60) ## convention to use m/s, not knots
+        newDF$topo <- df$topo [1]
+        newDF$LandDistance_m <- df$LandDistance_m [1]
+        # newDF$onLand
+        newDF$deployDepth <- df$deployDepth [1]
+        newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
+        newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
+        newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
+        # newDF$badSpeed
+      }else{
+        newDF <- df # %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
+      }
+      ## interpolate all other variables; closest for categoricals
+      newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+      ## trim newDF XXXX  -- cut bad stuff front and back
+      ## at the very least: first and last
+      newDF <- newDF [2:(nrow (newDF)-1),]
+    }}) %>%
+    rbindlist()
+  stopCluster(cl); rm (cl, nCores)
+  # iDF <- do.call ("rbind", iDFL)
+}else{
 for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize? cache?; use dplyr split/group
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
@@ -671,17 +740,24 @@ for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize?
       newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
       newDF$dT_min <- interP
       ## fill in the rest -- interpolate if numeric, find nearest if categorical
-
+      newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
+      newDF$speed_ms <- newDF$distance_m / (newDF$dT_min*60) ## convention to use m/s, not knots
+      newDF$topo <- df$topo [1]
+      newDF$LandDistance_m <- df$LandDistance_m [1]
+      # newDF$onLand
+      newDF$deployDepth <- df$deployDepth [1]
+      newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
+      newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
+      newDF$mapped_speed <- df$mapped_speed [1]
+      # newDF$badSpeed
     }else{
-      newDF <- df %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
+      newDF <- df # %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
     }
+    ## interpolate all other variables; closest for categoricals
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
-    newDF$dist_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-    newDF$speed_ms <- newDF$dist_m / (newDF$dT_min*60) ## convention to use m/s, not knots
     ## trim newDF XXXX  -- cut bad stuff front and back
     ## at the very least: first and last
     newDF <- newDF [2:(nrow (newDF)-1),]
-
     if (exists ("iDF")){
       iDF <- rbind (iDF, newDF)
     }else{
@@ -689,32 +765,19 @@ for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize?
     }
   }
 }
+}
 
 
-rm (df, i, newDF, interP)
-iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
-
-
-## filter out unrealistic speeds and records too close to shore/on land? XXX
-driftX <- drift %>%
-  # st_drop_geometry() %>%  ## drop spatial part
-  #  filter (speed_ms < speedTH) %>%  ## not much effect here? still need to filter again after interpolation?
-  filter ((badSpeed != TRUE) | (is.na (badSpeed)) ) %>%
-  filter (topo < 1) %>%         ## to make sure none are on land  XXX
-  #  filter (LandDistance_m > 50) %>%
-  filter()
-## retains 21k out of 28 k
-nrow (drift)
-nrow (driftX)
-
-
-
+# iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
 
 ## project positions -- don't move earlier to allow interpolations
-drift <- iDF %>%
-  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-  st_transform(projection)
-rm (iDF)
+if (1){   #interP > 0){
+  drift <- iDF %>%
+    filter (!is.na (Longitude)) %>%  ## not sure where they came from, but can't have it XXX
+    st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+    st_transform(projection)
+}
+rm (df, i, newDF, interP, iDF)
 
 
 

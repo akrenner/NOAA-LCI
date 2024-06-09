@@ -17,7 +17,7 @@ keywords: NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrient
 NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been 
 conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 2012. This document 
 is based on previous versions compiled by Kim Schuster and James Schloemer. Please direct question to 
-Martin Renner martin.renner@noaa.gov or Kris Holderied  kris.holderied@noaa.gov.
+Martin Renner martin.renner@noaa.gov.
 
 "Printed on `r format(Sys.time(), '%d %B, %Y')`"
 
@@ -32,10 +32,10 @@ Prior to sampling, the CTD status must be checked to ensure that there is suffic
 MMDDYY=090123
 HHMMSS=090000
 ```
-To change the date, the time command has to be issued as well. 
+To change the date, the time command has to be issued as well, and visa-versa. We use LOCAL TIME, so it is important to adjust times to daylight-savings-time/standard time. 
 - vbatt: battery must be greater than 12 V. If lower, change batteries.
 - vlith: replace lithium battery if vlith is < 7 (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).
-- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate!!! 
+- casts: CTD stores up to 299 casts. It is advisable to clear the CTD memory after each survey once it has been confirmed that all data has been successfully downloaded. To clear CTD memory, click the 'Init Log' botton. At the very latest, memory should be cleared when approaching 200 casts in memory. 
 - mode: MUST be 'profile'. 
 Screenshot of Seaterm v1.59 ![Alt](manual/SeaTerm.PNG "Seaterm")
 Document CTD time, date, and voltages in the FileMaker database (layout: CTDstatusLog). 
@@ -45,7 +45,7 @@ Charge iPad the night before (USB-C charger in blue bag). Also check that there'
 
 FileMaker database: sync to iPad. Write-down last ctd-cast number. Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@icloud.com. Then open Mail.app on iPad, download database, and open directly in FileMaker (replacing old copy). -- last updated on 2023-08-30, MR.
 
-### staging gear Have the following items handy to bring to the boat:
+### Staging gear Have the following items handy to bring to the boat:
 - note book
 - pencils
 - CTD
@@ -72,7 +72,7 @@ FileMaker database: sync to iPad. Write-down last ctd-cast number. Sync-ing proc
 
 ## Monthly and quarterly sampling
 
-Monthly samplinng covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count at each station. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton (see below). Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water sample at T6-3
+Monthly sampling covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count at each station. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton (see below). Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water sample at T6-3
 
 ### CTD
 Verbalize turning on the CTD at the beginning of each cast. Lower the instrument to about 3m, raise it up to the surface (leaving the water intake port well submerged) and let it soak for at least 1 minute (use stop-watch). The lower it to about 5 m above the sounded depth (avoid touching the bottom). On retrieving the instrument, verbalize switching it off.
@@ -81,7 +81,7 @@ Verbalize turning on the CTD at the beginning of each cast. Lower the instrument
 Niskin bottle water samples as well as bucket surface water samples are taken at pre-determined stations. XXX details?
 
 ### Phytoplankton
-Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the ouside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical. Label bottle with date, Transect and station, and amount of water filtered (usually 40 l).
+Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the outside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical. Label bottle with date, Transect and station, and amount of water filtered (usually 40 l).
 
 ### Notes
 Take notes on paper, as before -- at a minimum, date, time, transect, and station numbers; as back-up. 
