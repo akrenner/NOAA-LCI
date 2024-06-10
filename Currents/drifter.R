@@ -187,7 +187,7 @@ endDate="2023-12-31"
 FieldList="DeviceName,DeviceDateTime,CommId,Latitude,Longitude"  ## make sure all fields are covered by all devices
 driftF <- paste0 (driftP, "drifter-data_", endDate, ".zip")
 updateFN <- gsub ("2023-12-31", "latest", driftF)
-dM <- ifelse (version$platform=="unix", "w", "wd")
+dM <- ifelse (.Platform$OS.type=="unix", "w", "wd")
 
 
 ## could do annual downloads?
@@ -211,7 +211,7 @@ if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, 
                              "&fileFormat=csv&compression=zip&download=Yes")## endDate defaults to now
                  , destfile=updateFN, mode=dM)
 }
-rm (key, startDate, endDate, FieldList)
+rm (key, startDate, endDate, FieldList, dM)
 
 
 ## combine archive and latest drifter download
@@ -383,7 +383,7 @@ if (length (yL) > 0){
   ## find closest date for each moment
   write.csv (tide, file="~/tmp/LCI_noaa/cache/drifter/tideCache.csv", row.names=FALSE)
 }
-rm (yL)
+rm (yL, station)
 
 ## find better solution to the nearest point problem? -- divide and conquer
 ## https://www.statology.org/r-find-closest-value/
@@ -655,7 +655,7 @@ if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")}
 drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 
 ## define new deployment XXXX  review!!! XXXX
-newDeploy <- drift$dT_min > 120 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 2h
+newDeploy <- drift$dT_min > 240 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 240 min = 4 h
 # newDeploy <- drift$dT_min > 60*14 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments   14 h (840 min)
 ## mark new deployments
 x <- 0; depIdx <- character(nrow (drift)) # declare variables
@@ -688,52 +688,9 @@ if (test){
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
 
-if (1){
-  require ("parallel")
-  require ('data.table')
-  nCores <- detectCores()-1
-  cl <- makeCluster(nCores, type="PSOCK")
-  clusterExport(cl, varlist=c("drift", "interP"))
-  clusterEvalQ(cl, require ("dplyr"))
-
-  ## not a valid cluster?
-  iDF <- parLapply (cl, seq_along(levels (drift$deploy)), fun=function (i){
-    df <- subset (drift, deploy == levels (drift$deploy)[i])
-    if (nrow (df)>1){
-      if (interP > 0){
-        newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
-                                      , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
-                                                                  , to=max (DeviceDateTime)
-                                                                  , by=paste (interP, "min"))
-        ))
-        newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
-        newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
-        newDF$dT_min <- interP
-        ## fill in the rest -- interpolate if numeric, find nearest if categorical
-        newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-        newDF$speed_ms <- newDF$distance_m / (newDF$dT_min*60) ## convention to use m/s, not knots
-        newDF$topo <- df$topo [1]
-        newDF$LandDistance_m <- df$LandDistance_m [1]
-        # newDF$onLand
-        newDF$deployDepth <- df$deployDepth [1]
-        newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
-        newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
-        newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
-        # newDF$badSpeed
-      }else{
-        newDF <- df # %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
-      }
-      ## interpolate all other variables; closest for categoricals
-      newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
-      ## trim newDF XXXX  -- cut bad stuff front and back
-      ## at the very least: first and last
-      newDF <- newDF [2:(nrow (newDF)-1),]
-    }}) %>%
-    rbindlist()
-  stopCluster(cl); rm (cl, nCores)
-  # iDF <- do.call ("rbind", iDFL)
-}else{
-for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize? cache?; use dplyr split/group
+dInt <- function (i){
+  require ("sf")
+  require ("dplyr")
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)>1){
     if (interP > 0){
@@ -754,7 +711,7 @@ for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize?
       newDF$deployDepth <- df$deployDepth [1]
       newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
       newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
-      newDF$mapped_speed <- df$mapped_speed [1]
+      newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
       # newDF$badSpeed
     }else{
       newDF <- df # %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
@@ -764,14 +721,31 @@ for (i in seq_along (levels (drift$deploy))){               ## slow! paralelize?
     ## trim newDF XXXX  -- cut bad stuff front and back
     ## at the very least: first and last
     newDF <- newDF [2:(nrow (newDF)-1),]
-    if (exists ("iDF")){
-      iDF <- rbind (iDF, newDF)
-    }else{
-      iDF <- newDF
-    }
+  }}
+
+if (1){
+  require ("parallel")
+  require ('data.table')
+  nCores <- detectCores()-1
+
+  if (.Platform$OS.type=="unix"){
+    iDF <- mclapply(seq_along (levels (drift$deploy)), FUN=dInt, mc.cores=nCores) %>%
+      rbindlist()
+  }else{
+    cl <- makeCluster(nCores, type="PSOCK")
+    clusterExport(cl, varlist=c("drift", "interP", "dInt"))
+    clusterEvalQ(cl, require ("dplyr"))
+    iDF <- parLapply (cl, seq_along (levels (drift$deploy)), fun=dInt) %>%
+      rbindlist()
+    stopCluster(cl); rm (cl)
+  }
+  rm (nCores)
+}else{
+  for (i in seq_along (levels (drift$deploy))){               ## serial=slow! cache?; use dplyr split/group
+    dInt (i)
   }
 }
-}
+rm (dInt)
 
 
 # iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
@@ -1153,10 +1127,11 @@ plotBG <- function(downsample=0, dr=drift){
 
 
 
+cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
+rm (startTime)
 save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
 
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
