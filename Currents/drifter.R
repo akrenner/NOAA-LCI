@@ -154,6 +154,7 @@ worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>%
 worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
   st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) %>%   ## or could use bbox above
   sf::st_transform(projection)
+rm (worldP)
 ## somehow, polygon 2245 is not valid and cannot be made valid
 ## it's at Lon:43.83, Lat:-69.75 -- ideally fixed in gshhs source!
 # summary (st_is_valid(st_make_valid(worldM)))
@@ -224,7 +225,7 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
   arrange (DeviceName, DeviceDateTime) %>%
   mutate (IDn=1:nrow (.)) %>%
   filter()
-rm (readC, driftF, updateFN)
+rm (readC, driftF, updateFN, driftP)
 
 
 ## remove duplicates (about 80 in contiguous download)
@@ -292,7 +293,8 @@ drift$onLand <- st_intersects(drift, worldM) %>% as.numeric () ## not pretty, no
 drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
 drift$year <- format (drift$DeviceDateTime, "%Y") |> factor()  ## above should be piped and mapped XXX
 
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")
+
+if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")}
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
@@ -358,7 +360,7 @@ if (file.exists("~/tmp/LCI_noaa/cache/drifter/tideCache.csv")){
   tide$Date.Time <- tide$Date.Time |> as.POSIXct(tz="GMT")
   ## fetch only the missing ones
   nL <- tide$Date.Time |> format ("%Y") |> factor () |> levels()
-  yL <- yL [-which (yL %in% nL)]
+  yL <- yL [-which (yL %in% nL)]; rm (nL)
 }
 
 if (length (yL) > 0){
@@ -377,10 +379,11 @@ if (length (yL) > 0){
       tide <- rbind (tide, tideT)
     }
   }
-  rm (tideT, station, end_date, begin_date, url, yL, nL, i)
+  rm (tideT, station, end_date, begin_date, url, i)
   ## find closest date for each moment
   write.csv (tide, file="~/tmp/LCI_noaa/cache/drifter/tideCache.csv", row.names=FALSE)
 }
+rm (yL)
 
 ## find better solution to the nearest point problem? -- divide and conquer
 ## https://www.statology.org/r-find-closest-value/
@@ -463,7 +466,7 @@ if (0){
       tSlack <- tide_slack_data(tu)  ## must parallelize
     }
   })
-  # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata")  ## checkpoint for safety
+  if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata")}  ## checkpoint for safety
   ##  rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
   ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
@@ -487,7 +490,7 @@ if (0){
   rm (tu, ttbl, tSlack)
 }
 ## move tide functions into function script, load that
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")
+if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
 #  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
@@ -524,7 +527,7 @@ drift_sf <- drift %>%
   filter()
 # nrow (drift_sf)
 
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")}
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
 
 
@@ -617,6 +620,7 @@ if (1){ ## revert to drift or stay with drift_sf (which is restricted to study a
                                       which (!names (dr)%in%names (drift_sf))])
   rm (dr)
 }
+rm (drift_sf)
 
 
 
@@ -631,12 +635,12 @@ driftX <- drift %>%
 ## retains 21k out of 28 k
 nrow (drift)
 nrow (driftX)
+# drift <- driftX
+rm (driftX)
 
 
 
-
-
-save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
+if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")}
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
 
@@ -684,14 +688,16 @@ if (test){
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
 
-if (0){
+if (1){
   require ("parallel")
   require ('data.table')
   nCores <- detectCores()-1
   cl <- makeCluster(nCores, type="PSOCK")
   clusterExport(cl, varlist=c("drift", "interP"))
+  clusterEvalQ(cl, require ("dplyr"))
+
   ## not a valid cluster?
-  iDF <- parLapply (seq_along(levels (drift$deploy)), fun=function (i){
+  iDF <- parLapply (cl, seq_along(levels (drift$deploy)), fun=function (i){
     df <- subset (drift, deploy == levels (drift$deploy)[i])
     if (nrow (df)>1){
       if (interP > 0){
@@ -777,7 +783,7 @@ if (1){   #interP > 0){
     st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
     st_transform(projection)
 }
-rm (df, i, newDF, interP, iDF)
+rm (interP, iDF)
 
 
 
@@ -839,8 +845,7 @@ if (0){
 
 
 
-
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata")
+if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata")}
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
