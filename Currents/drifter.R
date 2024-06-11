@@ -683,10 +683,13 @@ if (test){
 # for (i in 1:5) alarm()
 
 
+
+
 # ----------------------------------------------------------------------------
 ## interpolate within bouts
-if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
+## trim bad speeds at start and end
 
+if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 
 dInt <- function (i){
   require ("sf")
@@ -718,9 +721,49 @@ dInt <- function (i){
     }
     ## interpolate all other variables; closest for categoricals
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+
+
+
     ## trim newDF XXXX  -- cut bad stuff front and back
     ## at the very least: first and last
-    newDF <- newDF [2:(nrow (newDF)-1),]
+    ## from start to 1/2 nrow: trim 0 to last bad
+    ## from 1/2 nrow to end: trim first bad to nrow
+
+    #      plot (newDF$speed_ms, type="l")
+
+    resx <- with (newDF, speed_ms - mapped_speed)
+    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 4* sd (newDF$speed_ms, na.rm=TRUE)
+    bad <- c (which (resx > 4* sd (resx, na.rm=TRUE)),
+              # which (newDF$mapped_speed < 0.009),
+              which (newDF$mapped_speed > sdTH),
+              which (newDF$speed_ms > speedTH)) %>%
+      unique()
+    suppressWarnings({trimb <- c (max (subset (bad, bad < (nrow (newDF)/2)))+1,
+                                  min (subset (bad, bad > (nrow (newDF)/2)))-1)
+    })
+    ## in case there are no bad data points
+    trimb <- ifelse (trimb == -Inf, 1, trimb)
+    trimb <- ifelse (trimb == Inf, nrow (newDF), trimb)
+
+    #    which (resx > newDF$mapped_speed + 1*sd (resx))
+    #    which (resx > sd (resx, na.rm=TRUE))
+
+    newDF$trimBoat <- TRUE
+    newDF$trimBoat [seq (trimb[1], trimb[2])] <- FALSE
+
+    if (1){
+      png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png"))
+      plot (newDF$speed_ms, col=ifelse (newDF$trimBoat, "red", "black"), pch=19)
+      abline (h=sdTH, lty="dashed")
+      abline (v=trimb, lty="dotted")
+      dev.off()
+    }
+    rm (trimb, sdTH, bad, resx)
+
+    ## reset time in the water
+    # newDF <- newDF [seq (trimb[1], trimb[2]),]  ## trim the ends off
+    # newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+
   }}
 
 if (1){
@@ -733,7 +776,7 @@ if (1){
       rbindlist()
   }else{
     cl <- makeCluster(nCores, type="PSOCK")
-    clusterExport(cl, varlist=c("drift", "interP", "dInt"))
+    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH"))
     clusterEvalQ(cl, require ("dplyr"))
     iDF <- parLapply (cl, seq_along (levels (drift$deploy)), fun=dInt) %>%
       rbindlist()
@@ -750,23 +793,13 @@ rm (dInt)
 
 # iDF <- subset (iDF, speed_ms < speedTH)  ## apply again --- any way to get pre/post deploy more thorough?
 
-## project positions -- don't move earlier to allow interpolations
-if (1){   #interP > 0){
-  drift <- iDF %>%
-    filter (!is.na (Longitude)) %>%  ## not sure where they came from, but can't have it XXX
-    st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-    st_transform(projection)
-}
+## project positions -- don't move earlier to allow interpolations  ???
+drift <- iDF %>%
+  filter (!is.na (Longitude)) %>%  ## not sure where they came from, but can't have it XXX
+  st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection)
 rm (interP, iDF)
 
-
-
-# ### -- old -- did this already
-# # drift$distance_m <- c (0, d <- st_distance (drift, by_element=TRUE))
-# ## ice wave rider and MicroStar are surface devices
-# drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
-# drift$year <- format (drift$DeviceDateTime, "%Y") |> as.numeric()  ## above should be piped and mapped XXX
-# drift$topo <- st_extract(mar_bathy, at=drift)$topo
 
 
 
@@ -816,162 +849,9 @@ if (0){
 }
 
 
-
-
-
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata")}
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifter0.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-
-
-
-
-
-
-
-
-
-
-
-if (0){
-  if (0){  ## fast IDW or gstat?
-    ## fast IDW
-    # https://geobrinkmann.com/post/iwd/
-    ## not accelerated under windows -- worth the installation trouble?
-    ## should use kriging for data-product output
-    ## ideally, grid would be 95%-ile -- revert to gstat?
-
-    # shoreline -- assume and force shoreline speed to be 0  -- only needed for interpolation, not for averaging
-    # add shoreline to drifter speeds
-    if (0){
-      drift_sf <- worldM %>%
-        st_sf () %>%
-        st_simplify(dTolerance=0.01) %>%  ## in meters
-        st_cast ("MULTIPOLYGON") %>%
-        sf::st_coordinates() %>%
-        as.data.frame() %>%
-        st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
-        st_transform(projection) %>%
-        mutate (speed_ms = 0) %>%
-        mutate (IDn = -1) %>%
-        select (speed_ms, IDn) %>%
-        rbind (drift_sf)
-    }
-
-
-    p <- require ('GVI')  ## for sf_to_rast
-    if (!p){
-      require ("remotes")
-      remotes::install_github("STBrinkmann/GVI")
-    }; rm (p)
-
-    # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap0.Rdata")
-    require ('parallel')
-    nCores <- detectCores()-1
-
-    speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
-                          , aoi=st_sf (seaA)
-                          , max_distance=10e3
-                          , raster_res=5e3
-                          , beta=3
-                          , progress=TRUE
-                          , cores=nCores  # no effect on windows? uses openMP?
-    ) %>%
-      st_as_stars () %>%  ## terra raster to stars
-      st_warp(crs=projection)
-  }else{
-    ## consider using gstat to specify aggregating function = max
-    require ("gstat")
-    ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
-    ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
-    require ("starsExtra")
-    grd <- starsExtra::make_grid (drift_sf, res=20e3)  # 1 km grid -- takes a while
-
-    if (0){ ## serial processing?
-      speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
-                            # , nmax=10e3
-                            ,
-      )
-      ## clip to seaA
-    }else{
-      ## parallel interpolation
-      ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
-      vg <- variogram (speed_ms~1, drift_sf)
-      mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
-      # plot (vg, model=mdl)
-
-      require ("parallel")
-      nCores <- detectCores ()-1
-      parts <- split (x=1:length (grd), f=1:nCores)
-
-      if (.Platform$OS.type=="unix"){
-        speedP <- mclapply(1:nCores, FUN=function (x){
-          # gstat::idw (speed_ms~1, drift_sf, newdata=grd [parts[[x]],], idp=2.0, nmax=10e3)  ## requires sp class?
-          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-        })
-      }else{
-        cl <- makeCluster (nCores)
-        clusterExport(cl=cl, varlist = c("grd", "drift_sf"), envir = .GlobalEnv)
-        clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
-        pX <- parLapply(cl=cl, X=1:nCores, FUN=function (x){
-          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-        })
-        stopCluster (cl)
-      }
-      ## rbind grid--stars version of maptools
-    }
-  }
-}
-
-
-
-if (0){  ## redundant -- more kriging??
-  ## variogram = excruciatingly slow -- subsample input?!  Parallelize
-  v_mod_OK <- autofitVariogram(speed_ms~1, as(drift_sf, "Spatial"))$var_model
-  # plot (v_mod_OK)
-
-  # Create grid
-  grid <- st_as_stars(st_bbox(st_buffer(drift_sf, 0.001)))  ## set resolution ?
-
-  # Interpolation model
-  g = gstat(formula = speed_ms~1, model = v_mod_OK$var_model, data = drift_sf)
-  # plot (v_mod_OK, g) ## parameter cutoff needs to be specified
-
-
-  if(0){
-    require ('parallel')
-    nCores <- detectCores()-1
-    cl <- makeCluster (nCores)
-    parts <- split (x=1:length (grid), f=1:nCores)
-    clusterExport (cl=cl, varlist=c("drift_sf", "grid", "v_mod_OK", "g"), envir = .GlobalEnv)
-    clusterEvalQ(cl = cl, expr = c(library('sf'), library('gstat')))
-    parallelX <- parLapply(cl = cl, X = 1:no_cores, fun = function(x){
-      krige(formula=log(zinc)~1, locations = drift_sf, newdata=grid[parts[[x]],], model = g)
-    })
-    stopCluster(cl)
-  }
-
-  # Interpolate
-  z = predict(g, grid)  ## slow -- go back to parallel version?
-  ## just do an IDW from the start -- for simplicity!
-
-  # Plot
-  plot(z, col = hcl.colors(12, "Spectral"), reset = FALSE)
-  plot(st_geometry(drift_sf), add = TRUE)
-  # text(st_coordinates(kerpensample_sf), as.character(round(kerpensample_sf$Z, 1)), pos = 3, add = TRUE)
-
-  # grd <- drift %>%
-  #   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-  #     st_bbox () |>
-  #   st_as_stars (dx=1000) |>
-  #   st_crop (drift)
-  #
-  # # https://r-spatial.org/book/12-Interpolation.html
-  # require ('gstat')
-  # v <- variogram (speed_ms~1, drift)
-  save.image("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
-  # load ("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
-}
 
 
 
@@ -1072,58 +952,6 @@ add.alpha <- function(col, alpha=1){
 }
 
 
-## -----------------------------------------------------------------------------
-## revert to R base-graphics -- keep it simple and flexible
-
-
-plotBG <- function(downsample=0, dr=drift){
-  ## start background details for plot
-  nbox <- st_bbox (dr)
-  pA <- projection == st_crs (4326)
-
-  ## static plot of drifter tracks, colored by deployment
-  par(mar=c(3,3,4,1))
-  plot (st_geometry (worldM), col="beige", border=NA
-        , xlim=nbox[c(1,3)], ylim=nbox[c(2,4)]
-        , axes=pA
-        , main="")
-  # rm (pA, nbox)
-
-  ## add google/bing map background -- ggmap an option?? needs token :(
-
-  ## add bathymetry/topography
-  if (0){
-    depth <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
-                         , dimensions = attr(mar_bathy, "dimensions"))  ## move up if actually using!
-    plot (depth, add=TRUE
-          , nbreaks=100
-          , compact=TRUE  ## still smothers everyting
-          , col=colorRampPalette(c("lightblue", "darkblue"), interpolate="spline", bias=1)
-          , main=""
-    )
-    ## add land back on
-    plot (st_geometry (worldM), add=TRUE, col="beige") ## find a brewer color -- or satelite BG
-  }else{
-    ## see https://www.benjaminbell.co.uk/2019/08/bathymetric-maps-in-r-colour-palettes.html
-    ## use topo colors for mar_bathy
-    plot (mar_bathy, add=TRUE
-          , downsample=downsample
-          , col=c(colorRampPalette (c("darkblue", "lightblue"))(80)
-                  , add.alpha (terrain.colors(100), 0.15))
-          , breaks=c(seq (-400, 0, by=5), seq (0, 1000, by=10))
-          , main=""
-    )
-    ## add land back on -- to tone down land
-    # plot (st_geometry (worldM), add=TRUE, col=add.alpha("beige", 0.8), border=NA) ## find a brewer color -- or satelite BG
-  }
-
-  ## add bathymetry contours -- don't
-  if (0){
-    plot (st_contour (mar_bathy, contour_lines=TRUE
-                      , breaks=seq (-500, -50, by=50))
-          , add=TRUE, col="blue")
-  }
-}
 
 
 
