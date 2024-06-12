@@ -697,7 +697,7 @@ is.unsorted(drift$DeviceName)
 
 # newDeploy <- drift$dT_min > 250 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 240 min = 4 h
 # newDeploy <- drift$natIntvl | !duplicated (drift$DeviceName)
-newDeploy <- drift$dT_min > 60*12 | !duplicated (drift$DeviceName)
+newDeploy <- drift$dT_min > 60*4 | !duplicated (drift$DeviceName)  ## some deploys shorter than 12 hours!
 
 # cbind (newDeploy, drift)[275215:275227,
 #                          c(1,1+which (names (drift) %in% c("DeviceName", "DeviceDateTime", "dT_min")))]
@@ -738,13 +738,14 @@ if (test){
 ## trim bad speeds at start and end
 
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
+dir.create(paste0 (outpath, "deployment/"), showWarnings=FALSE, recursive=TRUE)
 
 dInt <- function (i){
   require ("sf")
   require ("dplyr")
   df <- subset (drift, deploy == levels (drift$deploy)[i])
   if (nrow (df)<=2){
-    newDF <- dInt (1)[0,]  ## dirty; reliant on i==1 to be good -- cache result?
+    newDF <- NULL #dInt (1)[0,]  ## dirty; reliant on i==1 to be good -- cache result?
   }else{
     if (interP > 0){
       newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
@@ -782,7 +783,7 @@ dInt <- function (i){
     ### cut-out long stationary periods, in case those are longer than deployments
     ## evaluate 2-h blocks -- should move at least 100 m from start to finish
     tBlock <- 20
-    # buf <- nrow (newDF) %% tBlock
+    buf <- nrow (newDF) %% tBlock
     # require ("oce")
     if (0){    ## can produce NAs
       newDF$blockDist_m <- sapply (nrow (newDF):buf, function (i){
@@ -798,14 +799,40 @@ dInt <- function (i){
     }
     if (!"blockDist_m" %in% names (newDF)){newDF$blockDist_m <- 5000}
 
+
+
+    badGPS <- c (rep (FALSE, 3), sapply (3:nrow (newDF), FUN=function (k){
+      ## single bad GPS position: previous speed is fine, next is bad, next+1 is good
+      if (k < (nrow (newDF)-2) &
+          (newDF$speed_ms [k-1] < speedTH) &
+          (newDF$speed_ms [k] > speedTH) &
+          (newDF$speed_ms [k+2] < speedTH)){
+        out <- TRUE
+      }else{
+        out<- FALSE
+      }
+      out
+    }))
+
+    if (any (badGPS)){
+      newDF <- subset (newDF, subset=!badGPS)
+      newDF$dT_min <- c (0, diff (newDF$DeviceDateTime)/60)  ## in min
+      newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
+      newDF$speed_ms <- with (newDF, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
+    }
+
     resx <- with (newDF, speed_ms - mapped_speed)
-    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 3* sd (newDF$speed_ms, na.rm=TRUE)
+    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 4* sd (newDF$speed_ms, na.rm=TRUE)
+    sdMT <- mean (resx, na.rm=TRUE) + 5 * sd (resx, na.rm=TRUE)
+
     bad <- c (which (resx > 4* sd (resx, na.rm=TRUE)),
               # which (newDF$mapped_speed < 0.009),
               # which (newDF$blockDist_m < 100)
-              which (newDF$mapped_speed > sdTH),
-              which (newDF$speed_ms > speedTH)
-              ) %>%
+              which (newDF$onLand > 0),
+              which (resx > sdTH),
+              which (newDF$speed_ms > sdTH),
+              which (newDF$speed_ms > speedTH)  # can still have sequence of points > speedTH
+    ) %>%
       unique()
 
 
@@ -818,27 +845,27 @@ dInt <- function (i){
     newDF$trimBoat <- TRUE
     newDF$trimBoat [seq (trimb[1], trimb[2])] <- FALSE
 
-      png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png")
-           , height=resH, width=resW)
-      par (mfrow=c(1,2))
-      plot (newDF$speed_ms, col=ifelse (newDF$trimBoat, "red", "black"), pch=19)
-      abline (h=sdTH, lty="dashed")
-      abline (v=trimb, lty="dotted")
+    png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png")
+         , height=resH, width=resW)
+    par (mfrow=c(1,2))
+    plot (newDF$speed_ms, col=ifelse (newDF$trimBoat, "red", "black"), pch=19)
+    abline (h=sdTH, lty="dashed")
+    abline (v=trimb, lty="dotted")
 
-      pDF <- newDF %>%
-        st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-        st_transform(projection) %>%
-        st_geometry()
-      plot (pDF, col=ifelse (newDF$trimBoat, "red", "black"), pch=19, cex=0.7)
-       pC <- st_coordinates(pDF)
-      for (j in 1:(nrow (newDF)-1)){
-        segments (pC [j,1], pC [j,2], pC [j+1,1]
-                  , pC [j+1,2], col=ifelse (newDF$trimBoat, "red", "black")[j]
-                  , lwd=2)
-      }
-      plot (worldM, add=TRUE, col="lightgray")
-      dev.off()
-          rm (trimb, sdTH, bad, resx)
+    pDF <- newDF %>%
+      st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+      st_transform(projection) %>%
+      st_geometry()
+    plot (pDF, col=ifelse (newDF$trimBoat, "red", "black"), pch=19, cex=0.7)
+    plot (worldM, add=TRUE, col="lightgray")
+    pC <- st_coordinates(pDF)
+    for (j in 1:(nrow (newDF)-1)){
+      segments (pC [j,1], pC [j,2], pC [j+1,1]
+                , pC [j+1,2], col=ifelse (newDF$trimBoat, "red", "black")[j]
+                , lwd=2)
+    }
+    dev.off()
+    rm (trimb, sdTH, bad, resx)
 
     ## reset time in the water
     # newDF <- newDF [seq (trimb[1], trimb[2]),]  ## trim the ends off
@@ -866,7 +893,13 @@ if (1){
   rm (nCores)
 }else{
   for (i in seq_along (levels (drift$deploy))){               ## serial=slow! cache?; use dplyr split/group
-    dInt (i)
+    x <- dInt (i)
+    cat (i, "\n")
+    if (i == 1){
+      iDF <- x
+    }else{
+      iDF <- rbind (iDF, x)
+    }
   }
 }
 rm (dInt)
