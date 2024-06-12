@@ -250,8 +250,8 @@ if (0){
 
 
 
-
-if (0){
+## kriging of speed
+## ------------------------------------------------------------------------
   if (0){  ## fast IDW or gstat?
     ## fast IDW
     # https://geobrinkmann.com/post/iwd/
@@ -303,18 +303,18 @@ if (0){
     ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
     ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
     require ("starsExtra")
-    grd <- starsExtra::make_grid (drift_sf, res=20e3)  # 1 km grid -- takes a while
+    grd <- starsExtra::make_grid (drift, res=20e3)  # 1 km grid -- takes a while
 
     if (0){ ## serial processing?
       speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
                             # , nmax=10e3
-                            ,
+                            # ,
       )
       ## clip to seaA
     }else{
       ## parallel interpolation
       ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
-      vg <- variogram (speed_ms~1, drift_sf)
+      vg <- variogram (speed_ms~1, subset (drift$tide != "slack"))
       mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
       # plot (vg, model=mdl)
 
@@ -337,9 +337,9 @@ if (0){
         stopCluster (cl)
       }
       ## rbind grid--stars version of maptools
+
     }
   }
-}
 
 
 

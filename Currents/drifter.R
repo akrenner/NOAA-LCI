@@ -13,6 +13,8 @@ test <- FALSE
 ## clean data: identify positions over land or transported by boat
 ## produce two versions: raw positions and interpolated values for animation
 
+## review need for drift_sf -- remove?? driftX  XXX
+
 # and animate through seasons (by jday -- or monthly plots)
 ## get OpenDrift to work on jupyter notebook -- check-point raw book in here.
 
@@ -26,7 +28,7 @@ test <- FALSE
 
 ## set interpolation [min] for animation
 interP <- 10 # interpolation interval (min)
-# interP <- 0  # no interepolation
+interP <- 0  # no interepolation
 
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
@@ -229,10 +231,11 @@ rm (readC, driftF, updateFN, driftP)
 
 
 ## remove duplicates (about 80 in contiguous download)
-drift <- drift %>%
-  filter (!duplicated (drift [,which (names (drift) %in%
-                                        c("DeviceName", "DeviceDateTime") )])) %>%
-  filter()
+# drift <- drift %>%
+#   filter (!duplicated (drift [,which (names (drift) %in%
+#                                         c("DeviceName", "DeviceDateTime") )])) %>%
+#   filter()
+drift <- subset (drift, !duplicated (paste (drift$DeviceName, drift$DeviceDateTime)))
 ## get more drifter data from NOAA global drifter program
 if (0) {
   ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
@@ -267,6 +270,7 @@ if (0) {
 #   st_transform(projection)
 # ## to replace drift, would still need direction of shift (velocity)
 
+# drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
@@ -512,10 +516,41 @@ if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
 
 ## filter == only for drifter speed map
 
+## interval between samples to gauge new deployments
+drift <- drift %>%
+#  st_drop_geometry() %>%
+#  filter (speed_ms > 0.0001) %>%
+#  filter (speed_ms < 20) %>%
+#  filter (dT_min < 7*24*60) %>%
+  mutate (dT_f=5*round (dT_min/5)) %>%
+  mutate (dT_f=ifelse(dT_f > 24*60, 24*60, dT_f)) %>%
+  mutate (dT_f=factor (dT_f))
+invlSum <- summary (drift$dT_f, maxsum=1e3)
+invlSum [order (as.numeric (names (invlSum)))]
+drift$natIntvl <- (drift$dT_min > 4 & drift$dT_min < 40) |
+  (drift$dT_min > 55 & drift$dT_min < 70) |
+  (drift$dT_min > 0 & drift$dT_min < 70) |  ## take this out?? XXX
+  (drift$dT_min > 235 & drift$dT_min < 255)
+## call Mark Johnson -- distinguish satellite glitch from short deployment?
+
+hx <- hist (subset (drift, (dT_min > 30) & (dT_min < 60*7))$dT_min |> log()
+      , breaks=200, axes=FALSE)  # there are 3 peaks only
+axis (1, at=pretty (hx$breaks)
+      , labels = round (exp (pretty (hx$breaks)))
+      )
+rm (hx)
+## intervals found: 10, 30, 60[], 240[]
+##
+# invlSum/nrow (drift)
+drift$ivlNew <- drift$dT_f %in% c(10, 20, 25, 30, 35, 55, 60, 65
+                                  , 120, 235, 240, 245, 300, 360)
+
+
+
 drift_sf <- drift %>%
   filter (!is.na (speed_ms)) %>%   ## uncertain why there are NAs, but they have to go
-  filter (speed_ms > 0.0001) %>%   ## negatives -- go
-  filter (speed_ms < 10) %>%    ## 15 m/s approx 30 knots -- generous to avoid it messing with mean
+  filter (speed_ms > 0.000001) %>%   ## negatives -- go
+  filter (speed_ms < 20) %>%    ## 15 m/s approx 30 knots -- generous to avoid it messing with mean
   #  filter (distance_m > 0.1) %>%  # no effect?
   #  filter (is.na (onLand)) %>%   ## trouble -- cuts down nrow dramatically
   filter (dT_min != 0) %>%     ## some zero-values
@@ -573,7 +608,7 @@ rm (pointsID, pgon)
 # drift_sf$inSpeedcov <- st_intersects(drift_sf, A) %>% apply (1, sum)
 # drift_sf <- filter (drift_sf, inSpeedcov==1) ## subset to within grid or st_extract fails
 
-sdTh <- 3
+sdTh <- 4
 
 drift_sf$mapped_speed <- st_rasterize (A ["mapped_speed"]) %>%
   st_extract (drift_sf) %>%
@@ -641,27 +676,38 @@ rm (driftX)
 
 
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")}
+save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
 
 
 
 
-# ----------------------------------------------------------------------------
+## ----------------------------------------------------------------------------
 ## define individual drifter deployments
 
 ## redundant, but better safe
-# is.unsorted(drift$DeviceName)
-drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
+is.unsorted(drift$DeviceName)
+# drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 
 ## define new deployment XXXX  review!!! XXXX
-newDeploy <- drift$dT_min > 240 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 240 min = 4 h
-# newDeploy <- drift$dT_min > 60*14 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments   14 h (840 min)
+## important definition! Don't interpolate between deployments
+## missed satellite?
+## ask Mark Johnson about multiple short-term deployments
+
+# newDeploy <- drift$dT_min > 250 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 240 min = 4 h
+# newDeploy <- drift$natIntvl | !duplicated (drift$DeviceName)
+newDeploy <- drift$dT_min > 60*12 | !duplicated (drift$DeviceName)
+
+# cbind (newDeploy, drift)[275215:275227,
+#                          c(1,1+which (names (drift) %in% c("DeviceName", "DeviceDateTime", "dT_min")))]
+
+
 ## mark new deployments
 x <- 0; depIdx <- character(nrow (drift)) # declare variables
 for (i in 1:length (newDeploy)){
   if (newDeploy [i]){
-    x <- x + 1
+    # x <- x + 1  ## consecutive numbers
     x <- drift$DeviceDateTime [i]
   }
   depIdx [i] <- paste0 (drift$DeviceName [i], "-", x)
@@ -670,6 +716,8 @@ drift$deploy <- factor (depIdx)
 # head (summary (drift$deploy))
 rm (newDeploy, x, depIdx, i)
 
+cat ("\n\n### N deployments: ####\n")
+print (length (levels (drift$deploy)))
 
 
 if (test){
@@ -695,7 +743,9 @@ dInt <- function (i){
   require ("sf")
   require ("dplyr")
   df <- subset (drift, deploy == levels (drift$deploy)[i])
-  if (nrow (df)>1){
+  if (nrow (df)<=2){
+    newDF <- dInt (1)[0,]  ## dirty; reliant on i==1 to be good -- cache result?
+  }else{
     if (interP > 0){
       newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
                                     , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
@@ -717,7 +767,7 @@ dInt <- function (i){
       newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
       # newDF$badSpeed
     }else{
-      newDF <- df # %>% select (c("DeviceName", "DeviceDateTime", "Longitude", "Latitude", "deploy", "dT_min"))
+      newDF <- df
     }
     ## interpolate all other variables; closest for categoricals
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
@@ -729,42 +779,73 @@ dInt <- function (i){
     ## from start to 1/2 nrow: trim 0 to last bad
     ## from 1/2 nrow to end: trim first bad to nrow
 
-    #      plot (newDF$speed_ms, type="l")
+    ### cut-out long stationary periods, in case those are longer than deployments
+    ## evaluate 2-h blocks -- should move at least 100 m from start to finish
+    tBlock <- 20
+    # buf <- nrow (newDF) %% tBlock
+    # require ("oce")
+    if (0){    ## can produce NAs
+      newDF$blockDist_m <- sapply (nrow (newDF):buf, function (i){
+        oce::geodDist(newDF$Longitude [i], newDF$Latitude [i]
+                      , newDF$Longitude [i-tBlock], newDF$Latitude [i-tBlock]) * 1e3
+      }) %>%
+        c (rep (NA, buf-1)) %>%
+        rev()
+      # plot (blockDist_m~distance_m, newDF)
+      # plot (newDF$speed_ms, type="l")
+      # plot (newDF$blockDist_m, type="l")
+      # plot (newDF$blockDist_m, col=ifelse (newDF$blockDist_m < 100, "red", "black"))
+    }
+    if (!"blockDist_m" %in% names (newDF)){newDF$blockDist_m <- 5000}
 
     resx <- with (newDF, speed_ms - mapped_speed)
-    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 4* sd (newDF$speed_ms, na.rm=TRUE)
+    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 3* sd (newDF$speed_ms, na.rm=TRUE)
     bad <- c (which (resx > 4* sd (resx, na.rm=TRUE)),
               # which (newDF$mapped_speed < 0.009),
+              # which (newDF$blockDist_m < 100)
               which (newDF$mapped_speed > sdTH),
-              which (newDF$speed_ms > speedTH)) %>%
+              which (newDF$speed_ms > speedTH)
+              ) %>%
       unique()
+
+
     suppressWarnings({trimb <- c (max (subset (bad, bad < (nrow (newDF)/2)))+1,
                                   min (subset (bad, bad > (nrow (newDF)/2)))-1)
     })
     ## in case there are no bad data points
     trimb <- ifelse (trimb == -Inf, 1, trimb)
     trimb <- ifelse (trimb == Inf, nrow (newDF), trimb)
-
-    #    which (resx > newDF$mapped_speed + 1*sd (resx))
-    #    which (resx > sd (resx, na.rm=TRUE))
-
     newDF$trimBoat <- TRUE
     newDF$trimBoat [seq (trimb[1], trimb[2])] <- FALSE
 
-    if (1){
-      png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png"))
+      png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png")
+           , height=resH, width=resW)
+      par (mfrow=c(1,2))
       plot (newDF$speed_ms, col=ifelse (newDF$trimBoat, "red", "black"), pch=19)
       abline (h=sdTH, lty="dashed")
       abline (v=trimb, lty="dotted")
+
+      pDF <- newDF %>%
+        st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
+        st_transform(projection) %>%
+        st_geometry()
+      plot (pDF, col=ifelse (newDF$trimBoat, "red", "black"), pch=19, cex=0.7)
+       pC <- st_coordinates(pDF)
+      for (j in 1:(nrow (newDF)-1)){
+        segments (pC [j,1], pC [j,2], pC [j+1,1]
+                  , pC [j+1,2], col=ifelse (newDF$trimBoat, "red", "black")[j]
+                  , lwd=2)
+      }
+      plot (worldM, add=TRUE, col="lightgray")
       dev.off()
-    }
-    rm (trimb, sdTH, bad, resx)
+          rm (trimb, sdTH, bad, resx)
 
     ## reset time in the water
     # newDF <- newDF [seq (trimb[1], trimb[2]),]  ## trim the ends off
     # newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
-
-  }}
+  }
+  newDF
+}
 
 if (1){
   require ("parallel")
@@ -776,7 +857,7 @@ if (1){
       rbindlist()
   }else{
     cl <- makeCluster(nCores, type="PSOCK")
-    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH"))
+    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH", "projection", "resW", "resH", "worldM"))
     clusterEvalQ(cl, require ("dplyr"))
     iDF <- parLapply (cl, seq_along (levels (drift$deploy)), fun=dInt) %>%
       rbindlist()
@@ -813,22 +894,6 @@ if (0){
   levels (factor (x$DeviceName))
 }
 
-
-
-# driftC <- st_intersection(drift, bbox)
-
-## get more drifter data from NOAA global drifter program
-if (0) {
-  ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
-  df = read.csv('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E=-70&longitude%3C=-50&latitude%3E=35&latitude%3C=50&time%3E=2018-01-01&time%3C=2019-01-01')
-  df = read_csv(paste0 ('http://osmc.noaa.gov/erddap/tabledap/gdp_interpolated_drifter.csvp?"
-, "ID%2Clongitude%2Clatitude%2Ctime%2Cve%2Cvn&longitude%3E="
-                      , -70, "&longitude%3C=", -50, "&latitude%3E=", 35, "&latitude%3C=", 50,
-                      "&time%3E=2018-01-01&time%3C=2019-01-01'))
-
-  # ERDDAP "https://erddap.aoml.noaa.gov/"
-  # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
-}
 
 
 ## summarise reporting interval ?? still needed? -- move up if to be used
