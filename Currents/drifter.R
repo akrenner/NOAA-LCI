@@ -529,7 +529,7 @@ invlSum <- summary (drift$dT_f, maxsum=1e3)
 invlSum [order (as.numeric (names (invlSum)))]
 drift$natIntvl <- (drift$dT_min > 4 & drift$dT_min < 40) |
   (drift$dT_min > 55 & drift$dT_min < 70) |
-  (drift$dT_min > 0 & drift$dT_min < 70) |  ## take this out?? XXX
+  # (drift$dT_min > 0 & drift$dT_min < 70) |  ## take this out?? XXX
   (drift$dT_min > 235 & drift$dT_min < 255)
 ## call Mark Johnson -- distinguish satellite glitch from short deployment?
 
@@ -686,18 +686,12 @@ save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 ## ----------------------------------------------------------------------------
 ## define individual drifter deployments
 
-## redundant, but better safe
-is.unsorted(drift$DeviceName)
-# drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
-
-## define new deployment XXXX  review!!! XXXX
 ## important definition! Don't interpolate between deployments
 ## missed satellite?
-## ask Mark Johnson about multiple short-term deployments
 
-# newDeploy <- drift$dT_min > 250 | !duplicated (drift$DeviceName) ## dT_min in min. mark new deployments XXX test!! 240 min = 4 h
-# newDeploy <- drift$natIntvl | !duplicated (drift$DeviceName)
-newDeploy <- drift$dT_min > 60*4 | !duplicated (drift$DeviceName)  ## some deploys shorter than 12 hours!
+newDeploy <- (drift$dT_min > 250) | (!duplicated (drift$DeviceName)) ## 700 -- dT_min in min. mark new deployments XXX test!! 240 min = 4 h
+# newDeploy <- drift$natIntvl | !duplicated (drift$DeviceName)     ## 300k -- too much
+# print (summary (newDeploy))
 
 # cbind (newDeploy, drift)[275215:275227,
 #                          c(1,1+which (names (drift) %in% c("DeviceName", "DeviceDateTime", "dT_min")))]
@@ -738,75 +732,44 @@ if (test){
 ## trim bad speeds at start and end
 
 if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
+unlink(paste0 (outpath, "deployment/"), recursive=TRUE)
 dir.create(paste0 (outpath, "deployment/"), showWarnings=FALSE, recursive=TRUE)
 
 dInt <- function (i){
   require ("sf")
   require ("dplyr")
   df <- subset (drift, deploy == levels (drift$deploy)[i])
-  if (nrow (df)<=2){
-    newDF <- NULL #dInt (1)[0,]  ## dirty; reliant on i==1 to be good -- cache result?
-  }else{
-    if (interP > 0){
-      newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
-                                    , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
-                                                                , to=max (DeviceDateTime)
-                                                                , by=paste (interP, "min"))
-      ))
-      newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
-      newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
-      newDF$dT_min <- interP
-      ## fill in the rest -- interpolate if numeric, find nearest if categorical
-      newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-      newDF$speed_ms <- newDF$distance_m / (newDF$dT_min*60) ## convention to use m/s, not knots
-      newDF$topo <- df$topo [1]
-      newDF$LandDistance_m <- df$LandDistance_m [1]
-      # newDF$onLand
-      newDF$deployDepth <- df$deployDepth [1]
-      newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
-      newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
-      newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
-      # newDF$badSpeed
-    }else{
-      newDF <- df
-    }
-    ## interpolate all other variables; closest for categoricals
-    newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
 
+  if (nrow (df) > 4){  # discard deployments shorter than this off-hand
 
-
-    ## trim newDF XXXX  -- cut bad stuff front and back
-    ## at the very least: first and last
-    ## from start to 1/2 nrow: trim 0 to last bad
-    ## from 1/2 nrow to end: trim first bad to nrow
-
+    if (1){   ## cut out bad positions -- {} to fold code
     ### cut-out long stationary periods, in case those are longer than deployments
     ## evaluate 2-h blocks -- should move at least 100 m from start to finish
     tBlock <- 20
-    buf <- nrow (newDF) %% tBlock
+    buf <- nrow (df) %% tBlock
     # require ("oce")
-    if (0){    ## can produce NAs
-      newDF$blockDist_m <- sapply (nrow (newDF):buf, function (i){
-        oce::geodDist(newDF$Longitude [i], newDF$Latitude [i]
-                      , newDF$Longitude [i-tBlock], newDF$Latitude [i-tBlock]) * 1e3
+    if (0){  # nrow (df) > 40){    ## can produce NAs
+      df$blockSpeed_ms <- sapply (nrow (df):buf, function (m){
+        oce::geodDist(df$Longitude [m], df$Latitude [m]
+                      , df$Longitude [m-tBlock], df$Latitude [i-tBlock]) * 1e3 #/ (df$DeviceDateTime [m] - df$DeviceDateTime [m-tBlock])
       }) %>%
         c (rep (NA, buf-1)) %>%
         rev()
-      # plot (blockDist_m~distance_m, newDF)
-      # plot (newDF$speed_ms, type="l")
-      # plot (newDF$blockDist_m, type="l")
-      # plot (newDF$blockDist_m, col=ifelse (newDF$blockDist_m < 100, "red", "black"))
+      # plot (blockSpeed_ms~distance_m, df)
+      # plot (df$speed_ms, type="l")
+      # plot (df$blockSpeed_ms, type="l")
+      # plot (df$blockSpeed_ms, col=ifelse (df$blockSpeed_ms < 100, "red", "black"))
     }
-    if (!"blockDist_m" %in% names (newDF)){newDF$blockDist_m <- 5000}
+    if (!"blockSpeed_ms" %in% names (df)){df$blockSpeed_ms <- 5000}
 
 
 
-    badGPS <- c (rep (FALSE, 3), sapply (3:nrow (newDF), FUN=function (k){
+    badGPS <- c (rep (FALSE, 3), sapply (3:nrow (df), FUN=function (k){
       ## single bad GPS position: previous speed is fine, next is bad, next+1 is good
-      if (k < (nrow (newDF)-2) &
-          (newDF$speed_ms [k-1] < speedTH) &
-          (newDF$speed_ms [k] > speedTH) &
-          (newDF$speed_ms [k+2] < speedTH)){
+      if (k < (nrow (df)-2) &
+          (df$speed_ms [k-1] < speedTH) &
+          (df$speed_ms [k] > speedTH) &
+          (df$speed_ms [k+2] < speedTH)){
         out <- TRUE
       }else{
         out<- FALSE
@@ -814,62 +777,104 @@ dInt <- function (i){
       out
     }))
 
-    if (any (badGPS)){
-      newDF <- subset (newDF, subset=!badGPS)
-      newDF$dT_min <- c (0, diff (newDF$DeviceDateTime)/60)  ## in min
-      newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
-      newDF$speed_ms <- with (newDF, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
+    if (any (badGPS)){  ## remove these separately, as to not jeapardize ID of boat tracks
+      df <- subset (df, subset=!badGPS)
+      df$dT_min <- c (0, diff.POSIXt (df$DeviceDateTime, units="min"))
+      df$distance_m <- c (0, diff (oce::geodDist(df$Longitude, df$Latitude, alongPath=TRUE)*1e3))
+      df$speed_ms <- with (df, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
     }
 
-    resx <- with (newDF, speed_ms - mapped_speed)
-    sdTH <- mean (newDF$speed_ms, na.rm=TRUE) + 4* sd (newDF$speed_ms, na.rm=TRUE)
-    sdMT <- mean (resx, na.rm=TRUE) + 5 * sd (resx, na.rm=TRUE)
 
-    bad <- c (which (resx > 4* sd (resx, na.rm=TRUE)),
-              # which (newDF$mapped_speed < 0.009),
-              # which (newDF$blockDist_m < 100)
-              which (newDF$onLand > 0),
+    resx <- with (df, speed_ms - mapped_speed)
+    sdTH <- median (df$speed_ms, na.rm=TRUE) + 3 * sd (df$speed_ms, na.rm=TRUE)
+    sdMT <- mean (resx, na.rm=TRUE) + 5*sd (resx, na.rm=TRUE)
+
+    bad <- c (which (df$topo > 10), # which (df$onLand > 0),
               which (resx > sdTH),
-              which (newDF$speed_ms > sdTH),
-              which (newDF$speed_ms > speedTH)  # can still have sequence of points > speedTH
+              which (df$speed_ms > sdTH),
+              which (df$speed_ms > sdMT),
+              which (df$speed_ms > speedTH)  # can still have sequence of points > speedTH
     ) %>%
       unique()
 
-
-    suppressWarnings({trimb <- c (max (subset (bad, bad < (nrow (newDF)/2)))+1,
-                                  min (subset (bad, bad > (nrow (newDF)/2)))-1)
+    ## only consider the end 1/4 of deployment for cutting
+    suppressWarnings({trimb <- c (max (subset (bad, bad < (nrow (df)*0.20)))+1,
+                                  min (subset (bad, bad > (nrow (df)*0.85)))-1)
     })
     ## in case there are no bad data points
     trimb <- ifelse (trimb == -Inf, 1, trimb)
-    trimb <- ifelse (trimb == Inf, nrow (newDF), trimb)
-    newDF$trimBoat <- TRUE
-    newDF$trimBoat [seq (trimb[1], trimb[2])] <- FALSE
+    trimb <- ifelse (trimb == Inf, nrow (df), trimb)
+    df$trimBoat <- TRUE
+    df$trimBoat [seq (trimb[1], trimb[2])] <- FALSE
+    df$trimBoat [bad] <- TRUE
+
 
     png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png")
          , height=resH, width=resW)
     par (mfrow=c(1,2))
-    plot (newDF$speed_ms, col=ifelse (newDF$trimBoat, "red", "black"), pch=19)
+    plot (df$speed_ms, col=ifelse (df$trimBoat, "red", "black"), pch=19)
     abline (h=sdTH, lty="dashed")
+    abline (h=speedTH, lty="dotted", col="green")
     abline (v=trimb, lty="dotted")
 
-    pDF <- newDF %>%
+    pDF <- df %>%
       st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
       st_transform(projection) %>%
       st_geometry()
-    plot (pDF, col=ifelse (newDF$trimBoat, "red", "black"), pch=19, cex=0.7)
+    plot (pDF, col=ifelse (df$trimBoat, "red", "black"), pch=19, cex=0.7)
     plot (worldM, add=TRUE, col="lightgray")
     pC <- st_coordinates(pDF)
-    for (j in 1:(nrow (newDF)-1)){
+    for (j in 1:(nrow (df)-1)){
       segments (pC [j,1], pC [j,2], pC [j+1,1]
-                , pC [j+1,2], col=ifelse (newDF$trimBoat, "red", "black")[j]
+                , pC [j+1,2], col=ifelse (df$trimBoat, "red", "black")[j]
                 , lwd=2)
     }
     dev.off()
     rm (trimb, sdTH, bad, resx)
 
     ## reset time in the water
-    # newDF <- newDF [seq (trimb[1], trimb[2]),]  ## trim the ends off
-    # newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+    # df <- df [seq (trimb[1], trimb[2]),]  ## trim the ends off
+    # df$days_in_water <- with (df, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+    }
+
+    if (nrow (df)<=2){
+      newDF <- NULL #dInt (1)[0,]  ## dirty; reliant on i==1 to be good -- cache result?
+    }else{
+
+      ## trim newDF XXXX  -- cut bad stuff front and back
+      ## at the very least: first and last
+      ## from start to 1/2 nrow: trim 0 to last bad
+      ## from 1/2 nrow to end: trim first bad to nrow
+
+
+      if (interP > 0){
+        newDF <- with (df, data.frame(DeviceName=df$DeviceName[1], deploy=df$deploy[1]
+                                      , DeviceDateTime=seq.POSIXt(from=min (DeviceDateTime)
+                                                                  , to=max (DeviceDateTime)
+                                                                  , by=paste (interP, "min"))
+        ))
+        newDF$Longitude <- approx (df$DeviceDateTime, df$Longitude, xout=newDF$DeviceDateTime)$y
+        newDF$Latitude <- approx (df$DeviceDateTime, df$Latitude, xout=newDF$DeviceDateTime)$y
+        newDF$dT_min <- interP
+        ## fill in the rest -- interpolate if numeric, find nearest if categorical
+        newDF$distance_m <- c (0, diff (oce::geodDist(newDF$Longitude, newDF$Latitude, alongPath=TRUE)*1e3))
+        newDF$speed_ms <- newDF$distance_m / (newDF$dT_min*60) ## convention to use m/s, not knots
+        newDF$topo <- df$topo [1]
+        newDF$LandDistance_m <- df$LandDistance_m [1]
+        # newDF$onLand
+        newDF$deployDepth <- df$deployDepth [1]
+        newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
+        newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
+        newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
+        # newDF$badSpeed
+      }else{
+        newDF <- df
+      }
+      ## interpolate all other variables; closest for categoricals
+      newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+    }
+  }else{
+    newDF <- NULL
   }
   newDF
 }
@@ -1053,17 +1058,15 @@ add.alpha <- function(col, alpha=1){
 
 
 
-cat ("Total time passed from startTime:", difftime(Sys.time(), startTime), "\n")
+cat ("\nTotal time passed from startTime:"
+     , round (difftime(Sys.time(), startTime, "minutes"),1), " min\n")
 rm (startTime)
 save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
 
-
-for (i in 1:5) alarm()
 
 ## -----------------------------------------------------------------------------
 ## EOF
