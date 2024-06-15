@@ -1008,17 +1008,18 @@ rm (anomCol, anomL, yLabt)
       aggregate (TempSN~Year, data=T96f, function (x, thTemp=y){
         lD <- min ((1:length (x[1:(366/2)]))[x >=thTemp], na.rm=TRUE)
         x <- c (-1, x)
-#        if (tempName=="Max"){
-#          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
-#        }else{
-           x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
-#        }
-        lD <- ifelse (x4==1, NA, x4)
+        #        if (tempName=="Max"){
+        #          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
+        #        }else{
+        x4 <- max ((1:length (x[1:(366/2)]))[x<=thTemp], na.rm=TRUE)
+        #        }
+        lD <- ifelse (x4==1, NA, x4)   ## review this further!!  2024 isn't right XXX
         # lD <- ifelse (x4>=364/2, NA, lD)
         as.Date("2000-01-01")+lD
         # last4
       })$TempSN
     })
+
     springM [is.infinite((springM))] <- NA
     rownames(springM) <- levels (factor (T96f$Year))
     springM <- as.Date (springM) # this would turn matrix into vector if ncol=1
