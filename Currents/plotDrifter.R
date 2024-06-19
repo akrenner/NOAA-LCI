@@ -247,11 +247,76 @@ if (0){
 
 
 
-
+save.image ("~/tmp/LCI_noaa/cache/drifter/preKrige.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/preKrige.RData"); require ('dplyr'); require ('stars')
 
 
 ## kriging of speed
 ## ------------------------------------------------------------------------
+
+## Kachemak Bay only
+dK <- drift %>%
+  filter (Latitude > 59.0) %>%
+  filter (Latitude < 59.9) %>%
+  filter (Longitude > -152.6) %>%
+  filter (Longitude < -150.5) %>%
+  filter (badSpeed==FALSE) %>%
+  filter (trimBoat==FALSE) %>%
+  filter (!is.na (speed_ms)) %>%
+  filter()
+# rm (drift)
+
+
+grd <- starsExtra::make_grid(dK, res=1e3)
+
+## quick'n dirty: IDW
+p <- require ('GVI')  ## for sf_to_rast
+if (!p){
+  require ("remotes")
+  remotes::install_github("STBrinkmann/GVI")
+  require ("GVI")
+}; rm (p)
+require ('parallel')
+require ('rnaturalearth')
+nCores <- detectCores()-1
+
+speed1 <- sf_to_rast (observer=dK, v="speed_ms"
+                      , aoi=st_sf (seaA)
+                      , max_distance=10e3
+                      , raster_res=0.5e3
+                      , beta=2
+                      , progress=TRUE
+                      , cores=nCores  # no effect on windows? uses openMP?
+) %>%
+  st_as_stars () %>%  ## terra raster to stars
+  st_warp(crs=projection)
+
+# %>%
+ # st_set_bbox()
+#  st_crop (y=c(xmin=1101e3, xmax=1701e3, ymin=10201e3, ymax=10901e3))
+#  st_crop (sf::st_read ("~/GISdata/LCI/KachemakBayCHA.kmz"))
+#  st_crop ()
+
+## write speed1 to geoTIFF
+write_stars (speed1, dsn="~/tmp/LCI_noaa/data-products/maxSpeedDrifter.tiff")
+
+
+## EoEdits
+
+
+plot(speed1, col = hcl.colors(12, "Spectral"), reset = TRUE)
+# plot(st_geometry(dK), add = TRUE, pch=19, cex=0.1)
+plot (worldM, col="beige", add=TRUE)
+
+
+
+
+## sophisticated: kriging
+vg <- variogram (speed_ms~1, subset (dK$tide != "slack"))
+mdl <- fit.variogram()
+
+
+
   if (0){  ## fast IDW or gstat?
     ## fast IDW
     # https://geobrinkmann.com/post/iwd/
@@ -290,7 +355,7 @@ if (0){
     speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
                           , aoi=st_sf (seaA)
                           , max_distance=10e3
-                          , raster_res=5e3
+                          , raster_res=1e3
                           , beta=3
                           , progress=TRUE
                           , cores=nCores  # no effect on windows? uses openMP?

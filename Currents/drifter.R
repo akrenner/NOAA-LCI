@@ -257,20 +257,6 @@ if (0) {
 ## include speed between positions? XXX
 ## interpolated positions = potentially dangerous (on land)? But, is a more accurate position for the speed
 
-# ## new dataframe for interpolated positions -- move down?
-# dI <- with (drift, data.frame (CommId [-1], DeviceName[-1], IDn [-1],
-#                                DeviceDateTime=DeviceDateTime[-1]-diff(DeviceDateTime),
-#                                Latitude=Latitude[-1]-diff (Latitude),
-#                                Longitude=Longitude[-1]-diff (Longitude),
-#                                dT_min=diff (DeviceDateTime) %>% as.numeric()/60,
-#                                distance_m=diff (oce::geodDist (Longitude, Latitude, alongPath=TRUE)*1e3)
-# )) %>%
-#   mutate (speed_ms=distance_m/(dT_min*60)) %>%
-#   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
-#   st_transform(projection)
-# ## to replace drift, would still need direction of shift (velocity)
-
-# drift <- drift [order (drift$DeviceName, drift$DeviceDateTime),]
 drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
@@ -1063,6 +1049,12 @@ cat ("\nTotal time passed from startTime:"
 rm (startTime)
 save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+write.csv (drift %>% st_drop_geometry() %>%
+             filter (badSpeed==FALSE) %>%
+             filter (trimBoat==FALSE) %>%
+             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
+           , file="~/tmp/LCI_noaa/data-products/drifter.csv", row.names=FALSE)
 
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
