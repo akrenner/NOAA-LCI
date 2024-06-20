@@ -517,7 +517,7 @@ drift$natIntvl <- (drift$dT_min > 4 & drift$dT_min < 40) |
   (drift$dT_min > 55 & drift$dT_min < 70) |
   # (drift$dT_min > 0 & drift$dT_min < 70) |  ## take this out?? XXX
   (drift$dT_min > 235 & drift$dT_min < 255)
-## call Mark Johnson -- distinguish satellite glitch from short deployment?
+
 
 hx <- hist (subset (drift, (dT_min > 30) & (dT_min < 60*7))$dT_min |> log()
       , breaks=200, axes=FALSE)  # there are 3 peaks only
@@ -817,6 +817,14 @@ dInt <- function (i){
     }
     dev.off()
     rm (trimb, sdTH, bad, resx)
+
+
+    if (1){
+      ## set NAs in bad points to prevent interpolation across them
+      is.na (df$Latitude [which (df$trimBoat)]) <- TRUE
+      is.na (df$Longitude [which (df$trimBoat)]) <- TRUE
+      is.na (df$DeviceDateTime [which (df$trimBoat)]) <- TRUE
+    }
 
     ## reset time in the water
     # df <- df [seq (trimb[1], trimb[2]),]  ## trim the ends off
