@@ -182,67 +182,6 @@ if (0){
     )
 }
 
-## plot each individual deployment
-dir.create(paste0 (outpath, "deployment/"), recursive=TRUE, showWarnings=FALSE)
-
-plotDrift <- function (i){
-  dR <- drift %>%
-    #  filter (speed_ms < 3) %>%
-    filter (deploy == levels (drift$deploy)[i]) %>%
-    # select (days_in_water)
-    select (speed_ms)
-  # if (nrow (dR) > 3)
-  png (filename=paste0 (outpath, "deployment/"
-                        # ,i #
-                        , gsub (":","-", levels (drift$deploy)[i])
-                        , ".png")
-       , width=resW, height=resH)
-  plotBG(dr=dR)
-  plot (dR, add=TRUE
-        , pch=19  ## by deployDepth
-        , cex=1, type="p"
-        , alpha=0.5
-        , nbreaks=100
-        #        , key.pos=
-        #        , breaks=brks
-  )
-  #  legend ("topleft", fill)
-  # https://stackoverflow.com/questions/9314658/colorbar-from-custom-colorramppalette
-
-  title (main=levels (drift$deploy)[i])
-  dev.off()
-}
-
-
-for (i in seq_along(levels (drift$deploy))){
-  print (i)
-  plotDrift (i)
-}
-
-# library (parallels)
-# require ('parallelly')
-
-
-if (0){
-  plot (speed_ms~topo, drift, pch=19, col = add.alpha("black", 0.1))
-  lS <- loess(speed_ms~topo, drift)
-  nD <- data.frame (topo=seq(-200, 0, length.out=100))
-  lines (nD$topo, predict (lS, newdata=nD), col = "red")
-}
-
-## plot drifter
-# for (i in 1:seq_along (levels (drift$deploy))){
-#   dr <- subset (drift, deploy==levels (drift$deploy)[i])
-#   if (nrow (dr)>2){
-#   plot (st_geometry (dr), add=TRUE, type="l", lwd=3, col=dr$col)
-#   plot (st_geometry (dr), add=TRUE, pch=20, cex=0.1)
-#   }
-# }
-
-
-
-
-
 
 
 
@@ -455,6 +394,73 @@ if (0){  ## redundant -- more kriging??
   save.image("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
   # load ("~/tmp/LCI_noaa/cache/drifter/drifterKrige.RData")
 }
+
+
+
+
+
+
+
+
+## plot each individual deployment
+dir.create(paste0 (outpath, "deployment/"), recursive=TRUE, showWarnings=FALSE)
+
+plotDrift <- function (i){
+  dR <- drift %>%
+    #  filter (speed_ms < 3) %>%
+    filter (deploy == levels (drift$deploy)[i]) %>%
+    # select (days_in_water)
+    select (speed_ms)
+  # if (nrow (dR) > 3)
+  png (filename=paste0 (outpath, "deployment/"
+                        # ,i #
+                        , gsub (":","-", levels (drift$deploy)[i])
+                        , ".png")
+       , width=resW, height=resH)
+  plotBG(dr=dR)
+  plot (dR, add=TRUE
+        , pch=19  ## by deployDepth
+        , cex=1, type="p"
+        , alpha=0.5
+        , nbreaks=100
+        #        , key.pos=
+        #        , breaks=brks
+  )
+  #  legend ("topleft", fill)
+  # https://stackoverflow.com/questions/9314658/colorbar-from-custom-colorramppalette
+
+  title (main=levels (drift$deploy)[i])
+  dev.off()
+}
+
+
+for (i in seq_along(levels (drift$deploy))){
+  print (i)
+  plotDrift (i)    ## ugly crash at i = 4+
+}
+
+# library (parallels)
+# require ('parallelly')
+
+
+if (0){
+  plot (speed_ms~topo, drift, pch=19, col = add.alpha("black", 0.1))
+  lS <- loess(speed_ms~topo, drift)
+  nD <- data.frame (topo=seq(-200, 0, length.out=100))
+  lines (nD$topo, predict (lS, newdata=nD), col = "red")
+}
+
+## plot drifter
+# for (i in 1:seq_along (levels (drift$deploy))){
+#   dr <- subset (drift, deploy==levels (drift$deploy)[i])
+#   if (nrow (dr)>2){
+#   plot (st_geometry (dr), add=TRUE, type="l", lwd=3, col=dr$col)
+#   plot (st_geometry (dr), add=TRUE, pch=20, cex=0.1)
+#   }
+# }
+
+
+
 
 
 

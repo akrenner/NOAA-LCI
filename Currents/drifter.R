@@ -211,7 +211,8 @@ if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, 
                              "&FieldList=", FieldList,
                              "&startDate=", as.character (as.Date(endDate)+1), "%2000:00",
                              "&fileFormat=csv&compression=zip&download=Yes")## endDate defaults to now
-                 , destfile=updateFN, mode=dM)
+                 , destfile=updateFN, mode=dM, cacheOK=TRUE  ## still having issues on Windows. Go manual.
+                 )
 }
 rm (key, startDate, endDate, FieldList, dM)
 
