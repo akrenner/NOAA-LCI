@@ -203,8 +203,10 @@ if (!file.exists(driftF)){
   download.file(url=urlC, destfile=driftF, mode=dM); rm (urlC)
 }
 ## update to the latest data
-if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, units="days") < 7)){
-  message ("Drifter data downloaded within the last week: skipping update")
+if (1){  ## for the time being -- download updates manually
+  message ("Download updated drifter data manually for the time being")
+  # if (file.exists (updateFN) & (difftime (Sys.time(), file.info (updateFN)$ctime, units="days") < 7)){
+  # message ("Drifter data downloaded within the last week: skipping update")
 }else{
   options(timeout=180)
   download.file (url=paste0 ("https://api.pacificgyre.com/api2/getData.aspx?apiKey=", key,
@@ -269,7 +271,7 @@ drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep i
 ## use morph..
 drift$topo <- st_extract(mar_bathy, at=drift)$topo
 
-## using LandDistance_m <- st_distance(worldM, dx) %>% apply (2, min) is slow by orders of magnitude
+## using LandDistance_m <- st_distance(worldM, dx) %>% apply (2, min) is slower by orders of magnitude
 drift$LandDistance_m <- worldM %>%
   st_union() %>%
   st_distance(drift, by_element=FALSE) %>%
@@ -281,7 +283,7 @@ drift$onLand <- st_intersects(drift, worldM) %>% as.numeric () ## not pretty, no
 # rm (dx)
 
 ## ice wave rider and MicroStar are surface devices
-drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0) |> factor()
 drift$year <- format (drift$DeviceDateTime, "%Y") |> factor()  ## above should be piped and mapped XXX
 
 

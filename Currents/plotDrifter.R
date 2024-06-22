@@ -6,6 +6,8 @@ rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 require ("stars")
 require ("RColorBrewer")
 require ("dplyr")
+require ("starsExtra")  # for makeGrid
+
 
 
 
@@ -186,27 +188,61 @@ if (0){
 
 
 
+
+
+## interpolation of speed
+## ------------------------------------------------------------------------
+
+
+# shoreline -- assume and force shoreline speed to be 0  -- only needed for interpolation, not for averaging
+# add shoreline to drifter speeds
+if (0){
+  drift_sf <- worldM %>%
+    st_sf () %>%
+    st_simplify(dTolerance=0.01) %>%  ## in meters
+    st_cast ("MULTIPOLYGON") %>%
+    sf::st_coordinates() %>%
+    as.data.frame() %>%
+    st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
+    st_transform(projection) %>%
+    mutate (speed_ms = 0) %>%
+    mutate (IDn = -1) %>%
+    select (speed_ms, IDn) %>%
+    rbind (drift_sf)
+}
+
+
+
+
 save.image ("~/tmp/LCI_noaa/cache/drifter/preKrige.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/preKrige.RData"); require ('dplyr'); require ('stars')
 
 
-## kriging of speed
-## ------------------------------------------------------------------------
+##
+## --- set user-defined parameters --------------------------------------------
+
+gRes <- 200  # grid cell length (m). 500 m about 1 min
+gRes <- 500  # grid cell length (m). 500 m about 1 min
+dDepth <- levels (drift$deployDepth)[2]  ## surface (1) or 15 m (2)
+
+
+
 
 ## Kachemak Bay only
 dK <- drift %>%
-  filter (Latitude > 59.0) %>%
-  filter (Latitude < 59.9) %>%
-  filter (Longitude > -152.6) %>%
-  filter (Longitude < -150.5) %>%
+#  filter (Latitude > 59.0) %>%
+#  filter (Latitude < 59.9) %>%
+#  filter (Longitude > -152.6) %>%
+#  filter (Longitude < -150.5) %>%
+  filter (Longitude > -155.5) %>%
   filter (badSpeed==FALSE) %>%
   filter (trimBoat==FALSE) %>%
   filter (!is.na (speed_ms)) %>%
+  filter (deployDepth==dDepth) %>%
+  filter (tide != "slack") %>%
   filter()
 # rm (drift)
 
-
-grd <- starsExtra::make_grid(dK, res=1e3)
 
 ## quick'n dirty: IDW
 p <- require ('GVI')  ## for sf_to_rast
@@ -222,10 +258,10 @@ nCores <- detectCores()-1
 speed1 <- sf_to_rast (observer=dK, v="speed_ms"
                       , aoi=st_sf (seaA)
                       , max_distance=10e3
-                      , raster_res=0.5e3
+                      , raster_res=gRes
                       , beta=2
                       , progress=TRUE
-                      , cores=nCores  # no effect on windows? uses openMP?
+                      , cores=nCores
 ) %>%
   st_as_stars () %>%  ## terra raster to stars
   st_warp(crs=projection)
@@ -237,113 +273,114 @@ speed1 <- sf_to_rast (observer=dK, v="speed_ms"
 #  st_crop ()
 
 ## write speed1 to geoTIFF
-write_stars (speed1, dsn="~/tmp/LCI_noaa/data-products/maxSpeedDrifter.tiff")
+write_stars (speed1, dsn=paste0 ("~/tmp/LCI_noaa/data-products/maxSpeedDrifter_IDW_",
+                                 dDepth, "m-dploy_", gRes,
+                                 "res.tiff"))
+## cartography in QGIS
+
+if (0){  ## alternative, cartography in R -- unfinished
+  plot(speed1, col = hcl.colors(12, "Spectral"), reset = TRUE)
+  # plot(st_geometry(dK), add = TRUE, pch=19, cex=0.1)
+  plot (worldM, col="beige", add=TRUE)
+}
+
+
+
+
+
+
+## interpolation: kriging
+## ------------------------------------------------------------------------
+
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/preKrige.RData"); require ('dplyr'); require ('stars')
+
+## consider using gstat for IDW with aggregating function = max
+require ("gstat")
+## see https://mgimond.github.io/Spatial/interpolation-in-r.html
+## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
+
+grd <- starsExtra::make_grid(dK, res=gRes) # 1 km grid -- slow
+# grd <- st_as_stars (st_bbox (st_buffer (dK, 0.01)), dx=1e3, dy=1e3)
+
+if (0){ ## IDW with gstat
+  speedO <- gstat::idw (speed_ms~1, dK, newdata=grd, idp=2.0
+                        # , nmax=10e3
+  )  ## -- no major advantages over GVI?
+  ## XX cut-out coast polygon
+  write_stars(speedO, layer=1,
+              dsn="~/tmp/LCI_noaa/data-products/maxSpeedDrifter_IDW2.tiff")
+  rm (speedO)
+}
+
+
+## sophisticated: kriging
+vg <- variogram (sqrt (speed_ms)~1, dK, cutoff=100e3)
+mdl <- fit.variogram (vg, model=vgm (psill=0.2, "Gau", range=500e3, nugget=0.1))  ## review; not great XXX
+# plot (vg, model=mdl)
+
+# require ("automap")
+# v_mod_OK <- autofitVariogram(speed_ms~1, as(dK, "Spatial"))$var_model  ## quite similar to above
+# # plot (vg, model=v_mod_OK)
+
+## local kriging:  see https://stackoverflow.com/questions/40852598/local-block-kriging-with-local-variogram-with-gstat
+
+
+if (1){ ## serial kriging
+  speed0 <- gstat::krige (formula=speed_ms~1, locations=dK, newdata=grd, model=mdl
+                          , maxdist=20e3
+  )  ## blows up dynamic memory -- try local kriging
+}else{
+  ## parallel interpolation
+  ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
+
+  require ("parallel")
+  nCores <- detectCores ()-1
+  # parts <- split (x=1:length (grd), f=1:nCores)
+  parts <- base::split (x=1:nrow (grd), f=1:nCores)
+  kFnct <- function (x){
+    mdlL <- mdl
+    ## expand to include local variogram
+    ## loop over every value of x, x still being a vector
+    if (0){
+      for (i in 1:length (x)){
+        # https://stackoverflow.com/questions/40852598/local-block-kriging-with-local-variogram-with-gstat
+        # not quite right yet!
+        dists <- spDistsN1(pts=dK, pt=grd[i,], longlat=FALSE)
+        IndsInRad <- which (dists < mdl [2,3])  ## get cut-off distance from variogram
+        IndsInRad <- which (dist < 20e3)        ## manually define cut-off distance
+
+        locVario <- variogram (speed_ms~1, model=vgm ("Gau"), dK [IndsInRad,])
+        locVarioFit <- fit.variogram (mdl, model=vgm ("Gau")) ## is this right??
+        locVarioFit <- fit.variogram (locVario, model=vgm ("Gau"))
+      }
+    }
+    krige (formula=speed_ms~1, locations=dK, newdata=grd [parts[[x]],], model=mdlL, maxdist=20e3)
+  }
+
+  if (.Platform$OS.type=="unix"){
+    speedP <- mclapply(1:nCores, FUN=kFnct)
+  }else{
+    cl <- makeCluster (nCores)
+    clusterExport(cl=cl, varlist = c("grd", "dK", "parts", "mdl", "kFnct"), envir = .GlobalEnv)
+    clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
+    pX <- parLapply(cl=cl, X=1:nCores, fun=kFnct)
+    stopCluster (cl)
+  }
+  speed0 <- do.call(pX, "c")  # c to combine stars objects -- test! XXX
+  rm (parts, nCores, pX)
+  ## rbind grid--stars version of maptools
+}
+write_stars (speed0, dsn="~/tmp/LCI_noaa/data-products/maxSpeedDrifter_krig.tiff", layer=1)
+write_stars (speed0, dsn="~/tmp/LCI_noaa/data-products/maxSpeedDrifter_krig_sd.tiff", layer=2)
+## cartography in QGIS
+
 
 
 ## EoEdits
 
 
-plot(speed1, col = hcl.colors(12, "Spectral"), reset = TRUE)
-# plot(st_geometry(dK), add = TRUE, pch=19, cex=0.1)
-plot (worldM, col="beige", add=TRUE)
 
 
-
-
-## sophisticated: kriging
-vg <- variogram (speed_ms~1, subset (dK$tide != "slack"))
-mdl <- fit.variogram()
-
-
-
-  if (0){  ## fast IDW or gstat?
-    ## fast IDW
-    # https://geobrinkmann.com/post/iwd/
-    ## not accelerated under windows -- worth the installation trouble?
-    ## should use kriging for data-product output
-    ## ideally, grid would be 95%-ile -- revert to gstat?
-
-    # shoreline -- assume and force shoreline speed to be 0  -- only needed for interpolation, not for averaging
-    # add shoreline to drifter speeds
-    if (0){
-      drift_sf <- worldM %>%
-        st_sf () %>%
-        st_simplify(dTolerance=0.01) %>%  ## in meters
-        st_cast ("MULTIPOLYGON") %>%
-        sf::st_coordinates() %>%
-        as.data.frame() %>%
-        st_as_sf (coords=c("X", "Y"), dim="XY", remove=TRUE, crs=4326) %>%
-        st_transform(projection) %>%
-        mutate (speed_ms = 0) %>%
-        mutate (IDn = -1) %>%
-        select (speed_ms, IDn) %>%
-        rbind (drift_sf)
-    }
-
-
-    p <- require ('GVI')  ## for sf_to_rast
-    if (!p){
-      require ("remotes")
-      remotes::install_github("STBrinkmann/GVI")
-    }; rm (p)
-
-    # save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap0.Rdata")
-    require ('parallel')
-    nCores <- detectCores()-1
-
-    speed1 <- sf_to_rast (observer=drift_sf, v="speed_ms"
-                          , aoi=st_sf (seaA)
-                          , max_distance=10e3
-                          , raster_res=1e3
-                          , beta=3
-                          , progress=TRUE
-                          , cores=nCores  # no effect on windows? uses openMP?
-    ) %>%
-      st_as_stars () %>%  ## terra raster to stars
-      st_warp(crs=projection)
-  }else{
-    ## consider using gstat to specify aggregating function = max
-    require ("gstat")
-    ## see https://mgimond.github.io/Spatial/interpolation-in-r.html
-    ## create an empty grid see https://michaeldorman.github.io/starsExtra/reference/make_grid.html
-    require ("starsExtra")
-    grd <- starsExtra::make_grid (drift, res=20e3)  # 1 km grid -- takes a while
-
-    if (0){ ## serial processing?
-      speedO <- gstat::idw (speed_ms~1, drift_sf, newdata=grd, idp=2.0
-                            # , nmax=10e3
-                            # ,
-      )
-      ## clip to seaA
-    }else{
-      ## parallel interpolation
-      ## see https://gis.stackexchange.com/questions/237672/how-to-achieve-parallel-kriging-in-r-to-speed-up-the-process
-      vg <- variogram (speed_ms~1, subset (drift$tide != "slack"))
-      mdl <- fit.variogram (vg, model=vgm (1, "Exp", 90, 1))
-      # plot (vg, model=mdl)
-
-      require ("parallel")
-      nCores <- detectCores ()-1
-      parts <- split (x=1:length (grd), f=1:nCores)
-
-      if (.Platform$OS.type=="unix"){
-        speedP <- mclapply(1:nCores, FUN=function (x){
-          # gstat::idw (speed_ms~1, drift_sf, newdata=grd [parts[[x]],], idp=2.0, nmax=10e3)  ## requires sp class?
-          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-        })
-      }else{
-        cl <- makeCluster (nCores)
-        clusterExport(cl=cl, varlist = c("grd", "drift_sf"), envir = .GlobalEnv)
-        clusterEvalQ (cl=cl, expr = c(library ('sf'), library ('gstat'), library ('stars')))
-        pX <- parLapply(cl=cl, X=1:nCores, FUN=function (x){
-          krige (formula=speed_ms~1, locations=drift_sf, newdata=grd [parts[[x]],], model=mdl)
-        })
-        stopCluster (cl)
-      }
-      ## rbind grid--stars version of maptools
-
-    }
-  }
 
 
 
