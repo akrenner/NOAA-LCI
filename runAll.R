@@ -26,11 +26,23 @@ if (0){
 
 
 if (0){
-  ## to update packages:
+  ## to update packages: 0-- trouble on MacOS?
   require (usethis) ## for github rate limits
   usethis::create_github_token()
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
+
+
+  ## troubleshoot dependencies:
+  # x <- renv::status()
+  # names (x$library$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
+  # names (x$lockfile$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
+  badP <- c("maptools", "rgdal", "rgeos", "rnoaa", "rtide")
+  deps <- renv::dependencies()
+  for (i in 1:length (badP)){
+    print (deps [which (deps$Package==badP[i]),])
+  }
+  rm (badP, deps)
 
   renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
   # renv::install ("~/src/oce_1.7-10.tar.gz")

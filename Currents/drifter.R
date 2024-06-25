@@ -305,7 +305,8 @@ if (0){
   # tide_slack_data_station (tide_station ("Seldovia*", Sys.time()))
   # tide_slack_data_datetime (as.POSIXct ("2020-05-01 15:00", tz= "GMT"), tide_station("Seldovia*"))
   # hist ((runif (1e6) - runif (1e6)))
-  require ('rtide')
+
+#  require ('rtide')
   tide_slack_data (as.POSIXct ("2020-05-01 15:00", tz= "GMT"), tide_stations("Kasitsna*"))
 
   times <-  tide_datetimes(
@@ -521,18 +522,19 @@ drift$natIntvl <- (drift$dT_min > 4 & drift$dT_min < 40) |
   # (drift$dT_min > 0 & drift$dT_min < 70) |  ## take this out?? XXX
   (drift$dT_min > 235 & drift$dT_min < 255)
 
-
+if (0){
 hx <- hist (subset (drift, (dT_min > 30) & (dT_min < 60*7))$dT_min |> log()
       , breaks=200, axes=FALSE)  # there are 3 peaks only
 axis (1, at=pretty (hx$breaks)
       , labels = round (exp (pretty (hx$breaks)))
       )
 rm (hx)
+}
 ## intervals found: 10, 30, 60[], 240[]
 ##
 # invlSum/nrow (drift)
-drift$ivlNew <- drift$dT_f %in% c(10, 20, 25, 30, 35, 55, 60, 65
-                                  , 120, 235, 240, 245, 300, 360)
+drift$ivlNew <- drift$dT_f %in% c(10, 20, 25, 30, 35, 55, 60, 65  ## intervals around 30, 50, 240
+                                  , 120, 235, 240, 245, 250)
 
 
 
