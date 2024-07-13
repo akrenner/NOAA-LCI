@@ -157,7 +157,7 @@ mdl <- fit.variogram (vg, model=vgm (psill=0.2, "Gau", range=500e3, nugget=0.1))
 ## local kriging:  see https://stackoverflow.com/questions/40852598/local-block-kriging-with-local-variogram-with-gstat
 
 
-if (0){ ## serial kriging
+if (1){ ## serial kriging
   speed0 <- gstat::krige (formula=speed_ms~1, locations=dK, newdata=grd, model=mdl
                           # , maxdist=20e3
   )  ## blows up dynamic memory -- try local kriging
