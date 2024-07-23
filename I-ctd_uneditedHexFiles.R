@@ -61,9 +61,9 @@ for (i in seq_along(hexF)){
   deltaT <- difftime (as.POSIXct(paste (notR$Date_isotxt, notR$Time))
                       , ctdTime, units="min") %>%
     abs()
-  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", hexF [i],"\n"
-                        , "notes:", notR$Date_isotxt, " ", notR$Time, "\n"
-                        , "hex:", ctdTime, "\n")}
+  if (deltaT > 5){stop ("Notes and cast times differ by > 5 min in ", hexF [i],
+                        "\nNotes: ", notR$Date_isotxt, " ", notR$Time,
+                        "\nHexF : ", ctdTime)}
   ## end of checks
 
   ## add geographic coordinates, station match_name, etc. to hex-header

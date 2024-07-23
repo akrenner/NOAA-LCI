@@ -36,6 +36,9 @@ if (0){
 
 
 if (1){
+  ## run the first script interactively! :
+  # source ("I-ctd_uneditedHexFiles.R")
+
   ## hex conversion and QAQC plots
   sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
   cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
