@@ -7,6 +7,15 @@ print (startTime <- Sys.time())
 test <- TRUE
 test <- FALSE
 
+
+## clean-out rtide -- push replacement to CRAN? combine with weather?
+## data-density map by tide cycle: slack, flood, ebb (3 h each)
+
+
+
+
+
+
 ## tasks:
 ## fetch all drifter data from PacificGyre.com
 ## also add off-shore drifters?
@@ -297,6 +306,7 @@ if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")}
 
 
 ## -------------------------------------------------------------------------------------------
+## rtide to retire -- use NOAA server
 ## calculate state of the tide to subset data for maps, separating flood/slack/ebb
 
 ## XXX can't currently reproduce results of tide_slack_data XXXXX -- try different harmonics
@@ -425,64 +435,6 @@ drift$tide <- factor (drX$tide)
 rm (drX, tide, tIdx)
 # barplot (summary (drift$tide))
 
-## now obsolete (and currently unreliable) tide calculations using package rtide. Revive?
-if (0){
-  ## tides
-  require ('rtide')  ## calculates tides from harmonics
-  ## find closest station: Seldovia/Kasitsna, Nikiski, Kodiak, Anchorage, Seward
-  #  tStn <- tide_stations("Seldovia*")
-  tStn <- "Anchor Point, Cook Inlet, Alaska"
-  tSn <- "Bear Cove, Kachemak Bay, Cook Inlet, Alaska"
-  tSn <- "Kasitsna Bay, Kachemak Bay, Alaska"
-  ttbl <- data.frame (# Station=tide_stations ("Seldovia*") ## find better harmonics?!
-    Station=tSn, DateTime = round (drift$DeviceDateTime, units="hours"))  ## imperative to parallelize. Enough?
-  tu <- unique (ttbl)
-
-  system.time ({
-    if (1){  ## parallel (or serial)
-      require(parallel)
-      if (.Platform$OS.type=="unix"){
-        pT <- mclapply (1:nrow (tu), function (i){tide_slack_data(tu [i,])}
-                        , mc.cores=detectCores()-1)
-      }else{
-        require(parallel)
-        ## need to pre-allocate to cores -- don't use parLapplyLB
-        nCores <- detectCores()-1
-        cl <- makeCluster(nCores)
-        clusterExport (cl, varlist=c("tu"))
-        clusterEvalQ(cl, require ("rtide"))
-        pT <- parLapply (cl, 1:nrow (tu), function (i){tide_slack_data (tu [i,])})
-        stopCluster (cl); rm (cl)
-      }
-      tSlack <- as.data.frame (do.call (rbind, pT))
-    }else{
-      ## serial processing
-      tSlack <- tide_slack_data(tu)  ## must parallelize
-    }
-  })
-  if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata")}  ## checkpoint for safety
-  ##  rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
-  ttbl <-  cbind (DeviceDatetime=drift$DeviceDateTime
-                  # , DateTimeT=ttbl$DateTime
-                  , tSlack [match (ttbl$DateTime, tSlack$DateTime),c(2,3,5)])
-
-  ## categorize tide: within 1.5 h: high/low -- incorrect XXX see above
-  ttbl$dT <- difftime (ttbl$DeviceDatetime, ttbl$SlackDateTime) |> as.numeric()/3600  # time in hours
-  ttbl$tide <- ifelse (abs (ttbl$dT) < 1.5, "slack", NA)
-  # ttbl$tide <- ifelse (is.na (ttbl$tide), ifelse (ttbl$SlackType=="high", "ebb", "flood"), ttbl$tide)
-
-  if (0){
-    hist (ttbl$dT, main = "", xlab="hours from slack tide")
-    hist (abs (ttbl$dT), main = "", xlab = "|hours| from slack tide")
-    hist (subset (ttbl, SlackType=="high")$dT)
-    hist (format (ttbl$DeviceDatetime, "%H") |> as.numeric(), xlab="hour of day")
-    # hist (sin (runif(10e3)*2*pi))
-  }
-
-  drift <- cbind (drift, ttbl [, c(3,4,6)])
-  rm (tu, ttbl, tSlack)
-}
 ## move tide functions into function script, load that
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
 #  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
@@ -1067,7 +1019,8 @@ write.csv (drift %>% st_drop_geometry() %>%
              filter (badSpeed==FALSE) %>%
              filter (trimBoat==FALSE) %>%
              select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
-           , file="~/tmp/LCI_noaa/data-products/drifter.csv", row.names=FALSE)
+           , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter.csv.gz")
+           , row.names=FALSE)
 
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
