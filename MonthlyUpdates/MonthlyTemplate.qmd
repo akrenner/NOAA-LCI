@@ -1,0 +1,125 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## fetch data from notebook export and CTD processing
+
+minT = min (c(10.5, 10.6, 9.8, 11))
+maxT = max (c(13, 15, 14, 12))
+sDate = as.Date (Sys.Date())
+sY = format (sDate, "%Y")
+sM = month.name [as.numeric (format (sDate, "%m"))]
+sSlot= paste (sM, sY)
+
+crew = c("Hans", "Dom", "Martin") |> sort()
+crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
+                 paste0 (crew [length (crew)])), collapse = ", and ")
+# crewT
+
+
+## to-do: 
+## tweak title layout : remove "author" and "affiliation"
+## add date? 
+## add background graphics, NCCOS logo
+
+
+```
+
+---
+title: "Monthly Kachemak Bay report, `{r} sSlot`"
+author: 
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to Kasitsna Bay Lab, NCCOS, NOAA
+        address: 81 Sterling Highway
+        city: Homer
+        state: Alaska
+        postal-code: 99603
+
+format: html  # or pdf or word
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to pdf
+---
+
+## Conditions
+
+On `{r} sDate`, `{r} crewT` went out to conduct our monthly survey. Water temperatures ranged from `{r} minT` degrees C at ZZ to `{r} maxT` degrees C.
+
+Wind and precipitation. Introductory remarks
+
+## Physical oceanography
+
+Current conditions, long-term anomalies:
+
+### Temperature
+
+Absolute values and locations.
+
+### Salinity
+
+Salinity anomaly and seasonality. Anomaly of depth-profile.
+
+### Stratification, turbidity, remarks
+
+Seasonality and anomaly of strength of stratification (AlongBay 10) Seasonality of turbidity? AlongBay 02. Inner bay: glacial plume too erratic?
+
+## Biological conditions
+
+### Phytoplankton
+
+Fluorescence compared to the last 12 months
+
+Fluorescence compared to long-term mean.
+
+### Zooplankton
+
+Backscatter? Species composition?
+
+### Wildlife
+
+Sightings of whales, seaotters, birds, zooplankton.
+
+## Appendix
+
+<!-- Struggling with path settings -- circumvent this issue by copying relevant file to local directory -->
+```{r}
+#| echo: false
+  ## find files
+  ## construct mark-down code (all sections of the day, monthly / quarterly)
+  dest="media/CTDsections/sectionImages/"
+  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+  
+  fl <- list.files(paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
+  flS <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE)
+  cS <- file.copy(from=paste0 ("~/tmp/LCI_noaa/", dest, flS),
+            to=dest, overwrite=TRUE
+            )
+  fl <- list.files (dest, pattern="*.png")
+  Tran <- substr (fl, 12, nchar (fl))
+  Tran <- gsub (".png", "", Tran, fixed=TRUE)
+  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
+  iStrng <- paste0 (dest, fl)
+  s1 <- iStrng [1]
+  s2 <- iStrng [2]
+  rm (fl, flS, dest, cS)
+```
+
+
+<!-- absolute path   file:///d:/abs -->
+<!-- relative path to file: ./   -->
+<!-- relative path from project root -->
+<!-- shortcut path -->
+
+
+<!-- relative path and ~/[path] do not seem to work for html -->
+
+::: {#fig-elements layout-ncol=2}
+![AlongBay](./`{r} s2`)
+
+![T9](./`{r} s1`)
+
+Longitudinal sections of main parameters.
+:::

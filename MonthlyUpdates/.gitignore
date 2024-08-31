@@ -1,0 +1,7 @@
+MonthlyTemplate.html
+MonthlyTemplate.log
+MonthlyTemplate_files/
+media-lk.lnk
+media/
+*.tex
+*.Rmd
