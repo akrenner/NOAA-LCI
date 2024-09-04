@@ -2,17 +2,35 @@
 #| echo: false
 
 ## align wd with html dir
-setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
-## fetch data from notebook export and CTD processing
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ? 
 
-minT = min (c(10.5, 10.6, 9.8, 11))
-maxT = max (c(13, 15, 14, 12))
-sDate = as.Date (Sys.Date())
-sY = format (sDate, "%Y")
+## clear the slate
+rm (list=ls())
+unlink ("MonthlyUpdates/media/", recursive=TRUE)
+
+
+## fetch data from notebook export and CTD processing
+load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+physOc$isoDate <- as.Date (physOc$isoTime)
+physL <- subset (physOc, isoDate == max (isoDate))
+rm (physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- physL$isoDate [1]
+minT <- min (physL$Temperature_ITS90_DegC, na.rm=TRUE) |> round (1)
+maxT <- max (physL$Temperature_ITS90_DegC, na.rm=TRUE) |> round (1)
+minS <- min (physL$Salinity_PSU, na.rm=TRUE) |> round (1)
+maxS <- max (physL$Salinity_PSU, na.rm=TRUE) |> round (1)
+
+sY = as.numeric (format (sDate, "%Y"))
 sM = month.name [as.numeric (format (sDate, "%m"))]
 sSlot= paste (sM, sY)
 
-crew = c("Hans", "Dom", "Martin") |> sort()
+crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
 crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
                  paste0 (crew [length (crew)])), collapse = ", and ")
 # crewT
@@ -24,7 +42,61 @@ crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
 ## add background graphics, NCCOS logo
 
 
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+
+
+  ## find files
+  ## construct mark-down code (all sections of the day, monthly / quarterly)
+  dest="media/CTDsections/sectionImages/"
+  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+  
+  fl <- list.files(paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
+  # pick only transects from last survey; flexible as to monthly/quarterly
+  flS <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE) 
+  cS <- file.copy(from=paste0 ("~/tmp/LCI_noaa/", dest, flS),
+            to=dest, overwrite=TRUE
+            )
+  fl <- list.files (dest, pattern="*.png")
+  Tran <- substr (fl, 12, nchar (fl))
+  Tran <- gsub (".png", "", Tran, fixed=TRUE)
+  
+  ## generating strings for all transects -- not yet working
+#  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
+  iStrng <- paste0 (dest, fl)
+#  iStrng <- paste0 ("MonthlyUpdates/", dest, fl)
+  transectSection1 <- iStrng [1]
+  transectSection2 <- iStrng [2]
+
+  try ({
+    transectSection3 <- iStrng [3]
+    transectSection4 <- iStrng [4]
+  })
+  
+  
+  
+  ## Chlorophyll
+  dest="media/CTDsections/time-sections/"
+  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+  flS <- list.files (paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
+  cS <- file.copy (from=paste0 ("~/tmp/LCI_noaa/", dest, flS)
+                   , to=dest, overwrite=TRUE)
+  TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
+  TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
+  TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
+  TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
+  
+  ## NOAA weather -- replace from rNOAA
+  
+  rm (fl, flS, dest, cS)
 ```
+
+
+
 
 ---
 title: "Monthly Kachemak Bay report, `{r} sSlot`"
@@ -46,24 +118,27 @@ editor: visual
 
 ## Conditions
 
-On `{r} sDate`, `{r} crewT` went out to conduct our monthly survey. Water temperatures ranged from `{r} minT` degrees C at ZZ to `{r} maxT` degrees C.
+On `{r} sDate`, `{r} crewT` went out to conduct our monthly survey. 
+
 
 Wind and precipitation. Introductory remarks
 
 ## Physical oceanography
-
 Current conditions, long-term anomalies:
 
 ### Temperature
-
-Absolute values and locations.
+Water temperatures ranged from 
+`{r} minT` $^\circ$C at station `{r} physL$Match_Name [which.min (physL$Temperature_ITS90_DegC)]` 
+and depth of `{r} physL$Depth.saltwater..m. [which.min (physL$Temperature_ITS90_DegC)]` m
+to `{r} maxT` $^\circ$C at `{r} physL$Match_Name [which.max (physL$Temperature_ITS90_DegC)]` (`{r} physL$Depth.saltwater..m. [which.max (physL$Temperature_ITS90_DegC)]` m depth).
 
 ### Salinity
+Salinity values ranged from `{r} minS` PSU at `{r} physL$Match_Name [which.min (physL$Salinity_PSU)]` (`{r} physL$Depth.saltwater..m. [which.min (physL$Salinity_PSU)]`m depth)
+to `{r} maxS` at `{r} physL$Match_Name [which.max (physL$Salinity_PSU)]` (`{r} physL$Depth.saltwater..m. [which.max (physL$Salinity_PSU)]`m depth).
 
-Salinity anomaly and seasonality. Anomaly of depth-profile.
+Salinity anomaly and seasonality. Anomaly of depth-profile. Min and max values? 
 
 ### Stratification, turbidity, remarks
-
 Seasonality and anomaly of strength of stratification (AlongBay 10) Seasonality of turbidity? AlongBay 02. Inner bay: glacial plume too erratic?
 
 ## Biological conditions
@@ -74,6 +149,9 @@ Fluorescence compared to the last 12 months
 
 Fluorescence compared to long-term mean.
 
+![Chlorophyll concentration](./`{r} TSchlorophyll`)
+
+
 ### Zooplankton
 
 Backscatter? Species composition?
@@ -82,44 +160,17 @@ Backscatter? Species composition?
 
 Sightings of whales, seaotters, birds, zooplankton.
 
+
 ## Appendix
 
-<!-- Struggling with path settings -- circumvent this issue by copying relevant file to local directory -->
-```{r}
-#| echo: false
-  ## find files
-  ## construct mark-down code (all sections of the day, monthly / quarterly)
-  dest="media/CTDsections/sectionImages/"
-  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
-  
-  fl <- list.files(paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
-  flS <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE)
-  cS <- file.copy(from=paste0 ("~/tmp/LCI_noaa/", dest, flS),
-            to=dest, overwrite=TRUE
-            )
-  fl <- list.files (dest, pattern="*.png")
-  Tran <- substr (fl, 12, nchar (fl))
-  Tran <- gsub (".png", "", Tran, fixed=TRUE)
-  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
-  iStrng <- paste0 (dest, fl)
-  s1 <- iStrng [1]
-  s2 <- iStrng [2]
-  rm (fl, flS, dest, cS)
-```
+::: {#fig-elements layout-ncol=1}
+![AlongBay](./`{r} transectSection1`)
 
-
-<!-- absolute path   file:///d:/abs -->
-<!-- relative path to file: ./   -->
-<!-- relative path from project root -->
-<!-- shortcut path -->
-
-
-<!-- relative path and ~/[path] do not seem to work for html -->
-
-::: {#fig-elements layout-ncol=2}
-![AlongBay](./`{r} s2`)
-
-![T9](./`{r} s1`)
+![T9](./`{r} transectSection2`)
 
 Longitudinal sections of main parameters.
 :::
+
+More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots).
+
+Add map with station numbers -- schematic
