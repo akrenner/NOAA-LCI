@@ -21,11 +21,6 @@ rm (physOc)
 # sDate = as.Date (Sys.Date())
 # sDate = as.Date ("2024-08-26")
 sDate <- physL$isoDate [1]
-minT <- min (physL$Temperature_ITS90_DegC, na.rm=TRUE) |> round (1)
-maxT <- max (physL$Temperature_ITS90_DegC, na.rm=TRUE) |> round (1)
-minS <- min (physL$Salinity_PSU, na.rm=TRUE) |> round (1)
-maxS <- max (physL$Salinity_PSU, na.rm=TRUE) |> round (1)
-
 sY = as.numeric (format (sDate, "%Y"))
 sM = month.name [as.numeric (format (sDate, "%m"))]
 sSlot= paste (sM, sY)
@@ -33,7 +28,28 @@ sSlot= paste (sM, sY)
 crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
 crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
                  paste0 (crew [length (crew)])), collapse = ", and ")
-# crewT
+
+
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm=TRUE),
+                                             max (Temperature_ITS90_DegC, na.rm=TRUE),
+                                             min (Salinity_PSU, na.rm=TRUE),
+                                             max (Salinity_PSU, na.rm=TRUE)),
+                                  stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+                                          Match_Name [which.max (Temperature_ITS90_DegC)],
+                                          Match_Name [which.min (Salinity_PSU)],
+                                          Match_Name [which.max (Salinity_PSU)]),
+                                  depth= c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+                                          Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+                                          Depth.saltwater..m. [which.min (Salinity_PSU)],
+                                          Depth.saltwater..m. [which.max (Salinity_PSU)])
+                                  ))
+tsal$temSalR <- round (tsal$temSal, 1)
+tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
 
 
 ## to-do: 
@@ -47,8 +63,6 @@ crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
 ## copy files for figures
 
 # Struggling with path settings -- circumvent this issue by copying relevant file to local directory
-
-
 
   ## find files
   ## construct mark-down code (all sections of the day, monthly / quarterly)
@@ -128,13 +142,13 @@ Current conditions, long-term anomalies:
 
 ### Temperature
 Water temperatures ranged from 
-`{r} minT` $^\circ$C at station `{r} physL$Match_Name [which.min (physL$Temperature_ITS90_DegC)]` 
-and depth of `{r} physL$Depth.saltwater..m. [which.min (physL$Temperature_ITS90_DegC)]` m
-to `{r} maxT` $^\circ$C at `{r} physL$Match_Name [which.max (physL$Temperature_ITS90_DegC)]` (`{r} physL$Depth.saltwater..m. [which.max (physL$Temperature_ITS90_DegC)]` m depth).
+`{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to 
+`{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth).
 
 ### Salinity
-Salinity values ranged from `{r} minS` PSU at `{r} physL$Match_Name [which.min (physL$Salinity_PSU)]` (`{r} physL$Depth.saltwater..m. [which.min (physL$Salinity_PSU)]`m depth)
-to `{r} maxS` at `{r} physL$Match_Name [which.max (physL$Salinity_PSU)]` (`{r} physL$Depth.saltwater..m. [which.max (physL$Salinity_PSU)]`m depth).
+Salinity values ranged from 
+`{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to 
+`{r} tsal$temSalR[4]` at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth).
 
 Salinity anomaly and seasonality. Anomaly of depth-profile. Min and max values? 
 
