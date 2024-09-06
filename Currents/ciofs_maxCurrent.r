@@ -38,9 +38,9 @@ ncF <- "~/GISdata/LCI/drifter/max_speed_2014-1.nc"  ## max tide picked by Kriste
 ## visit ciofs_bigtide_KT.nc later (extracting u,v vectors, filtering by direction as well)
 
 
-grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+# grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 grid_spacing <- 1e3
-# grid_spacing <- 500
+grid_spacing <- 500
 prjct <- 3338
 
 

@@ -8,9 +8,9 @@ test <- TRUE
 test <- FALSE
 
 
-## clean-out rtide -- push replacement to CRAN? combine with weather?
-## data-density map by tide cycle: slack, flood, ebb (3 h each)
 
+## data-density map by tide cycle: slack, flood, ebb (3 h each)
+## clean raw data: compare to modeled speeds
 
 
 
@@ -68,7 +68,7 @@ require ('dplyr')      ## needed for pipe
 require ('RColorBrewer')
 require ("sf")         ## apparently not auto-loaded by ggOceanMaps
 require ("stars")
-require ('oce')
+require ('oce')        ## for oce::geodist
 require ("readr") ## for read_csv
 # require ("rnaturalearth")
 # require ('tidyverse')
@@ -242,12 +242,86 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
 rm (readC, driftF, updateFN, driftP)
 
 
+## BIG CHANGE:
+## Use files from Research Workspace, uploaded by Scott Pegau
+## These may be cleaned? And have more detailed drogue depth information
+## downloaded from https://researchworkspace.com/file/41810436/CIDrifter0013Y2012_SubsurfaceDrogueAt15M_data.csv
+require ("readr")
+driftF <- "~/GISdata/LCI/drifter-researchworkspace.zip"
+temp <- unzip(driftF, list = TRUE)$Name
+temp <- grep(".csv$", temp, value = TRUE)
+# for (i in 1:length (temp)){
+#   cat (i, "\n")
+#   d1 <- read_csv (unz (driftF, temp [i]))
+#   d1$fn <- temp [i]
+# }
+driftX <- dplyr::bind_rows(lapply(temp, function(fn){
+  suppressMessages ({
+  readr::read_csv(unz(driftF, fn)) %>%
+      mutate (drogue_depth=strsplit(fn, "m/")[[1]][1] %>%
+                as.numeric()) %>%
+      mutate(DeviceName=strsplit (fn, "/")[[1]][2])
+  })
+}
+))
+rm (temp, driftF)
+
+## adapt driftX to drift field names
+driftX <- driftX %>%
+  mutate (DeviceDateTime = as.POSIXct(paste0 (
+    Year, "-", Month, "-", Day, " ", Hour, ":", Minute))) %>%
+  mutate (Latitude=Lat) %>%
+  mutate (Longitude=Long)
+names (driftX) <- gsub ("-", "_", names (driftX), fixed = TRUE)
+
+
+drift <- with (drift, data.frame(Drifter=DeviceName,
+                                 Year=as.numeric (format (drift$DeviceDateTime, "%Y")),
+                                 Month=as.numeric (format (drift$DeviceDateTime, "%m")),
+                                 Day=as.numeric (format (drift$DeviceDateTime, "%d")),
+                                 Hour=as.numeric (format (drift$DeviceDateTime, "%H")),
+                                 Minute=as.numeric (format (drift$DeviceDateTime, "%M")),
+                                 Lat=Latitude, Long=Longitude,
+                                 U_Vel=rep (NA, nrow (drift)),
+                                 V_Vel=rep (NA, nrow (drift)),
+                                 drogue_depth=rep (NA, nrow (drift)),
+                                 DeviceName,
+                                 Deployment = rep (NA, nrow (drift)),
+                                 Temperature = rep (NA, nrow (drift)),
+                                 Salinity = rep (NA, nrow (drift)),
+                                 s = rep (NA, nrow (drift)),
+                                 DeviceDateTime, Latitude, Longitude))
+
+## summary of annual coverages
+if(0){
+  aggregate (DeviceName~Year, data=driftX, function (x){length(x)})
+  aggregate (DeviceName~Year, data=drift, function (x){length(x)})
+  plot (Latitude~Longitude, data=driftX, subset=Year < 2012)
+  plot (Latitude~Longitude, data=drift, subset=Year > 2020)
+}
+
+## append latest records from PacificGyre to records already processed by Scott Pegau
+drift <- rbind (driftX, subset (drift, Year > max (driftX$Year)))
+rm (driftX)
+
+
+
+
+
+
+
+
 ## remove duplicates (about 80 in contiguous download)
 # drift <- drift %>%
 #   filter (!duplicated (drift [,which (names (drift) %in%
 #                                         c("DeviceName", "DeviceDateTime") )])) %>%
 #   filter()
+Nd <- nrow (drift)
 drift <- subset (drift, !duplicated (paste (drift$DeviceName, drift$DeviceDateTime)))
+cat ("N drifter points:", Nd, "-- Removed", Nd - nrow (drift), "duplicates\n\n"); rm (Nd)
+# drift2 <- subset (drift, !duplicated (paste (drift$Latitude, drift$Longitude, drift$DeviceDateTime)))
+
+
 ## get more drifter data from NOAA global drifter program
 if (0) {
   ## See https://osmc.noaa.gov/erddap/tabledap/index.html?page=1&itemsPerPage=1000
@@ -260,6 +334,7 @@ if (0) {
   # ERDDAP "https://erddap.aoml.noaa.gov/"
   # https://erddap.aoml.noaa.gov/gdp/erddap/index.html
 }
+
 
 
 
@@ -277,6 +352,12 @@ drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 
 drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
                 , dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
+
+crds <- st_coordinates(drift) |> as.data.frame()
+drift$u_vel2 <- c (0, (diff (crds$X))) / (drift$dT_min*60)
+drift$v_vel2 <- c (0, (diff (crds$Y))) / (drift$dT_min*60)
+rm (crds)
+
 ## use morph..
 drift$topo <- st_extract(mar_bathy, at=drift)$topo
 
@@ -285,15 +366,19 @@ drift$LandDistance_m <- worldM %>%
   st_union() %>%
   st_distance(drift, by_element=FALSE) %>%
   as.numeric()
-# drift$onLand <- !is.na (st_intersects(dx, st_union (worldM)) |> as.numeric()) ## not pretty, not reliable. Skip for now
+## drift$onLand <- !is.na (st_intersects(dx, st_union (worldM)) |> as.numeric()) ## not pretty, not reliable. Skip for now
 drift$onLand <- st_intersects(drift, worldM) %>% as.numeric () ## not pretty, not reliable. Skip for now
 # dx$onLand <- st_join (dx, st_sf (worldM), join=st_within)
 # dx <- st_filter (dx, seaA)  ## supposed to filter out points on land
 # rm (dx)
 
 ## ice wave rider and MicroStar are surface devices
-drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0) |> factor()
-drift$year <- format (drift$DeviceDateTime, "%Y") |> factor()  ## above should be piped and mapped XXX
+drift$drogue_depth <- ifelse (is.na (drift$drogue_depth)
+                              , ifelse (seq_len (nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0)
+                              , drift$drogue_depth
+                              ) |> factor ()
+# drift$deployDepth <- ifelse (seq_len(nrow (drift)) %in% grep ("UAF-SVP", drift$DeviceName), 15, 0) |> factor()
+# drift$Year <- format (drift$DeviceDateTime, "%Y") |> factor()  ## above should be piped and mapped XXX
 
 
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifter3.Rdata")}
@@ -357,7 +442,7 @@ if (0){
 ## https://tidesandcurrents.noaa.gov/web_services_info.html
 
 station=9455517  # Kasitsna Bay
-yL <- levels (drift$year)
+yL <- levels (drift$Year)
 
 if (file.exists("~/tmp/LCI_noaa/cache/drifter/tideCache.csv")){
   tide <- read_csv ("~/tmp/LCI_noaa/cache/drifter/tideCache.csv", show_col_types=FALSE)
@@ -442,6 +527,8 @@ if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
 
 
 
+
+
 ## -------------------------------------------------------------------------------------------
 ## build reference map to identify human-transported drifter positions
 
@@ -506,7 +593,7 @@ drift_sf <- drift %>%
 # nrow (drift_sf)
 
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")}
-## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")
+## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata"); require ("stars"); require ("dplyr")
 
 
 
@@ -522,6 +609,18 @@ if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSpeedMap.Rdata")}
 ## later make prediction using kriging
 
 
+## -------------------------------------------------------------
+## use CIOFS max speeds instead
+## csv file exported by Kristen Thyng
+# ciofs <- read.csv("~/GISdata/LCI/drifter/drifter.csv.gz")
+
+
+## -------------------------------------------------------------
+
+
+
+
+
 ## define grid
 seaAEx <- st_bbox (drift_sf) %>%
   st_as_sfc() # %>%
@@ -530,7 +629,7 @@ pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
   st_sf () %>%
   mutate (ID=row_number())
 A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
-rm (seaAEx)
+rm (seaAEx, grid_spacing, pgon)
 
 # do this for classes: tide==flood, tide==ebb, deployDepth=0, depolyDepth==15
 ## ok to lump deployDepth here -- only for filtering. Separate them later
@@ -543,7 +642,7 @@ pointsID <- drift_sf %>%
   summarize (mapped_speed=quantile (speed_ms, 0.5))
 A <- left_join(A, pointsID, by="ID")
 # plot (A ["mapped_speed"])
-rm (pointsID, pgon)
+rm (pointsID)
 
 ## extract mapped_speed from A
 ## need to subset to drifters within study area
@@ -565,6 +664,7 @@ hist (rSp, breaks=500, xlab="speed residual [m/s]", main="")
 abline (v=sdTh*sd (rSp, na.rm=TRUE))
 axis (3, tick=FALSE, at=sdTh*sd (rSp, na.rm=TRUE), labels=paste (sdTh,"SD"))
 
+
 drift_sf %>%
   filter (speed_ms < 20) %>%
   st_drop_geometry() %>%
@@ -581,7 +681,9 @@ plot (worldM, add=TRUE, col="gray")
 dev.off()
 
 drift_sf$badSpeed <- ifelse (rSp > sdTh*sd (rSp, na.rm=TRUE), TRUE, FALSE)
-rm (grid_spacing, A, rSp, sdTh)
+rm (rSp, sdTh)
+
+
 
 
 ## ---------------------------------------------------------------------------------
@@ -621,6 +723,50 @@ rm (driftX)
 if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")}
 save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
+
+
+
+
+
+## ----------------------------------------------------------------------------
+## plot sampling effort by stage in tide cycle
+
+for (ti in levels (drift$tide)){
+
+#  ti <- "slack"
+#  ti <- "flood"
+## aggregate drift over grid
+pointsID <- drift %>%
+  #  group_split (tide, deployDepth) %>%
+  filter (tide==ti) %>%
+  st_join (A) %>%
+  as.data.frame() %>%
+  group_by (ID) %>%
+  summarize (Ndrift=length (speed_ms))
+#  summarize (mapped_speed=quantile (speed_ms, 0.5))
+B <- left_join(A, pointsID, by="ID")
+# A$Ndrift <- ifelse(is.na (A$Ndrift), 0, A$Ndrift)
+# plot (A ["mapped_speed"])
+rm (pointsID)
+# print (ti)
+# print (max (B$Ndrift, na.rm=TRUE))
+
+# breaks <- 19571 # max slack
+mbreaks <- seq (0, 19571, by=19571/100)  # 19571 = max (slack)
+
+png (paste0 (outpath, "Sampling-", ti, ".png"), width=resW, height=resH)
+require ("viridisLite")
+##
+
+plot (seaA, col="white", border="white", main=paste0 ("N positions ", ti, "-tide"))
+B ["Ndrift"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100), breaks=mbreaks, main="") #"equal")
+# Aimg <- A ["Ndrift"] %>% st_rasterize()
+# %>% plot(add=TRUE, col=plasma (100))
+plot (worldM, add=TRUE, col="gray")
+rm (B)
+dev.off()
+}
+rm (A)
 
 
 
@@ -690,7 +836,7 @@ dInt <- function (i){
     ## evaluate 2-h blocks -- should move at least 100 m from start to finish
     tBlock <- 20
     buf <- nrow (df) %% tBlock
-    # require ("oce")
+
     if (0){  # nrow (df) > 40){    ## can produce NAs
       df$blockSpeed_ms <- sapply (nrow (df):buf, function (m){
         oce::geodDist(df$Longitude [m], df$Latitude [m]
@@ -814,7 +960,7 @@ dInt <- function (i){
         newDF$LandDistance_m <- df$LandDistance_m [1]
         # newDF$onLand
         newDF$deployDepth <- df$deployDepth [1]
-        newDF$year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
+        newDF$Year <- format (newDF$DeviceDateTime, "%Y") %>% as.numeric() %>% as.factor()
         newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
         newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
         # newDF$badSpeed
@@ -950,7 +1096,7 @@ drift <- drift %>%
   mutate (DeviceName=factor (DeviceName)) %>%
   mutate (deploy = factor (deploy)) %>%
   mutate (col=brewer.pal (8, "Set2")[drift$DeviceName]) %>% # 8 is max of Set2
-  mutate (year=as.numeric (format (DeviceDateTime, "%Y"))) %>%
+  mutate (Year=as.numeric (format (DeviceDateTime, "%Y"))) %>%
   dplyr::filter()
 # drift$DeviceName <- factor (drift$DeviceName)
 # drift$deploy <- factor (drift$deploy)
@@ -967,7 +1113,7 @@ drift <- drift %>%
 require ('mapview')  ## also see rMaps on GitHub
 require ('webshot')
 mymap <- drift %>%
-  filter (year==2022) %>%
+  filter (Year==2022) %>%
   filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%  #, "UAF-MS-0066")) %>%
   filter (DeviceDateTime < as.POSIXct("2022-08-20 07:00")) %>%
   filter (DeviceDateTime > as.POSIXct("2022-07-21 18:00")) %>%

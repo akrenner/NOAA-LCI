@@ -134,6 +134,22 @@ if (0){ # Dec 2019 seasonality
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")
 
+
+## how to execute report?
+# source ("MonthlyUpdates/MonthlyTemplate.qmd")
+
+
+## one-offs
+if (0){
+  source ("Currents/bathymetry-merge.R")
+  source ("Currents/ciofs_maxCurrent.r")
+  source ("Currents/drifter.R")
+  source ("Currents/plotDrifter.R")
+}
+
+
+
+
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
