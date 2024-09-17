@@ -36,19 +36,13 @@ test <- FALSE
 
 
 
+speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
 
 
 ## set interpolation [min] for animation
 interP <- 10 # interpolation interval (min)
-
-speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
-
-resW <- 1920; resH <- 1080   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
-resW <- 1024; resH <-  576   ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
-frameR <- 24 ## frames/s
-
-
-
+resolu <- c (resW=1080, resH=576, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+# resolu <- c (resW=1920, resH=1080, frameR=30)
 
 ## ----------------------------------------------------------
 ## set file locations
@@ -211,7 +205,7 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
   mutate (IDn=1:nrow (.)) %>%
   mutate (FileName="PacificGyre") %>%
   filter()
-rm (readC, driftF, updateFN, driftP)
+rm (readC, driftF, updateFN)
 
 
 ## BIG CHANGE:
@@ -219,7 +213,8 @@ rm (readC, driftF, updateFN, driftP)
 ## These may be cleaned? And have more detailed drogue depth information
 ## downloaded from https://researchworkspace.com/file/41810436/CIDrifter0013Y2012_SubsurfaceDrogueAt15M_data.csv
 require ("readr")
-driftF <- "~/GISdata/LCI/drifter-researchworkspace.zip"
+driftF <- paste0 (driftP, "drifter-researchworkspace.zip")
+# driftF <- "~/GISdata/LCI/drifter-researchworkspace.zip"
 fileL <- unzip(driftF, list = TRUE)$Name
 fileL <- grep(".csv$", fileL, value = TRUE)
 # for (i in 1:length (fileL)){
@@ -631,7 +626,7 @@ for (ti in levels (drift$tide)){
   # breaks <- 19571 # max slack
   mbreaks <- seq (0, 19571, by=19571/100)  # 19571 = max (slack)
 
-  png (paste0 (outpath, "Sampling-", ti, ".png"), width=resW, height=resH)
+  png (paste0 (outpath, "Sampling-", ti, ".png"), width=resolu [1], height=resolu [2])
   require ("viridisLite")
   ##
 
@@ -643,7 +638,7 @@ for (ti in levels (drift$tide)){
   rm (B)
   dev.off()
 }
-rm (A)
+rm (A, ti)
 
 
 
@@ -706,6 +701,34 @@ unlink(paste0 (outpath, "deployment/"), recursive=TRUE)
 dir.create(paste0 (outpath, "deployment/"), showWarnings=FALSE, recursive=TRUE)
 
 dInt <- function (i){
+  ## step-by-step re-implementation to work with new dataset
+  require ("sf")
+  require ("dplyr")
+  df <- subset (drift, deploy == levels (drift$deploy)[i])
+
+  ## less than 4 positions in deployment
+  if (nrow (df) < 4){df$off_deploy <- TRUE}
+
+  ## bad GPS: addressed by CIOFS?
+
+  ## no movement in 2-h blocks -- XXX unfinished
+  tBlock <- 20
+  buf <- nrow (df) %% tBlock
+
+  ## only consider the end 1/4 of deployment for cutting?
+
+  ## no bad data points
+  df$off_deploy [c(1, nrow (df))] <- TRUE
+
+
+  ## interpolations
+  newDF <- df
+
+  newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
+  newDF
+}
+
+dIntX <- function (i){
   require ("sf")
   require ("dplyr")
   df <- subset (drift, deploy == levels (drift$deploy)[i])
@@ -731,8 +754,6 @@ dInt <- function (i){
         # plot (df$blockSpeed_ms, col=ifelse (df$blockSpeed_ms < 100, "red", "black"))
       }
       if (!"blockSpeed_ms" %in% names (df)){df$blockSpeed_ms <- 5000}
-
-
 
       badGPS <- c (rep (FALSE, 3), sapply (3:nrow (df), FUN=function (k){
         ## single bad GPS position: previous speed is fine, next is bad, next+1 is good
@@ -780,7 +801,7 @@ dInt <- function (i){
 
 
       png (paste0 ("~/tmp/LCI_noaa/media/drifter/deployment/trim_", i, ".png")
-           , height=resH, width=resW)
+           , height=resolu [2], width=resolu [1])
       par (mfrow=c(1,2))
       plot (df$speed_ms, col=ifelse (df$trimBoat, "red", "black"), pch=19)
       abline (h=sdTH, lty="dashed")
@@ -840,7 +861,6 @@ dInt <- function (i){
     newDF$tide <- df$tide [1]  ## quick and dirty -- ok for short intervals
     newDF$mapped_speed <- df$mapped_speed [1]  ## XXX dirty, but fine here
     newDF$interp <- TRUE
-    # newDF$badSpeed
 
     df$interp <- FALSE
     newDF <- rbind (df, newDF)
@@ -848,13 +868,20 @@ dInt <- function (i){
     newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
 
   }else{
-    newDF <- NULL
+    newDF <- df
+    newDF$off_deploy <- TRUE
+    # newDF <- NULL
   }
   newDF
 }
 
 
-if (1){
+# x <- dInt (1)
+
+
+
+
+if (1){   ## parallel processing
   require ("parallel")
   require ('data.table')
   nCores <- detectCores()-1
@@ -864,7 +891,7 @@ if (1){
       rbindlist()
   }else{
     cl <- makeCluster(nCores, type="PSOCK")
-    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH", "projection", "resW", "resH", "worldM"))
+    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH", "projection", "resolu", "worldM"))
     clusterEvalQ(cl, require ("dplyr"))
     iDF <- parLapply (cl, seq_along (levels (drift$deploy)), fun=dInt) %>%
       rbindlist()
@@ -896,6 +923,7 @@ drift <- iDF %>%
   st_as_sf (coords=c("Longitude", "Latitude"), dim="XY", remove=FALSE, crs=4326) %>%
   st_transform(projection)
 rm (interP, iDF)
+
 
 
 
@@ -1041,9 +1069,13 @@ save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 write.csv (drift %>% st_drop_geometry() %>%
-             filter (badSpeed==FALSE) %>%
-             filter (trimBoat==FALSE) %>%
-             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
+             filter (off_deploy==FALSE) %>%
+             # filter (trimBoat==FALSE) %>%
+#             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
+           select (Drifter, Year, Month, Day, Hour, Minute, Lat, Long,
+                   # U-Vel, V-Vel
+                   drogue_depth, DeviceName, FileName #, Deployment
+                   )
            , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter.csv.gz")
            , row.names=FALSE)
 

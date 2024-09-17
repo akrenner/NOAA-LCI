@@ -27,6 +27,8 @@ rm (list=ls())
 # xi_rho and eta_rho:  simple counters -- not needed
 
 
+
+## any way to download these automatically? maybe not
 ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
 ncF <- "~/GISdata/LCI/drifter/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
 
