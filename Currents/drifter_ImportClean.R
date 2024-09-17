@@ -490,7 +490,7 @@ rm (drX, tide, tIdx)
 # barplot (summary (drift$tide))
 
 ## move tide functions into function script, load that
-if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
+# if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata")}
 #  rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterTide2.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 
@@ -1076,7 +1076,7 @@ write.csv (drift %>% st_drop_geometry() %>%
                    # U-Vel, V-Vel
                    drogue_depth, DeviceName, FileName #, Deployment
                    )
-           , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter.csv.gz")
+           , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
            , row.names=FALSE)
 
 ## call plotting code here?
