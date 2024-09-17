@@ -365,19 +365,13 @@ print (ds)
 # virtualenv_remove("zarrDL")
 
 
-
-
-
-
-
-
 if (0){
-# see https://ptaconet.github.io/modisfast/
-if (!require (modisfast)){
-  if(!require(devtools)){renv::install("devtools")}
-  devtools::install_github("ptaconet/modisfast")
-  library(modisfast)
-}  ## formerly opendapr
+# # see https://ptaconet.github.io/modisfast/
+# if (!require (modisfast)){
+#   if(!require(devtools)){renv::install("devtools")}
+#   devtools::install_github("ptaconet/modisfast")
+#   require (modisfast)
+# }  ## formerly opendapr
 
 ## ROI and time range
 roi <- st_as_sf (data.frame (id="any", geom="POLOYGON ((-156 58, -156 61, -149 61, -149 58, -156 58))",
@@ -424,10 +418,6 @@ bounds = c(longitude = "lon_bounds", latitude = "lat_bounds")
 r = read_mdim(dsn, bounds = bounds)
 r
 }
-
-
-
-
 
 }
 
