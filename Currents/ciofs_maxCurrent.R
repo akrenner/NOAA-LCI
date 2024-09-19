@@ -84,6 +84,7 @@ rm (nX, nc)
 # )
 # rm (bb)
 
+
 ## define grid
 seaAEx <- st_bbox (maxS) %>%
   st_as_sfc()
@@ -94,6 +95,13 @@ A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
 rm (seaAEx, pgon)
 
 
+## voronoi interpolation
+# voroi <- st_voronoi(maxS)
+# speedS <- maxS %>%
+#   st_voronoi() %>%
+#   st_rasterize(dx=grid_spacing, dy=grid_spacing)
+
+
 ## aggregate CIOFS data over new grid
 pointsID <- maxS %>%
   st_join (A) %>%
@@ -102,6 +110,7 @@ pointsID <- maxS %>%
   summarize (maxSpeed=max (speed, na.rm=TRUE))
 speedPol <- left_join(A, pointsID, by="ID")
 rm (pointsID)
+
 
 speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
 
@@ -373,11 +382,11 @@ print (ds)
 
 if (0){
 # see https://ptaconet.github.io/modisfast/
-if (!require (modisfast)){
-  if(!require(devtools)){renv::install("devtools")}
-  devtools::install_github("ptaconet/modisfast")
-  library(modisfast)
-}  ## formerly opendapr
+# if (!require (modisfast)){
+#   if(!require(devtools)){renv::install("devtools")}
+#   devtools::install_github("ptaconet/modisfast")
+#   library(modisfast)
+# }  ## formerly opendapr
 
 ## ROI and time range
 roi <- st_as_sf (data.frame (id="any", geom="POLOYGON ((-156 58, -156 61, -149 61, -149 58, -156 58))",

@@ -128,7 +128,7 @@ bbox <- mar_bathy %>%  ## extended Research Area
 worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>%
   st_geometry()
 worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
-  st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) %>%   ## or could use bbox above
+  st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
   sf::st_transform(projection)
 rm (worldP)
 ## somehow, polygon 2245 is not valid and cannot be made valid
@@ -233,7 +233,7 @@ driftWS <- dplyr::bind_rows(lapply(fileL, function(fn){
   })
 }
 ))
-rm (fileL, driftF)
+rm (fileL, driftF, driftP)
 
 
 ## merge WorkSpace files with PacificGyre downloads
@@ -289,9 +289,9 @@ rm (driftWS)
 #   filter()
 Nd <- nrow (drift)
 drift <- subset (drift, !duplicated (paste (drift$DeviceName, drift$DeviceDateTime)))
-cat ("N drifter points:", Nd, "-- Removed", Nd - nrow (drift), "duplicates\n\n"); rm (Nd)
+cat (paste0 ("N drifter points: ", Nd, ". Removed ", Nd - nrow (drift), " duplicates ("
+     , (Nd-nrow(drift))/nrow(drift), " %)\n\n")); rm (Nd)
 # drift2 <- subset (drift, !duplicated (paste (drift$Latitude, drift$Longitude, drift$DeviceDateTime)))
-
 
 ## get more drifter data from NOAA global drifter program
 if (0) {
@@ -565,6 +565,9 @@ if (0){
 
 
 
+
+
+
 ## -------------------------------------------------------------
 
 ## criteria by which to weed out positions
@@ -577,68 +580,18 @@ if (0){
 
 
 
+if (any (is.na (drift$ciofs_sp))){ ## replace with spatial interpolation (voronoi) XXX
+  drift$ciofs_sp [which (is.na (drift$ciofs_sp))] < max (drift$ciofs_sp, na.rm=TRUE)
+}
+
 
 ## better than filter: mark bad, then cut chunks of bad positions?
-drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)
-drift$off_deploy <- ifelse (drift$speed_ms < 0.0000001, TRUE, drift$off_deploy)
-drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * 1.1, TRUE, drift$off_deploy)
-drift$off_deploy <- ifelse (drift$dT_min < 0.00000001, TRUE, drift$off_deploy)
-drift$off_deploy <- ifelse (drift$topo > 1, TRUE, drift$off_deploy)  # depth > 1 => over land
-
-
-
-
-
-
-
-## ----------------------------------------------------------------------------
-## plot sampling effort by stage in tide cycle
-
-seaAEx <- st_bbox (drift) %>%
-  st_as_sfc() # %>%
-grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
-pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
-  st_sf () %>%
-  mutate (ID=row_number())
-A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
-rm (seaAEx, grid_spacing, pgon)
-
-
-for (ti in levels (drift$tide)){
-  #  ti <- "slack"
-  #  ti <- "flood"
-  ## aggregate drift over grid
-  pointsID <- drift %>%
-    #  group_split (tide, deployDepth) %>%
-    filter (tide==ti) %>%
-    st_join (A) %>%
-    as.data.frame() %>%
-    group_by (ID) %>%
-    summarize (Ndrift=length (speed_ms))
-  #  summarize (mapped_speed=quantile (speed_ms, 0.5))
-  B <- left_join(A, pointsID, by="ID")
-  # A$Ndrift <- ifelse(is.na (A$Ndrift), 0, A$Ndrift)
-  # plot (A ["mapped_speed"])
-  rm (pointsID)
-  # print (ti)
-  # print (max (B$Ndrift, na.rm=TRUE))
-
-  # breaks <- 19571 # max slack
-  mbreaks <- seq (0, 19571, by=19571/100)  # 19571 = max (slack)
-
-  png (paste0 (outpath, "Sampling-", ti, ".png"), width=resolu [1], height=resolu [2])
-  require ("viridisLite")
-  ##
-
-  plot (seaA, col="white", border="white", main=paste0 ("N positions ", ti, "-tide"))
-  B ["Ndrift"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100), breaks=mbreaks, main="") #"equal")
-  # Aimg <- A ["Ndrift"] %>% st_rasterize()
-  # %>% plot(add=TRUE, col=plasma (100))
-  plot (worldM, add=TRUE, col="gray")
-  rm (B)
-  dev.off()
-}
-rm (A, ti)
+drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)                # no speed
+drift$off_deploy <- ifelse (drift$dT_min > 60*12, TRUE, drift$off_deploy)       # 12 h is always too long
+drift$off_deploy <- ifelse (drift$speed_ms < 0.0000001, TRUE, drift$off_deploy) # standing too still
+drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * 1.1, TRUE, drift$off_deploy) # too fast, 10% faster than max
+drift$off_deploy <- ifelse (drift$dT_min < 0.00000001, TRUE, drift$off_deploy)  # same time
+drift$off_deploy <- ifelse (drift$topo > 1, TRUE, drift$off_deploy)             # depth > 1 => over land
 
 
 
@@ -700,29 +653,49 @@ if (exists ("iDF")){rm (iDF)} ## in case of reruns of code
 unlink(paste0 (outpath, "deployment/"), recursive=TRUE)
 dir.create(paste0 (outpath, "deployment/"), showWarnings=FALSE, recursive=TRUE)
 
+
 dInt <- function (i){
   ## step-by-step re-implementation to work with new dataset
   require ("sf")
   require ("dplyr")
-  df <- subset (drift, deploy == levels (drift$deploy)[i])
+  dfd <- subset (drift, deploy == levels (drift$deploy)[i])
 
   ## less than 4 positions in deployment
-  if (nrow (df) < 4){df$off_deploy <- TRUE}
+  if (nrow (dfd) < 4){dfd$off_deploy <- TRUE}
 
   ## bad GPS: addressed by CIOFS?
 
   ## no movement in 2-h blocks -- XXX unfinished
   tBlock <- 20
-  buf <- nrow (df) %% tBlock
+  buf <- nrow (dfd) %% tBlock
+
+  ## first and last (not enough!)
+  dfd$off_deploy [1] <- TRUE
+  dfd$off_deploy [nrow (dfd)] <- TRUE
+
 
   ## only consider the end 1/4 of deployment for cutting?
 
   ## no bad data points
-  df$off_deploy [c(1, nrow (df))] <- TRUE
+  # dfd$off_deploy [c(1, nrow (dfd))] <- FALSE
+
+  ## output plots and individual CSV files
+  write.csv(dfd, file=paste0 (outpath, "deployment/"
+                             , i, levels (drift$deploy)[i], ".csv")
+            , row.names = FALSE)
+
+  ## plot deployments
+  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"))
+  plot (Lat~Long, dfd, type="n")
+  plot (worldM %>% st_transform(crs=4326), add=TRUE, col="beige")
+  lines (Lat~Long, dfd)
+  points (Lat~Long, dfd, col = ifelse (dfd$off_deploy, "red", "black"), pch=ifelse (dfd$off_deploy, 19, 1))
+  dev.off()
+
 
 
   ## interpolations
-  newDF <- df
+  newDF <- dfd
 
   newDF$days_in_water <- with (newDF, difftime(DeviceDateTime, min (DeviceDateTime), units="days"))|> as.numeric()
   newDF
@@ -994,7 +967,7 @@ drift <- drift %>%
   # dplyr::filter (DeviceDateTime > as.POSIXct("2022-07-22 07:00")) %>%
   #  dplyr::filter (DeviceName == "UAF-MS-0066") # %>%
   #  dplyr::filter (speed_ms < speedTH) %>%
-  dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
+#  dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
 
@@ -1041,6 +1014,63 @@ mapshot (mymap, url=paste0 (outpath, "mapview.html"))
 rm (mymap)
 ## save for others  (ggplotly)
 ## saveWidget(object_name, file="map.html")
+
+
+
+
+
+
+## ----------------------------------------------------------------------------
+## plot sampling effort by stage in tide cycle
+
+seaAEx <- st_bbox (drift) %>%
+  st_as_sfc() # %>%
+grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
+  st_sf () %>%
+  mutate (ID=row_number())
+A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
+rm (grid_spacing, pgon)
+
+
+for (ti in levels (drift$tide)){
+  #  ti <- "slack"
+  #  ti <- "flood"
+  ## aggregate drift over grid
+  pointsID <- drift %>%
+    #  group_split (tide, deployDepth) %>%
+    filter (tide==ti) %>%
+    st_join (A) %>%
+    as.data.frame() %>%
+    group_by (ID) %>%
+    summarize (Ndrift=length (speed_ms))
+  #  summarize (mapped_speed=quantile (speed_ms, 0.5))
+  B <- left_join(A, pointsID, by="ID")
+  # A$Ndrift <- ifelse(is.na (A$Ndrift), 0, A$Ndrift)
+  # plot (A ["mapped_speed"])
+  rm (pointsID)
+  # print (ti)
+  # print (max (B$Ndrift, na.rm=TRUE))
+
+  # breaks <- 19571 # max slack
+  mbreaks <- seq (0, 19571, by=19571/100)  # 19571 = max (slack)
+
+  png (paste0 (outpath, "Sampling-", ti, ".png"), width=resolu [1], height=resolu [2])
+  require ("viridisLite")
+  ##
+
+  plot (seaA, col="white", border="white", main=paste0 ("N positions ", ti, "-tide"))
+  B ["Ndrift"] %>% st_rasterize() %>% plot(add=TRUE, col=plasma (100), breaks=mbreaks, main="") #"equal")
+  # Aimg <- A ["Ndrift"] %>% st_rasterize()
+  # %>% plot(add=TRUE, col=plasma (100))
+  plot (worldM, add=TRUE, col="gray")
+  rm (B)
+  dev.off()
+}
+rm (A, ti)
+
+
+
 
 
 
