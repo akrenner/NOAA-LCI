@@ -84,6 +84,7 @@ rm (nX, nc)
 # )
 # rm (bb)
 
+
 ## define grid
 seaAEx <- st_bbox (maxS) %>%
   st_as_sfc()
@@ -94,6 +95,13 @@ A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
 rm (seaAEx, pgon)
 
 
+## voronoi interpolation
+# voroi <- st_voronoi(maxS)
+# speedS <- maxS %>%
+#   st_voronoi() %>%
+#   st_rasterize(dx=grid_spacing, dy=grid_spacing)
+
+
 ## aggregate CIOFS data over new grid
 pointsID <- maxS %>%
   st_join (A) %>%
@@ -102,6 +110,7 @@ pointsID <- maxS %>%
   summarize (maxSpeed=max (speed, na.rm=TRUE))
 speedPol <- left_join(A, pointsID, by="ID")
 rm (pointsID)
+
 
 speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
 
