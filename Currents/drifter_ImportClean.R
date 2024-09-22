@@ -228,8 +228,9 @@ driftWS <- dplyr::bind_rows(lapply(fileL, function(fn){
       mutate (drogue_depth=strsplit(fn, "m/")[[1]][1] %>%
                 as.numeric()) %>%
       mutate(DeviceName=strsplit (fn, "/")[[1]][2]) %>%
-      mutate (FileName=fn)
-
+      mutate (FileName=fn) %>%
+      arrange (FileName, DeviceName, Year, Month, Day, Hour, Minute) %>%
+filter()
   })
 }
 ))
@@ -243,6 +244,9 @@ driftWS <- driftWS %>%
   mutate (Latitude=Lat) %>%
   mutate (Longitude=Long)
 names (driftWS) <- gsub ("-", "_", names (driftWS), fixed = TRUE)
+
+## QAQC
+head (driftWS)
 
 
 drift <- with (drift, data.frame(Drifter=DeviceName,
@@ -318,6 +322,14 @@ if (0) {
 drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
+
+## QAQC
+if (0){
+  summary (drift$speed_ms)
+  head (drift$DeviceDateTime)
+  head (drift$dT_min)
+}
+
 
 # consider: using dI here instead of drift
 drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
@@ -581,19 +593,22 @@ if (0){
 
 
 if (any (is.na (drift$ciofs_sp))){ ## replace with spatial interpolation (voronoi) XXX
-  drift$ciofs_sp [which (is.na (drift$ciofs_sp))] < max (drift$ciofs_sp, na.rm=TRUE)
+  drift$ciofs_sp [which (is.na (drift$ciofs_sp))] <- max (drift$ciofs_sp, na.rm=TRUE)
+}
+if (any (is.na (drift$speed_ms))){
+  drift$speed_ms [which (is.na (drift$speed_ms))] <- max (drift$speed_ms, na.rm=TRUE)
 }
 
 
 ## better than filter: mark bad, then cut chunks of bad positions?
-drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)                # no speed
+drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)                # NA speed
 drift$off_deploy <- ifelse (drift$dT_min > 60*12, TRUE, drift$off_deploy)       # 12 h is always too long
 drift$off_deploy <- ifelse (drift$speed_ms < 0.0000001, TRUE, drift$off_deploy) # standing too still
-drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * 1.1, TRUE, drift$off_deploy) # too fast, 10% faster than max
+drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * 1.1, TRUE, drift$off_deploy) # too fast, 10% faster than max -- way too many?? XX
 drift$off_deploy <- ifelse (drift$dT_min < 0.00000001, TRUE, drift$off_deploy)  # same time
-drift$off_deploy <- ifelse (drift$topo > 1, TRUE, drift$off_deploy)             # depth > 1 => over land
+drift$off_deploy <- ifelse (drift$topo > 1, TRUE, drift$off_deploy)             # depth > 1 m => over land
 
-
+## distinguish: 1 bad GPS signal vs boat transport -- possible?
 
 
 
@@ -685,11 +700,15 @@ dInt <- function (i){
             , row.names = FALSE)
 
   ## plot deployments
-  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"))
+  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"), width=12*300, height=6*300)
+  par (mfrow=c(1,2))
   plot (Lat~Long, dfd, type="n")
   plot (worldM %>% st_transform(crs=4326), add=TRUE, col="beige")
   lines (Lat~Long, dfd)
-  points (Lat~Long, dfd, col = ifelse (dfd$off_deploy, "red", "black"), pch=ifelse (dfd$off_deploy, 19, 1))
+  points (Lat~Long, dfd, col = ifelse (dfd$off_deploy, "red", "blue"), pch=ifelse (dfd$off_deploy, 19, 1))
+
+  plot (speed_ms ~ DeviceDateTime, data=dfd, type = "l", col = "green")
+  lines (ciofs_sp ~ DeviceDateTime, data=dfd, col = "blue")
   dev.off()
 
 
