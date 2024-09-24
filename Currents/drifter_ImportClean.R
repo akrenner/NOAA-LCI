@@ -311,8 +311,8 @@ if(0){
 }
 
 ## append latest records from PacificGyre to records already processed by Scott Pegau
-# drift <- rbind (driftWS, subset (drift, Year > max (driftWS$Year)))
-drift <- rbind (subset (driftWS, Year < min (drift$Year)), drift)
+drift <- rbind (driftWS, subset (drift, Year > max (driftWS$Year)))
+# drift <- rbind (subset (driftWS, Year < min (drift$Year)), drift)
 rm (driftWS)
 
 
