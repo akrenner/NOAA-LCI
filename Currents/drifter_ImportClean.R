@@ -228,12 +228,14 @@ driftWS <- dplyr::bind_rows(lapply(fileL, function(fn){
       mutate (drogue_depth=strsplit(fn, "m/")[[1]][1] %>%
                 as.numeric()) %>%
       mutate(DeviceName=strsplit (fn, "/")[[1]][2]) %>%
+#     mutate(DeviceName=Drifter) %>%
       mutate (FileName=fn)
 
   })
 }
 ))
-rm (fileL, driftF, driftP)
+rm (fileL, driftF)
+# rm (driftP)
 
 
 ## merge WorkSpace files with PacificGyre downloads
@@ -318,6 +320,9 @@ if (0) {
 drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
 drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
 drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
+## QAQC
+head (drift$DeviceDateTime)
+head (drift$dT_min)
 
 # consider: using dI here instead of drift
 drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
@@ -581,7 +586,7 @@ if (0){
 
 
 if (any (is.na (drift$ciofs_sp))){ ## replace with spatial interpolation (voronoi) XXX
-  drift$ciofs_sp [which (is.na (drift$ciofs_sp))] < max (drift$ciofs_sp, na.rm=TRUE)
+  drift$ciofs_sp [which (is.na (drift$ciofs_sp))] <- max (drift$ciofs_sp, na.rm=TRUE)
 }
 
 
@@ -669,23 +674,23 @@ dInt <- function (i){
   tBlock <- 20
   buf <- nrow (dfd) %% tBlock
 
-  ## first and last (not enough!)
-  dfd$off_deploy [1] <- TRUE
-  dfd$off_deploy [nrow (dfd)] <- TRUE
+#  ## first and last (not enough!) -- some clean?
+#  dfd$off_deploy [1] <- TRUE
+#  dfd$off_deploy [nrow (dfd)] <- TRUE
 
 
   ## only consider the end 1/4 of deployment for cutting?
 
   ## no bad data points
   # dfd$off_deploy [c(1, nrow (dfd))] <- FALSE
+fN <- gsub (":", "_", paste0 (outpath, "deployment/", i
+                              , levels (drift$deploy)[i]))
 
   ## output plots and individual CSV files
-  write.csv(dfd, file=paste0 (outpath, "deployment/"
-                             , i, levels (drift$deploy)[i], ".csv")
-            , row.names = FALSE)
+  write.csv(dfd, file=paste0 (fN, ".csv"), row.names = FALSE)
 
   ## plot deployments
-  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"))
+  png (paste0 (fN, ".png"))
   plot (Lat~Long, dfd, type="n")
   plot (worldM %>% st_transform(crs=4326), add=TRUE, col="beige")
   lines (Lat~Long, dfd)
@@ -864,7 +869,7 @@ if (1){   ## parallel processing
       rbindlist()
   }else{
     cl <- makeCluster(nCores, type="PSOCK")
-    clusterExport(cl, varlist=c("drift", "interP", "dInt", "speedTH", "projection", "resolu", "worldM"))
+    clusterExport(cl, varlist=c("drift", "interP", "outpath", "dInt", "speedTH", "projection", "resolu", "worldM"))
     clusterEvalQ(cl, require ("dplyr"))
     iDF <- parLapply (cl, seq_along (levels (drift$deploy)), fun=dInt) %>%
       rbindlist()
@@ -957,7 +962,7 @@ rm (depL)
 
 ## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
-drift <- drift %>%
+driftP <- drift %>%
   dplyr::arrange (depOrder, DeviceDateTime) %>%
   #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
   ###  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
@@ -970,6 +975,9 @@ drift <- drift %>%
 #  dplyr::filter (Latitude > 58.7) %>%        ## restrict it to within Cook Inlet
   # dplyr::filter (DeviceDateTime > as.POSIXct("2020-01-01 12:00")) %>%
   dplyr::filter()
+
+
+
 
 ## need to set these after final drifter selection (days_in_water already per deploy)
 drift <- drift %>%
