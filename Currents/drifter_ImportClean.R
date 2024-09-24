@@ -208,6 +208,7 @@ drift <- purrr::map_df (c(driftF, updateFN) #list.files (path=driftP, pattern="\
 rm (readC, driftF, updateFN)
 
 
+
 ## BIG CHANGE:
 ## Use files from Research Workspace, uploaded by Scott Pegau
 ## These may be cleaned? And have more detailed drogue depth information
@@ -239,15 +240,48 @@ rm (fileL, driftF)
 
 
 ## merge WorkSpace files with PacificGyre downloads
+spd <- function (x){
+  require ("stringr")
+  str_pad(x, width=2, side="left", pad="0")
+}
+
 driftWS <- driftWS %>%
-  mutate (DeviceDateTime = as.POSIXct(paste0 (
-    Year, "-", Month, "-", Day, " ", Hour, ":", Minute))) %>%
+  # mutate (DeviceDateTimeTxt=paste0 (Year, "-", spd (Month), "-", spd (Day), " ", spd (Hour), ":", spd (Minute), ":00")) %>%
+  mutate (DeviceDateTime = as.POSIXct(paste0 (Year, "-", spd (Month), "-", spd (Day), " "
+                                              , spd (Hour), ":", spd (Minute), ":00")
+                                      , tz="GMT")) %>%
   mutate (Latitude=Lat) %>%
   mutate (Longitude=Long)
 names (driftWS) <- gsub ("-", "_", names (driftWS), fixed = TRUE)
+rm (spd)
 
-## QAQC
-head (driftWS)
+# ## QAQC
+# head (driftWS$DeviceDateTime)  # if (any (is.na ()))
+# summary (driftWS$Hour%%1)      # all integr?
+# summary (driftWS$Minute)
+# for (i in 1:nrow (driftWS)){
+#   x <- with (driftWS [i,], as.POSIXct (paste0 (Year, "-", Month, "-", Day, " ", Hour, ":", Minute, ":00"), tz="GMT"))
+#   #  if (format (x, "%H") == "00"){with (driftWS [i,], print (paste (i, x, Year, Month, Day, Hour, Minute)))}
+#   if (nchar (as.character (driftWS$DeviceDateTime [i])) < 10){
+#   #  if (nchar (as.character (x)) < 10){
+#       print (with (driftWS[i], paste (i, x, Year, Month, Day, Hour, Minute)))
+#   }
+# }
+# head (format (driftWS$DeviceDateTime, "%H %M"))
+# x <- driftWS [which (driftWS$Minute==00),]
+# y <- driftWS [which (driftWS$Minute!=00),]
+# nrow (driftWS [which (driftWS$Hour==00),]) / nrow (driftWS)
+#
+# inshoreD <- driftWS %>%
+#   filter (Hour != 0)
+# inshoreFile <- levels (factor (inshoreD$FileName))
+# inshoreDevice <- levels (factor(inshoreD$Drifter))
+#
+# ## only use drifters that report more than once per day
+# driftWSx <- subset (driftWS, Drifter %in% inshoreDevice)
+# driftWSx <- subset (driftWS, FileName %in% inshoreFile)
+# ## no effect to subset by these -- some intervals are 24 h -> need to ensure that > 23 h is classified as a new deployment
+
 
 
 drift <- with (drift, data.frame(Drifter=DeviceName,
@@ -277,7 +311,8 @@ if(0){
 }
 
 ## append latest records from PacificGyre to records already processed by Scott Pegau
-drift <- rbind (driftWS, subset (drift, Year > max (driftWS$Year)))
+# drift <- rbind (driftWS, subset (drift, Year > max (driftWS$Year)))
+drift <- rbind (subset (driftWS, Year < min (drift$Year)), drift)
 rm (driftWS)
 
 
@@ -397,10 +432,10 @@ if (0){
     #    tz = "PST8PDT"
   )
   tide_height()  # tide heigth at station and times to-from
-  tide_height_data(data.frame (DateTime=as.POSIXct("2015-01-01 00:00"), Station=tide_stations ("Monterey Harbor*")))
-  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00"), Station=tide_stations ("Monterey Harbor*")))
+  tide_height_data(data.frame (DateTime=as.POSIXct("2015-01-01 00:00", tz="GMT"), Station=tide_stations ("Monterey Harbor*")))
+  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00", tz="GMT"), Station=tide_stations ("Monterey Harbor*")))
 
-  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00"), Station=tide_stations ("Seldovia*")))
+  tide_slack_data(data.frame (DateTime=as.POSIXct("2015-01-01 12:00", tz="GMT"), Station=tide_stations ("Seldovia*")))
 
 
   ## for testing:  drift <- slice_sample(drift, n=1000)
@@ -1021,10 +1056,10 @@ require ('webshot')
 mymap <- drift %>%
   filter (Year==2022) %>%
   filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%  #, "UAF-MS-0066")) %>%
-  filter (DeviceDateTime < as.POSIXct("2022-08-20 07:00")) %>%
-  filter (DeviceDateTime > as.POSIXct("2022-07-21 18:00")) %>%
+  filter (DeviceDateTime < as.POSIXct("2022-08-20 07:00", tz="GMT")) %>%
+  filter (DeviceDateTime > as.POSIXct("2022-07-21 18:00", tz="GMT")) %>%
   #  filter (CommId != "300534060052710") %>%
-  filter ((DeviceDateTime < as.POSIXct ("2022-08-10") | DeviceName == "UAF-SVPI-0047")) %>%  ## remove redeployment
+  filter ((DeviceDateTime < as.POSIXct ("2022-08-10", tz="GMT") | DeviceName == "UAF-SVPI-0047")) %>%  ## remove redeployment
   mutate (month=as.numeric (format (DeviceDateTime, "%m"))) %>%
   mutate (depth=topo * -1) %>%
   # group_by (DeviceName) %>%
