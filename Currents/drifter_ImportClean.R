@@ -37,7 +37,7 @@ test <- FALSE
 
 
 speedTH <- 6 # max speed deemed realistic. Above which records are not plotted
-
+ciofsF <- 1.5
 
 ## set interpolation [min] for animation
 interP <- 10 # interpolation interval (min)
@@ -355,9 +355,12 @@ if (0) {
 ## include speed between positions? XXX
 ## interpolated positions = potentially dangerous (on land)? But, is a more accurate position for the speed
 
-drift$dT_min <- c (0, diff (drift$DeviceDateTime)/60)  ## in min
-drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))
-drift$speed_ms <- with (drift, distance_m / (dT_min*60)) ## filter out speeds > 6 (11 knots) -- later
+drift$dT_sec <- c (0, diff (drift$DeviceDateTime, units="secs"))
+drift$dT_min <- drift$dT_sec / 60
+
+drift$distance_m <- c (0, diff (oce::geodDist(drift$Longitude, drift$Latitude, alongPath=TRUE)*1e3))  ## verified and correct -- sqrt (u2 + v2) is the same
+drift$speed_ms <- drift$distance_m / drift$dT_sec  ## filter out speeds > 6 (11 knots) -- later
+
 ## QAQC
 head (drift$DeviceDateTime)
 head (drift$dT_min)
@@ -376,8 +379,8 @@ drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep i
   st_transform(projection)
 
 crds <- st_coordinates(drift) |> as.data.frame()
-drift$u_vel2 <- c (0, (diff (crds$X))) / (drift$dT_min*60)
-drift$v_vel2 <- c (0, (diff (crds$Y))) / (drift$dT_min*60)
+drift$u_vel2 <- c (0, (diff (crds$X))) / drift$dT_sec
+drift$v_vel2 <- c (0, (diff (crds$Y))) / drift$dT_sec
 rm (crds)
 
 ## use morph..
@@ -634,22 +637,18 @@ if (0){
 if (any (is.na (drift$ciofs_sp))){ ## replace with spatial interpolation (voronoi) XXX
   drift$ciofs_sp [which (is.na (drift$ciofs_sp))] <- max (drift$ciofs_sp, na.rm=TRUE)
 }
-if (any (is.na (drift$speed_ms))){
-  drift$speed_ms [which (is.na (drift$speed_ms))] <- max (drift$speed_ms, na.rm=TRUE)
-}
-
 
 ## better than filter: mark bad, then cut chunks of bad positions?
-drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)                # NA speed
+drift$off_deploy <- ifelse (is.na (drift$speed_ms), TRUE, FALSE)                # NA speed -- only 1st record
 drift$off_deploy <- ifelse (drift$dT_min > 60*12, TRUE, drift$off_deploy)       # 12 h is always too long
 drift$off_deploy <- ifelse (drift$speed_ms < 0.0000001, TRUE, drift$off_deploy) # standing too still
-drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * 1.1, TRUE, drift$off_deploy) # too fast, 10% faster than max -- way too many?? XX
+drift$off_deploy <- ifelse (drift$speed_ms > drift$ciofs_sp * ciofsF, TRUE, drift$off_deploy) # too fast, 10% faster than max -- way too many?? XX
 drift$off_deploy <- ifelse (drift$dT_min < 0.00000001, TRUE, drift$off_deploy)  # same time
-drift$off_deploy <- ifelse (drift$topo > 1, TRUE, drift$off_deploy)             # depth > 1 m => over land
+drift$off_deploy <- ifelse (is.na (drift$topo), drift$off_deploy,
+                            ifelse (drift$topo > 1, TRUE, drift$off_deploy))  # depth > 1 m => over land
 
+if (any (is.na (drift$off_deploy))){stop ("1")}
 ## distinguish: 1 bad GPS signal vs boat transport -- possible?
-
-
 
 
 ## ----------------------------------------------------------------------------
@@ -739,15 +738,18 @@ fN <- gsub (":", "_", paste0 (outpath, "deployment/", i
   write.csv(dfd, file=paste0 (fN, ".csv"), row.names = FALSE)
 
   ## plot deployments
-  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"), width=12*300, height=6*300)
+  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"), width=6*300, height=3*300)
   par (mfrow=c(1,2))
   plot (Lat~Long, dfd, type="n")
   plot (worldM %>% st_transform(crs=4326), add=TRUE, col="beige")
   lines (Lat~Long, dfd)
-  points (Lat~Long, dfd, col = ifelse (dfd$off_deploy, "red", "blue"), pch=ifelse (dfd$off_deploy, 19, 1))
+  points (Lat~Long, dfd
+          , col = ifelse (dfd$off_deploy, "red", "blue")
+          , pch=ifelse (dfd$off_deploy, 19, 1))
 
-  plot (speed_ms ~ DeviceDateTime, data=dfd, type = "l", col = "green")
-  lines (ciofs_sp ~ DeviceDateTime, data=dfd, col = "blue")
+  plot (speed_ms ~ DeviceDateTime, data=dfd, type = "l", col = "green", lwd=2)
+  lines (ciofs_sp ~ DeviceDateTime, data=dfd, col = "blue", lwd=2)
+  legend ("topleft", col=c("green", "blue"), lwd=2, legend=c("drift", "ciofs"))
   dev.off()
 
 
@@ -912,7 +914,7 @@ dIntX <- function (i){
 
 
 
-if (1){   ## parallel processing
+if (0){   ## parallel processing
   require ("parallel")
   require ('data.table')
   nCores <- detectCores()-1
@@ -955,6 +957,7 @@ drift <- iDF %>%
   st_transform(projection)
 rm (interP, iDF)
 
+if (any (is.na (drift$off_deploy))){stop ("2")}
 
 
 
