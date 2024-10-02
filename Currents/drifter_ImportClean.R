@@ -731,14 +731,13 @@ dInt <- function (i){
 
   ## no bad data points
   # dfd$off_deploy [c(1, nrow (dfd))] <- FALSE
-fN <- gsub (":", "_", paste0 (outpath, "deployment/", i
-                              , levels (drift$deploy)[i]))
+fN <- gsub (":", "_", paste0 (outpath, "deployment/", i, levels (drift$deploy)[i]))
 
   ## output plots and individual CSV files
   write.csv(dfd, file=paste0 (fN, ".csv"), row.names = FALSE)
 
   ## plot deployments
-  png (paste0 (outpath, "deployment/", i, levels (drift$deploy)[i], ".png"), width=6*300, height=3*300)
+  png (paste0 (fN, ".png"), width=6*300, height=3*300)
   par (mfrow=c(1,2))
   plot (Lat~Long, dfd, type="n")
   plot (worldM %>% st_transform(crs=4326), add=TRUE, col="beige")
