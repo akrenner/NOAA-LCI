@@ -49,6 +49,7 @@ tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm=T
                                           Depth.saltwater..m. [which.min (Salinity_PSU)],
                                           Depth.saltwater..m. [which.max (Salinity_PSU)])
                                   ))
+tsal$stn <- gsub ("_", "-", tsal$stn)
 tsal$temSalR <- round (tsal$temSal, 1)
 tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
 # tsal$region <- tsal$stn
@@ -127,74 +128,74 @@ author:
         state: Alaska
         postal-code: 99603
 
-format: html  # or pdf or word
+format: email  # or html, pdf or word
 editor: visual
 # title-block-style: none
 # in terminal: quarto render --to pdf
 ---
 
+
+email to:
+
+
 ## Conditions
 
 <!-- On `{r} sDate`, `{r} crewT`  -->
-On 26 and 27 September 2024, Hans, Kris, Martin, and Paul went out to conduct our monthly oceanographic survey. We were able to take advantage of a narrow weather window and were able to sample all stations of the quarterly survey, including the extended Along-Bay transect. Winds were blowing from the west, turning towards the south on Friday. Sea conditions were at times rough with seas up to 3 feet on Thursday, but laid down on Friday. The preceeding week had seen its fair share of precipitation, even though total amounts were substantially lower than the long-term mean. A large low-pressure system was active in the Gulf of Alaska. 
-<!-- Consider link to annual/sa-precip-AP.png -->
 
-Because of battery problems with the older 5028 CTD, we used the newer 8138 instrument for the first time on a full survey. 
+On 26 and 27 September 2024, Hans, Kris, Martin, and Paul went out to conduct our monthly oceanographic survey. We were able to take advantage of a narrow weather window and sampled all stations of the quarterly survey, including the extended Along-Bay transect. Winds were blowing from the west, turning towards the south on Friday. Sea conditions were at times rough with seas up to 3 feet on Thursday, but laid down on Friday. The preceding week had seen its fair share of precipitation, even though total amounts were substantially lower than the long-term mean. A large low-pressure system was active in the Gulf of Alaska. <!-- Consider link to annual/sa-precip-AP.png -->
 
+Because of battery problems with the older 5028 CTD, we used the newer 8138 instrument for the first time on a full survey.
 
 ## Physical oceanography
 
 <!-- Current conditions, long-term anomalies: -->
 
-
 ### Temperature
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). The AlongBay transect showed some interesting temperature patterns, also seen in salinity and density: Relatively fresh surface waters near the head of the bay were mixed down to about 20 m. This contrasts with the summer pattern, when the fastest change in density is usually found in the first 1-2 m near the surface, indicating that the summer stratification is in the process of breaking down.  
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). The AlongBay transect (@AlongBay) showed some interesting temperature patterns, also seen in salinity and density: Relatively fresh surface waters near the head of the bay were mixed down to about 20 m. This contrasts with the summer pattern, when the fastest change in density is usually found in the first 1-2 m near the surface, indicating that the summer stratification was in the process of breaking down.
 
-Peculiarly, the warmest water temperatures were at the end of the AlongBay transect in Cook Inlet (6_3), rather than at the head of the bay. Warm waters there extended down to about 20 m depth, where it was met by the coldest waters observed on this survey. The next station saw upwelling of this cold and saline deep water from 60 m at 6_3 to 25 m at 7_11. Presumably as a consequence of this (tidal-driven?) upwelling, surface waters were coldest off Pogi Point.   
-
+Peculiarly, the warmest water temperatures were at the end of the AlongBay transect in Cook Inlet (6_3), rather than at the head of the bay. Warm waters there extended down to about 20 m depth, where it was met by the coldest waters observed on this survey. The next station saw upwelling of this cold and saline deep water from 60 m at 6_3 to 25 m at 7_11. Presumably as a consequence of this (tidal-driven?) upwelling, surface waters were coldest off Pogi Point.
 
 ### Salinity
 
-Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Compared to last month, deep waters are slightly fresher, indicating that surface waters have been slowly mixed down, whereas minimal salinity is slightly higher, again indicating the coming end of summer stratification.
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Compared to last month, deep waters were slightly fresher, indicating that surface waters have been slowly mixed down, whereas minimal salinity is slightly higher, again indicating the coming end of summer stratification.
 
-The two cross-bay transects show distinct slopes of density. This is indicative of currents moving along the bay. Especially in transect 4 we see a different slope, and therefore different current direction in the upper water column and in the deep channel. 
+The two cross-bay transects showed distinct slopes of density. This was indicative of currents moving along the bay. Especially in transect 4 we saw a different slope, and therefore different current direction in the upper water column and in the deep channel.
 
-### Turbidity and Chlorophyll
+### Turbidity
 
-Visually, waters were clear, a marked contrast to the previous months. In contrast to previous surveys, we see some clear spatial patterns in turbidity. This is probably due to the new instrument -- the older instrument is about to go back to the factory for servicing. 
-
+Visually, waters were clear, a marked contrast to the previous months. In contrast to previous surveys, we saw some clear spatial patterns in turbidity. This was probably due to the new instrument -- the older instrument is about to go back to the factory for servicing. There was a marked contrast in turbidity between clear waters in the outer and more turbid water in the inner bay (@AlongBay). Turbidity was highest near the surface in the inner bay, but raised turbidity levels also extended along the bottom from the inner bay to the deep sections past lands end. This pattern is similar to what could be seen for dissolved oxygen, but runs in the opposite direction as temperature and salinity. 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Fluorescence compared to the last 12 months
+Areas of high chlorophyll concentration were found between 20 and 50 m depth in the outer bay, concentrating more towards the surface in the central portions of the bay. Chlorophyll concentrations were high compared to the seasonal long-term mean.
 
-Fluorescence compared to long-term mean.
+<!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
 
-![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60)
+<!-- ### Zooplankton -->
 
-### Zooplankton
-
-Backscatter? Species composition?
+<!-- Backscatter? Species composition? -->
 
 ### Wildlife
 
-Sightings of whales, seaotters, birds, zooplankton.
+A tall distant blow near Yukon Island, seen from T4, may have been a Fin Whale. Several flocks of Short-tailed Shearwaters could still be found in the outer bay and lower Cook Inlet. Two or three Long-tailed Jaegers near Land's End were unusual for Kachemak Bay. About 5 Tufted Puffins were seen, all in winter plumage. Also unusual was a flock of about 20 Double-crested Cormorants off Flat Island (high number for the species) together with a Red-faced Cormorant. The later species used to breed on Gull Island, but is now quite rare here, seen less than annually.
 
-## Appendix
+## Figures
 
 ::: {#fig-elements layout-ncol="1"}
-![AlongBay](./%60%7Br%7D%20transectSection1%60)
+![Extended AlongBay Transect](./media/CTDsections/sectionImages/2024-09-26 T-AlongBay.png)
 
-![T9](./%60%7Br%7D%20transectSection2%60)
+![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-09-26 T-9.png)
 
-Longitudinal sections of main parameters.
+![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/CTDsections/sectionImages/2024-09-26 T-4.png)
+
+Longitudinal and cross-sections of main parameters.
 :::
 
-More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots).
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
 
-Add map with station numbers -- schematic
+<!-- Add map with station numbers -- schematic -->
