@@ -49,8 +49,6 @@ prjct <- 3338
 
 
 
-
-
 require ("ncdf4")
 require ("stars")
 
@@ -88,12 +86,90 @@ rm (nc)
 
 
 
+## define grid
+seaAEx <- st_bbox (maxS) %>%
+  st_as_sfc()
+pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
+  st_as_sf() %>%
+   mutate (ID=row_number())
+A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
+rm (seaAEx, pgon)
+
+
+## voronoi interpolation
+# voroi <- st_voronoi(maxS)
+# speedS <- maxS %>%
+#   st_voronoi() %>%
+#   st_rasterize(dx=grid_spacing, dy=grid_spacing)
+
+pointsID <- maxS %>%
+  st_join (A) %>%
+  as.data.frame() %>%
+  group_by (ID) %>%
+  summarize (maxSpeed=max (speed, na.rm=TRUE))
+speedPol <- left_join(A, pointsID, by="ID")
+rm (pointsID)
+
+speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
+
+
+
+
+## aggregate CIOFS data over new grid
+if (0){  ## seems super slow -- needs testing
+  gridPts <- function (pts, grid_spacing, var="speed"){
+    seaAx <- st_bbox (pts) %>%
+      st_as_sfc()
+    pgon <- st_make_grid(seaAx, square=TRUE, cellsize = rep (grid_spacing, 2)) %>%
+      st_as_sf() %>%
+      mutate(ID=row_number())
+    Ax <- st_intersection(pgon, seaAx)
+    # generalize variable name
+    pts$speedX <- pts [,which (names (pts)==var)]
+    pointsID <- pts %>%
+      st_join(Ax) %>%
+      as.data.frame() %>%
+      group_by (ID) %>%
+      summarize (maxSpeed=max (speedX, na.rm=TRUE))  ## need to generalize this!
+    speedPol <- left_join(A, pointsID, by=ID)
+    speedS <- st_rasterize(speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
+    speedS
+  }
+
+  speedS <- gridPts (maxS, 50)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 100), speedS), speedS)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 500), speedS), speedS)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 1000), speedS), speedS)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 5000), speedS), speedS)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 10000), speedS), speedS)
+  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 50000), speedS), speedS)
+}
+
+
+
+
+png ("~/tmp/LCI_noaa/media/drifter/ciofs_maxspeed.png")
+plot (speedS)
+dev.off()
+
+save (speedS, file="~/tmp/LCI_noaa/cache/ciofs_maxspeed.RData")
+write_stars (speedS, dsn = paste0 ("~/tmp/LCI_noaa/data-products/maxSpeed_CIOFS"
+             , grid_spacing, ".tif"))
+
+rm (speedPol, ncF, maxS)
+
+
+
+
+
 ## ------------------ new start with u v w ----------------------
 
 ## set depth = 0
 ## calc speeds per time and position
 ## find greatest speed for each position
 ## export speed, u, v, and w
+
+## should use proper u_lat, v_lat, etc, instead of truncating arrays (dimLim1, dimLim2)
 
 
 ### u v movement
@@ -120,10 +196,10 @@ for (i in 1:dim (wN)[1]){
 }
 
 wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dimLim1,dimLim2]),
-       lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dimLim1,dimLim2]),
-       w = as.numeric (wN[dimLim1,dimLim2])
+                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dimLim1,dimLim2]),
+                   w = as.numeric (wN[dimLim1,dimLim2])
 )         # cut off first or last??
-          # working so far 2024-10-09
+# working so far 2024-10-09
 
 ## 1: calculate speed
 vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
@@ -151,57 +227,23 @@ wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
 ## clean-up
 ncdf4::nc_close (nc)
 rm (nc, topAr, speed, uV, vV, wN, var, ncF)
-
-## turn it into stars object (earlier?) and export
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS.RData")
 
 
+## rasterize
+wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
+  st_transform(crs=st_crs (speedS)) %>%
+  st_rasterize()
+
+write_stars(wDFsf, dsn="~/tmp/LCI_noaa/data-products/ciofs_maxspeeds.tiff")
+
+## turn it into stars object (earlier?) and export
+save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
+
+
+# image (wDFsf, band=3)
+
 ## ------------------ end of u v w ----------------------
-
-
-
-
-
-## define grid
-seaAEx <- st_bbox (maxS) %>%
-  st_as_sfc()
-pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
-  st_as_sf() %>%
-   mutate (ID=row_number())
-A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
-rm (seaAEx, pgon)
-
-
-## voronoi interpolation
-# voroi <- st_voronoi(maxS)
-# speedS <- maxS %>%
-#   st_voronoi() %>%
-#   st_rasterize(dx=grid_spacing, dy=grid_spacing)
-
-
-## aggregate CIOFS data over new grid
-pointsID <- maxS %>%
-  st_join (A) %>%
-  as.data.frame() %>%
-  group_by (ID) %>%
-  summarize (maxSpeed=max (speed, na.rm=TRUE))
-speedPol <- left_join(A, pointsID, by="ID")
-rm (pointsID)
-
-
-speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
-
-
-png ("~/tmp/LCI_noaa/media/drifter/ciofs_maxspeed.png")
-plot (speedS)
-dev.off()
-
-save (speedS, file="~/tmp/LCI_noaa/cache/ciofs_maxspeed.RData")
-write_stars (speedS, dsn = paste0 ("~/tmp/LCI_noaa/data-products/maxSpeed_CIOFS"
-             , grid_spacing, ".tif"))
-
-rm (speedS, speedPol, ncF, maxS)
-
 
 
 
@@ -236,94 +278,6 @@ if (0){
 ## polygon now? should be a point cloud
 # um <- apply (u, MARGIN=c(1,2), FUN=max, na.rm=TRUE)  ## use for u, v -- not max speed
 }
-
-
-## work with u, v, w vectors -- using ncdf4
-if (0){
-  ## export netCDF with jupyter notebook https://researchworkspace.com/file/44648890/CIOFS_currents_MR_2.ipynb
-  ## then import netCDF -- or use csv exported by Kristen Thyng
-
-  ### dimensions of u, v, and w don't perfectly match
-  ## => extract each variable with associated lat,lon
-  ## subset surface layer (s_rho = -0.01666666-ish)  [30]
-  ## reproject to a new raster grid
-  ## stack those rasters
-
-
-  maxCurrent <- function (ncF, varid, maxv=TRUE){
-    ## dimensions of u, v, w don't match -- use lat_u, lat_v, lat_rho!
-    u <- ncvar_get (nc, varid=varid)
-
-    ## extract surface or max value?
-    if (maxv){
-      um <- apply (u, MARGIN=c(1,2), FUN=max, na.rm=TRUE) ## suppress
-    }else{
-      um <- apply (u [,,30,], MARGIN=c(1,2), FUN=max, na.rm=TRUE) # surface, any time
-    }
-    um2 <- ifelse (is.finite (um), um, NA)
-    as.numeric (um2)
-  }
-
-
-
-
-  ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"
-  require ("ncdf4")
-  nc <- ncdf4::nc_open(ncF)
-  # print (nc)
-  # names (nc$dim)
-  # names (nc$var)
-
-
-  ## dimensions are close but don't match yet XXXX
-  maxDF <- data.frame (lon=as.numeric (ncvar_get (nc, varid="lon_rho")),
-                       lat=as.numeric (ncvar_get (nc, varid="lon_rho")),
-                       u=maxCurrent (nc, varid="u"),
-                     v=maxCurrent (nc, varid="v"),
-                     w=maxCurrent (nc, varid="w"))
-nc_close(nc)
-rm (nc, maxCurrent)
-
-
-maxDF <- data.frame (lon=ncvar_get (nc, varid="lon_rho"))
-maxDF <- data.frame (lon=ncvar_get (nc, varid="lon_rho"))
-
-
-nc <- ncdf4::nc_open("~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc")
-
-
-## extract u with lon_u and lat_u and v with lon_v and lat_v
-## only uppermost layer (s_rho=-1), all times (ocean_time=0)
-u <- ncvar_get (nc, varid="u")
-u_lat <- ncvar_get (nc, varid="lat_u")
-u_lon <- ncvar_get (nc, varid="lon_u")
-
-## find max -- any time, any depth -- or always surface
-um <- apply (u [,,30,], MARGIN = c(1,2), FUN=function (y){max (y, na.rm=TRUE)})
-um2 <- ifelse (is.finite(um), um, NA)
-uDF <- data.frame (u=as.numeric (um2), lat=as.numeric (u_lat), lon=as.numeric (u_lon))
-rm (u, u_lat, u_lon, um, um2)
-
-u <- ncvar_get (nc, varid="v")
-u_lat <- ncvar_get (nc, varid="lat_v")
-u_lon <- ncvar_get (nc, varid="lon_v")
-
-## find max -- any time, any depth -- or always surface
-um <- apply (u [,,30,], MARGIN = c(1,2), FUN=function (y){max (y, na.rm=TRUE)})
-um2 <- ifelse (is.finite(um), um, NA)
-vDF <- data.frame (u=as.numeric (um2), lat=as.numeric (u_lat), lon=as.numeric (u_lon))
-rm (u, u_lat, u_lon, um, um2)
-
-
-
-
-
-nc_close (nc)
-}
-
-
-
-
 
 
 
