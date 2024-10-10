@@ -32,6 +32,7 @@ rm (list=ls())
 ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
 ncF <- "~/GISdata/LCI/drifter/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
 
+
 ## options to access ROM netCDF data
 ## stars::read_ncdf Simple, nice documentation
 ## netcdf4 raw. More complicated. But avoids some stars hassle.
@@ -73,7 +74,7 @@ maxS <- data.frame (lon = nX ("lon_rho"),
   st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=prjct)
 ncdf4::nc_close (nc)
-rm (nX, nc)
+rm (nc)
 
 # COUlD use ## st_rasterize ## (effectively reproject) or aggregate over grid
 # bb <- st_bbox (maxS)
@@ -83,6 +84,82 @@ rm (nX, nc)
 #                        #                       ny = (bb$ymax-bb$ymin) %% grid_spacing)
 # )
 # rm (bb)
+
+
+
+
+## ------------------ new start with u v w ----------------------
+
+## set depth = 0
+## calc speeds per time and position
+## find greatest speed for each position
+## export speed, u, v, and w
+
+
+### u v movement
+ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
+nc <- ncdf4::nc_open(ncF)
+
+
+## dimLimit
+dimLim1 <- 1:391
+dimLim2 <- 1:187
+
+
+## 0: easy: max w
+var <- ncvar_get (nc, "w")[,dimLim2,1,]  # dim: xi_v, eta_v, s_rho, ocean_time - 391 187 30 30
+wN <- array (dim=dim(var)[1:2])
+for (i in 1:dim (wN)[1]){
+  for (j in 1:dim (wN)[2]){
+    if (!any (!is.na (var [i,j,]))){  # all values are NA/NaN
+      wN [i,j] <- NA
+    }else{
+      wN [i,j] <- max (var [i,j,], na.rm=TRUE)
+    }
+  }
+}
+
+wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dimLim1,dimLim2]),
+       lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dimLim1,dimLim2]),
+       w = as.numeric (wN[dimLim1,dimLim2])
+)         # cut off first or last??
+          # working so far 2024-10-09
+
+## 1: calculate speed
+vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
+uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
+speed <- sqrt (vV^2 * uV^2)
+
+topAr <- array (dim = c (dim (speed)[1:2], 3))  # last dimension: speed, u, v
+for (i in 1:dim (speed)[1]){
+  for (j in 1:dim (speed)[2]){
+    if (all (is.na (speed [i,j,]))){
+      topAr [i,j,] <- rep (NA, 3)
+    }else{
+      mIJ <- which.max (speed [i,j,])
+      topAr [i,j,1] <- speed [i,j,mIJ]
+      topAr [i,j,2] <- uV [i,j,mIJ]
+      topAr [i,j,3] <- vV [i,j,mIJ]
+    }
+  }
+}
+## assemple big DF for export
+wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
+              u = as.numeric (topAr [,,2]),
+              v = as.numeric (topAr [,,3])
+)
+## clean-up
+ncdf4::nc_close (nc)
+rm (nc, topAr, speed, uV, vV, wN, var, ncF)
+
+## turn it into stars object (earlier?) and export
+save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS.RData")
+
+
+## ------------------ end of u v w ----------------------
+
+
+
 
 
 ## define grid
