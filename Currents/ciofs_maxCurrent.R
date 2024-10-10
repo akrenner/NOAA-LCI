@@ -233,9 +233,12 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS.RData")
 ## rasterize
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=st_crs (speedS)) %>%
-  st_rasterize()
+  st_rasterize(template=speedS)
 
-write_stars(wDFsf, dsn="~/tmp/LCI_noaa/data-products/ciofs_maxspeeds.tiff")
+for (i in 1:length (names (wDFsf))){
+  write_stars(wDFsf, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
+                                 , names (wDFsf)[i], ".tif"), layer=i)
+}
 
 ## turn it into stars object (earlier?) and export
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
