@@ -87,8 +87,8 @@ source ("CTD_DataAvailability.R")
 
 ## the Wall
 source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
-source ("CTDsections.R")
 source ("CTDwall-setup.R")
+source ("CTDsections.R")
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
 # source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later

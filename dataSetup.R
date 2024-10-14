@@ -17,6 +17,7 @@ rm (list = ls())
 # system ("rm -r ~/tmp/LCI_noaa/")
 # unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 print (Sys.time())
+require ("conflicted")
 
 
 deepThd <- 15 ## bottom threshold -- everything above considered surface,
@@ -105,7 +106,8 @@ if (.Platform$OS.type != "unix"){
 ## this is done by scripts called in ctd_workflow.R
 
 # base::load (paste0 (dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-require ("tidyverse")
+# require ("tidyverse")
+require ("dplyr")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
                       # forcing physOct$Station to "character" would be convenient
@@ -1120,7 +1122,7 @@ bDist <- function (stnL){
 stnT <- subset (stnP, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off stations
 stnT <- subset (stnP, stnP$Plankton) ## better subset here from stnT? XX
 
-## XXX sf replacement for gBuffer! 
+## XXX sf replacement for gBuffer!
 lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
 ## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
 rm (stnT)
