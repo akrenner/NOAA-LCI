@@ -29,8 +29,9 @@ rm (list=ls())
 
 
 ## any way to download these automatically? maybe not
-ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
-ncF <- "~/GISdata/LCI/drifter/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
+ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
+# ncF <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
+ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"
 
 
 ## options to access ROM netCDF data
@@ -41,9 +42,9 @@ ncF <- "~/GISdata/LCI/drifter/max_speed_2014-1.nc"  ## max tide picked by Kriste
 ## visit ciofs_bigtide_KT.nc later (extracting u,v vectors, filtering by direction as well)
 
 
-# grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 grid_spacing <- 1e3
-grid_spacing <- 500
+# grid_spacing <- 500
 prjct <- 3338
 
 
@@ -173,38 +174,56 @@ rm (speedPol, ncF, maxS)
 
 
 ### u v movement
-ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
+ncF <- ncF3   ## big file with 30 depth, 30 time steps
 nc <- ncdf4::nc_open(ncF)
+
+wV <- ncvar_get (nc, "w")  # dim: xi_v, eta_v, s_rho, ocean_time - 391 187 30 30
+vV <- ncvar_get (nc, "v")  ## dim 2 is already short
+uV <- ncvar_get (nc, "u")  ## u is 1 short of v
 
 
 ## dimLimit
-dimLim1 <- 1:391
-dimLim2 <- 1:187
-
+# dims <- rbind (dim (wV), dim (vV), dim (uV))
+# dR <- apply (dims, 2, FUN=min) %>%
+#   lapply (FUN=function (x, sv = 1){seq (sv, x)})
+dR <- rbind (dim (wV), dim (vV), dim (uV)) %>%
+  apply (MARGIN=2, FUN=min) %>%
+  lapply (FUN=function (x, sv=1){seq(sv, x)})
 
 ## 0: easy: max w
-var <- ncvar_get (nc, "w")[,dimLim2,1,]  # dim: xi_v, eta_v, s_rho, ocean_time - 391 187 30 30
-wN <- array (dim=dim(var)[1:2])
-for (i in 1:dim (wN)[1]){
-  for (j in 1:dim (wN)[2]){
-    if (!any (!is.na (var [i,j,]))){  # all values are NA/NaN
-      wN [i,j] <- NA
+wV <- ncvar_get (nc, "w")[dR[[1]],dR[[2]],,dR[[4]]]   ## use any depth for w, surface for v and u
+vV <- ncvar_get (nc, "v")[dR[[1]],dR[[2]],1,dR[[4]]]
+uV <- ncvar_get (nc, "u")[dR[[1]],dR[[2]],1,dR[[4]]]
+
+
+
+wU <- array (dim=dim(wV)[1:2])
+wD <- wU
+for (i in 1:dim (wU)[1]){
+  for (j in 1:dim (wU)[2]){
+    if (!any (!is.na (wV [i,j,,]))){  # all values are NA/NaN
+      wU [i,j] <- NA
+      wD [i,j] <- NA
     }else{
-      wN [i,j] <- max (var [i,j,], na.rm=TRUE)
+      wU [i,j] <- max (wV [i,j,,], na.rm=TRUE)
+      wD [i,j] <- min (wV [i,j,,], na.rm=TRUE)
     }
   }
 }
 
-wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dimLim1,dimLim2]),
-                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dimLim1,dimLim2]),
-                   w = as.numeric (wN[dimLim1,dimLim2])
+wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[[2]]]),
+                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dR[[1]],dR[[2]]]),
+                   wu = as.numeric (wU[dR[[1]],dR[[2]]]),
+                   wd = as.numeric (wD[dR[[1]],dR[[2]]])
 )         # cut off first or last??
 # working so far 2024-10-09
 
 ## 1: calculate speed
-vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
-uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
-speed <- sqrt (vV^2 * uV^2)
+# vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
+# uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
+speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
+  array (dim = dim (vV))
+
 
 topAr <- array (dim = c (dim (speed)[1:2], 3))  # last dimension: speed, u, v
 for (i in 1:dim (speed)[1]){
@@ -226,8 +245,7 @@ wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
 )
 ## clean-up
 ncdf4::nc_close (nc)
-rm (nc, topAr, speed, uV, vV, wN, var, ncF)
-save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS.RData")
+rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF)
 
 
 ## rasterize
@@ -237,7 +255,7 @@ wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
 
 for (i in 1:length (names (wDFsf))){
   write_stars(wDFsf, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
-                                 , names (wDFsf)[i], ".tif"), layer=i)
+                                 , names (wDFsf)[i], "_", grid_spacing, ".tif"), layer=i)
 }
 
 ## turn it into stars object (earlier?) and export
