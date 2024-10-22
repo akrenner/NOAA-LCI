@@ -1,0 +1,210 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ? 
+
+## clear the slate
+rm (list=ls())
+unlink ("MonthlyUpdates/media/", recursive=TRUE)
+
+
+## fetch data from notebook export and CTD processing
+load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+physOc$isoDate <- as.Date (physOc$isoTime)
+physL <- subset (physOc, isoDate == max (isoDate))
+## find survey, not just last date
+physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) == 
+                   max (as.numeric (format (physOc$isoTime, "%Y"))))
+physL <- subset (physL, as.numeric (format (physL$isoTime, "%m")) ==
+                   max (as.numeric (format (physL$isoTime, "%m"))))
+rm (physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- physL$isoDate [1]
+
+sY = as.numeric (format (sDate, "%Y"))
+sM = month.name [as.numeric (format (sDate, "%m"))]
+sSlot= paste (sM, sY)
+
+crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
+crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
+                 paste0 (crew [length (crew)])), collapse = ", and ")
+
+
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm=TRUE),
+                                             max (Temperature_ITS90_DegC, na.rm=TRUE),
+                                             min (Salinity_PSU, na.rm=TRUE),
+                                             max (Salinity_PSU, na.rm=TRUE)),
+                                  stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+                                          Match_Name [which.max (Temperature_ITS90_DegC)],
+                                          Match_Name [which.min (Salinity_PSU)],
+                                          Match_Name [which.max (Salinity_PSU)]),
+                                  depth= c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+                                          Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+                                          Depth.saltwater..m. [which.min (Salinity_PSU)],
+                                          Depth.saltwater..m. [which.max (Salinity_PSU)])
+                                  ))
+tsal$stn <- gsub ("_", "-", tsal$stn)
+tsal$temSalR <- round (tsal$temSal, 1)
+tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
+
+
+## to-do: 
+## tweak title layout : remove "author" and "affiliation"
+## add date? 
+## add background graphics, NCCOS logo
+
+
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+  ## find files
+  ## construct mark-down code (all sections of the day, monthly / quarterly)
+  dest="media/CTDsections/sectionImages/"
+  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+  
+  fl <- list.files(paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
+  # pick only transects from last survey; flexible as to monthly/quarterly
+  flS <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE) 
+  cS <- file.copy(from=paste0 ("~/tmp/LCI_noaa/", dest, flS),
+            to=dest, overwrite=TRUE
+            )
+  fl <- list.files (dest, pattern="*.png")
+  Tran <- substr (fl, 12, nchar (fl))
+  Tran <- gsub (".png", "", Tran, fixed=TRUE)
+  
+  ## generating strings for all transects -- not yet working
+#  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
+  iStrng <- paste0 (dest, fl)
+#  iStrng <- paste0 ("MonthlyUpdates/", dest, fl)
+  transectSection1 <- iStrng [1]
+  transectSection2 <- iStrng [2]
+
+  try ({
+    transectSection3 <- iStrng [3]
+    transectSection4 <- iStrng [4]
+  })
+  
+  
+  
+  ## Chlorophyll
+  dest="media/CTDsections/time-sections/"
+  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+  flS <- list.files (paste0 ("~/tmp/LCI_noaa/", dest), pattern="*.png")
+  cS <- file.copy (from=paste0 ("~/tmp/LCI_noaa/", dest, flS)
+                   , to=dest, overwrite=TRUE)
+  TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
+  TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
+  TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
+  TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
+  
+  ## NOAA weather -- replace from rNOAA
+  
+  rm (fl, flS, dest, cS)
+```
+
+---
+title: "Monthly Kachemak Bay report, `{r} sSlot`"
+author: 
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to Kasitsna Bay Lab, NCCOS, NOAA
+        address: 81 Sterling Highway
+        city: Homer
+        state: Alaska
+        postal-code: 99603
+
+format: email  # or html, pdf or word
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to pdf
+---
+
+
+email to:
+
+
+## Conditions
+
+<!-- On `{r} sDate`, `{r} crewT`  -->
+
+On 10 October 2024, Mike, Martin, and Paul went out to conduct our monthly oceanographic survey. We had a one-day window of calm, and even sunny weather, before a major storm hit the following day, sampling all of the AlongBay and T9 transects. Winds were between 5 knots from the SW to flat calm. Like last month, we used the 8138 CTD. 
+ <!-- Consider link to annual/sa-precip-AP.png -->
+
+## Physical oceanography
+
+<!-- Current conditions, long-term anomalies: -->
+
+### Temperature
+
+<!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
+
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Despite only two weeks between this and the preceeding survey, distinct changes in temperature patterns could be observed. Most notably, falling air temperatures have now cooled the mixed surface layer. This was the warmest part of the water column last month, but is now the coldest in all but the outermost AlongBay stations, flipping the direction of the thermocline at the bottom of the mixed surface layer. Spatially, we were still seeing a warmer inner and a colder outer bay. 
+
+Temperature patterns on T9 were remarkably complex, with up to three warm-water layers sandwiched between colder waters, where warmer inner bay water in the north meets colder outer bay water in the south. This inner bay water was also noticeably more turbid than outer bay water, both at the surface and at depth. The AlongBay transect graphically illustrated the contrast between warm inner-bay and cold outer-bay waters. T9 happened to coincide with the transition between these two water bodies, and since the overall temperature gradient was small, complex mixing patterns, likely enhanced by turbulance behind the Homer Spit, ensued.           
+
+
+### Salinity
+
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Compared to last month, deep waters were slightly fresher, which should be due to the seasonal freshening of the source water in the Alaska Coastal Current. A distinct halocline is found throughout the surveyed area, probably now at its maximal extend, even covering the outer bay. 
+
+
+### Turbidity
+
+Especially the waters in the outer bay were remarkably clear, with secchi depth readings in excess of 10 m. Turbid waters were encountered off Glacier Spit in the inner bay, but also in the northern half of T9. Patterns of turbidity at T9 closely matched the distribution of warm waters, but less so of salinity, for which I don't have a ready explanation. 
+
+Oxygen levels were depleted at depth, especially in the inner bay, but comparatively high in the outer bay. 
+
+
+## Biological conditions
+
+### Phytoplankton
+
+Chlorophyll concentrations were generally low in the outer bay, with only slightly higher values found near the pycnocline than at depth. The inner bay still showed raised chlorophyll concentrations at the pycnocline. Yet, at T9_6, chlorophyll concentrations were still high compared to the long-term mean. 
+
+The sonar showed backscatter near the bottom on several AlongBay stations near the spit. We took a water sample at AlongBay_12 in 65 m depth (10 m above the bottom) using the Niskin bottle and filtered the water through the plankton net. Lisa Spittler helped identify a small number of copepods (mostly larval stages with 2-3 tail segments), about 1 mm in size, and an ostracode in this sample. 
+
+<!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
+
+<!-- ### Zooplankton -->
+
+<!-- Backscatter? Species composition? -->
+
+### Wildlife
+
+A pod of 5-7 female killer whales was encountered at T9_8, off Land's End. Acoustic backscatter of individual fish (possibly salmon) was also noticed at this station. 
+<!-- ![Killer Whales (5-7 in pod)(~/Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
+<!-- ![Killer Whales (5-7 in pod)(C:/Users/Martin.Renner/Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
+<!-- ![Killer Whales (5-7 in pod)(../../../Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
+A seasonally late Red-necked Phalarope was foraging on a convergence at AlongBay_4. 
+
+
+## Figures
+
+::: {#fig-elements layout-ncol="1"}
+![Extended AlongBay Transect](./media/CTDsections/sectionImages/2024-10-10 T-AlongBay.png)
+
+![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-10-10 T-9.png)
+
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/CTDsections/sectionImages/2024-09-26 T-4.png) -->
+
+Longitudinal and cross-sections of main parameters.
+:::
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+<!-- Add map with station numbers -- schematic -->

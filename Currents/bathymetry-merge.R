@@ -9,7 +9,6 @@
 
 
 ## QGIS: no scripting -- this is too complex
-## GrassGIS: may be better alternative? use rgrass
 rm (list=ls())
 # renv::load("renv/activate.R")
 
@@ -24,15 +23,42 @@ interAct <- FALSE
 area <- "ResearchAreaXL"
 bbox <- c (-156, -143.5, 55, 61.5) ## rRes 200 is too much for Dell
 
+if (1){
 ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
 area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
-# bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
-
-if (1){
+bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
+}
+if (0){
   ## reduced research area
   area <- "GWA-area"
-  bbox <- c(-154, -150, 58.5, 61) ## restricted to stay within memory limits
+  bbox <- c(-154.3, -150.7, 58.6, 61) ## restricted to stay within memory limits
 }
+
+
+## find maximal resolution that can be computed with available RAM
+## set gRes depending on available memory
+require ("memuse")
+ramL <- memuse::Sys.meminfo()$totalram |> as.numeric ()
+if (area == "GWA-area"){
+  gRes <- 200
+}else{
+  gRes <- 400
+}
+if (ramL  > 60e9){
+#  gRes <- gRes / 8  ## too much for ResearchArea
+  if (area=="GWA-area"){
+    # GWA-area, gRes =25 ok with 64 GB RAM
+    gRes <- 25
+  }else{
+    gRes <- 5*round (gRes/5 / 6.5, digits=0)  ## 7 too much for ResearchArea
+    gRes <- 60 # 50 is too big?
+  }
+}else if (ramL > 17e9){
+  gRes <- gRes / 4
+}
+rm (ramL)
+
+
 ## output projection (Alaska AEA: 3338)
 epsg <- 3338
 
@@ -48,7 +74,8 @@ gcF <- "~/GISdata/LCI/bathymetry/gebco_2022/GEBCO_2022.nc" ## has crs
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO/ETOPO_2022_(iceSurface-15arcS).tif"  ## use ETOPO instead of GEBCO. Better DEM?
 gcF <- "~/GISdata/LCI/bathymetry/ETOPO_2022_v1_15s_surface_SCAK.tiff"
 gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240412topo_max_WGS84_EPSG4326.grd"
-gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2/GMRTv4_2_20240423topo.tif"
+# gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2/GMRTv4_2_20240423topo.tif"
+gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240423topo.tif"
 ## add terrestrial DEM: best=2m AK from USGS
 
 
@@ -73,29 +100,10 @@ rm (mF)
 
 require ("stars")
 require ("magrittr")
-
-
-## set gRes depending on available memory
-require ("memuse")
-ramL <- memuse::Sys.meminfo()$totalram |> as.numeric ()
-if (area == "GWA-area" && ramL > 17e9){
-  gRes <- 50                                     # ok on 32 GB Mac
-} else if (ramL |> as.numeric() < 17e9 ){        # have less than 17 GB RAM?
-  gRes <- 400                                    # for testing. Works on Dell.
-  gRes <- 1000
-}else if (ramL |> as.numeric() > 24e9){
-  gRes <- 100                                    # max on Mac (32 GB RAM)
-}else{
-  gRes <- 200
-}
-rm (ramL)
-# gRes <- 100
-
-
-
-## generate a new all-inclusive raster first
 ## port all of this to GrassGIS?
 ## require ("rgrass")
+
+
 
 
 ## -----------------------------------------------------------------------------
@@ -154,7 +162,7 @@ rm (gc2, gcF)
 # zm2 <- st_crop (zm, )
 
 ## save results
-write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry_", area, "_"
+write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_", area, "_"
                         , gRes, "m_EPSG", epsg, ".tiff"))
 ## add metadata, e.g.: gdal_edit.py -mo TIFFTAG_ARTIST="It was me" in.tif
 ## or gdal_translate in.tif out.tif -mo TIFFTAG_ARTIST="It was me" -mo TIFFTAG_IMAGEDESCRIPTION="This data my layer"

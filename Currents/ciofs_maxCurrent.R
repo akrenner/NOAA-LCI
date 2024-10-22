@@ -30,8 +30,7 @@ rm (list=ls())
 
 ## any way to download these automatically? maybe not
 ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
-# ncF <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT.nc"  ## big file with 30 depth, 30 time steps
-ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"
+ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
 
 
 ## options to access ROM netCDF data
@@ -42,9 +41,21 @@ ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"
 ## visit ciofs_bigtide_KT.nc later (extracting u,v vectors, filtering by direction as well)
 
 
+if (0){
+  require ("stars")
+  ncU <- stars::read_ncdf(ncF3, var="u")
+  ncU  ## dimensions: xi_u (lon), eta_u (lat), s_rho (1-30, offset -1, delta 0.03333), ocean_time (1-25, 2014-01-31 18:00 delta 1 hours)
+
+  ncV <- stars::read_ncdf(ncF3, var="v")
+  ncW <- stars::read_ncdf(ncF3, var="w")
+}
+
+
+
 grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 grid_spacing <- 1e3
-# grid_spacing <- 500
+grid_spacing <- 500
+
 prjct <- 3338
 
 
@@ -83,6 +94,12 @@ rm (nc)
 #                        #                       ny = (bb$ymax-bb$ymin) %% grid_spacing)
 # )
 # rm (bb)
+
+
+## ncdf is grid -- export raw grid coodrinates?
+## use st_warp ?? !
+## akima bi-cubic (nah)
+
 
 
 
@@ -248,10 +265,20 @@ ncdf4::nc_close (nc)
 rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF)
 
 
+
+
+save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
+## modify things here to interpolate NAs?
+
+
 ## rasterize
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=st_crs (speedS)) %>%
   st_rasterize(template=speedS)
+## re-write this part to interpolate NAs.
+
+
 
 for (i in 1:length (names (wDFsf))){
   write_stars(wDFsf, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
@@ -265,6 +292,8 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 # image (wDFsf, band=3)
 
 ## ------------------ end of u v w ----------------------
+
+
 
 
 
