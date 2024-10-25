@@ -96,14 +96,6 @@ rm (nc)
 # rm (bb)
 
 
-## ncdf is grid -- export raw grid coodrinates?
-## use st_warp ?? !
-## akima bi-cubic (nah)
-
-
-
-
-
 ## define grid
 seaAEx <- st_bbox (maxS) %>%
   st_as_sfc()
@@ -112,6 +104,7 @@ pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
    mutate (ID=row_number())
 A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
 rm (seaAEx, pgon)
+
 
 
 ## voronoi interpolation
@@ -130,6 +123,24 @@ rm (pointsID)
 
 speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
 
+
+## ncdf is grid -- export raw grid coodrinates?
+## use st_warp ?? !
+## akima bi-cubic (nah)
+
+## cut out parts beyond export area
+
+# require ("akima")
+# bcg <- bicubic (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
+#                 , x0=st_coordinates (speedS)[1]
+#                 , y0=st_coordinates (speedS)[2]
+# )
+require ("interp")
+bcg <- interp (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
+               , linear=FALSE, extrap=FALSE, duplicate="error"
+               , nx = length (unique (st_coordinates(speedS)[,1]))
+               , ny = length (unique (st_coordinates(speedS)[,2]))
+               )
 
 
 
