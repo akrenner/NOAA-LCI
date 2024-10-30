@@ -53,8 +53,9 @@ if (0){
 
 
 grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+grid_spacing <- 5e3
 grid_spacing <- 1e3
-grid_spacing <- 500
+# grid_spacing <- 500
 
 prjct <- 3338
 
@@ -124,25 +125,6 @@ rm (pointsID)
 speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
 
 
-## ncdf is grid -- export raw grid coodrinates?
-## use st_warp ?? !
-## akima bi-cubic (nah)
-
-## cut out parts beyond export area
-
-# require ("akima")
-# bcg <- bicubic (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
-#                 , x0=st_coordinates (speedS)[1]
-#                 , y0=st_coordinates (speedS)[2]
-# )
-require ("interp")
-bcg <- interp (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
-               , linear=FALSE, extrap=FALSE, duplicate="error"
-               , nx = length (unique (st_coordinates(speedS)[,1]))
-               , ny = length (unique (st_coordinates(speedS)[,2]))
-               )
-
-
 
 ## aggregate CIOFS data over new grid
 if (0){  ## seems super slow -- needs testing
@@ -185,7 +167,7 @@ save (speedS, file="~/tmp/LCI_noaa/cache/ciofs_maxspeed.RData")
 write_stars (speedS, dsn = paste0 ("~/tmp/LCI_noaa/data-products/maxSpeed_CIOFS"
              , grid_spacing, ".tif"))
 
-rm (speedPol, ncF, maxS)
+rm (speedPol, ncF)
 
 
 
@@ -210,7 +192,7 @@ vV <- ncvar_get (nc, "v")  ## dim 2 is already short
 uV <- ncvar_get (nc, "u")  ## u is 1 short of v
 
 
-## dimLimit
+## dimLimit -- ensure all dimensions are of same length
 # dims <- rbind (dim (wV), dim (vV), dim (uV))
 # dR <- apply (dims, 2, FUN=min) %>%
 #   lapply (FUN=function (x, sv = 1){seq (sv, x)})
@@ -226,7 +208,7 @@ uV <- ncvar_get (nc, "u")[dR[[1]],dR[[2]],1,dR[[4]]]
 
 
 wU <- array (dim=dim(wV)[1:2])
-wD <- wU
+wD <- wU # wU: up, wD: down
 for (i in 1:dim (wU)[1]){
   for (j in 1:dim (wU)[2]){
     if (!any (!is.na (wV [i,j,,]))){  # all values are NA/NaN
@@ -245,6 +227,8 @@ wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[
                    wd = as.numeric (wD[dR[[1]],dR[[2]]])
 )         # cut off first or last??
 # working so far 2024-10-09
+ncdf4::nc_close (nc)
+
 
 ## 1: calculate speed
 # vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
@@ -272,29 +256,98 @@ wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
               v = as.numeric (topAr [,,3])
 )
 ## clean-up
-ncdf4::nc_close (nc)
 rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF)
 
 
-
+## trim to original export domain (unknown why there is more data than that)
+wDF <- subset (wDF, (-153.6 < lon) & (lon < -150.0) &
+                 (58.7 < lat) & (lat < 60.8))
 
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData"); require ("stars"); require ("dplyr")
 ## modify things here to interpolate NAs?
 
+
+
+
+
+
+### ---------- snip ------------------------------ ###
+if (0){
+## ncdf is grid -- export raw grid coodrinates?
+## use st_warp ?? !
+## akima bi-cubic (nah)
+## st_as_stars ???
+
+require ("akima")
+bcg <- akima::interp (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
+               , linear=FALSE, extrap=FALSE, duplicate="error"
+               , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
+               , ny = length (unique (st_coordinates(speedS)[,2]))
+               # , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing
+               # , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing
+               )
+## assemble stars object from bcg  -- or start with stars::read_ncdf after all?
+# bcg <- stars::read_ncdf(ncF3, var="w")
+# bcg <- subset (bcg, bcg$s_w == 1)
+# bcg <- bcg [,,1,] # surface only
+# which.max (bcg [300,1,,])
 
 ## rasterize
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=st_crs (speedS)) %>%
   st_rasterize(template=speedS)
-## re-write this part to interpolate NAs.
-
 
 
 for (i in 1:length (names (wDFsf))){
   write_stars(wDFsf, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
                                  , names (wDFsf)[i], "_", grid_spacing, ".tif"), layer=i)
 }
+
+}
+
+
+
+### --------- re-write of snipped part ------------ ###
+wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
+  st_transform(crs=st_crs (speedS))
+require ("interp")
+for (i in seq_len(length (names (wDFsf))-1)){
+  tDF <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
+                     , z=st_drop_geometry(wDFsf [,i])[,1]) %>%
+    dplyr::filter (!is.na (z))
+  wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
+                            , linear=TRUE  ## bi-cubic can result in negative speeds!!
+                            , extrap=FALSE, duplicate="error"
+                            # , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
+                            # , ny = length (unique (st_coordinates(speedS)[,2]))
+                            , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
+                            , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing + 1
+  )
+  rm (tDF)
+  ## assemble stars object
+#  if (i==2){wDFbc$z <- wDFbc$z * -1}  # otherwise negative values blow up tiff
+  wdS <- data.frame (x = rep (wDFbc$x, length (wDFbc$y)),
+                     y = rep (wDFbc$y, each=length (wDFbc$x)),
+                     z = as.numeric (wDFbc$z)) %>%
+    st_as_sf (coords=c("x", "y"), crs=st_crs (speedS)) %>%
+    st_rasterize ()  ## specify grid size?? template=maxS causes trouble!
+
+  ## cut-out land
+
+
+  ## save to geoTIFF
+  write_stars (wdS, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
+                                 , names (wDFsf)[i], "_", grid_spacing, ".tif"))
+  rm (wdS)
+}
+rm (wDFsf)
+### --------- end of re-write of snipped part ------------ ###
+
+
+
+
+
 
 ## turn it into stars object (earlier?) and export
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
@@ -312,8 +365,16 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 
 
 
-### code in progress -- or to be deleted
 
+
+
+
+
+
+
+
+### code in progress -- or to be deleted
+if (0){
 ## work with u, v, w vectors -- using stars
 if (0){
   ## does not work with speed, only with bigTide file!
@@ -523,4 +584,4 @@ r
 }
 
 
-
+}
