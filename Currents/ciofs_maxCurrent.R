@@ -8,11 +8,23 @@ rm (list=ls())
 
 
 
-
-
 ## -----------------------------------------------------------
 ## read NoteBook-exported ncdf file and extract coordinates
 ## -----------------------------------------------------------
+
+
+## 2024-10-30, status:
+## can export netcdf to raster, but stretched grid results in gaps
+## using larger grid to fill-in gaps causes some ugly artifacts
+## not much luck with bicubic interpolation so far, apparently
+##
+## exporting directions from u and w -- would need to figure out cardinal
+## directions first (from change in lat-lon in cell above and to the right)
+
+
+
+
+
 
 ###-----  use OpenDrift.R instead???  ------
 
@@ -28,9 +40,24 @@ rm (list=ls())
 
 
 
+
+## --------------------- define parameters ------------------- ##
+
 ## any way to download these automatically? maybe not
-ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"  ## max tide picked by Kristen Thyng
+ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"     ## max tide picked by Kristen Thyng
 ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
+
+
+grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+grid_spacing <- 5e3
+grid_spacing <- 1e3
+# grid_spacing <- 500
+
+prjct <- 3338
+
+
+## ------------------------- processing ----------------------- ##
+
 
 
 ## options to access ROM netCDF data
@@ -43,22 +70,11 @@ ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 dep
 
 if (0){
   require ("stars")
-  ncU <- stars::read_ncdf(ncF3, var="u")
+  ncU <- stars::read_ncdf(ncF3, var="u")  ## not this simple -- as-is = no values? -- abandone this effort
   ncU  ## dimensions: xi_u (lon), eta_u (lat), s_rho (1-30, offset -1, delta 0.03333), ocean_time (1-25, 2014-01-31 18:00 delta 1 hours)
-
   ncV <- stars::read_ncdf(ncF3, var="v")
   ncW <- stars::read_ncdf(ncF3, var="w")
 }
-
-
-
-grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
-grid_spacing <- 5e3
-grid_spacing <- 1e3
-# grid_spacing <- 500
-
-prjct <- 3338
-
 
 
 
@@ -173,6 +189,9 @@ rm (speedPol, ncF)
 
 
 
+
+
+
 ## ------------------ new start with u v w ----------------------
 
 ## set depth = 0
@@ -181,6 +200,45 @@ rm (speedPol, ncF)
 ## export speed, u, v, and w
 
 ## should use proper u_lat, v_lat, etc, instead of truncating arrays (dimLim1, dimLim2)
+
+
+## start over
+rm (list=ls())
+ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
+grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+grid_spacing <- 5e3
+grid_spacing <- 1e3
+# grid_spacing <- 500
+prjct <- 3338
+
+
+
+## ----- snip -- try a different, more canned approach ------- ##
+## see https://rpubs.com/cyclemumner/roms0
+## tools made for ROMS -- but useing old sp/raster framework
+
+if (0){
+roms_path <- file.path (ncF3)
+                       ## require ("devtools")
+require (angstroms)    ## devtools::install_github("AustralianAntarcticDivision/angstroms")
+require (ncdump)       ## devtools::install_github("r-gris/ncdump")
+require (tabularaster) ## devtools::install_github("r-gris/tabularaster")
+require (rworldmap)
+ncd <- NetCDF(roms_path)
+ncd$variable$name
+
+vname <- "v"
+dd <- romsdata(roms_path, varname = vname, slice = c(1L, 1L), transpose = TRUE)
+plot (dd)
+
+longlat <- romscoords(roms_path, transpose = TRUE)
+contour(longlat[[1]], add = TRUE, lty = 2)
+bound <- boundary(longlat)
+projection(bound) <- "+init=epsg:4326"
+extent(bound)
+}
+## ---- snip -- end of a different, more canned approach ------ ##
+
 
 
 ### u v movement
@@ -192,19 +250,16 @@ vV <- ncvar_get (nc, "v")  ## dim 2 is already short
 uV <- ncvar_get (nc, "u")  ## u is 1 short of v
 
 
+
 ## dimLimit -- ensure all dimensions are of same length
-# dims <- rbind (dim (wV), dim (vV), dim (uV))
-# dR <- apply (dims, 2, FUN=min) %>%
-#   lapply (FUN=function (x, sv = 1){seq (sv, x)})
 dR <- rbind (dim (wV), dim (vV), dim (uV)) %>%
   apply (MARGIN=2, FUN=min) %>%
   lapply (FUN=function (x, sv=1){seq(sv, x)})
 
 ## 0: easy: max w
-wV <- ncvar_get (nc, "w")[dR[[1]],dR[[2]],,dR[[4]]]   ## use any depth for w, surface for v and u
-vV <- ncvar_get (nc, "v")[dR[[1]],dR[[2]],1,dR[[4]]]
-uV <- ncvar_get (nc, "u")[dR[[1]],dR[[2]],1,dR[[4]]]
-
+wV <- wV[dR[[1]],dR[[2]],,dR[[4]]]   ## use any depth for w, surface for v and u
+vV <- vV [dR[[1]],dR[[2]],1,dR[[4]]]
+uV <- uV [dR[[1]],dR[[2]],1,dR[[4]]]
 
 
 wU <- array (dim=dim(wV)[1:2])
@@ -221,13 +276,11 @@ for (i in 1:dim (wU)[1]){
   }
 }
 
-wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[[2]]]),
-                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dR[[1]],dR[[2]]]),
-                   wu = as.numeric (wU[dR[[1]],dR[[2]]]),
-                   wd = as.numeric (wD[dR[[1]],dR[[2]]])
+wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[[2]] ]),
+                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dR[[1]],dR[[2]] ]),
+                   wu = as.numeric (wU), # already applied dR
+                   wd = as.numeric (wD)  # already applied dR
 )         # cut off first or last??
-# working so far 2024-10-09
-ncdf4::nc_close (nc)
 
 
 ## 1: calculate speed
@@ -235,6 +288,20 @@ ncdf4::nc_close (nc)
 # uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
 speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
   array (dim = dim (vV))
+
+## calculate direction -- in ROMS and then in projected coordinates
+alphaR <- atan (uV/vV)  /pi*360  ## N = 0 degrees
+## transform into projected coordinates
+lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
+lat <- ncvar_get(nc, varid="lat_rho")[dR[[1]], dR[[2]]]
+
+require ("useful")
+# cart2pol ()
+rm (alphaR, lon, lat)
+
+
+# working so far 2024-10-09
+ncdf4::nc_close (nc)
 
 
 topAr <- array (dim = c (dim (speed)[1:2], 3))  # last dimension: speed, u, v
@@ -245,8 +312,8 @@ for (i in 1:dim (speed)[1]){
     }else{
       mIJ <- which.max (speed [i,j,])
       topAr [i,j,1] <- speed [i,j,mIJ]
-      topAr [i,j,2] <- uV [i,j,mIJ]
-      topAr [i,j,3] <- vV [i,j,mIJ]
+      # topAr [i,j,2] <- uV [i,j,mIJ]    ## cannot easily calculate a vector in projected space from these
+      # topAr [i,j,3] <- vV [i,j,mIJ]
     }
   }
 }
@@ -256,7 +323,7 @@ wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
               v = as.numeric (topAr [,,3])
 )
 ## clean-up
-rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF)
+rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR)
 
 
 ## trim to original export domain (unknown why there is more data than that)
@@ -269,80 +336,49 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
 
 
 
-
-
-
-### ---------- snip ------------------------------ ###
-if (0){
-## ncdf is grid -- export raw grid coodrinates?
-## use st_warp ?? !
-## akima bi-cubic (nah)
-## st_as_stars ???
-
-require ("akima")
-bcg <- akima::interp (x=st_coordinates(maxS)[,1], y=st_coordinates(maxS)[,2], z=maxS$speed
-               , linear=FALSE, extrap=FALSE, duplicate="error"
-               , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
-               , ny = length (unique (st_coordinates(speedS)[,2]))
-               # , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing
-               # , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing
-               )
-## assemble stars object from bcg  -- or start with stars::read_ncdf after all?
-# bcg <- stars::read_ncdf(ncF3, var="w")
-# bcg <- subset (bcg, bcg$s_w == 1)
-# bcg <- bcg [,,1,] # surface only
-# which.max (bcg [300,1,,])
-
-## rasterize
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
-  st_transform(crs=st_crs (speedS)) %>%
-  st_rasterize(template=speedS)
-
-
-for (i in 1:length (names (wDFsf))){
-  write_stars(wDFsf, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
-                                 , names (wDFsf)[i], "_", grid_spacing, ".tif"), layer=i)
-}
-
-}
-
-
-
-### --------- re-write of snipped part ------------ ###
-wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
-  st_transform(crs=st_crs (speedS))
+  st_transform(crs=prjct)
 require ("interp")
 for (i in seq_len(length (names (wDFsf))-1)){
   tDF <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
                      , z=st_drop_geometry(wDFsf [,i])[,1]) %>%
     dplyr::filter (!is.na (z))
   wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
-                            , linear=TRUE  ## bi-cubic can result in negative speeds!!
-                            , extrap=FALSE, duplicate="error"
-                            # , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
-                            # , ny = length (unique (st_coordinates(speedS)[,2]))
-                            , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
-                            , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing + 1
+                           , input="points", output="grid"
+                           , linear=TRUE  ## bi-cubic can result in negative speeds!!
+                           # , linear=FALSE, baryweight=TRUE
+                           , na.rm=TRUE
+                           , extrap=FALSE, duplicate="error"
+                           # , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
+                           # , ny = length (unique (st_coordinates(speedS)[,2]))
+                           , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
+                           , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing + 1
   )
   rm (tDF)
+
+  # ## apply interp or akima a 2nd time?
+  # x <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>% filter (!is.na (z))
+  # wDFbc <- interp::bicubic (x$x, x$y, x$z, x0=x$x, y0=x$y)
+  #                               , dx=grid_spacing, dy=grid_spacing)
+
+
   ## assemble stars object
-#  if (i==2){wDFbc$z <- wDFbc$z * -1}  # otherwise negative values blow up tiff
-  wdS <- data.frame (x = rep (wDFbc$x, length (wDFbc$y)),
-                     y = rep (wDFbc$y, each=length (wDFbc$x)),
-                     z = as.numeric (wDFbc$z)) %>%
-    st_as_sf (coords=c("x", "y"), crs=st_crs (speedS)) %>%
+  wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
+    st_as_sf (coords=c("x", "y"), crs=prjct) %>%
     st_rasterize ()  ## specify grid size?? template=maxS causes trouble!
+  ## interp::interp2grid () -- not applicable, at least not until stars version available
+
 
   ## cut-out land
 
 
   ## save to geoTIFF
   write_stars (wdS, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
-                                 , names (wDFsf)[i], "_", grid_spacing, ".tif"))
+                                , names (wDFsf)[i], "_", grid_spacing, ".tif"))
   rm (wdS)
+  cat (i, "\n")
 }
 rm (wDFsf)
-### --------- end of re-write of snipped part ------------ ###
 
 
 
