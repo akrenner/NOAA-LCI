@@ -290,37 +290,56 @@ speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
   array (dim = dim (vV))
 
 ## calculate direction -- in ROMS and then in projected coordinates
-alphaR <- atan (uV/vV)  /pi*360  ## N = 0 degrees
+alphaR <- atan (uV/vV)  ## N = 0 degrees
+## calculate angle between ROMS cells in projected coordinates
 ## transform into projected coordinates
 lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
 lat <- ncvar_get(nc, varid="lat_rho")[dR[[1]], dR[[2]]]
-
-require ("useful")
-# cart2pol ()
-rm (alphaR, lon, lat)
+lA <- sapply (1:ncol (lon), function (i){
+  require ("useful")
+  lldf <- data.frame (lon=lon [,i], lat=lat [,i]) %>%
+    st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
+    st_transform(crs=prjct) %>%
+    st_coordinates()
+  dC <- diff (lldf) %>% as.data.frame()
+  angl <- 2*pi - cart2pol (dC$X, dC$Y, degrees=FALSE)$theta
+})
+aR <- sapply (1:dim (alphaR)[3], function (i){
+  alphaR [2:nrow (alphaR),,i] + lA
+})
+rm (alphaR, lon, lat, lA)
 
 
 # working so far 2024-10-09
 ncdf4::nc_close (nc)
 
 
-topAr <- array (dim = c (dim (speed)[1:2], 3))  # last dimension: speed, u, v
+
+## extract max speed within day
+## anywhere in water column or only at the surface?
+topAr <- array (dim = c (dim (speed)[1:2], 4))  # last dimension: max speed, mtheta, surface speed, stheta
 for (i in 1:dim (speed)[1]){
   for (j in 1:dim (speed)[2]){
     if (all (is.na (speed [i,j,]))){
-      topAr [i,j,] <- rep (NA, 3)
+      topAr [i,j,] <- rep (NA, dim (topAr)[3])
     }else{
       mIJ <- which.max (speed [i,j,])
+      print (mIJ)
       topAr [i,j,1] <- speed [i,j,mIJ]
-      # topAr [i,j,2] <- uV [i,j,mIJ]    ## cannot easily calculate a vector in projected space from these
-      # topAr [i,j,3] <- vV [i,j,mIJ]
+      topAr [i,j,2] <- aR [,,mIJ]
+      topAr [i,j,3] <- speed [i,j,1]
+      topAr [i,j,4] <- aR [,,1]
+      # topAr [i,j,5] <- uV [i,j,mIJ]    ## cannot easily calculate a vector in projected space from these
+      # topAr [i,j,6] <- vV [i,j,mIJ]
     }
   }
 }
 ## assemple big DF for export
-wDF <- cbind (wDF, speed = as.numeric (topAr [,,1]),
-              u = as.numeric (topAr [,,2]),
-              v = as.numeric (topAr [,,3])
+wDF <- cbind (wDF,
+              speedM = as.numeric (topAr [,,1]),
+              theatM = as.numeric (topAr [,,2]),
+              speedS = as.numeric (topAr [,,3]),
+              theatS = as.numeric (topAr [,,4])
 )
 ## clean-up
 rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR)
