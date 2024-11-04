@@ -218,6 +218,7 @@ prjct <- 3338
 ## tools made for ROMS -- but useing old sp/raster framework
 
 if (0){
+  ## tested -- same result as below (maybe less flexible??)
 roms_path <- file.path (ncF3)
                        ## require ("devtools")
 require (angstroms)    ## devtools::install_github("AustralianAntarcticDivision/angstroms")
@@ -290,13 +291,17 @@ speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
   array (dim = dim (vV))
 
 ## calculate direction -- in ROMS and then in projected coordinates
-alphaR <- atan (uV/vV)  /pi*360  ## N = 0 degrees
+alphaR <- atan (uV/vV)  /pi*360  ## N = 0 degrees, E: 90 degrees -- check XXX
 ## transform into projected coordinates
 lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
 lat <- ncvar_get(nc, varid="lat_rho")[dR[[1]], dR[[2]]]
 
 require ("useful")
-# cart2pol ()
+## find angle between current cell and cell to the north in ROMS-grid
+sapply (1:nrow (lon), FUN=function (i){
+  XXX
+  cart2pol ()
+})
 rm (alphaR, lon, lat)
 
 
