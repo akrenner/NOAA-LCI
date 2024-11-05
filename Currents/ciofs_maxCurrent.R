@@ -68,13 +68,8 @@ prjct <- 3338
 ## visit ciofs_bigtide_KT.nc later (extracting u,v vectors, filtering by direction as well)
 
 
-if (0){
-  require ("stars")
-  ncU <- stars::read_ncdf(ncF3, var="u")  ## not this simple -- as-is = no values? -- abandone this effort
-  ncU  ## dimensions: xi_u (lon), eta_u (lat), s_rho (1-30, offset -1, delta 0.03333), ocean_time (1-25, 2014-01-31 18:00 delta 1 hours)
-  ncV <- stars::read_ncdf(ncF3, var="v")
-  ncW <- stars::read_ncdf(ncF3, var="w")
-}
+## use stars::read_ncdf(ncF3, var="u") -- not that simple; abandon this effort. Trouble extracting data
+
 
 
 
@@ -203,42 +198,22 @@ rm (speedPol, ncF)
 
 
 ## start over
-rm (list=ls())
-ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
-grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
-grid_spacing <- 5e3
-grid_spacing <- 1e3
-# grid_spacing <- 500
-prjct <- 3338
+if (0){
+  rm (list=ls())
+  ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
+  grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
+  grid_spacing <- 5e3
+  grid_spacing <- 1e3
+  # grid_spacing <- 500
+  prjct <- 3338
+}
 
 
-
-## ----- snip -- try a different, more canned approach ------- ##
 ## see https://rpubs.com/cyclemumner/roms0
 ## tools made for ROMS -- but useing old sp/raster framework
+## using angstroms, ncdump, tabularaster, rworldmap....  not substantial gain
+## do not pursue this further
 
-if (0){
-  ## tested -- same result as below (maybe less flexible??)
-roms_path <- file.path (ncF3)
-                       ## require ("devtools")
-require (angstroms)    ## devtools::install_github("AustralianAntarcticDivision/angstroms")
-require (ncdump)       ## devtools::install_github("r-gris/ncdump")
-require (tabularaster) ## devtools::install_github("r-gris/tabularaster")
-require (rworldmap)
-ncd <- NetCDF(roms_path)
-ncd$variable$name
-
-vname <- "v"
-dd <- romsdata(roms_path, varname = vname, slice = c(1L, 1L), transpose = TRUE)
-plot (dd)
-
-longlat <- romscoords(roms_path, transpose = TRUE)
-contour(longlat[[1]], add = TRUE, lty = 2)
-bound <- boundary(longlat)
-projection(bound) <- "+init=epsg:4326"
-extent(bound)
-}
-## ---- snip -- end of a different, more canned approach ------ ##
 
 
 
@@ -271,8 +246,11 @@ for (i in 1:dim (wU)[1]){
       wU [i,j] <- NA
       wD [i,j] <- NA
     }else{
+      # XXXX  add: average upwelling, upwelling in top layer
       wU [i,j] <- max (wV [i,j,,], na.rm=TRUE)
       wD [i,j] <- min (wV [i,j,,], na.rm=TRUE)
+      maxT <- which.max (wV [i,j,1,]) # time is last
+      meanUP <- mean  (subset (wV [i,j,,maxT], wV [i,j,,maxT] > 0), na.rm=TRUE)  ## all NAs
     }
   }
 }
@@ -281,6 +259,7 @@ wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[
                    lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dR[[1]],dR[[2]] ]),
                    wu = as.numeric (wU), # already applied dR
                    wd = as.numeric (wD)  # already applied dR
+#                   wuM = as.numeric (meanUP)  # mean upwelling in the watercolumn at time of max upwelling  ## XXX not working yet -- all NA
 )         # cut off first or last??
 
 
@@ -323,14 +302,14 @@ ncdf4::nc_close (nc)
 ## extract max speed within day
 ## anywhere in water column or only at the surface?
 topAr <- array (dim = c (dim (speed)[1:2], 5))  # last dimension: max speed, mtheta, surface speed, stheta
-topSpeed <- rep (NA, dim (speed)[1])
+speedDepth <- rep (NA, dim (speed)[1])
 for (i in 1:dim (speed)[1]){
   for (j in 1:dim (speed)[2]){
     if (all (is.na (speed [i,j,]))){
       topAr [i,j,] <- rep (NA, dim (topAr)[3])
     }else{
       mIJ <- which.max (speed [i,j,])
-      topSpeed [i] <- mIJ
+      speedDepth [i] <- mIJ
       topAr [i,j,1] <- speed [i,j,mIJ]
       topAr [i,j,2] <- aR [i,j,mIJ]
       topAr [i,j,3] <- speed [i,j,1]
@@ -345,11 +324,11 @@ for (i in 1:dim (speed)[1]){
 wDF <- cbind (wDF,
               speedM = as.numeric (topAr [,,1]),
               theatM = as.numeric (topAr [,,2]),
-              speedS = as.numeric (topAr [,,3]),
-              theatS = as.numeric (topAr [,,4])
+              speedS0 = as.numeric (topAr [,,3]),
+              theatS0 = as.numeric (topAr [,,4])
 )
 ## clean-up
-rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR)
+rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i,j, mIJ)
 
 
 ## trim to original export domain (unknown why there is more data than that)
