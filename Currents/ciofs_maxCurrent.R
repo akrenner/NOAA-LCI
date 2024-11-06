@@ -21,7 +21,7 @@ rm (list=ls())
 ## exporting directions from u and w -- would need to figure out cardinal
 ## directions first (from change in lat-lon in cell above and to the right)
 
-
+## 2024-11-06: interpolated raster
 
 
 
@@ -51,7 +51,7 @@ ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 dep
 grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
 grid_spacing <- 5e3
 grid_spacing <- 1e3
-# grid_spacing <- 500
+grid_spacing <- 100
 
 prjct <- 3338
 
@@ -119,13 +119,6 @@ pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
 A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
 rm (seaAEx, pgon)
 
-
-
-## voronoi interpolation
-# voroi <- st_voronoi(maxS)
-# speedS <- maxS %>%
-#   st_voronoi() %>%
-#   st_rasterize(dx=grid_spacing, dy=grid_spacing)
 
 pointsID <- maxS %>%
   st_join (A) %>%
@@ -254,6 +247,7 @@ for (i in 1:dim (wU)[1]){
       wU [i,j] <- max (wV [i,j,,], na.rm=TRUE)
       wD [i,j] <- min (wV [i,j,,], na.rm=TRUE)
       maxT <- which.max (wV [i,j,1,]) # time is last
+      minT <- which.min (wV [i,j,1,]) # other end of tide
       meanUP <- mean  (subset (wV [i,j,,maxT], wV [i,j,,maxT] > 0), na.rm=TRUE)  ## all NAs
     }
   }
@@ -299,12 +293,7 @@ ncdf4::nc_close (nc)
 ## combine uv-angle with lA chart curvature
 aR <- array (dim = dim (alphaR))
 for (i in 1:dim (alphaR)[3]){
-  ## XXXX think a bit more about how to add these two vectors!
-  aR [,,i] <- (alphaR [,,i] + lA [c(1:nrow (lA), nrow (lA)),]) # %% (pi/2) ## duplicate last row to make lA conformal
-  # make sure alphaR and lA are turning in the same direction
-  ## %% (pi/2) to normalize   XXXX
-  # 2 pi = 180 degree
-  aR [,,i] <- aR [,,i] %% (pi*2)
+  aR [,,i] <- (alphaR [,,i] + lA [c(1:nrow (lA), nrow (lA)),]) %% (pi/2) ## duplicate last row to make lA conformal
 }
 # aR <- ifelse (aR > )
 rm (alphaR, lon, lat, lA, i)
@@ -329,8 +318,6 @@ for (i in 1:dim (speed)[1]){
       topAr [i,j,3] <- speed [i,j,1]
       topAr [i,j,4] <- aR [i,j,1]
       topAr [i,j,5] <- mean (speed [i,j,], na.rm=TRUE)
-      # topAr [i,j,5] <- uV [i,j,mIJ]    ## cannot easily calculate a vector in projected space from these
-      # topAr [i,j,6] <- vV [i,j,mIJ]
     }
   }
 }
@@ -376,18 +363,10 @@ for (i in seq_len(length (names (wDFsf))-1)){
                            # , linear=FALSE, baryweight=TRUE
                            , na.rm=TRUE
                            , extrap=FALSE, duplicate="error"
-                           # , nx = length (unique (st_coordinates(speedS)[,1]))  ## better to have a meaningful pixel size
-                           # , ny = length (unique (st_coordinates(speedS)[,2]))
                            , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
                            , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing + 1
   )
   rm (tDF)
-
-  # ## apply interp or akima a 2nd time?
-  # x <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>% filter (!is.na (z))
-  # wDFbc <- interp::bicubic (x$x, x$y, x$z, x0=x$x, y0=x$y)
-  #                               , dx=grid_spacing, dy=grid_spacing)
-
 
   ## assemble stars object
   wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
@@ -441,32 +420,6 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 
 ### code in progress -- or to be deleted
 if (0){
-## work with u, v, w vectors -- using stars
-if (0){
-  ## does not work with speed, only with bigTide file!
-  ncF <- "~/GISdata/LCI/drifter/ciofs_bigtide_KT.nc"
-
-  readSpeed <- function (var){
-    require (stars)
-    velo <- stars::read_ncdf(ncF, var=var)
-    st_crs (velo) <- 4326
-    ## subset surface [s_rho>-0.16669]
-    # velo <-
-    ## reproject onto grid A
-    velo
-  }
-
-
-  u <- stars::read_ncdf (ncF, var="u", crs=4326)
-  v <- stars::read_ncdf (ncF, var="v")
-  w <- stars::read_ncdf (ncF, var="w")
-  st_crs (u) <- 4326
-  u <- st_transform(u, crs=3338)
-
-## polygon now? should be a point cloud
-# um <- apply (u, MARGIN=c(1,2), FUN=max, na.rm=TRUE)  ## use for u, v -- not max speed
-}
-
 
 
 ## the hard part: get data from AOOS/Axiom server -- failed so far
