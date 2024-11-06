@@ -75,6 +75,8 @@ prjct <- 3338
 
 require ("ncdf4")
 require ("stars")
+dir.create("~/tmp/LCI_noaa/data-products/CIOFS/", showWarnings=FALSE, recursive=TRUE)
+
 
 nc <- ncdf4::nc_open(ncF)
 #print (nc)
@@ -170,7 +172,8 @@ if (0){  ## seems super slow -- needs testing
 
 
 
-png ("~/tmp/LCI_noaa/media/drifter/ciofs_maxspeed.png")
+dir.create("~/tmp/LCI_noaa/media/CIOFS/", showWarnings=FALSE, recursive=FALSE)
+png ("~/tmp/LCI_noaa/media/CIOFS/ciofs_maxspeed.png")
 plot (speedS)
 dev.off()
 
@@ -206,6 +209,7 @@ if (0){
   grid_spacing <- 1e3
   # grid_spacing <- 500
   prjct <- 3338
+  require ("ncdf4")
 }
 
 
@@ -266,36 +270,46 @@ wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[
 ## 1: calculate speed
 # vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
 # uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
-speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
+speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>     ## -180 to 180, 0 = north
   array (dim = dim (vV))
 
 ## calculate direction -- in ROMS and then in projected coordinates
-alphaR <- atan (uV/vV)  /pi*360  ## N = 0 degrees, E: 90 degrees -- check XXX
+alphaR <- atan (uV/vV)  #   0 = north; -pi to pi     /pi*360  ## N = 0 degrees, E: 90 degrees -- check XXX -- N/S correct?
 ## calculate angle between ROMS cells in projected coordinates
 ## transform into projected coordinates
 lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
 lat <- ncvar_get(nc, varid="lat_rho")[dR[[1]], dR[[2]]]
 ## find angle between current cell and cell to the north in ROMS-grid
-lA <- sapply (1:ncol (lon), function (i){
+lA <- sapply (1:ncol (lon), function (i){ ## process column by column. lat goes from south to north
+  # or use gear::angle2d?
   require ("useful")
   lldf <- data.frame (lon=lon [,i], lat=lat [,i]) %>%
     st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
     st_transform(crs=prjct) %>%
     st_coordinates()
   dC <- diff (lldf) %>% as.data.frame()
-  angl <- 2*pi - cart2pol (dC$X, dC$Y, degrees=FALSE)$theta
+  angl <- (cart2pol (dC$X, dC$Y, degrees=FALSE)$theta) + pi/2 ## 0-2pi, 0 degrees = N -- VERIFY XXXX
+  angl
 })
-
-
-aR <- array (dim = dim (alphaR))
-for (i in 1:dim (alphaR)[3]){
-  aR [,,i] <- alphaR [,,i] + lA [c(1,1:nrow (lA)),]  ## duplicate first row to make lA conformal
-}
-rm (alphaR, lon, lat, lA)
-
 
 # working so far 2024-10-09
 ncdf4::nc_close (nc)
+
+
+## combine uv-angle with lA chart curvature
+aR <- array (dim = dim (alphaR))
+for (i in 1:dim (alphaR)[3]){
+  ## XXXX think a bit more about how to add these two vectors!
+  aR [,,i] <- (alphaR [,,i] + lA [c(1:nrow (lA), nrow (lA)),]) # %% (pi/2) ## duplicate last row to make lA conformal
+  # make sure alphaR and lA are turning in the same direction
+  ## %% (pi/2) to normalize   XXXX
+  # 2 pi = 180 degree
+  aR [,,i] <- aR [,,i] %% (pi*2)
+}
+# aR <- ifelse (aR > )
+rm (alphaR, lon, lat, lA, i)
+
+
 
 
 
@@ -323,9 +337,9 @@ for (i in 1:dim (speed)[1]){
 ## assemple big DF for export
 wDF <- cbind (wDF,
               speedM = as.numeric (topAr [,,1]),
-              theatM = as.numeric (topAr [,,2]),
+              thetaM = as.numeric (topAr [,,2]),
               speedS0 = as.numeric (topAr [,,3]),
-              theatS0 = as.numeric (topAr [,,4])
+              thetaS0 = as.numeric (topAr [,,4])
 )
 ## clean-up
 rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i,j, mIJ)
@@ -334,6 +348,14 @@ rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i,j, mIJ)
 ## trim to original export domain (unknown why there is more data than that)
 wDF <- subset (wDF, (-153.6 < lon) & (lon < -150.0) &
                  (58.7 < lat) & (lat < 60.8))
+
+
+
+
+
+
+
+## --------------- interpolate and save output ------------------------------##
 
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData"); require ("stars"); require ("dplyr")
@@ -377,8 +399,11 @@ for (i in seq_len(length (names (wDFsf))-1)){
   ## cut-out land
 
 
+  ## plot
+
+
   ## save to geoTIFF
-  write_stars (wdS, dsn=paste0 ("~/tmp/LCI_noaa/data-products/ciofs_maxspeeds_"
+  write_stars (wdS, dsn=paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
                                 , names (wDFsf)[i], "_", grid_spacing, ".tif"))
   rm (wdS)
   cat (i, "\n")
