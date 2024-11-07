@@ -45,7 +45,7 @@ rm (list=ls())
 
 ## --------------------- define parameters ------------------- ##
 
-grid_spacing <- 500
+grid_spacing <- 100
 
 prjct <- 3338
 
@@ -78,6 +78,7 @@ require ("stars")
 dir.create("~/tmp/LCI_noaa/data-products/CIOFS/", showWarnings=FALSE, recursive=TRUE)
 
 
+if (0){
 nc <- ncdf4::nc_open(ncF)
 #print (nc)
 #names (nc$dim)
@@ -154,13 +155,7 @@ if (0){  ## seems super slow -- needs testing
   }
 
   speedS <- gridPts (maxS, 50)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 100), speedS), speedS)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 500), speedS), speedS)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 1000), speedS), speedS)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 5000), speedS), speedS)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 10000), speedS), speedS)
-  speedS <- ifelse (is.na (speedS), st_extract(gridPts (maxS, 50000), speedS), speedS)
-}
+ }
 
 
 
@@ -175,7 +170,7 @@ write_stars (speedS, dsn = paste0 ("~/tmp/LCI_noaa/data-products/maxSpeed_CIOFS"
              , grid_spacing, ".tif"))
 
 rm (speedPol, ncF)
-
+}
 
 
 
@@ -367,8 +362,8 @@ for (i in seq_len(length (names (wDFsf))-1)){
                             , linear=FALSE, baryweight=TRUE
                            , na.rm=TRUE
                            , extrap=FALSE, duplicate="error"
-                           , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
-                           , ny = diff (range (st_coordinates (speedS)[,2])) / grid_spacing + 1
+                           , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
+                           , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
   )
   rm (tDF)
 
@@ -395,7 +390,7 @@ for (i in seq_len(length (names (wDFsf))-1)){
   ## plot
   png (paste0 ("~/tmp/LCI_noaa/media/CIOFS/", names (wDFsf)[i], ".png")
        , width = 6*300, height=8*300, res=300)
-  plot (wDS)
+  plot (wdS)
   dev.off()
 
 
