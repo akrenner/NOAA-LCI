@@ -22,6 +22,8 @@ rm (list=ls())
 ## directions first (from change in lat-lon in cell above and to the right)
 
 ## 2024-11-06: interpolated raster
+## still need to test: bicubic, linear, vs nearest neighbour interpolation
+## still to do: windy-like plot of vector field
 
 
 
@@ -43,17 +45,15 @@ rm (list=ls())
 
 ## --------------------- define parameters ------------------- ##
 
+grid_spacing <- 500
+
+prjct <- 3338
+
+
 ## any way to download these automatically? maybe not
 ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"     ## max tide picked by Kristen Thyng
 ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
-
-
-grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
-grid_spacing <- 5e3
-grid_spacing <- 1e3
-grid_spacing <- 100
-
-prjct <- 3338
+worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## full resolution
 
 
 ## ------------------------- processing ----------------------- ##
@@ -326,8 +326,11 @@ wDF <- cbind (wDF,
               speedM = as.numeric (topAr [,,1]),
               thetaM = as.numeric (topAr [,,2]),
               speedS0 = as.numeric (topAr [,,3]),
-              thetaS0 = as.numeric (topAr [,,4])
-)
+              thetaS0 = as.numeric (topAr [,,4]))
+## add projected u and v
+wDF$prU <- sin (wDF$thetaM) * wDF$speedM
+wDF$prV <- cos (wDF$thetaM) * wDF$speedM
+
 ## clean-up
 rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i,j, mIJ)
 
@@ -352,6 +355,7 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
 
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=prjct)
+
 require ("interp")
 for (i in seq_len(length (names (wDFsf))-1)){
   tDF <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
@@ -359,8 +363,8 @@ for (i in seq_len(length (names (wDFsf))-1)){
     dplyr::filter (!is.na (z))
   wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
                            , input="points", output="grid"
-                           , linear=TRUE  ## bi-cubic can result in negative speeds!!
-                           # , linear=FALSE, baryweight=TRUE
+                           # , linear=TRUE  ## bi-cubic can result in negative speeds!!
+                            , linear=FALSE, baryweight=TRUE
                            , na.rm=TRUE
                            , extrap=FALSE, duplicate="error"
                            , nx = diff (range (st_coordinates (speedS)[,1])) / grid_spacing + 1
@@ -370,42 +374,58 @@ for (i in seq_len(length (names (wDFsf))-1)){
 
   ## assemble stars object
   wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
-    st_as_sf (coords=c("x", "y"), crs=prjct) %>%
-    st_rasterize ()  ## specify grid size?? template=maxS causes trouble!
+    st_as_sf (coords=c("x", "y"), crs=prjct)
   ## interp::interp2grid () -- not applicable, at least not until stars version available
 
 
+  if (0){
   ## cut-out land
+  if (!exists ("onLand")){
+    worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>% st_geometry()
+    worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
+      st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
+      sf::st_transform(prjct)
+    rm (worldP)
+    onLand <- st_intersects(wdS, worldM) %>% as.numeric () ##
+  }
+  wdS <- subset (wdS, isFALSE(onLand)); rm (onLand)
+  }
 
 
   ## plot
+  png (paste0 ("~/tmp/LCI_noaa/media/CIOFS/", names (wDFsf)[i], ".png")
+       , width = 6*300, height=8*300, res=300)
+  plot (wDS)
+  dev.off()
 
 
   ## save to geoTIFF
-  write_stars (wdS, dsn=paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
-                                , names (wDFsf)[i], "_", grid_spacing, ".tif"))
+  write_stars (wdS %>% st_rasterize()
+               , dsn=paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
+                             , names (wDFsf)[i], ".tif"))
   rm (wdS)
   cat (i, "\n")
 }
 rm (wDFsf)
 
 
-
-
-
-
 ## turn it into stars object (earlier?) and export
 save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 
-
 # image (wDFsf, band=3)
+
 
 ## ------------------ end of u v w ----------------------
 
 
+## move to a new file?
 
+## read in transformed u and v vectors
+## make windy-like current map for flood and slack tides
 
-
+## read geotiffs
+## plot as in https://github.com/milos-agathon/wind_map/blob/main/R/wind_map.R
+## also see https://r-graphics.org/recipe-miscgraph-vectorfield (more traditional)
 
 
 
