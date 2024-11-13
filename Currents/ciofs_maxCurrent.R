@@ -46,9 +46,8 @@ rm (list=ls())
 ## --------------------- define parameters ------------------- ##
 
 grid_spacing <- 100
-
 prjct <- 3338
-
+bicubic <- FALSE # linear or bicubic interpolation
 
 ## any way to download these automatically? maybe not
 ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"     ## max tide picked by Kristen Thyng
@@ -358,10 +357,9 @@ for (i in seq_len(length (names (wDFsf))-1)){
     dplyr::filter (!is.na (z))
   wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
                            , input="points", output="grid"
-                           # , linear=TRUE  ## bi-cubic can result in negative speeds!!
-                            , linear=FALSE, baryweight=TRUE
-                           , na.rm=TRUE
-                           , extrap=FALSE, duplicate="error"
+                           , linear=bicubic  ## bi-cubic can result in negative speeds!!
+                           , baryweight=TRUE
+                           , na.rm=TRUE, extrap=FALSE, duplicate="error"
                            , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
                            , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
   )
@@ -388,7 +386,8 @@ for (i in seq_len(length (names (wDFsf))-1)){
 
 
   ## plot
-  png (paste0 ("~/tmp/LCI_noaa/media/CIOFS/", names (wDFsf)[i], ".png")
+  png (paste0 ("~/tmp/LCI_noaa/media/CIOFS/", names (wDFsf)[i]
+               , c("_linear", "_bc")[bicubic+1], ".png")
        , width = 6*300, height=8*300, res=300)
   plot (wdS)
   dev.off()
@@ -397,7 +396,8 @@ for (i in seq_len(length (names (wDFsf))-1)){
   ## save to geoTIFF
   write_stars (wdS %>% st_rasterize()
                , dsn=paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
-                             , names (wDFsf)[i], ".tif"))
+                             , names (wDFsf)[i]
+                             , c("_linear", "_bc")[bicubic+1], ".tif"))
   rm (wdS)
   cat (i, "\n")
 }
