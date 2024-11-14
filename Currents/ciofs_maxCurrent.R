@@ -6,6 +6,8 @@ rm (list=ls())
 ## max tide speed: 0.0003626 m/s, 2015-02-19 21:16:00
 # format (as.POSIXct("2014-01-31"), "0%d")
 
+## also see CIOFS files on aws cloud: https://noaa-nos-ofs-pds.s3.amazonaws.com/index.html#ciofs/netcdf/
+
 
 
 ## -----------------------------------------------------------
@@ -242,7 +244,7 @@ for (i in 1:dim (wU)[1]){
       wD [i,j] <- min (wV [i,j,,], na.rm=TRUE)
       maxT <- which.max (wV [i,j,1,]) # time is last
       minT <- which.min (wV [i,j,1,]) # other end of tide
-      meanUP <- mean  (subset (wV [i,j,,maxT], wV [i,j,,maxT] > 0), na.rm=TRUE)  ## all NAs
+     # meanUP <- mean  (subset (wV [i,j,,maxT], wV [i,j,,maxT] > 0), na.rm=TRUE)  ## all NAs
     }
   }
 }
@@ -349,40 +351,39 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
 
 wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
   st_transform(crs=prjct)
+rm (wDF)
 
 require ("interp")
 for (i in seq_len(length (names (wDFsf))-1)){
   tDF <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
                      , z=st_drop_geometry(wDFsf [,i])[,1]) %>%
     dplyr::filter (!is.na (z))
-  wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
+  wdS <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
                            , input="points", output="grid"
                            , linear=bicubic  ## bi-cubic can result in negative speeds!!
                            , baryweight=TRUE
                            , na.rm=TRUE, extrap=FALSE, duplicate="error"
                            , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
                            , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
-  )
-  rm (tDF)
-
-  ## assemble stars object
-  wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
+  ) %>%
+    interp::interp2xyz(data.frame=TRUE) %>%   ## assemble stars object
     st_as_sf (coords=c("x", "y"), crs=prjct)
   ## interp::interp2grid () -- not applicable, at least not until stars version available
 
 
-  if (0){
   ## cut-out land
-  if (!exists ("onLand")){
+  if (!exists ("worldM")){
     worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>% st_geometry()
     worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
       st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
       sf::st_transform(prjct)
     rm (worldP)
+  }
+  if (0){
     onLand <- st_intersects(wdS, worldM) %>% as.numeric () ##
+    wdS <- subset (wdS, isFALSE(onLand)); rm (onLand)
   }
-  wdS <- subset (wdS, isFALSE(onLand)); rm (onLand)
-  }
+
 
 
   ## plot
@@ -390,6 +391,7 @@ for (i in seq_len(length (names (wDFsf))-1)){
                , c("_linear", "_bc")[bicubic+1], ".png")
        , width = 6*300, height=8*300, res=300)
   plot (wdS)
+  plot (worldM, add=TRUE, col = "beige")
   dev.off()
 
 
@@ -401,7 +403,6 @@ for (i in seq_len(length (names (wDFsf))-1)){
   rm (wdS)
   cat (i, "\n")
 }
-rm (wDFsf)
 
 
 ## turn it into stars object (earlier?) and export
@@ -413,6 +414,10 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 ## ------------------ end of u v w ----------------------
 
 
+
+
+
+
 ## move to a new file?
 
 ## read in transformed u and v vectors
@@ -422,8 +427,77 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 ## plot as in https://github.com/milos-agathon/wind_map/blob/main/R/wind_map.R
 ## also see https://r-graphics.org/recipe-miscgraph-vectorfield (more traditional)
 
+rm (list = ls()); load ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 
 
+require ('ggfields')
+require ('ggplot2')
+require ('ggspatial')
+
+
+## unified data frame with u, v, speed, and theta
+## export csv file for use in here or GIS
+tDFx <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
+                    , speedS0 = wDFsf$speedS0, thetaS0 = wDFsf$thetaS0
+                    , u = wDFsf$prU, v = wDFsf$prV)
+for (i in 3:ncol (tDF)){
+  tDF <- tDFx %>%
+    dplyr::filter (!is.na (tDFx [,i]))  ## move outside loop?
+  wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF[,i]
+                           , input="points", output="grid"
+                           , linear=TRUE  ## bi-cubic can result in negative speeds!!
+                           # , linear=FALSE, baryweight=TRUE
+                           , na.rm=TRUE
+                           , extrap=FALSE, duplicate="error"
+                           , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
+                           , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
+  ) %>%
+    interp::interp2xyz(data.frame=TRUE)
+  if (i == 3){
+    wDS <- wDFbc
+  }else{
+    wDS <- cbind (wDS, wDFbc$z)
+  }
+}
+names (wDS) <- names (tDFx)
+rm (tDFx, tDF, wDFbc)
+
+## save csv file for QGIS
+wDS %>%
+  dplyr::filter (!is.na (speedS0), !is.na (thetaS0)) %>%
+  dplyr::filter ((1:length (x)) %% 1000 == 0) %>%  ## subsample
+write.csv(file = "~/tmp/LCI_noaa/data-products/CIOFS/Current_vectorfield.csv"
+          , row.names=FALSE) ## QGIS doesn't read from compressed CSV
+
+
+
+## plot in R (maybe easier to do that iterative?)
+
+wDS <- st_as_sf (wDFbc, coords=c("x", "y"), crs=prjct)
+wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
+  st_as_sf (coords=c("x", "y"), crs=prjct)
+rm (tDF)
+
+
+
+## assemble stars object
+
+
+
+ggplot() +
+  ggspatial::annotation_map_tile(
+    alpha      = 0.25,
+    cachedir   = tempdir()) +
+  geom_fields(
+    data       = seawatervelocity,
+    aes(radius = as.numeric(v),
+        angle  = as.numeric(angle),
+        colour = as.numeric(v)),
+    max_radius = grid::unit(0.7, "cm")) +
+  labs(colour  = "v[m/s]",
+       radius  = "v[m/s]") +
+  scale_radius_binned() +
+  scale_colour_viridis_b(guide = guide_bins())
 
 
 
