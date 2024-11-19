@@ -551,6 +551,41 @@ if (0){
 # setTimeLimit (elapsed=60*10
 #               , transient=TRUE) # 10 min limit
 
+
+
+
+
+
+rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+## -------- animation with trail for each deployment ------------- ##
+driftP$deploy <- factor (driftP$deploy)
+
+tailL <- 10
+
+
+dI <- subset (driftP, Deployment == levels (driftP$Deployment)[5])
+
+## interpolate? -- earlier
+
+
+
+for (j in seq_len(nrow (dI))){
+  plot (st_geometry(dI), type="n")
+  plot (worldM, add=TRUE, col = "beige")
+  ## add tail
+  tL <- min (c (j, tailL))
+  st_linestring (st_coordinates (st_geometry(dI)[(j-tL):j])) %>%
+    plot (add=TRUE, lwd=2)
+  plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19)
+}
+
+
+
+
+
+
+
+
 if (0){
   tD <- tempdir()
   png (paste0 (tD, "/frame%04d.png"), width = resW, height=resH, res=120)

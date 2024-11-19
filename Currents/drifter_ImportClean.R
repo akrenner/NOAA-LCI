@@ -615,7 +615,8 @@ if (0){
   abline (b=1)
 }
 
-
+pU <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prU_bc.tif")
+pV <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prV_bc.tif")
 
 
 
@@ -1153,7 +1154,13 @@ add.alpha <- function(col, alpha=1){
 
 
 
+## clean-up
+rm (speedS, pU, pV, i, dIntX, ciofsF, speedTH)
 
+
+
+## -----------------------------------------------------------------------------
+## save data dump for plotting
 
 cat ("\nTotal time passed from startTime:"
      , round (difftime(Sys.time(), startTime, "minutes"),1), " min\n")

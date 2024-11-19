@@ -5,6 +5,7 @@ rm (list=ls())
 ## biggest tide:   8.242 m,       2014-01-31 21:23:00
 ## max tide speed: 0.0003626 m/s, 2015-02-19 21:16:00
 # format (as.POSIXct("2014-01-31"), "0%d")
+## convention: 0 degrees is due North, proceeding clockwise. degrees in radians (360 = 2 pi)
 
 ## also see CIOFS files on aws cloud: https://noaa-nos-ofs-pds.s3.amazonaws.com/index.html#ciofs/netcdf/
 
@@ -49,7 +50,7 @@ rm (list=ls())
 
 grid_spacing <- 100
 prjct <- 3338
-bicubic <- FALSE # linear or bicubic interpolation
+bicubic <- TRUE # linear or bicubic interpolation
 
 ## any way to download these automatically? maybe not
 ncF <- "~/GISdata/LCI/OpenDrift/max_speed_2014-1.nc"     ## max tide picked by Kristen Thyng
@@ -79,7 +80,7 @@ require ("stars")
 dir.create("~/tmp/LCI_noaa/data-products/CIOFS/", showWarnings=FALSE, recursive=TRUE)
 
 
-if (0){
+if (0){  ## old code using Kristin's max-speed export -- obsolete?
 nc <- ncdf4::nc_open(ncF)
 #print (nc)
 #names (nc$dim)
@@ -189,18 +190,6 @@ rm (speedPol, ncF)
 ## should use proper u_lat, v_lat, etc, instead of truncating arrays (dimLim1, dimLim2)
 
 
-## start over
-if (0){
-  rm (list=ls())
-  ncF3 <- "~/GISdata/LCI/OpenDrift/ciofs_bigtide_KT_b.nc"  ## big file with 30 depth, 30 time steps
-  grid_spacing <- 10e3  ## 10 km seems to make sense -- go to 20 km?
-  grid_spacing <- 5e3
-  grid_spacing <- 1e3
-  # grid_spacing <- 500
-  prjct <- 3338
-  require ("ncdf4")
-}
-
 
 ## see https://rpubs.com/cyclemumner/roms0
 ## tools made for ROMS -- but useing old sp/raster framework
@@ -260,11 +249,14 @@ wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[
 ## 1: calculate speed
 # vV <- ncvar_get (nc, "v")[,,1,]  ## dim 2 is already short
 # uV <- ncvar_get (nc, "u")[,dimLim2,1,] ## u is 1 short of v
-speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>     ## -180 to 180, 0 = north
+## -180 to 180, 0 = north
+speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
   array (dim = dim (vV))
 
+
+## -------------------------start with trigonometry ---------------------------- ##
 ## calculate direction -- in ROMS and then in projected coordinates
-alphaR <- atan (uV/vV)  #   0 = north; -pi to pi     /pi*360  ## N = 0 degrees, E: 90 degrees -- check XXX -- N/S correct?
+alphaR <- (atan (vV/uV) + pi/2) * -1  #   0 = north; -pi to pi     /pi*360  ## N = 0 degrees, E: pi/2 -- check XXX -- N/S correct?
 ## calculate angle between ROMS cells in projected coordinates
 ## transform into projected coordinates
 lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
@@ -278,7 +270,7 @@ lA <- sapply (1:ncol (lon), function (i){ ## process column by column. lat goes 
     st_transform(crs=prjct) %>%
     st_coordinates()
   dC <- diff (lldf) %>% as.data.frame()
-  angl <- (cart2pol (dC$X, dC$Y, degrees=FALSE)$theta) + pi/2 ## 0-2pi, 0 degrees = N -- VERIFY XXXX
+  angl <- (cart2pol (dC$X, dC$Y, degrees=FALSE)$theta)  # + pi/2 ## 0-2pi, 0 degrees = N -- VERIFY XXXX
   angl
 })
 
@@ -419,6 +411,9 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS2.RData")
 
 
 ## move to a new file?
+
+
+## ------------- plot vector field --------------------- ##
 
 ## read in transformed u and v vectors
 ## make windy-like current map for flood and slack tides
