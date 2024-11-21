@@ -55,7 +55,7 @@ if (0){
 
 gRes <- 200  # grid cell length (m). 500 m about 1 min
 gRes <- 500  # grid cell length (m). 500 m about 1 min
-dDepth <- levels (drift$deployDepth)[2]  ## surface (1) or 15 m (2)
+dDepth <- levels (drift$drogue_depth)[1]  ## surface (1) or 15 m (5)
 
 
 
@@ -67,10 +67,9 @@ dK <- drift %>%
   #  filter (Longitude > -152.6) %>%
   filter (Longitude < -147) %>%
   filter (Longitude > -155) %>%
-  filter (badSpeed==FALSE) %>%
-  filter (trimBoat==FALSE) %>%
+  filter (off_deploy==FALSE) %>%
   filter (!is.na (speed_ms)) %>%
-  filter (deployDepth==dDepth) %>%
+  filter (drogue_depth==dDepth) %>%
   filter (tide != "slack") %>%
   filter()
 # rm (drift)
@@ -369,7 +368,7 @@ x <- sqrt (x)
 drift %>%
   filter (speed_ms < 3) %>%
   filter (speed_ms > 0) %>%
-  filter (deployDepth < 5) %>%
+  filter (drogue_depth < 5) %>%
   select (speed_ms) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
@@ -385,7 +384,7 @@ plotBG()
 drift %>%
   filter (speed_ms < 3) %>%
   filter (speed_ms > 0) %>%
-  filter (deployDepth > 5) %>%
+  filter (drogue_depth > 5) %>%
   select (speed_ms) %>%
   plot (add=TRUE
         , pch=19  ## by deployDepth
@@ -406,10 +405,10 @@ png (filename=paste0 (outpath, "drifterPlot_age.png")
 plotBG()
 drift %>%
   filter (speed_ms < 3) %>%
-  #  filter (deployDepth < 5) %>%
+  #  filter (drogue_depth < 5) %>%
   select (days_in_water) %>%
   plot (add=TRUE
-        , pch=19  ## by deployDepth
+        , pch=19  ## by drogue_depth
         , cex=1
         , type="p"
         , alpha=0.5
@@ -466,7 +465,7 @@ plotDrift <- function (i){
        , width=resW, height=resH)
   plotBG(dr=dR)
   plot (dR, add=TRUE
-        , pch=19  ## by deployDepth
+        , pch=19  ## by drogue_depth
         , cex=1, type="p"
         , alpha=0.5
         , nbreaks=100
@@ -556,16 +555,71 @@ if (0){
 
 
 
-rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+#  rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 ## -------- animation with trail for each deployment ------------- ##
 driftP$deploy <- factor (driftP$deploy)
 
 tailL <- 10
+dir.create(paste0 (outpath, "/drifterVideo/"), showWarnings=FALSE, recursive=TRUE)
 
 
-dI <- subset (driftP, Deployment == levels (driftP$Deployment)[5])
+## bare av
+dPlot <- function (i){
+  require ("sf")
+  require ("av")
+  dI <- subset (driftP, deploy == levels (driftP$deploy)[i])
 
-## interpolate? -- earlier
+  ## interpolate -- here or earlier
+
+  video_file <- paste0 (outpath, "drifterVideo/driftAnimationAV_", i, ".mp4")
+  av::av_capture_graphics({
+    par (ask=FALSE)
+    for (j in seq_len (nrow (dI))){
+      # plotBG()
+      plot (st_geometry(dI), type="n")
+      plot (worldM, add=TRUE, col = "beige")
+      ## add tail
+      tL <- min (c (j, tailL))
+      st_linestring (st_coordinates (st_geometry(dI)[1:j])) %>%
+        plot (add=TRUE, lwd=0.5, col = "gray")
+      st_linestring (st_coordinates (st_geometry(dI)[(j-tL):j])) %>%
+        plot (add=TRUE, lwd=1)
+      st_linestring (st_coordinates (st_geometry(dI)[(j-(tL%/%2)):j])) %>%
+        plot (add=TRUE, lwd=2)
+      st_linestring (st_coordinates (st_geometry(dI)[(j-(tL%/%4)):j])) %>%
+        plot (add=TRUE, lwd=3)
+      plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=1.2)
+      legend ("topright", bty="n", box.col=NA
+              , legend=paste0 ("day ", floor (difftime(dI$DeviceDateTime[j]
+                                               , dI$DeviceDateTime [1], units="days"))
+                               , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M")))
+      title (main = paste0 (dI$DeviceName [1], "\ndepth: ", dI$drogue_depth [1], "m"))
+      ## add virtual particle from particle trajectory tool
+      box()
+    }
+  }, output=video_file, width=resolu [1], height=resolu [2], framerate=4
+  # , vfilter=paste0 ('framerate=fps=', resolu [3])
+  )
+  # utils::browseURL(video_file)
+}
+
+
+# dPlot (2)  ## for testing
+
+# for (i in seq_along (levels (driftP$deploy))){
+#   dPlot (i)
+# }
+require ("parallel")
+ncores <- detectCores()
+cl <- makeCluster (ncores)
+clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "outpath", "resolu"))
+result <- parLapply (cl, seq_along(levels (driftP$deploy)), dPlot)
+stopCluster (cl); rm (cl)
+
+
+
+## compare distance to CIOFS particles: need to be able to upload file with
+## positions and times of particle deployment
 
 
 

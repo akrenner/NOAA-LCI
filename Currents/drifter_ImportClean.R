@@ -47,7 +47,7 @@ resolu <- c (resW=1080, resH=576, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, w
 ## ----------------------------------------------------------
 ## set file locations
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## full resolution
-worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
+# worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/"
@@ -995,6 +995,26 @@ if (0){
 
 
 
+## --------------------- manually fix bad positions ------------------------- ##
+## screening video plots
+
+# 16 boat transport in last 1/4 from w to e of spit 2012-08-13 17:00 to 2012-08-14 00:00 -- cut out
+# 24 stuck at KBL?
+# 25 too much time at KBL?? Jakolof?
+# 37 deployed at 2013-06-19 05:00 ?
+# 47 cut into two: boat from 2013-04-21 18:00 to 2013-04-22 00:00
+# 52 beached at times
+# 70 2012-08-15 19:00 to 2012-08-15 23:00 -- boat?
+# 71 delete start to 2012-08-26 20:00 (KBL)
+
+## 86 -- good
+gap to 92
+
+# 119
+# 163 boat from 2019-07-05 23:50 to 2019-07-07 01:10
+## last inspected: 166
+
+# 90 -- NP gyre circumnavigation -- cool!
 
 
 
