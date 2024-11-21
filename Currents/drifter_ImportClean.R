@@ -47,7 +47,7 @@ resolu <- c (resW=1080, resH=576, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, w
 ## ----------------------------------------------------------
 ## set file locations
 worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## full resolution
-# worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
+worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/h/GSHHS_h_L1.shp"   ## high
 # worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/c/GSHHS_c_L1.shp"  ## coarse for testing
 # AKshape <- "GISdata/LCI/shoreline/akshape"
 driftP <- "~/GISdata/LCI/drifter/"
@@ -1008,7 +1008,8 @@ if (0){
 # 71 delete start to 2012-08-26 20:00 (KBL)
 
 ## 86 -- good
-gap to 92
+# gap 74-79
+# gap to 93
 
 # 119
 # 163 boat from 2019-07-05 23:50 to 2019-07-07 01:10
