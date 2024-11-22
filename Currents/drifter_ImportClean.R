@@ -125,10 +125,13 @@ bbox <- mar_bathy %>%  ## extended Research Area
 
 
 ## coastline
-worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>%
+worldMb <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>%
   st_geometry()
-worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
+worldM <- subset (worldMb, st_is_valid (worldMb)) %>% ## polygon 2245 is not valid
   st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
+  sf::st_transform(projection)
+worldMb <- subset (worldMb, st_is_valid (worldMb)) %>%
+  st_crop (c(xmin=-179, xmax=-135, ymin=48, ymax=70)) %>%
   sf::st_transform(projection)
 rm (worldP)
 ## somehow, polygon 2245 is not valid and cannot be made valid
@@ -1014,6 +1017,7 @@ if (0){
 # 119
 # 163 boat from 2019-07-05 23:50 to 2019-07-07 01:10
 ## last inspected: 166
+## 243 cut start
 
 # 90 -- NP gyre circumnavigation -- cool!
 
