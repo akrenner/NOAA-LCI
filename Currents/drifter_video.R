@@ -22,6 +22,7 @@ dPlot <- function (i){
     ## interpolate -- here or earlier
 
     ## select appropriately sized coastline
+    if (0){
     if (st_transform(dI, crs=4326) %>%
         st_geometry() %>%
         st_coordinates() %>%
@@ -30,12 +31,14 @@ dPlot <- function (i){
     }else{
       wMap <- worldM
     }
+    }else{wMap <- worldM}
 
     av::av_capture_graphics({
       par (ask=FALSE)
       for (j in seq_len (nrow (dI))){
         # plotBG()
         plot (st_geometry(dI), type="n")
+#        plot (wMap, type="n")
         plot (wMap, add=TRUE, col = "beige")
         ## add tail
         tL <- min (c (j, tailL))
@@ -73,7 +76,7 @@ require ("parallel")
 ncores <- detectCores()
 cl <- makeCluster (ncores)
 clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "outpath", "resolu"))
-result <- parLapply (cl, seq_along(levels (driftP$deploy)), dPlot)
+result <- parLapplyLB (cl, seq_along(levels (driftP$deploy)), dPlot)
 stopCluster (cl); rm (cl)
 
 
