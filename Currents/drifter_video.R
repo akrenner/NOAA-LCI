@@ -74,11 +74,15 @@ dPlot <- function (i){
 # }
 require ("parallel")
 ncores <- detectCores()
-cl <- makeCluster (ncores)
-clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "outpath", "resolu"))
-result <- parLapplyLB (cl, seq_along(levels (driftP$deploy)), dPlot)
-stopCluster (cl); rm (cl)
 
+if (.Platform$OS.type=="unix"){
+  result <- mclapply(seq_along(levels (driftP$deploy)), dPlot, mc.cores=ncores)
+}else{
+  cl <- makeCluster (ncores)
+  clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "worldMb", "outpath", "resolu"))
+  result <- parLapplyLB (cl, seq_along(levels (driftP$deploy)), dPlot)
+  stopCluster (cl); rm (cl)
+}
 
 
 ## compare distance to CIOFS particles: need to be able to upload file with
