@@ -22,7 +22,7 @@ dPlot <- function (i){
     ## interpolate -- here or earlier
 
     ## select appropriately sized coastline
-    if (0){
+    if (1){
     if (st_transform(dI, crs=4326) %>%
         st_geometry() %>%
         st_coordinates() %>%

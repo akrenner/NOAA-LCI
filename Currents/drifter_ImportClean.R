@@ -618,8 +618,8 @@ if (0){
   abline (b=1)
 }
 
-pU <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prU_bc.tif")
-pV <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prV_bc.tif")
+# pU <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prU_bc.tif")
+# pV <- stars::read_stars ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_prV_bc.tif")
 
 
 
@@ -1009,15 +1009,52 @@ if (0){
 # 52 beached at times
 # 70 2012-08-15 19:00 to 2012-08-15 23:00 -- boat?
 # 71 delete start to 2012-08-26 20:00 (KBL)
-# 78 cut first hours until 2014-11-07 04:00 ?
+# 78 cut first hours until 2014-11-07 07:00
+# 144 2003-08-14 20:00 to 2003-08-15 10:00 on boat
+# 145 2003-08-28 03:00 to end on boat [a few more short drifts]  2003-08-29 07:00 on boats
 # 157 cut from 2019-06-03 21:40 to end
 # 159 cut from 2019-06-06 14:24 to end
-## 86 -- good
-# gap 74-79
-# gap to 93
+# 161 from 2019-07-04 13:30 to end
+# 162 from 2020-07-04 19:30 to end
+# 163 2019-07-06 23:00 to 2019-07-07 01:10 on boat
+# 164 2020-07-03 23:10 to end
+# 165 2019-07-30 21:50 to end
+# 167 2019-08-01 23:30 to 2019-08-02 01:10 and 2019-08-03 18:40 to end
+# 168 2020-07-05 12:00 to end
+# 170 2020-07-06 20:20 to end
+# 171 2020-07-08 18:20
+# 174 to 2020-08-02 18:10
+# 175 2020-08-03 19:30 to 2020-08-04 02:00 and 2020-08-04 21:30 to end
+# 176 2020-08-06 00:50 to end
+# 177 2020-08-06 12:50 to end
+# 179 2020-09-19 20:20 to end
+# 180 2020-06-07 07:30 to end
+# 185 2020-06-20 22:00 to end
+# 187 2020-07-30 01:30 to 20-07-30 05.50
+# 188 2012-09-13 18:20 to end
+# 195 all of it
+# 196 all of it
+# 197 all
+# 198
+# 199
+# 200 start to 2021-03-29 00:00 and 2021-04-03 20:10 to end
+# 201 start to 2021-04-24 23:00 and 2021-04-27 18:40 to 2021-04-28 02:00 and 2021-05-02 19:10 to end
+# 202 start to 2021-05-24 01:00 and 2021-05-26 15:30 to 2021-05-27 01:40
+# 204 all
+# 205 start to 2021-07-21 23:00 and 2021-07-25 23:40 to 2021-07-26 01:30 and 2021-07-27 18:50 to end
+# 206 2021-08-19 23:50 and 2021-08-21 21:30 to 2021-08-23 01:00 to 2021-08-23 20:20 and 2021-08-25 18:10 to end
+# 207 start to 2021-09-20 00:30
+# 208 all
+# 209 start to 2021-05-24 01:20 and 2021-05-26 15:30 to 2021-05-27 01:40 and 2021-05-29 15:10 to end
+# 210 start to 2021-06-23 00:00 and 2021-06-24 18:00 to 2021-06-24 21:10 and 2021-06-27 15:30 to end
+# 211 start to 2021-07-21 22:30 and 2021-07-25 23:20 to 2021-07-26 01:20 and 2021-07-27 17:00 to end
+# 212 start to 2021-08-20 00:10 and 2021-08-21 20:50 to end
+# 213 start to 2021-03-29 00:20 and 2021-04-01 04:40 to end
+# 214 start to 2021-04-25 00:00 and 2021-05-02 19:00 to end
+# 215 start to 2021-05-23 23:30 and 2021-05-26 20:10 to 2021-05-27 03:30 and 2021-05-29 21:50 to end
 
-# 119
-# 163 boat from 2019-07-05 23:50 to 2019-07-07 01:10
+
+
 ## last inspected: 166
 ## 243 cut start
 
@@ -1182,7 +1219,8 @@ add.alpha <- function(col, alpha=1){
 
 
 ## clean-up
-rm (speedS, pU, pV, i, dIntX, ciofsF, speedTH)
+rm (speedS, i, dIntX, ciofsF, speedTH)
+# rm (speedS, pU, pV, i, dIntX, ciofsF, speedTH)
 
 
 
