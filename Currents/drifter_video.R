@@ -77,18 +77,24 @@ dPlot <- function (i){
 require ("parallel")
 ncores <- detectCores()
 
+dpl <- driftP$deploy
+dLvls <- seq_along(levels (driftP$deploy))
+dLvls <- dLvls [order (sapply (dLvls, function (i){subset (dpl, dpl==levels (dpl)[i]) |>
+    length()}), decreasing=TRUE)]
+rm (dpl)
+
 # if (.Platform$OS.type=="unix"){
 if (0){
-  result <- mclapply(seq_along(levels (driftP$deploy)), dPlot, mc.cores=ncores)
+  result <- mclapply(dLvls, dPlot, mc.cores=ncores)
 }else{
   cl <- makeCluster (ncores)
   clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "worldMb", "outpath", "resolu", "frameR"))
-  result <- parLapplyLB (cl, seq_along(levels (driftP$deploy)), dPlot)
+  result <- parLapplyLB (cl, dLvls, dPlot)
   stopCluster (cl); rm (cl)
 }
 
 
-rm (tailL, frameR, dPlot)
+rm (tailL, frameR, dPlot, dLvls)
 
 ## compare distance to CIOFS particles: need to be able to upload file with
 ## positions and times of particle deployment
