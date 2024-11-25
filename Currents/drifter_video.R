@@ -3,11 +3,12 @@
 
 rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 ## -------- animation with trail for each deployment ------------- ##
+
+tailL <- 30
+frameR <- 7
+
 driftP$deploy <- factor (driftP$deploy)
-
-tailL <- 10
 dir.create(paste0 (outpath, "/drifterVideo/"), showWarnings=FALSE, recursive=TRUE)
-
 
 ## bare av
 dPlot <- function (i){
@@ -37,7 +38,8 @@ dPlot <- function (i){
       par (ask=FALSE)
       for (j in seq_len (nrow (dI))){
         # plotBG()
-        plot (st_geometry(dI), type="n")
+#        plot (st_geometry(dI), type="n")
+        plot (st_geometry(dI)[1:min (c (j + 5, nrow (dI))),], type="n")
 #        plot (wMap, type="n")
         plot (wMap, add=TRUE, col = "beige")
         ## add tail
@@ -59,7 +61,7 @@ dPlot <- function (i){
         ## add virtual particle from particle trajectory tool
         box()
       }
-    }, output=video_file, width=resolu [1], height=resolu [2], framerate=4
+    }, output=video_file, width=resolu [1], height=resolu [2], framerate=frameR
     # , vfilter=paste0 ('framerate=fps=', resolu [3])
     )
   }
@@ -75,15 +77,18 @@ dPlot <- function (i){
 require ("parallel")
 ncores <- detectCores()
 
-if (.Platform$OS.type=="unix"){
+# if (.Platform$OS.type=="unix"){
+if (0){
   result <- mclapply(seq_along(levels (driftP$deploy)), dPlot, mc.cores=ncores)
 }else{
   cl <- makeCluster (ncores)
-  clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "worldMb", "outpath", "resolu"))
+  clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "worldMb", "outpath", "resolu", "frameR"))
   result <- parLapplyLB (cl, seq_along(levels (driftP$deploy)), dPlot)
   stopCluster (cl); rm (cl)
 }
 
+
+rm (tailL, frameR, dPlot)
 
 ## compare distance to CIOFS particles: need to be able to upload file with
 ## positions and times of particle deployment

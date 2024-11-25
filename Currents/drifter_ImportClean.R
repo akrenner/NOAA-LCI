@@ -131,7 +131,7 @@ worldM <- subset (worldMb, st_is_valid (worldMb)) %>% ## polygon 2245 is not val
   st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
   sf::st_transform(projection)
 worldMb <- subset (worldMb, st_is_valid (worldMb)) %>%
-  st_crop (c(xmin=-179, xmax=-135, ymin=48, ymax=70)) %>%
+  st_crop (c(xmin=150, xmax=-115, ymin=35, ymax=70)) %>%
   sf::st_transform(projection)
 rm (worldP)
 ## somehow, polygon 2245 is not valid and cannot be made valid
