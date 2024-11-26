@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.4.1",
+    "Version": "4.4.0",
     "Repositories": [
       {
         "Name": "BioCsoft",
@@ -426,7 +426,7 @@
     },
     "RSQLite": {
       "Package": "RSQLite",
-      "Version": "2.3.7",
+      "Version": "2.3.8",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -441,7 +441,7 @@
         "plogr",
         "rlang"
       ],
-      "Hash": "46b45a4dd7bb0e0f4e3fc22245817240"
+      "Hash": "7ab2505b85e2ed1b07873b56e8beddd1"
     },
     "Rcpp": {
       "Package": "Rcpp",
@@ -456,7 +456,7 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "14.0.2-1",
+      "Version": "14.2.0-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -466,7 +466,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "edff747eebfb8f2e18eed194e000caa1"
+      "Hash": "ce9c35ab9ea9c6ef4e27a08868cdb32b"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -583,6 +583,21 @@
         "utils"
       ],
       "Hash": "a9c26d0c76fdcde77410b88197efa7bf"
+    },
+    "TSP": {
+      "Package": "TSP",
+      "Version": "1.2-4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "foreach",
+        "grDevices",
+        "graphics",
+        "stats",
+        "utils"
+      ],
+      "Hash": "7fba3f587b0f3cb3232d03d540dbf772"
     },
     "TTR": {
       "Package": "TTR",
@@ -744,14 +759,14 @@
     },
     "av": {
       "Package": "av",
-      "Version": "0.9.2",
+      "Version": "0.9.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "graphics"
       ],
-      "Hash": "8a5212b03378cfd78cb8140e3ac99f45"
+      "Hash": "53a3ebb8386e848440acf746b182ef81"
     },
     "backports": {
       "Package": "backports",
@@ -1279,13 +1294,13 @@
     },
     "curl": {
       "Package": "curl",
-      "Version": "5.2.3",
+      "Version": "6.0.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R"
       ],
-      "Hash": "d91263322a58af798f6cf3b13fd56dde"
+      "Hash": "e8ba62486230951fcd2b881c5be23f96"
     },
     "data.table": {
       "Package": "data.table",
@@ -1340,7 +1355,7 @@
     },
     "dendextend": {
       "Package": "dendextend",
-      "Version": "1.18.1",
+      "Version": "1.19.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1352,7 +1367,7 @@
         "utils",
         "viridis"
       ],
-      "Hash": "735689b7975ad5a4d72b571857d60a33"
+      "Hash": "1eac6e791abbd86638185314ad588f4a"
     },
     "desc": {
       "Package": "desc",
@@ -1672,7 +1687,7 @@
     },
     "fontawesome": {
       "Package": "fontawesome",
-      "Version": "0.5.2",
+      "Version": "0.5.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1680,7 +1695,7 @@
         "htmltools",
         "rlang"
       ],
-      "Hash": "c2efdd5f0bcd1ea861c2d4e2a883a67d"
+      "Hash": "bd1297f9b5b1fc1372d19e2c4cd82215"
     },
     "forcats": {
       "Package": "forcats",
@@ -2001,6 +2016,22 @@
         "utils"
       ],
       "Hash": "5329e13d122612ddb277324be964b132"
+    },
+    "ggfields": {
+      "Package": "ggfields",
+      "Version": "0.0.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "dplyr",
+        "ggplot2",
+        "grid",
+        "rlang",
+        "scales",
+        "sf"
+      ],
+      "Hash": "2723f4622d3f537651b81cfa05967351"
     },
     "ggplot2": {
       "Package": "ggplot2",
@@ -2395,7 +2426,7 @@
     },
     "hexbin": {
       "Package": "hexbin",
-      "Version": "1.28.4",
+      "Version": "1.28.5",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2408,7 +2439,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "2520cb5cbe2c02559992b64f7ad80134"
+      "Hash": "10a44851f04ff2d0e26b1c84c38d914a"
     },
     "highr": {
       "Package": "highr",
@@ -2736,7 +2767,7 @@
     },
     "knitr": {
       "Package": "knitr",
-      "Version": "1.48",
+      "Version": "1.49",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2748,7 +2779,7 @@
         "xfun",
         "yaml"
       ],
-      "Hash": "acf380f300c721da9fde7df115a5f86f"
+      "Hash": "9fcb189926d93c636dea94fbe4f44480"
     },
     "labeling": {
       "Package": "labeling",
@@ -2970,10 +3001,10 @@
     },
     "lpSolve": {
       "Package": "lpSolve",
-      "Version": "5.6.21",
+      "Version": "5.6.22",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "730a90bdc519fb0caff03df11218ddd8"
+      "Hash": "bd62ebb5bdc0cbf55ea6da593a4475ed"
     },
     "lubridate": {
       "Package": "lubridate",
@@ -3036,7 +3067,7 @@
     },
     "maps": {
       "Package": "maps",
-      "Version": "3.4.2",
+      "Version": "3.4.2.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3044,7 +3075,7 @@
         "graphics",
         "utils"
       ],
-      "Hash": "5f7886e53a3b39d4a110c7bd7fce9164"
+      "Hash": "354a8094c634031421eeb5103f2e1f80"
     },
     "maptools": {
       "Package": "maptools",
@@ -3607,7 +3638,7 @@
     },
     "parallelly": {
       "Package": "parallelly",
-      "Version": "1.38.0",
+      "Version": "1.39.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3615,7 +3646,7 @@
         "tools",
         "utils"
       ],
-      "Hash": "6e8b139c1904f5e9e14c69db64453bbe"
+      "Hash": "1d60a6e27e3f1753945cf305735dda19"
     },
     "pbapply": {
       "Package": "pbapply",
@@ -3913,7 +3944,7 @@
     },
     "quantreg": {
       "Package": "quantreg",
-      "Version": "5.99",
+      "Version": "5.99.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3927,7 +3958,7 @@
         "stats",
         "survival"
       ],
-      "Hash": "c6e207b874494a7ac4d52f02dcd7d3af"
+      "Hash": "c48844cd7961de506a1b4d22b2e082c7"
     },
     "rJava": {
       "Package": "rJava",
@@ -4121,7 +4152,7 @@
     },
     "reticulate": {
       "Package": "reticulate",
-      "Version": "1.39.0",
+      "Version": "1.40.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4139,7 +4170,7 @@
         "utils",
         "withr"
       ],
-      "Hash": "e1a5d04397edc1580c5e0ed1dbdccf76"
+      "Hash": "04740f615607c4e6099356ff6d6694ee"
     },
     "rgbif": {
       "Package": "rgbif",
@@ -4386,7 +4417,7 @@
     },
     "rtide": {
       "Package": "rtide",
-      "Version": "0.0.10",
+      "Version": "0.0.11",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4397,7 +4428,7 @@
         "tibble",
         "utils"
       ],
-      "Hash": "6154ff2e18e7e3ce3087016278656f3c"
+      "Hash": "a476f23ced435de035c29d3b771b07d6"
     },
     "rvest": {
       "Package": "rvest",
@@ -4539,7 +4570,7 @@
     },
     "sf": {
       "Package": "sf",
-      "Version": "1.0-18",
+      "Version": "1.0-19",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4558,7 +4589,7 @@
         "units",
         "utils"
       ],
-      "Hash": "801bec14b3bae0f37eef4d187ee0bb44"
+      "Hash": "fe02eec2f6b3ba0e24afe83d5ccfb528"
     },
     "sfheaders": {
       "Package": "sfheaders",
@@ -4721,7 +4752,7 @@
     },
     "snotelr": {
       "Package": "snotelr",
-      "Version": "1.5.1",
+      "Version": "1.5.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4734,7 +4765,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "8266c1c3cd377c38d5c16cade54ec642"
+      "Hash": "48ce9fb2361c9e8920a531dab65b456a"
     },
     "sourcetools": {
       "Package": "sourcetools",
@@ -4827,7 +4858,7 @@
     },
     "stars": {
       "Package": "stars",
-      "Version": "0.6-6",
+      "Version": "0.6-7",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -4840,7 +4871,7 @@
         "sf",
         "units"
       ],
-      "Hash": "379c270cf22c8394682d3acd5c62a3ef"
+      "Hash": "0df88c47fce8cda8cfe84ce05cc4c5a1"
     },
     "starsExtra": {
       "Package": "starsExtra",

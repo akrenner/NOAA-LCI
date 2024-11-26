@@ -34,12 +34,16 @@ dPlot <- function (i){
     }
     }else{wMap <- worldM}
 
+    dstV <- c (0, st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
+                              , y=st_geometry (dI)[2:nrow (dI),]
+                              , by_element=TRUE))
+
     av::av_capture_graphics({
       par (ask=FALSE)
       for (j in seq_len (nrow (dI))){
         # plotBG()
 #        plot (st_geometry(dI), type="n")
-        plot (st_geometry(dI)[1:min (c (j + 5, nrow (dI))),], type="n")
+        plot (st_geometry(dI)[1:min (c (j + tailL, nrow (dI))),], type="n")
 #        plot (wMap, type="n")
         plot (wMap, add=TRUE, col = "beige")
         ## add tail
@@ -53,11 +57,16 @@ dPlot <- function (i){
         st_linestring (st_coordinates (st_geometry(dI)[(j-(tL%/%4)):j])) %>%
           plot (add=TRUE, lwd=3)
         plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=1.2)
-        legend ("topright", bty="n", box.col=NA
-                , legend=paste0 ("day ", floor (difftime(dI$DeviceDateTime[j]
-                                                         , dI$DeviceDateTime [1], units="days"))
-                                 , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M")))
-        title (main = paste0 (dI$DeviceName [1], "\ndepth: ", dI$drogue_depth [1], "m"))
+
+        mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
+                       , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC\n")
+               , side=1, outer=TRUE, line=-2)
+
+        mtext (paste ("total distance:", signif (sum (dstV [1:j])/1e3, 1), "km\n"
+                      , "speed:", round (dstV[j]/dI$dT_sec[j], 3), "m/s"
+                      )
+               , side=1, outer=FALSE, line=1, adj = 1)
+        title (main = paste0 (dI$DeviceName [1], ", depth: ", dI$drogue_depth [1], "m"))
         ## add virtual particle from particle trajectory tool
         box()
       }
@@ -68,6 +77,7 @@ dPlot <- function (i){
   # utils::browseURL(video_file)
 }
 
+dPlot (8)
 
 # dPlot (2)  ## for testing
 
