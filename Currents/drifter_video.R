@@ -4,26 +4,32 @@
 rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 ## -------- animation with trail for each deployment ------------- ##
 
-tailL <- 30
-frameR <- 7
 
+driftP <- subset (driftP, off_deploy==FALSE)
 driftP$deploy <- factor (driftP$deploy)
 dir.create(paste0 (outpath, "/drifterVideo/"), showWarnings=FALSE, recursive=TRUE)
 
+
 ## bare av
-dPlot <- function (i){
+dPlot <- function (i, replace=FALSE){
   require ("sf")
   require ("av")
+  require ("RColorBrewer")
 
+  tailL <- 30
+  frameR <- 7
+  hC <- rev (RColorBrewer::brewer.pal(9, "YlOrRd")[2:9])
   video_file <- paste0 (outpath, "drifterVideo/driftAnimationAV_", i, ".mp4")
-  if (file.exists(video_file)){cat (video_file)}else{  ## don't overwrite existing files
 
+  makeVideo <- function (i){
     dI <- subset (driftP, deploy == levels (driftP$deploy)[i])
+    dstV <- c (0, st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
+                              , y=st_geometry (dI)[2:nrow (dI),]
+                              , by_element=TRUE))
 
     ## interpolate -- here or earlier
 
     ## select appropriately sized coastline
-    if (1){
     if (st_transform(dI, crs=4326) %>%
         st_geometry() %>%
         st_coordinates() %>%
@@ -32,40 +38,36 @@ dPlot <- function (i){
     }else{
       wMap <- worldM
     }
-    }else{wMap <- worldM}
 
-    dstV <- c (0, st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
-                              , y=st_geometry (dI)[2:nrow (dI),]
-                              , by_element=TRUE))
 
     av::av_capture_graphics({
-      par (ask=FALSE)
+      # par (ask=FALSE)
+      devAskNewPage (ask=FALSE)
+      par (mar=c(5,2,4,2)+0.1)
       for (j in seq_len (nrow (dI))){
         # plotBG()
-#        plot (st_geometry(dI), type="n")
+        #        plot (st_geometry(dI), type="n")
         plot (st_geometry(dI)[1:min (c (j + tailL, nrow (dI))),], type="n")
-#        plot (wMap, type="n")
+        u <- par ("usr")  # coordinates of plotting area
+        rect (u[1], u[3], u[2], u[4], col="lightblue", border=NA)
         plot (wMap, add=TRUE, col = "beige")
         ## add tail
         tL <- min (c (j, tailL))
-        st_linestring (st_coordinates (st_geometry(dI)[1:j])) %>%
-          plot (add=TRUE, lwd=0.5, col = "gray")
-        st_linestring (st_coordinates (st_geometry(dI)[(j-tL):j])) %>%
-          plot (add=TRUE, lwd=1)
-        st_linestring (st_coordinates (st_geometry(dI)[(j-(tL%/%2)):j])) %>%
-          plot (add=TRUE, lwd=2)
-        st_linestring (st_coordinates (st_geometry(dI)[(j-(tL%/%4)):j])) %>%
-          plot (add=TRUE, lwd=3)
-        plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=1.2)
+        st_linestring(st_coordinates (st_geometry (dI)[1:j])) %>% plot (add=TRUE, lwd=0.5, col="darkgray")
+        for (k in 1:length(hC)){
+          tL2 <- min (c (j, tL%/%k))
+          st_linestring(st_coordinates (st_geometry (dI)[(j-tL2):j])) %>% plot (add=TRUE, lwd=k, col=hC[k])
+        }
+        plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=2)
 
         mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
                        , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC\n")
                , side=1, outer=TRUE, line=-2)
 
-        mtext (paste ("total distance:", signif (sum (dstV [1:j])/1e3, 1), "km\n"
-                      , "speed:", round (dstV[j]/dI$dT_sec[j], 3), "m/s"
-                      )
-               , side=1, outer=FALSE, line=1, adj = 1)
+        mtext (paste ("cumulative distance:", round (sum (dstV [1:j])/1e3, 0), "km\n"
+                      , "speed:", sprintf ("%.3f", round (dstV[j]/dI$dT_sec[j], 2)), "m/s"
+        )
+        , side=1, outer=FALSE, line=1.5, adj = 1)
         title (main = paste0 (dI$DeviceName [1], ", depth: ", dI$drogue_depth [1], "m"))
         ## add virtual particle from particle trajectory tool
         box()
@@ -74,16 +76,21 @@ dPlot <- function (i){
     # , vfilter=paste0 ('framerate=fps=', resolu [3])
     )
   }
-  # utils::browseURL(video_file)
+
+
+  if (isTRUE (replace)){## overwrite existing files
+    makeVideo (i)
+  }else if (file.exists(video_file)){
+    cat (video_file)
+  }else{
+    makeVideo (i)
+  }
 }
 
-dPlot (8)
+dPlot (8, replace=TRUE)
 
-# dPlot (2)  ## for testing
 
-# for (i in seq_along (levels (driftP$deploy))){
-#   dPlot (i)
-# }
+
 require ("parallel")
 ncores <- detectCores()
 
@@ -95,10 +102,10 @@ rm (dpl)
 
 # if (.Platform$OS.type=="unix"){
 if (0){
-  result <- mclapply(dLvls, dPlot, mc.cores=ncores)
+  result <- mclapply(dLvls, dP2, mc.cores=ncores)
 }else{
   cl <- makeCluster (ncores)
-  clusterExport (cl, varlist=c ("driftP", "tailL", "worldM", "worldMb", "outpath", "resolu", "frameR"))
+  clusterExport (cl, varlist=c ("driftP", "worldM", "worldMb", "outpath", "resolu"))
   result <- parLapplyLB (cl, dLvls, dPlot)
   stopCluster (cl); rm (cl)
 }
