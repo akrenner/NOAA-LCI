@@ -119,7 +119,7 @@ if (.Platform$OS.type=="unix"){
   result <- mclapply(dLvls, dPlot, mc.cores=ncores)
 }else{
   cl <- makeCluster (ncores)
-  clusterExport (cl, varlist=c ("driftP", "worldM", "worldMb", "outpath", "resolu"))
+  clusterExport (cl, varlist=c ("driftP", "worldM", "worldMb", "outpath", "resolu", "test"))
   result <- parLapplyLB (cl, dLvls, dPlot)
   stopCluster (cl); rm (cl)
 }

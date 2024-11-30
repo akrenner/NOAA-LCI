@@ -143,25 +143,26 @@ email to:
 <!-- On `{r} sDate`, `{r} crewT`  -->
 
 On 21 November 2024, Dom, Mike, and Paul went out to conduct our monthly oceanographic survey. This month had already a first cold snap, Beluga Lake is frozen. A major storm at the Barren Islands, coinciding with one of the biggest high tides of the year, caused major coastal erosion along the Homer Spit four days prior to this survey. 
-We had a one-day window of calm, and even sunny weather, before a major storm hit the following day, sampling all of the AlongBay and T9 transects. Winds were between 5 knots from the SW to flat calm. Like last month, we used the 8138 CTD. 
+
  <!-- Consider link to annual/sa-precip-AP.png -->
 
 ## Physical oceanography
 
 <!-- Current conditions, long-term anomalies: -->
 
+
+
 ### Temperature
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Despite only two weeks between this and the preceeding survey, distinct changes in temperature patterns could be observed. Most notably, falling air temperatures have now cooled the mixed surface layer. This was the warmest part of the water column last month, but is now the coldest in all but the outermost AlongBay stations, flipping the direction of the thermocline at the bottom of the mixed surface layer. Spatially, we were still seeing a warmer inner and a colder outer bay. 
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Temperatures in the AlongBay transect showed some interesting patterns. The shallow waters of the eastern end of inner bay were already fully mixed, showing virtually no difference between surface and deep water salinity, temperature, or density. A pocket of warmer water persisted in the deep waters of the western inner bay. By contrast, the temperatures in the outer bay were fairly uniform in depth and along the transect line. 
 
-Temperature patterns on T9 were remarkably complex, with up to three warm-water layers sandwiched between colder waters, where warmer inner bay water in the north meets colder outer bay water in the south. This inner bay water was also noticeably more turbid than outer bay water, both at the surface and at depth. The AlongBay transect graphically illustrated the contrast between warm inner-bay and cold outer-bay waters. T9 happened to coincide with the transition between these two water bodies, and since the overall temperature gradient was small, complex mixing patterns, likely enhanced by turbulance behind the Homer Spit, ensued.           
-
+More details of this pattern were revealed by the T9 transect, which covered the area of cold surface and warm bottom water seen in the deep parts of the inner bay. T9 showed that the shallower areas on both sides of the bay were mostly mixed, however, a a distinct surface front existed between the warmer south and the colder northern half of T9, jumping by as much as a full 1 $^\circ$C between two stations (100 m apart), capturing almost the entire temperature range in the entire bay! At depth, the same front was more diffuse and farther north, the depth profile of it froming a S-shaped pattern. 
 
 ### Salinity
 
-Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Compared to last month, deep waters were slightly fresher, which should be due to the seasonal freshening of the source water in the Alaska Coastal Current. A distinct halocline is found throughout the surveyed area, probably now at its maximal extend, even covering the outer bay. 
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Safe for a tiny surface layer, there were no longer remaining signs of the summer fresh-water lens in the inner bay. Presumably, the the cold air temperatures have cut-off most fresh-water influx by now, allowing the water column to mix more freely. We still see a weak horizontal gradient between saltier waters in the outer and fresher waters in the inner bay. No sharp fronts are apparet, however. Density patterns largely matched what can be seen in the salinity profile, showing a diffuse gradient from deep outer bay to shallow inner bay waters. 
 
 
 ### Turbidity
@@ -197,9 +198,9 @@ A seasonally late Red-necked Phalarope was foraging on a convergence at AlongBay
 ## Figures
 
 ::: {#fig-elements layout-ncol="1"}
-![Extended AlongBay Transect](./media/CTDsections/sectionImages/2024-10-10 T-AlongBay.png)
+![Extended AlongBay Transect](./media/CTDsections/sectionImages/2024-11-21 T-AlongBay.png)
 
-![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-10-10 T-9.png)
+![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-11-21 T-9.png)
 
 <!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/CTDsections/sectionImages/2024-09-26 T-4.png) -->
 
