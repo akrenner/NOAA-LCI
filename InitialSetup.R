@@ -56,4 +56,16 @@ dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings=FALSE, recursive=TR
 dir.create("~/tmp/LCI_noaa/data-products/", showWarnings=FALSE, recursive=TRUE)
 
 
+## fathom and python virtual environment
+## python installed?
+
+## virtual pip
+# dir.create ("~/src/pythonVE/")
+# system ("python3 -m venv ~/src/pythonVE")
+# system ("source src/pythonVE/bin/activate")
+# system ("python3 -m pip install --upgrade pip")
+# system ("python3 -m pip install seabirdscientific")
+
+
+
 #EOF
