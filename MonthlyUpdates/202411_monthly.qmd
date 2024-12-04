@@ -167,18 +167,15 @@ Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r}
 
 ### Turbidity
 
-Especially the waters in the outer bay were remarkably clear, with secchi depth readings in excess of 10 m. Turbid waters were encountered off Glacier Spit in the inner bay, but also in the northern half of T9. Patterns of turbidity at T9 closely matched the distribution of warm waters, but less so of salinity, for which I don't have a ready explanation. 
+Mirroring the pattern of salinity, there is a diffuse gradient of turbidity from more turbid in the inner bay to clear in the outer bay. Tracing inner-bay waters, just like salinity and turbidity, we also find a tongue of more turbid water layered over clearer deep waters in the middle of the AlongBay transect. 
 
-Oxygen levels were depleted at depth, especially in the inner bay, but comparatively high in the outer bay. 
-
+An odd pattern of oxygen concentration was found along T9: Concentrations were high at the surface, low at 10 m, and higher again below 15 m. Close inspection of the AlongBay transect showed the same pattern, albeit not that clearly, due to the different scaling of the color gradations. 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Chlorophyll concentrations were generally low in the outer bay, with only slightly higher values found near the pycnocline than at depth. The inner bay still showed raised chlorophyll concentrations at the pycnocline. Yet, at T9_6, chlorophyll concentrations were still high compared to the long-term mean. 
-
-The sonar showed backscatter near the bottom on several AlongBay stations near the spit. We took a water sample at AlongBay_12 in 65 m depth (10 m above the bottom) using the Niskin bottle and filtered the water through the plankton net. Lisa Spittler helped identify a small number of copepods (mostly larval stages with 2-3 tail segments), about 1 mm in size, and an ostracode in this sample. 
+Chlorophyll concentrations were generally low with little patterns discernable. Levels were slightly higher in the outer bay between 0 and 50 m depth, but overall concentrations were insignificant. 
 
 <!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
 
@@ -186,19 +183,19 @@ The sonar showed backscatter near the bottom on several AlongBay stations near t
 
 <!-- Backscatter? Species composition? -->
 
-### Wildlife
+<!-- ### Wildlife -->
 
-A pod of 5-7 female killer whales was encountered at T9_8, off Land's End. Acoustic backscatter of individual fish (possibly salmon) was also noticed at this station. 
-<!-- ![Killer Whales (5-7 in pod)(~/Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
-<!-- ![Killer Whales (5-7 in pod)(C:/Users/Martin.Renner/Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
-<!-- ![Killer Whales (5-7 in pod)(../../../Pictures/SavedPictures/2024-10/191A8479.jpg)] -->
-A seasonally late Red-necked Phalarope was foraging on a convergence at AlongBay_4. 
+<!-- A pod of 5-7 female killer whales was encountered at T9_8, off Land's End. Acoustic backscatter of individual fish (possibly salmon) was also noticed at this station.  -->
+<!-- <!-- ![Killer Whales (5-7 in pod)(~/Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
+<!-- <!-- ![Killer Whales (5-7 in pod)(C:/Users/Martin.Renner/Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
+<!-- <!-- ![Killer Whales (5-7 in pod)(../../../Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
+<!-- A seasonally late Red-necked Phalarope was foraging on a convergence at AlongBay_4.  -->
 
 
 ## Figures
 
 ::: {#fig-elements layout-ncol="1"}
-![Extended AlongBay Transect](./media/CTDsections/sectionImages/2024-11-21 T-AlongBay.png)
+![AlongBay Transect](./media/CTDsections/sectionImages/2024-11-21 T-AlongBay.png)
 
 ![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-11-21 T-9.png)
 
