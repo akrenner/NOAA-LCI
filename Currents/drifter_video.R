@@ -74,13 +74,6 @@ dPlot <- function (i, replace=FALSE){
           st_linestring(st_coordinates (st_geometry (dI)[(j-tL2):j])) %>% plot (add=TRUE, lwd=k*3, col=hC[k])
         }
         plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=3)
-
-        # mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
-        #                , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC\n")
-        #        , side=1, outer=TRUE, line=-2)
-        # mtext (paste ("cumulative distance:", round (sum (dstV [1:j])/1e3, 0), "km\n"
-        #               , "speed:", sprintf ("%.3f", round (dstV[j]/dI$dT_sec[j], 2)), "m/s")
-        #        , side=1, outer=FALSE, line=1.5, adj = 1)
         mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
                        , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC")
                , side=1, outer=FALSE, line=mLine, cex=2)
