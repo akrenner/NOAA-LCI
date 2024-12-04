@@ -1001,7 +1001,7 @@ if (0){
 ## --------------------- manually fix bad positions ------------------------- ##
 ## screening video plots
 
-# 16 boat transport in last 1/4 from w to e of spit 2012-08-13 17:00 to 2012-08-14 00:00 -- cut out
+# 16 boat transport in last 1/4 from w to e of spit 2012-08-13 17:00 to 2012-08-14 00:00 -- 4 h gap!
 # 24 stuck at KBL?
 # 25 too much time at KBL?? Jakolof?
 # 37 deployed at 2013-06-19 05:00 ?

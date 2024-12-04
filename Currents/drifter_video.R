@@ -5,6 +5,14 @@ rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 ## -------- animation with trail for each deployment ------------- ##
 
 
+## need to adjust frame margin and font sizes, if video resolution were to increase
+resolu <- c (resW=1920, resH=1080, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+# resolu <- c (resW=1024, resH=576, frameR=24)
+# resolu <- c (resW=1080, resH=576, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+# resolu <- c (resW=1280, resH=768, frameR=24) ## WXGA, computer, 16:9
+# resolu <- c (resW=1024, resH=600, frameR=24) ## WSVGA, computer, 16:9
+
+
 test <- TRUE
 test <- FALSE
 
@@ -48,7 +56,8 @@ dPlot <- function (i, replace=FALSE){
     av::av_capture_graphics({
       # par (ask=FALSE)
       devAskNewPage (ask=FALSE)
-      par (mar=c(3,2,4,2)+0.1)
+      par (mar= c(5.5,2,4,2)+0.1)
+      mLine <- 3.25
 #     for (j in seq_len (nrow (dI))){
       for (j in 2:nrow (dI)){
         # plotBG()
@@ -61,13 +70,10 @@ dPlot <- function (i, replace=FALSE){
         tL <- min (c (j, tailL))
         st_linestring(st_coordinates (st_geometry (dI)[1:j])) %>% plot (add=TRUE, lwd=0.7, col="black")
         for (k in seq_along (hC)){
-          # tL2 <- min (c (j, tL%/%k))
-          # tL2 <- 1 + j - ifelse (tL%/%k > j, tL%/%k, j)
-          # st_linestring(st_coordinates (st_geometry (dI)[tL2:j])) %>% plot (add=TRUE, lwd=k, col=hC[k])
           tL2 <- min (j-1, tailL %/% k)
-          st_linestring(st_coordinates (st_geometry (dI)[(j-tL2):j])) %>% plot (add=TRUE, lwd=k*1.5, col=hC[k])
+          st_linestring(st_coordinates (st_geometry (dI)[(j-tL2):j])) %>% plot (add=TRUE, lwd=k*3, col=hC[k])
         }
-        plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=2)
+        plot (st_geometry(dI)[[j]], add=TRUE, col = "red", pch=19, cex=3)
 
         # mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
         #                , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC\n")
@@ -77,13 +83,13 @@ dPlot <- function (i, replace=FALSE){
         #        , side=1, outer=FALSE, line=1.5, adj = 1)
         mtext (paste0 ("day ", floor (difftime(dI$DeviceDateTime[j], dI$DeviceDateTime [1], units="days"))
                        , "\n", format (dI$DeviceDateTime [j], "%Y-%m-%d %H:%M"), " UTC")
-               , side=1, outer=FALSE, line=1.5)
-        mtext (paste ("cumulative distance:", round (sum (dstV [1:j])/1e3, 0), "km\n"
-                      , "speed:", sprintf ("%.3f", round (dstV[j]/dI$dT_sec[j], 2)), "m/s")
-               , side=1, outer=FALSE, line=1.5, adj = 1)
+               , side=1, outer=FALSE, line=mLine, cex=2)
+        mtext (paste ("speed:", sprintf ("%.3f", round (dstV[j]/dI$dT_sec[j], 2)), "m/s\n",
+                      "cumulative distance:", round (sum (dstV [1:j])/1e3, 0), "km")
+               , side=1, outer=FALSE, line=mLine, adj = 1, cex=2)
         mtext (paste0 ("Kasitsna Bay Lab, NCCOS, NOAA\n", "Direct questions to Reid Brewer: reid.brewer@noaa.gov")
-               , side=1, outer=FALSE, line=1.5, adj=0)
-        title (main = paste0 (dI$DeviceName [1], ", depth: ", dI$drogue_depth [1], "m"))
+               , side=1, outer=FALSE, line=mLine, adj=0, cex=2)
+        title (main = paste0 (dI$DeviceName [1], ", depth: ", dI$drogue_depth [1], "m"), cex.main=2)
         ## add virtual particle from particle trajectory tool
         box()
       }
