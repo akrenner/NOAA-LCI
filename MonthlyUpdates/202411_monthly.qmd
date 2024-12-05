@@ -142,7 +142,7 @@ email to:
 
 <!-- On `{r} sDate`, `{r} crewT`  -->
 
-On 21 November 2024, Dom, Mike, and Paul went out to conduct our monthly oceanographic survey. This month had already a first cold snap, Beluga Lake is frozen. A major storm at the Barren Islands, coinciding with one of the biggest high tides of the year, caused major coastal erosion along the Homer Spit four days prior to this survey. 
+On 21 November 2024, Dom, Mike, and Paul went out to conduct our monthly oceanographic survey. This month  already had its first cold snap, Beluga Lake was frozen. A major storm at the Barren Islands, coinciding with one of the biggest high tides of the year, caused major coastal erosion along the Homer Spit four days prior to this survey. 
 
  <!-- Consider link to annual/sa-precip-AP.png -->
 
@@ -156,13 +156,13 @@ On 21 November 2024, Dom, Mike, and Paul went out to conduct our monthly oceanog
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Temperatures in the AlongBay transect showed some interesting patterns. The shallow waters of the eastern end of inner bay were already fully mixed, showing virtually no difference between surface and deep water salinity, temperature, or density. A pocket of warmer water persisted in the deep waters of the western inner bay. By contrast, the temperatures in the outer bay were fairly uniform in depth and along the transect line. 
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Temperatures in the AlongBay transect showed some interesting patterns. The shallow waters of the eastern end of the inner bay were already fully mixed, showing virtually no difference between surface and deep water salinity, temperature, or density. A pocket of warmer water persisted in the deep waters of the western inner bay. By contrast, the temperatures in the outer bay were fairly uniform in depth and along the transect line. 
 
-More details of this pattern were revealed by the T9 transect, which covered the area of cold surface and warm bottom water seen in the deep parts of the inner bay. T9 showed that the shallower areas on both sides of the bay were mostly mixed, however, a a distinct surface front existed between the warmer south and the colder northern half of T9, jumping by as much as a full 1 $^\circ$C between two stations (100 m apart), capturing almost the entire temperature range in the entire bay! At depth, the same front was more diffuse and farther north, the depth profile of it froming a S-shaped pattern. 
+More details of this pattern were revealed by the T9 transect, which covered the area of cold surface and warm bottom water seen in the deep parts of the inner bay. T9 showed that the shallower areas on both sides of the bay were mostly mixed, however, a a distinct surface front existed between the warmer south and the colder northern half of T9, jumping by as much as a full 1 $^\circ$C between two stations (100 m apart), capturing almost the entire temperature range in the entire bay! At depth, the same front was more diffuse and farther north, the depth profile of it forming a S-shaped pattern. 
 
 ### Salinity
 
-Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Safe for a tiny surface layer, there were no longer remaining signs of the summer fresh-water lens in the inner bay. Presumably, the the cold air temperatures have cut-off most fresh-water influx by now, allowing the water column to mix more freely. We still see a weak horizontal gradient between saltier waters in the outer and fresher waters in the inner bay. No sharp fronts are apparet, however. Density patterns largely matched what can be seen in the salinity profile, showing a diffuse gradient from deep outer bay to shallow inner bay waters. 
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Safe for a tiny surface layer, there were no longer remaining signs of the summer fresh-water lens in the inner bay. Presumably, the cold air temperatures have cut-off most fresh-water influx by now, allowing the water column to mix more freely. We still see a weak horizontal gradient between saltier waters in the outer and fresher waters in the inner bay. No sharp fronts are apparet, however. Density patterns largely matched what can be seen in the salinity profile, showing a diffuse gradient from deep outer bay to shallow inner bay waters. 
 
 
 ### Turbidity
@@ -185,12 +185,11 @@ Chlorophyll concentrations were generally low with little patterns discernable. 
 
 <!-- ### Wildlife -->
 
-<!-- A pod of 5-7 female killer whales was encountered at T9_8, off Land's End. Acoustic backscatter of individual fish (possibly salmon) was also noticed at this station.  -->
-<!-- <!-- ![Killer Whales (5-7 in pod)(~/Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
-<!-- <!-- ![Killer Whales (5-7 in pod)(C:/Users/Martin.Renner/Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
-<!-- <!-- ![Killer Whales (5-7 in pod)(../../../Pictures/SavedPictures/2024-10/191A8479.jpg)] --> -->
-<!-- A seasonally late Red-necked Phalarope was foraging on a convergence at AlongBay_4.  -->
 
+
+## Long-term trends at T9-6
+
+Temperature and salinity at T9-6 remain close to the long-term mean (2012-present), both in shallow and in deep water layers (Figure 2). 
 
 ## Figures
 
@@ -205,5 +204,12 @@ Longitudinal and cross-sections of main parameters.
 :::
 
 <!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+
+::: {#fig-elements layout-ncol="1"}
+![](./media/CTDsections/time-sections/2024-11_2-9_6-TSprofile.png)
+
+Long-term temperature and salinity profiles of T9-6 and their respective anomalies.
+:::
 
 <!-- Add map with station numbers -- schematic -->
