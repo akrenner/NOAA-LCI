@@ -1001,17 +1001,21 @@ if (0){
 ## --------------------- manually fix bad positions ------------------------- ##
 ## screening video plots
 
-# 16 boat transport in last 1/4 from w to e of spit 2012-08-13 17:00 to 2012-08-14 00:00 -- 4 h gap!
+## generate external file of deployments
+
+x <- as.character ("
+# 16 2012-08-13 17:00 to 2012-08-14 00:00
 # 24 start to 2012-08-27 00:00
 # 25 2013-04-14 07:00 to end
-# 47 cut into two: boat from 2013-04-21 18:00 to 2013-04-22 00:00
-# 52 beached at times
+# 47 2013-04-21 18:00 to 2013-04-22 00:00
 # 70 2012-08-15 19:00 to 2012-08-15 23:00
-# 71start to 2012-08-26 20:00 (KBL)
+# 71 start to 2012-08-26 20:00
 # 78 start to 2014-11-07 07:00
 # 112 start to 2005-12-25 01:00
 # 144 2003-08-14 20:00 to 2003-08-15 10:00
-# 145 2003-08-28 03:00 to end on boat [a few more short drifts]  2003-08-29 07:00 on boats
+# 145 2003-08-19 20:00 to 2003-08-20 22:00 and 2003-08-24 03:00 to 2003-08-24 17:00
+# 145 2003-08-26 00:00 to 2003-08-27 09:00 and 2003-08-28 04:00 to 2003-08-30 17:00
+# 145 2003-08-31 06:00 to end
 # 157 2019-06-03 21:40 to end
 # 159 2019-06-06 14:24 to end
 # 161 2019-07-04 13:30 to end
@@ -1022,8 +1026,8 @@ if (0){
 # 167 2019-08-01 23:30 to 2019-08-02 01:10 and 2019-08-03 18:40 to end
 # 168 2020-07-05 12:00 to end
 # 170 2020-07-06 20:20 to end
-# 171 2020-07-08 18:20
-# 174 to 2020-08-02 18:10
+# 171 2020-07-08 18:20 to end
+# 174 to 2020-08-02 18:10 to end
 # 175 2020-08-03 19:30 to 2020-08-04 02:00 and 2020-08-04 21:30 to end
 # 176 2020-08-06 00:50 to end
 # 177 2020-08-06 12:50 to end
@@ -1032,19 +1036,22 @@ if (0){
 # 185 2020-06-20 22:00 to end
 # 187 2020-07-30 01:30 to 20-07-30 05.50
 # 188 2012-09-13 18:20 to end
-# 195 start end
-# 196 start end
-# 197 start end
-# 198 start end
-# 199 start end
-# 200 start to 2021-03-29 00:00 and 2021-04-03 20:10 to end
-# 201 start to 2021-04-24 23:00 and 2021-04-27 18:40 to 2021-04-28 02:00 and 2021-05-02 19:10 to end
+# 195 start to end
+# 196 start to end
+# 197 start to end
+# 198 start to end
+# 199 start to end
+# 200 start to 2021-03-29 00:00
+# 200 2021-04-03 20:10 to end
+# 201 start to 2021-04-24 23:00
+# 201 2021-04-27 18:40 to 2021-04-28 02:00 and 2021-05-02 19:10 to end
 # 202 start to 2021-05-24 01:00 and 2021-05-26 15:30 to 2021-05-27 01:40
-# 204 start end
+# 204 start to end
 # 205 start to 2021-07-21 23:00 and 2021-07-25 23:40 to 2021-07-26 01:30 and 2021-07-27 18:50 to end
-# 206 2021-08-19 23:50 and 2021-08-21 21:30 to 2021-08-23 01:00 to 2021-08-23 20:20 and 2021-08-25 18:10 to end
+# 206 start to 2021-08-19 23:50 and 206 2021-08-21 21:30 to 2021-08-23 01:10
+# 206 2021-08-23 20:10 to 2021-08-23 01:10 and 2021-08-25 18:10 to end
 # 207 start to 2021-09-20 00:30
-# 208 start end
+# 208 start to end
 # 209 start to 2021-05-24 01:20 and 2021-05-26 15:30 to 2021-05-27 01:40 and 2021-05-29 15:10 to end
 # 210 start to 2021-06-23 00:00 and 2021-06-24 18:00 to 2021-06-24 21:10 and 2021-06-27 15:30 to end
 # 211 start to 2021-07-21 22:30 and 2021-07-25 23:20 to 2021-07-26 01:20 and 2021-07-27 17:00 to end
@@ -1086,8 +1093,61 @@ if (0){
 # 248 start to 2022-04-16 23:30 and 2022-04-18 14:40 to 2022-04-18 20:50 and 2022-04-20 01:10 to end
 # 249 start to 2022-05-14 20:40 and 2022-05-16 18:30 to 2022-05-17 15:00 and 2022-05-18 15:50 to 2022-05-18 18:30 and 2022-05-20 18:20 to end
 # 250 start to 2022-06-12 17:50 and 2022-06-13 17:10 to 2022-06-14 20:50 and 2022-06-16 21:40 to end
+# 251 start to 2022-07-11 17:20 and 2022-07-13 18:30 to 2022-07-14 20:10 and 2022-07-17 19:40 to end
+# 252 start to 2022-08-10 19:00 and 2022-08-12 19:50 to 2022-08-14 01:10 and 2022-08-14 19:30 to end
+")
+### comments
 
 # 90 -- NP gyre circumnavigation -- cool!
+# 52 beached at times
+
+
+
+## ----------------------------- process above text into deployment database -----------
+x2 <- gsub ("# ", "", x) |>
+  strsplit("\n") |>
+  unlist()
+x3 <- x2 [2:length (x2)] # first blank line
+x3s <- strsplit (x3, split=" ")
+lvN <- sapply (seq_along (x3s), function (i){x3s [[i]][1]|> as.numeric() })
+cT <- sapply (seq_along (x3s), function (i){Ts <- x3s [[i]]
+  tout <- paste (Ts [2:length (Ts)], collapse = " ")
+})
+dfix <- data.frame(level=lvN
+                   , text=cT
+)
+# and
+for (i in 1:nrow (dfix)){
+  if (length (grep ("and", dfix$text [i])) > 0){
+    nR <- strsplit (dfix [i,2], split=" and ")[[1]]
+  }else{
+    nR <- dfix$text [i]
+  }
+  dNand <- data.frame (level=rep (dfix$level [i], length (nR))
+                                     , text=nR)
+  if (i == 1){dOut <- dNand}else{dOut <- rbind (dOut, dNand)}
+}
+tL <- strsplit(dOut$text, split=" to ")
+SEtimes <- sapply (seq_along (tL), function (i){
+  if (length (tL[[i]]) != 2){stop (dOut [i,], " is bad")}
+  if (tL [[i]][1] == "start"){
+    sT <- min (drift$XXXXX)
+  }else{
+    sT <- tL[[i]][1]
+  }
+  if (tL[[i]][2] == "end"){
+    eT <- max(driftXXXX)
+  }else{
+    eT <- tL[[i]][2]
+  }
+  c (sT, eT)
+})
+dOut <- cbind (dOut, SEtimes)
+
+rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, gAnd, i, nR, SEtimes)
+# dOut$deploy <- levels ()
+
+## -------------------------------------------------------------------------------------
 
 
 
