@@ -1131,6 +1131,35 @@ x <- as.character ("
 # 284 start to 2022-08-10 22:40 and 2022-08-12 18:50 to 2022-08-13 20:50 and 2022-08-14 19:20 to end
 # 285 start to 2022-09-08 22:50 and 2022-09-11 11:20 to end
 # 286 start to 2022-05-15 00:30 and 2022-05-16 17:20 to 2022-05-17 04:00 and 2022-05-18 15:10 to 2022-05-19 15:00 and 2022-05-20 00:20 to end
+# 287 start to 2022-06-12 23:20 and 2022-06-13 13:20 to 2022-06-15 00:10 and 2022-06-15 18:20 to end
+# 288 start to 2022-07-11 22:50 and 2022-07-12 19:20 to 2022-07-12 23:50 and 2022-07-13 19:10 to 2022-07-14 Q1:30 and 2022-07-15 20:10 to end
+# 289 start to end
+# 290 start to 2022-06-12 23:20 and 2022-06-13 17:40 to 2022-06-15 00:00 and 2022-06-16 01:00 to end
+# 291 start to 2022-07-11 22:50 and 2022-07-12 19:20 to 2022-07-12 23:50 and 2022-07-13 18:40 to 2022-07-14 00:30 and 2022-07-14 19:00 to end
+# 292 start to 2022-08-10 22:40 and 2022-08-12 07:30 to 2022-08-13 20:50 and 2022-08-14 19:30 to end
+# 293 start to 2022-09-08 22:50 and 2022-09-08 22:50 to end
+# 294 start to end
+# 295 start to end
+# 296 start to end
+# 297 start to 2022-08-10 22:30 and 2022-08-12 18:20 to 2022-08-13 21:10 and 2022-08-14 19:20 to end
+# 298 start to 2022-09-08 22:49 and 2022-09-11 19:00 to end
+# 299 start to end
+# 300 start to 2022-05-19 14:50 and 2022-05-20 21:40 to end
+# 301 start to end
+# 302 start to end
+# 303 start to end
+# 304 start to end
+# 305 start to 2022-07-21 19:20 and 2022-08-10 13:00 to 2022-08-11 00:20 and 2022-08-12 19:50 to end
+# 306 start to 2022-07-21 19:20
+# 307 start to end
+# 308 start to end
+# 309 start to end
+# 310 start to end
+# 311 start to end
+# 312 start to end
+# 313 start to 2022-09-22 19:20 and 2022-10-31 22:00 to end
+# 314 start to end
+# 315 start to 2022-09-2299:00 and 2022-10-02 02:32 to 2022-10-08 05:30 and 2022-10-23 02:33 to end
 ")
 ### comments
 
@@ -1216,9 +1245,13 @@ for (i in seq_along(levels (drift$deploy))){
                     , TRUE, bT)
     }
 
+
     ## still all messed up! iterate by deployments or boat cut-outs? don't duplicate records!
+    diff (bT)
 XXXX      dTN$deploy <- paste0 (dTN$deploy, "-", j)  # kmeans clusters?
 dDeploy <- diff (bT)
+
+
 
    dTN <- dT [which (!bT),]
   }else{
