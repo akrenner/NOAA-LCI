@@ -1132,7 +1132,7 @@ x <- as.character ("
 # 285 start to 2022-09-08 22:50 and 2022-09-11 11:20 to end
 # 286 start to 2022-05-15 00:30 and 2022-05-16 17:20 to 2022-05-17 04:00 and 2022-05-18 15:10 to 2022-05-19 15:00 and 2022-05-20 00:20 to end
 # 287 start to 2022-06-12 23:20 and 2022-06-13 13:20 to 2022-06-15 00:10 and 2022-06-15 18:20 to end
-# 288 start to 2022-07-11 22:50 and 2022-07-12 19:20 to 2022-07-12 23:50 and 2022-07-13 19:10 to 2022-07-14 Q1:30 and 2022-07-15 20:10 to end
+# 288 start to 2022-07-11 22:50 and 2022-07-12 19:20 to 2022-07-12 23:50 and 2022-07-13 19:10 to 2022-07-14 01:30 and 2022-07-15 20:10 to end
 # 289 start to end
 # 290 start to 2022-06-12 23:20 and 2022-06-13 17:40 to 2022-06-15 00:00 and 2022-06-16 01:00 to end
 # 291 start to 2022-07-11 22:50 and 2022-07-12 19:20 to 2022-07-12 23:50 and 2022-07-13 18:40 to 2022-07-14 00:30 and 2022-07-14 19:00 to end
@@ -1159,7 +1159,7 @@ x <- as.character ("
 # 312 start to end
 # 313 start to 2022-09-22 19:20 and 2022-10-31 22:00 to end
 # 314 start to end
-# 315 start to 2022-09-2299:00 and 2022-10-02 02:32 to 2022-10-08 05:30 and 2022-10-23 02:33 to end
+# 315 start to 2022-09-22 19:00 and 2022-10-02 02:32 to 2022-10-08 05:30 and 2022-10-23 02:33 to end
 ")
 ### comments
 
@@ -1214,11 +1214,9 @@ SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start"
 )
 dOut <- cbind (dOut, t (SEtimes))
 names (dOut) <- c("level", "text", "start", "end")
-dOut$start <- paste (dOut$start, "GMT")
-dOut$end <- paste (dOut$end, "GMT")
-dOut$startT <- as.POSIXct(dOut$start)
-dOut$endT <- as.POSIXct(dOut$end)
 
+dOut$startT <- as.POSIXct(dOut$start, tz="GMT")
+dOut$endT <- as.POSIXct(dOut$end, tz="GMT")    ## make sure that times are preserved -- how?
 drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 
 ## testing
@@ -1228,6 +1226,9 @@ drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 # which (nchar (dOut$end) < 16)
 # if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
 # if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
+# lapply (1:nrow (dOut), FUN=function(i){
+#   as.POSIXct(dOut$start [i]) |> format ("%H")
+#   }) |> unlist()
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
@@ -1235,25 +1236,33 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 ## apply new dOut
 ## cut-out manually marked boat times and redefine drifter deployments
 
+
+## cycle through deploys (easier to deal with multiples boatrides than cycling through dOut)
 for (i in seq_along(levels (drift$deploy))){
   dT <- subset (drift, deploy == levels (deploy)[i])
   bT <- rep (FALSE, nrow (dT))
   if (i %in% dOut$level){ ## cut out boats
     boats <- which (dOut$level %in% i)
     for (j in seq_along (boats)){
-      bT <- ifelse ((dOut$startT [j] >= dT$ISOtime) & (dOut$endT [j] <= dT$ISOtime)
+      ## mark times in boat
+      bT <- ifelse ((dOut$startT [boats [j]] >= dT$ISOtime) &
+                      (dOut$endT [boats [j]] <= dT$ISOtime)
                     , TRUE, bT)
+      ## redefine deploy
+      if (min (dT$ISOtime) < dOut$startT [boats [j]]){  # this implies j == 1 and  start = boat
+        dT$deploy [1:(which (dT$ISOtime == dOut$startT[boats [j]])-1)] <-
+          paste0 (dT$deploy[1], "-0")
+      }
+      if (length (boats) > j){ # standard case
+        dT$deploy [(which (dT$ISOtime == dOut$endT [boats [j]])+1) :
+                     (which (dT$ISOtime == dOut$startT [boats [j+1]])-1)] <-
+          paste0 (dT$deploy[nrow (dT)], "-", j)
+      }else if (max (dT$ISOtime) > dOut$endT [j]){ # more drift after last boat
+        dT$deploy [(which (dT$ISOtime == dOut$endT [boats [j]])+1):nrow (dT)] <-
+          paste0 (dT$deploy[nrow (dT)], "-", j)
+      }
     }
-
-
-    ## still all messed up! iterate by deployments or boat cut-outs? don't duplicate records!
-    diff (bT)
-XXXX      dTN$deploy <- paste0 (dTN$deploy, "-", j)  # kmeans clusters?
-dDeploy <- diff (bT)
-
-
-
-   dTN <- dT [which (!bT),]
+    dTN <- dT [which (!bT),]
   }else{
     dTN <- dT
   }
@@ -1267,7 +1276,7 @@ nDrift$deploy <- factor (nDrift$deploy)
 dim (drift)
 dim (nDrift)
 drift <- nDrift
-rm (nDrift, dT, boats, bT, dTN, i)
+rm (nDrift, dT, boats, bT, dTN, i, j)
 
 ## -------------------------------------------------------------------------------------
 
