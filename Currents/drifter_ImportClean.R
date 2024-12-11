@@ -1079,7 +1079,7 @@ x <- as.character ("
 # 231 start to 2022-04-16 23:20 and 2022-04-18 15:40 to 2022-04-18 20:40 and 2022-04-20 11:40 to end
 # 232 start to 2022-05-14 21:20 and 2022-05-16 19:20 to 2022-05-17 14:40 and 2022-05-18 15:50 to 2022-05-18 18:20 and 2022-05-20 21:10 to end
 # 233 start to 2022-06-12 23:50 and 2022-06-13 17:10 to 2022-06-14 22:00 and 2022-06-16 01:20 to end
-# 234 start to 2022-07-11 18:30 and 2022-07-13 18.10 to 2022-07-14 23:50 and 2022-07-15 19:30 to end
+# 234 start to 2022-07-11 18:30 and 2022-07-13 18:10 to 2022-07-14 23:50 and 2022-07-15 19:30 to end
 # 235 start to 2022-08-10 22:30 and 2022-08-12 19:40 to 2022-08-14 00:50 and 2022-08-14 19:10 to end
 # 236 start to 2022-09-08 18:40 and 2022-09-11 09:50 to end
 # 238 start to 2021-03-29 00:20 and 2021-04-03 19:30 to end
@@ -1215,15 +1215,15 @@ SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start"
 dOut <- cbind (dOut, t (SEtimes))
 names (dOut) <- c("level", "text", "start", "end")
 
-dOut$startT <- as.POSIXct(dOut$start, tz="GMT", format="%Y-%m-$d %H:%M")
-dOut$endT <- as.POSIXct(dOut$end, tz="GMT", format="%Y-%m-$d %H:%M")    ## make sure that times are preserved -- how?
+dOut$startT <- as.POSIXct(dOut$start, tz="GMT", format="%Y-%m-%d %H:%M", optional=FALSE)
+dOut$endT   <- as.POSIXct(dOut$end  , tz="GMT", format="%Y-%m-%d %H:%M", optional=FALSE)    ## make sure that times are preserved -- how?
 drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 
 ## testing
 # dOut$start [1:20]
 # format (dOut$startT, "%H")
-# which (nchar (dOut$start) < 16)
-# which (nchar (dOut$end) < 16)
+# which (nchar (dOut$start) != 16)
+# which (nchar (dOut$end) != 16)
 # if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
 # if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
 # tT <- lapply (1:nrow (dOut), FUN=function(i){
@@ -1232,6 +1232,7 @@ drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 # for (i in 1:11){
 # print (dOut$start [which (tT == "00")][i] |> as.POSIXct(tz= "GMT"))
 # }
+if (any (is.na (c (dOut$startT, dOut$endT)))){stop ("bad times")}
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
