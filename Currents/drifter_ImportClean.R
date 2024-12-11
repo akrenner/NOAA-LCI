@@ -1196,8 +1196,9 @@ drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 # dOut$start [1:20]
 # format (dOut$start, "%H")
 # which (nchar (dOut$start) < 16)
-if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
-if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
+# which (nchar (dOut$end) < 16)
+# if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
+# if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
