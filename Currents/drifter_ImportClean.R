@@ -1215,20 +1215,23 @@ SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start"
 dOut <- cbind (dOut, t (SEtimes))
 names (dOut) <- c("level", "text", "start", "end")
 
-dOut$startT <- as.POSIXct(dOut$start, tz="GMT")
-dOut$endT <- as.POSIXct(dOut$end, tz="GMT")    ## make sure that times are preserved -- how?
+dOut$startT <- as.POSIXct(dOut$start, tz="GMT", format="%Y-%m-$d %H:%M")
+dOut$endT <- as.POSIXct(dOut$end, tz="GMT", format="%Y-%m-$d %H:%M")    ## make sure that times are preserved -- how?
 drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 
 ## testing
 # dOut$start [1:20]
-# format (dOut$start, "%H")
+# format (dOut$startT, "%H")
 # which (nchar (dOut$start) < 16)
 # which (nchar (dOut$end) < 16)
 # if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
 # if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
-# lapply (1:nrow (dOut), FUN=function(i){
-#   as.POSIXct(dOut$start [i]) |> format ("%H")
+# tT <- lapply (1:nrow (dOut), FUN=function(i){
+#   as.POSIXct(dOut$start [i], tz = "GMT") |> format ("%H")
 #   }) |> unlist()
+# for (i in 1:11){
+# print (dOut$start [which (tT == "00")][i] |> as.POSIXct(tz= "GMT"))
+# }
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
