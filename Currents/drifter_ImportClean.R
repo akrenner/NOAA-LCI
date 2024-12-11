@@ -1000,6 +1000,8 @@ if (0){
 
 ## --------------------- manually fix bad positions ------------------------- ##
 ## screening video plots
+save.image ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
 
 ## generate external file of deployments
 
@@ -1027,14 +1029,14 @@ x <- as.character ("
 # 168 2020-07-05 12:00 to end
 # 170 2020-07-06 20:20 to end
 # 171 2020-07-08 18:20 to end
-# 174 to 2020-08-02 18:10 to end
+# 174 2020-08-02 18:10 to end
 # 175 2020-08-03 19:30 to 2020-08-04 02:00 and 2020-08-04 21:30 to end
 # 176 2020-08-06 00:50 to end
 # 177 2020-08-06 12:50 to end
 # 179 2020-09-19 20:20 to end
 # 180 2020-06-07 07:30 to end
 # 185 2020-06-20 22:00 to end
-# 187 2020-07-30 01:30 to 20-07-30 05.50
+# 187 2020-07-30 01:30 to 2020-07-30 05:50
 # 188 2012-09-13 18:20 to end
 # 195 start to end
 # 196 start to end
@@ -1048,7 +1050,7 @@ x <- as.character ("
 # 202 start to 2021-05-24 01:00 and 2021-05-26 15:30 to 2021-05-27 01:40
 # 204 start to end
 # 205 start to 2021-07-21 23:00 and 2021-07-25 23:40 to 2021-07-26 01:30 and 2021-07-27 18:50 to end
-# 206 start to 2021-08-19 23:50 and 206 2021-08-21 21:30 to 2021-08-23 01:10
+# 206 start to 2021-08-19 23:50 and 2021-08-21 21:30 to 2021-08-23 01:10
 # 206 2021-08-23 20:10 to 2021-08-23 01:10 and 2021-08-25 18:10 to end
 # 207 start to 2021-09-20 00:30
 # 208 start to end
@@ -1095,11 +1097,47 @@ x <- as.character ("
 # 250 start to 2022-06-12 17:50 and 2022-06-13 17:10 to 2022-06-14 20:50 and 2022-06-16 21:40 to end
 # 251 start to 2022-07-11 17:20 and 2022-07-13 18:30 to 2022-07-14 20:10 and 2022-07-17 19:40 to end
 # 252 start to 2022-08-10 19:00 and 2022-08-12 19:50 to 2022-08-14 01:10 and 2022-08-14 19:30 to end
+# 253 start to 2022-09-08 19:20 and 2022-09-11 00:20 to end
+# 254 start to 2022-04-16 20:00 and 2022-04-18 14:30 to 2022-04-18 20:40 and 2022-04-21 01:50 to end
+# 254 start to 2022-04-16 23:30 and 2022-04-18 14:40 to 2022-04-18 20:30 and 2022-04-21 04:40 to end
+# 256 start to 2022-04-16 22:40 and 2022-04-18 15:10 to 2022-04-18 20:50 and 2022-04-20 15:00 to end
+# 257 start to 2022-05-14 20:10 and 2022-05-16 19:40 to 2022-05-17 14:40 and 2022-05-18 16:50 to 2022-05-18 18:40 and 2022-05-20 22:10 to end
+# 258 start to 2022-06-12 23:30 and 2022-06-13 17:40 to 2022-06-15 00:20 and 2022-06-16 01:00 to end
+# 259 start to 2022-07-11 16:30 and 2022-07-13 19:10 to 2022-07-14 20:00 and 2022-07-15 20:30 to end
+# 260 start to 2022-08-10 18:30 and 2022-08-12 18:40 to 2022-08-14 01:00 and 2022-08-14 19:30 to end
+# 261 start to 2022-09-08 19:10 and 2022-09-11 16:50 to end
+# 262 start to 2022-04-19 01:50 and 2022-04-20 15:10 to end
+# 263 start to 2022-05-15 00:40 and 2022-05-16 19:40 to 2022-05-16 22:00
+# 264 start to 2022-04-17 01:40 and 2022-04-18 14:50 to 2022-04-19 01:30 and 2022-04-20 15:10 to end
+# 265 start to 2022-05-14 19:30 and 2022-05-16 20:00 to 2022-05-17 15:00 and 2022-05-18 16:10 to 2022-05-18 18:30 and 2022-05-20 18:50 to end
+# 266 start to 2022-06-12 18:10 and 2022-06-13 16:50 to 2022-06-14 19:50 and 2022-06-15 17:50 to end
+# 267 start to 2022-07-11 18:10 and 2022-07-13 19:20 to 2022-07-14 19:50 and 2022-07-15 20:00 to end
+# 268 start to 2022-08-10 19:00 and 2022-08-12 04:20 to 2022-08-14 01:00 and 2022-08-14 19:30 to end
+# 269 start to 2022-09-08 19:50 and 2022-09-10 10:30 to end
+# 270 start to 2022-09-22 19:10
+# 271 start to end
+# 272 start to end
+# 273 start to 2022-04-17 01:30 and 2022-04-18 14:30 to 2022-04-19 01:20 and 2022-04-20 15:00 to end
+# 274 start to 2022-05-15 00:20 and 2022-05-18 15:20 to 2022-05-19 14:40 and 2022-05-20 21:50 to end
+# 275 start to 2022-06-12 23:50 and 2022-06-13 17:50 to 2022-06-15 00:20 and 2022-06-16 00:40 to end
+# 276 start to 2022-07-11 22:50 and 2022-07-12 18:30 to 2022-07-13 00:00 and 2022-07-13 15:50 to 2022-07-14 00:40 and 2022-07-15 21:00 to end
+# 277 start to 2022-08-10 18:40 and 2022-08-12 09:40 to 2022-08-13 21:20 and 2022-08-14 19:20 to end
+# 278 start to 2022-09-08 22:40 and 2022-09-11 05:00 to end
+# 279 start to 2022-09-22 19:10
+# 280 start to 2022-04-17 01:40 and 2022-04-18 15:20 to 2022-04-19 01:10 and 2022-04-20 15:20 to end
+# 281 start to 2022-05-15 00:20 and 2022-05-18 15:10 to 2022-05-19 15:10 and 2022-05-20 02:10 to end
+# 282 start to 2022-06-12 17:40 and 2022-06-13 16:00 to 2022-06-14 19:40 and 2022-06-16 22:00 to end
+# 283 start to 2022-07-11 23:00 and 2022-07-12 17:00 to 2022-07-13 00:20 and 2022-07-13 16:20 to 2022-07-14 01:30 and 2022-07-15 02:20 to end
+# 284 start to 2022-08-10 22:40 and 2022-08-12 18:50 to 2022-08-13 20:50 and 2022-08-14 19:20 to end
+# 285 start to 2022-09-08 22:50 and 2022-09-11 11:20 to end
+# 286 start to 2022-05-15 00:30 and 2022-05-16 17:20 to 2022-05-17 04:00 and 2022-05-18 15:10 to 2022-05-19 15:00 and 2022-05-20 00:20 to end
 ")
 ### comments
 
 # 90 -- NP gyre circumnavigation -- cool!
 # 52 beached at times
+# 280 2022-04-19 07:50 -- eddy-street behind 60-foot rock
+
 
 
 
@@ -1128,26 +1166,78 @@ for (i in 1:nrow (dfix)){
   if (i == 1){dOut <- dNand}else{dOut <- rbind (dOut, dNand)}
 }
 tL <- strsplit(dOut$text, split=" to ")
-SEtimes <- sapply (seq_along (tL), function (i){
+SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start" into times
+# for (i in seq_along (tL)){
   if (length (tL[[i]]) != 2){stop (dOut [i,], " is bad")}
+  dT <- subset (drift, deploy == levels (drift$deploy) [i])
   if (tL [[i]][1] == "start"){
-    sT <- min (drift$XXXXX)
+    sT <- format (min (dT$DeviceDateTime), "%Y-%m-%d %H:%M")
   }else{
     sT <- tL[[i]][1]
   }
   if (tL[[i]][2] == "end"){
-    eT <- max(driftXXXX)
+    eT <- format (max(dT$DeviceDateTime), "%Y-%m-%d %H:%M")
   }else{
     eT <- tL[[i]][2]
   }
   c (sT, eT)
-})
-dOut <- cbind (dOut, SEtimes)
+}
+)
+dOut <- cbind (dOut, t (SEtimes))
+names (dOut) <- c("level", "text", "start", "end")
+dOut$start <- paste (dOut$start, "GMT")
+dOut$end <- paste (dOut$end, "GMT")
+dOut$startT <- as.POSIXct(dOut$start)
+dOut$endT <- as.POSIXct(dOut$end)
 
-rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, gAnd, i, nR, SEtimes)
+drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
+
+## testing
+# dOut$start [1:20]
+# format (dOut$start, "%H")
+# which (nchar (dOut$start) < 16)
+if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
+if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
+
+rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
 
+## apply new dOut
+## cut-out manually marked boat times and redefine drifter deployments
+
+for (i in seq_along(levels (drift$deploy))){
+  dT <- subset (drift, deploy == levels (deploy)[i])
+  bT <- rep (FALSE, nrow (dT))
+  if (i %in% dOut$level){ ## cut out boats
+    boats <- which (dOut$level %in% i)
+    for (j in seq_along (boats)){
+      bT <- ifelse ((dOut$startT [j] >= dT$ISOtime) & (dOut$endT [j] <= dT$ISOtime)
+                    , TRUE, bT)
+    }
+
+    ## still all messed up! iterate by deployments or boat cut-outs? don't duplicate records!
+XXXX      dTN$deploy <- paste0 (dTN$deploy, "-", j)  # kmeans clusters?
+dDeploy <- diff (bT)
+
+   dTN <- dT [which (!bT),]
+  }else{
+    dTN <- dT
+  }
+  if (i == 1){
+    nDrift <- dTN
+  }else{
+    nDrift <- rbind (nDrift, dTN)
+  }
+}
+nDrift$deploy <- factor (nDrift$deploy)
+dim (drift)
+dim (nDrift)
+drift <- nDrift
+rm (nDrift, dT, boats, bT, dTN, i)
+
 ## -------------------------------------------------------------------------------------
+
+
 
 
 
