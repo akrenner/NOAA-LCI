@@ -1051,7 +1051,7 @@ x <- as.character ("
 # 204 start to end
 # 205 start to 2021-07-21 23:00 and 2021-07-25 23:40 to 2021-07-26 01:30 and 2021-07-27 18:50 to end
 # 206 start to 2021-08-19 23:50 and 2021-08-21 21:30 to 2021-08-23 01:10
-# 206 2021-08-23 20:10 to 2021-08-23 01:10 and 2021-08-25 18:10 to end
+# 206 2021-08-23 20:10 to 2021-08-24 00:50 and 2021-08-25 18:10 to end
 # 207 start to 2021-09-20 00:30
 # 208 start to end
 # 209 start to 2021-05-24 01:20 and 2021-05-26 15:30 to 2021-05-27 01:40 and 2021-05-29 15:10 to end
@@ -1095,11 +1095,11 @@ x <- as.character ("
 # 248 start to 2022-04-16 23:30 and 2022-04-18 14:40 to 2022-04-18 20:50 and 2022-04-20 01:10 to end
 # 249 start to 2022-05-14 20:40 and 2022-05-16 18:30 to 2022-05-17 15:00 and 2022-05-18 15:50 to 2022-05-18 18:30 and 2022-05-20 18:20 to end
 # 250 start to 2022-06-12 17:50 and 2022-06-13 17:10 to 2022-06-14 20:50 and 2022-06-16 21:40 to end
-# 251 start to 2022-07-11 17:20 and 2022-07-13 18:30 to 2022-07-14 20:10 and 2022-07-17 19:40 to end
+# 251 start to 2022-07-11 17:20 and 2022-07-13 18:30 to 2022-07-14 20:10 and 2022-07-15 19:40 to end
 # 252 start to 2022-08-10 19:00 and 2022-08-12 19:50 to 2022-08-14 01:10 and 2022-08-14 19:30 to end
 # 253 start to 2022-09-08 19:20 and 2022-09-11 00:20 to end
-# 254 start to 2022-04-16 20:00 and 2022-04-18 14:30 to 2022-04-18 20:40 and 2022-04-21 01:50 to end
-# 254 start to 2022-04-16 23:30 and 2022-04-18 14:40 to 2022-04-18 20:30 and 2022-04-21 04:40 to end
+# 254 start to 2022-09-22 19:00 and
+# 255 start to 2022-04-16 22:50 and 2022-04-18 14:40 to 2022-04-18 20:30 and 2022-04-21 02:20 to end
 # 256 start to 2022-04-16 22:40 and 2022-04-18 15:10 to 2022-04-18 20:50 and 2022-04-20 15:00 to end
 # 257 start to 2022-05-14 20:10 and 2022-05-16 19:40 to 2022-05-17 14:40 and 2022-05-18 16:50 to 2022-05-18 18:40 and 2022-05-20 22:10 to end
 # 258 start to 2022-06-12 23:30 and 2022-06-13 17:40 to 2022-06-15 00:20 and 2022-06-16 01:00 to end
@@ -1198,7 +1198,7 @@ tL <- strsplit(dOut$text, split=" to ")
 SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start" into times
 # for (i in seq_along (tL)){
   if (length (tL[[i]]) != 2){stop (dOut [i,], " is bad")}
-  dT <- subset (drift, deploy == levels (drift$deploy) [i])
+  dT <- subset (drift, deploy == levels (drift$deploy)[dOut$level[i]])
   if (tL [[i]][1] == "start"){
     sT <- format (min (dT$DeviceDateTime), "%Y-%m-%d %H:%M")
   }else{
@@ -1219,6 +1219,7 @@ dOut$startT <- as.POSIXct(dOut$start, tz="GMT", format="%Y-%m-%d %H:%M", optiona
 dOut$endT   <- as.POSIXct(dOut$end  , tz="GMT", format="%Y-%m-%d %H:%M", optional=FALSE)    ## make sure that times are preserved -- how?
 drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 
+
 ## testing
 # dOut$start [1:20]
 # format (dOut$startT, "%H")
@@ -1233,6 +1234,10 @@ drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 # print (dOut$start [which (tT == "00")][i] |> as.POSIXct(tz= "GMT"))
 # }
 if (any (is.na (c (dOut$startT, dOut$endT)))){stop ("bad times")}
+if (any (dOut$startT > dOut$endT)){
+  print (dOut [which (dOut$startT > dOut$endT),])
+  stop ("end time before start time")}
+
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 # dOut$deploy <- levels ()
@@ -1244,29 +1249,33 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 ## cycle through deploys (easier to deal with multiples boatrides than cycling through dOut)
 for (i in seq_along(levels (drift$deploy))){
   dT <- subset (drift, deploy == levels (deploy)[i])
+  dT$deployC <- as.character (dT$deploy)
   bT <- rep (FALSE, nrow (dT))
   if (i %in% dOut$level){ ## cut out boats
     boats <- which (dOut$level %in% i)
     for (j in seq_along (boats)){
       ## mark times in boat
-      bT <- ifelse ((dOut$startT [boats [j]] >= dT$ISOtime) &
-                      (dOut$endT [boats [j]] <= dT$ISOtime)
+      bT <- ifelse ((dOut$startT [boats [j]] <= dT$ISOtime) &
+                      (dT$ISOtime <= dOut$endT [boats [j]])
                     , TRUE, bT)
       ## redefine deploy
       if (min (dT$ISOtime) < dOut$startT [boats [j]]){  # this implies j == 1 and  start = boat
-        dT$deploy [1:(which (dT$ISOtime == dOut$startT[boats [j]])-1)] <-
-          paste0 (dT$deploy[1], "-0")
+        ## find nearest record to startT
+        bMtch <- max (2, which.min(difftime(dT$ISOtime, dOut$startT[boats[j]]))) # 2 in case which.min = 1
+        dT$deployC [1:(bMtch-1)] <- paste0 (dT$deployC[1], "-0")
       }
       if (length (boats) > j){ # standard case
-        dT$deploy [(which (dT$ISOtime == dOut$endT [boats [j]])+1) :
-                     (which (dT$ISOtime == dOut$startT [boats [j+1]])-1)] <-
-          paste0 (dT$deploy[nrow (dT)], "-", j)
-      }else if (max (dT$ISOtime) > dOut$endT [j]){ # more drift after last boat
-        dT$deploy [(which (dT$ISOtime == dOut$endT [boats [j]])+1):nrow (dT)] <-
-          paste0 (dT$deploy[nrow (dT)], "-", j)
+        dT$deployC [(which (dT$ISOtime == dOut$endT [boats [j]])+1) :
+                      (which (dT$ISOtime == dOut$startT [boats [j+1]])-1)] <-
+          paste0 (dT$deployC[nrow (dT)], "-", j)
+      }else if (max (dT$ISOtime) > dOut$endT [boats [j]]){ # more drift after last boat
+        ## find nearest record
+        bMtch <- min (c (nrow (dT)-1, which.min (difftime (dT$ISOtime, dOut$endT [boats[j]]))))
+        ## contingency for "start to end"?
+        dT$deployC [bMtch+1:nrow (dT)] <- paste0 (dT$deployC[nrow (dT)], "-", j)
       }
     }
-    dTN <- dT [which (!bT),]
+    dTN <- dT [which (!bT),]  ## apparently wrong XXX
   }else{
     dTN <- dT
   }
@@ -1276,7 +1285,8 @@ for (i in seq_along(levels (drift$deploy))){
     nDrift <- rbind (nDrift, dTN)
   }
 }
-nDrift$deploy <- factor (nDrift$deploy)
+nDrift$deploy <- factor (nDrift$deployC)
+nDrift$deployC <- NULL # remove temp column
 dim (drift)
 dim (nDrift)
 drift <- nDrift
