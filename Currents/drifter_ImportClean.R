@@ -684,6 +684,9 @@ rm (newDeploy, x, depIdx, i)
 
 cat ("\n\n### N deployments: ####\n")
 print (length (levels (drift$deploy)))
+if (length (levels (drift$deploy))!=315){
+  stop ("Changing parameters to define deployment bouts will upset manuall edits below -- unless new drifter tracks have been added.")
+}
 
 
 if (test){
@@ -1247,6 +1250,7 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 
 
 ## cycle through deploys (easier to deal with multiples boatrides than cycling through dOut)
+# fixDeploy <- function (i){}
 for (i in seq_along(levels (drift$deploy))){
   dT <- subset (drift, deploy == levels (deploy)[i])
   dT$deployC <- as.character (dT$deploy)
@@ -1265,14 +1269,14 @@ for (i in seq_along(levels (drift$deploy))){
         dT$deployC [1:(bMtch-1)] <- paste0 (dT$deployC[1], "-0")
       }
       if (length (boats) > j){ # standard case
-        dT$deployC [(which (dT$ISOtime == dOut$endT [boats [j]])+1) :
-                      (which (dT$ISOtime == dOut$startT [boats [j+1]])-1)] <-
+        dT$deployC [(which.min (difftime (dT$ISOtime, dOut$endT [boats [j]]))+1) :
+                      (which.min (difftime (dT$ISOtime, dOut$startT [boats [j+1]]))-1)] <-
           paste0 (dT$deployC[nrow (dT)], "-", j)
       }else if (max (dT$ISOtime) > dOut$endT [boats [j]]){ # more drift after last boat
         ## find nearest record
         bMtch <- min (c (nrow (dT)-1, which.min (difftime (dT$ISOtime, dOut$endT [boats[j]]))))
         ## contingency for "start to end"?
-        dT$deployC [bMtch+1:nrow (dT)] <- paste0 (dT$deployC[nrow (dT)], "-", j)
+        dT$deployC [(bMtch+1):nrow (dT)] <- paste0 (dT$deployC[nrow (dT)], "-", j)
       }
     }
     dTN <- dT [which (!bT),]  ## apparently wrong XXX
