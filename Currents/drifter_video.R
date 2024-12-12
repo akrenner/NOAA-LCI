@@ -6,7 +6,7 @@ rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
 
 
 ## need to adjust frame margin and font sizes, if video resolution were to increase
-resolu <- c (resW=1920, resH=1080, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
+resolu <- c (resW=1920, resH=1080, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576 -- FR=7?
 # resolu <- c (resW=1024, resH=576, frameR=24)
 # resolu <- c (resW=1080, resH=576, frameR=24) ## HD+ 1920 x 1080, HD: 1280x729, wvga: 1024x576
 # resolu <- c (resW=1280, resH=768, frameR=24) ## WXGA, computer, 16:9
@@ -29,12 +29,13 @@ dPlot <- function (i, replace=FALSE){
   require ("RColorBrewer")
 
   tailL <- 30
-  frameR <- 7
+  # frameR <- 7
   hC <- rev (RColorBrewer::brewer.pal(9, "YlOrRd")[2:9])
   video_file <- paste0 (outpath, "drifterVideo/driftAnimationAV_", i, ".mp4")
 
   makeVideo <- function (i){
     dI <- subset (driftP, deploy == levels (driftP$deploy)[i])
+    if (nrow (dI) > 5){
     dstV <- c (0, st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
                               , y=st_geometry (dI)[2:nrow (dI),]
                               , by_element=TRUE))
@@ -86,9 +87,10 @@ dPlot <- function (i, replace=FALSE){
         ## add virtual particle from particle trajectory tool
         box()
       }
-    }, output=video_file, width=resolu [1], height=resolu [2], framerate=frameR
+    }, output=video_file, width=resolu [1], height=resolu [2], framerate=resolu [3]
     # , vfilter=paste0 ('framerate=fps=', resolu [3])
     )
+    }
   }
 
   if (isTRUE (replace)){## overwrite existing files
@@ -109,8 +111,10 @@ ncores <- detectCores()
 
 dpl <- driftP$deploy
 dLvls <- seq_along(levels (driftP$deploy))  # big files first
+if (!test){
 dLvls <- dLvls [order (sapply (dLvls, function (i){subset (dpl, dpl==levels (dpl)[i]) |>
     length()}), decreasing=!test)]
+}
 rm (dpl)
 
 if (.Platform$OS.type=="unix"){

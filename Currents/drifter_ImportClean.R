@@ -1008,7 +1008,9 @@ save.image ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
 
 ## generate external file of deployments
 
+# 16 -- jump still in there
 x <- as.character ("
+# 15 2012-06-26 07:00 to 2012-06-28 18:00
 # 16 2012-08-13 17:00 to 2012-08-14 00:00
 # 24 start to 2012-08-27 00:00
 # 25 2013-04-14 07:00 to end
