@@ -31,7 +31,7 @@ dPlot <- function (i, replace=FALSE){
   tailL <- 30
   # frameR <- 7
   hC <- rev (RColorBrewer::brewer.pal(9, "YlOrRd")[2:9])
-  video_file <- paste0 (outpath, "drifterVideo/driftAnimationAV_", i, ".mp4")
+  video_file <- paste0 (outpath, "drifterVideo/drifter_", levels (driftP$deployV2) [i], ".mp4")
 
   makeVideo <- function (i){
     dI <- subset (driftP, deploy == levels (driftP$deploy)[i])
@@ -110,10 +110,13 @@ require ("parallel")
 ncores <- detectCores()
 
 dpl <- driftP$deploy
-dLvls <- seq_along(levels (driftP$deploy))  # big files first
+dLvls <- seq_along(levels (driftP$deployV2))  # big files first
 if (!test){
 dLvls <- dLvls [order (sapply (dLvls, function (i){subset (dpl, dpl==levels (dpl)[i]) |>
     length()}), decreasing=!test)]
+}
+if (test){
+  dLvls <- c(324, 194, 290, 287)
 }
 rm (dpl)
 
