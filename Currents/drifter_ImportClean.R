@@ -1004,7 +1004,7 @@ if (0){
 ## --------------------- manually fix bad positions ------------------------- ##
 ## screening video plots
 save.image ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterScreen.RData"); require ('dplyr'); require ("sf"); require ("stars"); require ('RColorBrewer')
 
 ## generate external file of deployments
 
@@ -1224,8 +1224,14 @@ names (dOut) <- c("level", "text", "start", "end")
 
 dOut$startT <- as.POSIXct(dOut$start, tz="GMT", format="%Y-%m-%d %H:%M", optional=FALSE)
 dOut$endT   <- as.POSIXct(dOut$end  , tz="GMT", format="%Y-%m-%d %H:%M", optional=FALSE)    ## make sure that times are preserved -- how?
-drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
 
+## extra info into dOut to make it a more complete DB
+
+
+
+
+drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
+drift$deployV2 <- drift$deploy
 
 ## testing
 # dOut$start [1:20]
@@ -1258,7 +1264,7 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 for (i in seq_along(levels (drift$deploy))){
   dT <- subset (drift, deploy == levels (deploy)[i])
   # dT$deployV2 <- as.character (dT$deploy)
-  dT$deployV2 <- as.charcter (i)
+  dT$deployV2 <- as.character (i)
   bT <- rep (FALSE, nrow (dT))
   if (i %in% dOut$level){ ## cut out boats
     boats <- which (dOut$level %in% i)
@@ -1271,10 +1277,10 @@ for (i in seq_along(levels (drift$deploy))){
       if (min (dT$ISOtime) < dOut$startT [boats [j]]){  # this implies j == 1 and  start = boat
         ## find nearest record to startT
         bMtch <- max (2, which.min(difftime(dT$ISOtime, dOut$startT[boats[j]]))) # 2 in case which.min = 1
-        dT$deployV2 [1:(bMtch-1)] <- paste0 (dT$deployC[1], "-0")
+        dT$deployV2 [1:(bMtch-1)] <- paste0 (dT$deployV2[1], "-0")
       }
       if (length (boats) > j){ # standard case
-        dT$deployC [(which.min (difftime (dT$ISOtime, dOut$endT [boats [j]]))+1) :
+        dT$deployV2 [(which.min (difftime (dT$ISOtime, dOut$endT [boats [j]]))+1) :
                       (which.min (difftime (dT$ISOtime, dOut$startT [boats [j+1]]))-1)] <-
           paste0 (dT$deployV2[nrow (dT)], "-", j)
 #     }else if (max (dT$ISOtime) > dOut$endT [boats [j]]){ # more drift after last boat
@@ -1282,7 +1288,7 @@ for (i in seq_along(levels (drift$deploy))){
         ## find nearest record
         bMtch <- min (c (nrow (dT)-1, which.min (difftime (dT$ISOtime, dOut$endT [boats[j]]))))
         ## contingency for "start to end"?
-        dT$deployC [(bMtch+1):nrow (dT)] <- paste0 (dT$deployV2[nrow (dT)], "-", j)
+        dT$deployV2 [(bMtch+1):nrow (dT)] <- paste0 (dT$deployV2[nrow (dT)], "-", j)
       }
     }
     dTN <- dT [which (!bT),]  ## apparently wrong XXX
@@ -1296,7 +1302,7 @@ for (i in seq_along(levels (drift$deploy))){
   }
 }
 nDrift$deployV2 <- factor (nDrift$deployV2)
-# nDrift$deployC <- NULL # remove temp column
+# nDrift$deployV2 <- NULL # remove temp column
 dim (drift)
 dim (nDrift)
 drift <- nDrift
