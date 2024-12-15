@@ -11,7 +11,7 @@ ns <- 15  # number of samples
 set.seed(7)
 
 ## study area
-sa <- sf::read_sf("~/GISdata/QGISlayers/ArchimandritofShoals/ArchimandritofShoals2.shp")
+sa <- sf::read_sf("~/GISdata/LCI/shapefiles/ArchimandritofShoals/ArchimandritofShoals.shp")
 # %>%
 # st_transform(crs=3467) # alaska albert
 # sa <- st_transform(sa, crs=3467) # alaska albert
@@ -45,12 +45,12 @@ tspS <- solve_TSP (etsp, method = "arbitrary_insertion", two_opt=TRUE, rep = nRe
 # stopCluster (cl)
 
 ## reorder to start with artificial starting point
-resort <- function (idx, start=length (idx)){
-  if (idx [start]==idx){
+resort <- function (idx, startI=length (idx)){
+  if (idx [startI]==idx){
     idx <- rev (idx)
   }else{
     idx <- c (idx [which (idx==start): length (idx)]
-              , idx [1:(which (idx == start)-1)])
+              , idx [1:(which (idx == startI)-1)])
   }
   idx
 }
@@ -67,5 +67,5 @@ plot (etsp, tspS, tour_col="red")
 
 ## export to gpx file for GPS
 write_sf (pnts, "~/tmp/LCI_noaa/data-products/Archimandritof_sample.gpx"
-          , driver = "GPX", dataset_options = "GPX_USE_EXTENSIONS=YES")
+          , driver="GPX", dataset_options="GPX_USE_EXTENSIONS=YES")
 
