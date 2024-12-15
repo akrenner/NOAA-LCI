@@ -40,32 +40,35 @@ ptT <- st_as_sf(as.data.frame (pt), crs=4326, coords=c("X", "Y"))
 nRep <- 50
 require ("doParallel")
 registerDoParallel (8)
-etsp <- ETSP (ptT %>% st_coordinates())
+etsp <- ETSP (ptT %>%
+                st_transform(3467) %>%
+                st_coordinates())
 tspS <- solve_TSP (etsp, method = "arbitrary_insertion", two_opt=TRUE, rep = nRep)
 # stopCluster (cl)
 
 ## reorder to start with artificial starting point
 resort <- function (idx, startI=length (idx)){
-  if (idx [startI]==idx){
+  if (startI==idx[length (idx)]){
     idx <- rev (idx)
   }else{
-    idx <- c (idx [which (idx==start): length (idx)]
+    idx <- c (idx [which (idx==startI): length (idx)]
               , idx [1:(which (idx == startI)-1)])
   }
   idx
 }
-tspO <- resort (as.integer (tspS))
+tsp0 <- resort (as.integer (tspS))
 
-pt <- pt [as.integer (tsp0),]
+ptT <- ptT [as.integer (tsp0),]
 
 
 plot (etsp, tspS, tour_col="red")
+print (paste (round (tour_length(tspS)/1e3,1), "km"))
 
 # plot (sa, col="blue")
 # points (pnts, col="yellow", pch=4)
 
 
 ## export to gpx file for GPS
-write_sf (pnts, "~/tmp/LCI_noaa/data-products/Archimandritof_sample.gpx"
+write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof_N=", ns,".gpx")
           , driver="GPX", dataset_options="GPX_USE_EXTENSIONS=YES")
 
