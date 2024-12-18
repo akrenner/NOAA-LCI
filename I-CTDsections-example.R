@@ -4,9 +4,9 @@
 ## code to select relevant files and match locations.
 
 ## files in package:
-## aggregated CTD data
-## CTDsectionFcts.R (in same directory as this file)
-## this file CTDsections-example.R
+## aggregated CTD data: ctdwallSetup.RData
+## utility functions:   CTDsectionFcts.R
+## this current file:   I-CTDsections-example.R
 
 ## output: print to graphics device rather than image file
 
@@ -15,29 +15,42 @@
 rm (list = ls())
 if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
+  ## bundle all required files into a zip archive
+  dir.create("~/tmp/LCI_noaa/cache-t/CTDexample/", showWarnings=FALSE, recursive=TRUE)
+  file.copy("CTDsectionFcts.R", "~/tmp/LCI_noaa/cache-t/CTDexample/CTDsectionFcts.R", overwrite=TRUE)
+  file.copy("I-CTDsections-example.R", "~/tmp/LCI_noaa/cache-t/CTDexample/I-CTDsections-example.R", overwrite=TRUE)
+  file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", "~/tmp/LCI_noaa/cache-t/CTDexample/ctdwallSetup.RData", overwrite=TRUE)
+  # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache-t/CTDexample/oce_1.7-3.tar.gz")
+  zip (zipfile="~/tmp/LCI_noaa/cache-t/CTDexample.zip",
+       , files=dir ("~/tmp/LCI_noaa/cache-t/CTDexample", full.names=TRUE), extras="-j") # -j drops directories in zip file
+  unlink("~/tmp/LCI_noaa/cache-t/CTDexample/", recursive=TRUE)
 }else{
   base::load ("ctdwallSetup.RData")
 }
-require ("oce")
+tst <- require ("oce")
+if (!tst){install.packages("oce", dependencies=TRUE, quiet=TRUE)}; rm (tst)
 source ("CTDsectionFcts.R")  # get pSec to plot sections
 
 
-# directory with aggregated CTD files
-ctdD <- "~/tmp/LCI_noaa/data-products/CTD/"
+
 
 
 ## ------- interactive user selection of transect, date, parameter ------- ##
 ## pick date and transect
 cat ("Available survey dates: \n")
 print (levels (poAll$survey))
-sv <- 26                                        # user to pick index number
+sv <- 173                                        # user to pick index number
+
 cat ("Selected date:", levels (poAll$survey) [sv], "\n")
+if (sv > length (levels (poAll$survey))){stop ("sv has to be smaller than ", 1+length (levels (poAll$survey)))}
 s <- subset (poAll, survey == levels (poAll$survey)[sv])
 s$Transect <- factor (s$Transect)
 
 print (levels (s$Transect))
 tn <- 1        # user to pick index number
+
 cat ("Selected Transect", levels (s$Transect)[tn], "\n")
+if (tn > length (levels (s$Transect))){stop ("tn has to be smaller than ", 1+length (levels (s$Transect)))}
 s <- subset (s, Transect==levels (s$Transect) [tn])
 s$survey <- factor (s$survey)
 s$Match_Name <- factor (s$Match_Name)
@@ -45,10 +58,14 @@ cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
 
 cat ("Available parameter to plot:\n")
 print (oVarsF)
-ov <- 3                                # user to pick index number
+ov <- 1                                # user to pick index number
+
 cat ("Selected parameter to plot: ", oVarsF [ov], "\n")
 
 ## --------------- end of interactive user selection -------------------- ##
+
+
+
 
 
 
@@ -110,7 +127,8 @@ cat ("Selected parameter to plot: ", oVarsF [ov], "\n")
       xCo <- sectionize (xC)
 
 
-        if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
+        # if (ov %in% c(4,5,6)){ # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
+        if (0){
           zR <- oRange [ov,]
         }else{
           cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
@@ -151,6 +169,7 @@ cat ("Selected parameter to plot: ", oVarsF [ov], "\n")
       if (s$Transect[tn] == "AlongBay"){mt <- ""}else{mt <- "T"}
       mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
              , side = 3, outer = TRUE, line = -1.0, cex =1); rm (mt)
+
       # plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
       #       , which = 99
       #       , coastline = "coastlineWorldFine"
