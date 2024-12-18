@@ -16,14 +16,14 @@ rm (list = ls())
 if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
   ## bundle all required files into a zip archive
-  dir.create("~/tmp/LCI_noaa/cache-t/CTDexample/", showWarnings=FALSE, recursive=TRUE)
-  file.copy("CTDsectionFcts.R", "~/tmp/LCI_noaa/cache-t/CTDexample/CTDsectionFcts.R", overwrite=TRUE)
-  file.copy("I-CTDsections-example.R", "~/tmp/LCI_noaa/cache-t/CTDexample/I-CTDsections-example.R", overwrite=TRUE)
-  file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", "~/tmp/LCI_noaa/cache-t/CTDexample/ctdwallSetup.RData", overwrite=TRUE)
-  # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache-t/CTDexample/oce_1.7-3.tar.gz")
-  zip (zipfile="~/tmp/LCI_noaa/cache-t/CTDexample.zip",
-       , files=dir ("~/tmp/LCI_noaa/cache-t/CTDexample", full.names=TRUE), extras="-j") # -j drops directories in zip file
-  unlink("~/tmp/LCI_noaa/cache-t/CTDexample/", recursive=TRUE)
+  dir.create("~/tmp/LCI_noaa/cache/CTDexample/", showWarnings=FALSE, recursive=TRUE)
+  file.copy("CTDsectionFcts.R", "~/tmp/LCI_noaa/cache/CTDexample/CTDsectionFcts.R", overwrite=TRUE)
+  file.copy("I-CTDsections-example.R", "~/tmp/LCI_noaa/cache/CTDexample/I-CTDsections-example.R", overwrite=TRUE)
+  file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", "~/tmp/LCI_noaa/cache/CTDexample/ctdwallSetup.RData", overwrite=TRUE)
+  # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache/CTDexample/oce_1.7-3.tar.gz")
+  zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip",
+       , files=dir ("~/tmp/LCI_noaa/cache/CTDexample", full.names=TRUE), extras="-j") # -j drops directories in zip file
+  unlink("~/tmp/LCI_noaa/cache/CTDexample/", recursive=TRUE)
 }else{
   base::load ("ctdwallSetup.RData")
 }
