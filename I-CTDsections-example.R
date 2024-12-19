@@ -21,12 +21,12 @@ rm (list = ls())
 if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
   ## bundle all required files into a zip archive
-  tD <- tempdir()
-
+  tD <- "~/tmp/LCI_noaa/cache/tCTD-example"
+  dir.create(tD, showWarnings=FALSE, recursive=TRUE)
   file.copy("CTDsectionFcts.R", tD)
   file.copy("I-CTDsections-example.R", tD)
   file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", tD)
-  file.copy ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff", tD)
+  # file.copy ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff", tD)
   # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache/CTDexample/oce_1.7-3.tar.gz")
   unlink ("~/tmp/LCI_noaa/cache/CTDexample.zip")
   zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip",
@@ -38,7 +38,8 @@ if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   }
   base::load ("ctdwallSetup.RData")
 }
-pks <- c("sf", "dplyr", "stars", "oce")
+# pks <- c("sf", "dplyr", "stars", "oce")
+pks <- c("oce")
 for (i in seq_along(pks)){
   tst <- require (pks[i], character.only=TRUE)
   if (!tst){install.packages (pks [i], dependencies=TRUE, quiet=TRUE)}
@@ -54,7 +55,7 @@ source ("CTDsectionFcts.R")  # get pSec to plot sections
 ## pick date and transect
 cat ("Available survey dates: \n")
 print (levels (poAll$survey))
-sv <- 173                                        # user to pick index number
+sv <- 18                                        # user to pick index number
 
 
 cat ("Selected date:", levels (poAll$survey) [sv], "\n")
