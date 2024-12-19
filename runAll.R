@@ -20,7 +20,7 @@ if (.Platform$OS.type=="windows"){
 }
 
 
-if (0){
+if (!require ("oce")){
   source ("InitialSetup.R")
 }
 

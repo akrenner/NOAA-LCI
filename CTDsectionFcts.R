@@ -13,7 +13,11 @@ getBathy <- function (transect, stn){
   require ("dplyr")
   require ("stars")
 
-  mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  if (file.exists("KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")){
+    mar_bathy <- stars::read_stars ("KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  }else{
+    mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  }
   names (mar_bathy) <- "topo"
   names (mar_bathy) <- "topo"
   bathyZ <- st_as_stars(ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)

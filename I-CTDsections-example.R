@@ -1,14 +1,19 @@
 ## Demo-script to try out settings
 ##
-## load data from .RData file rather than csv files. The latter would add much
-## code to select relevant files and match locations.
 
 ## files in package:
 ## aggregated CTD data: ctdwallSetup.RData
 ## utility functions:   CTDsectionFcts.R
 ## this current file:   I-CTDsections-example.R
 
+## Run entire script ("Source" button), after changing sv, tn, and ov, as
+## desired, all within the "interactive user selection of transect, date,
+## variable" heading.
+
+
 ## output: print to graphics device rather than image file
+## load data from .RData file rather than csv files. The latter would add much
+## code to select relevant files and match locations.
 
 
 ## ---------------------------- general set-up ------------------------------ ##
@@ -16,30 +21,41 @@ rm (list = ls())
 if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
   ## bundle all required files into a zip archive
-  dir.create("~/tmp/LCI_noaa/cache/CTDexample/", showWarnings=FALSE, recursive=TRUE)
-  file.copy("CTDsectionFcts.R", "~/tmp/LCI_noaa/cache/CTDexample/CTDsectionFcts.R", overwrite=TRUE)
-  file.copy("I-CTDsections-example.R", "~/tmp/LCI_noaa/cache/CTDexample/I-CTDsections-example.R", overwrite=TRUE)
-  file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", "~/tmp/LCI_noaa/cache/CTDexample/ctdwallSetup.RData", overwrite=TRUE)
+  tD <- tempdir()
+
+  file.copy("CTDsectionFcts.R", tD)
+  file.copy("I-CTDsections-example.R", tD)
+  file.copy("~/tmp/LCI_noaa/cache/ctdwallSetup.RData", tD)
+  file.copy ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff", tD)
   # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache/CTDexample/oce_1.7-3.tar.gz")
+  unlink ("~/tmp/LCI_noaa/cache/CTDexample.zip")
   zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip",
-       , files=dir ("~/tmp/LCI_noaa/cache/CTDexample", full.names=TRUE), extras="-j") # -j drops directories in zip file
-  unlink("~/tmp/LCI_noaa/cache/CTDexample/", recursive=TRUE)
+       , files=dir (tD, full.names=TRUE), extras="-j") # -j drops directories in zip file
+  unlink (tD, recursive=TRUE); rm (tD)
 }else{
+  if (!file.exists ("ctdwallSetup.RData")){
+    setwd(choose.dir(caption = "Select folder containing ctdwallSetup.RData"))
+  }
   base::load ("ctdwallSetup.RData")
 }
-tst <- require ("oce")
-if (!tst){install.packages("oce", dependencies=TRUE, quiet=TRUE)}; rm (tst)
+pks <- c("sf", "dplyr", "stars", "oce")
+for (i in seq_along(pks)){
+  tst <- require (pks[i], character.only=TRUE)
+  if (!tst){install.packages (pks [i], dependencies=TRUE, quiet=TRUE)}
+}
+rm (pks, i, tst)
+
+
 source ("CTDsectionFcts.R")  # get pSec to plot sections
 
 
 
-
-
-## ------- interactive user selection of transect, date, parameter ------- ##
+## ------- interactive user selection of transect, date, variable ------- ##
 ## pick date and transect
 cat ("Available survey dates: \n")
 print (levels (poAll$survey))
 sv <- 173                                        # user to pick index number
+
 
 cat ("Selected date:", levels (poAll$survey) [sv], "\n")
 if (sv > length (levels (poAll$survey))){stop ("sv has to be smaller than ", 1+length (levels (poAll$survey)))}
@@ -56,15 +72,31 @@ s$survey <- factor (s$survey)
 s$Match_Name <- factor (s$Match_Name)
 cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
 
-cat ("Available parameter to plot:\n")
+cat ("Available variables to plot:\n")
 print (oVarsF)
 ov <- 1                                # user to pick index number
 
-cat ("Selected parameter to plot: ", oVarsF [ov], "\n")
+cat ("Selected variable to plot: ", oVarsF [ov], "\n")
 
 ## --------------- end of interactive user selection -------------------- ##
 
 
+
+
+## ------------------- wrap interactive part into Shiny app ------------- ##
+if (0){
+  require ("shiny")
+  if (interactive()){
+    ui <- fluidPage (
+      numericInput ("sv", "Survey", 1, min=1, max=7)
+    )
+    server <- function (input, output){
+      output$value <- renderText ({input$tn})
+    }
+    shinyApp (ui, server)
+  }
+}
+## ------------------------------ end of shiny --------------------------- ##
 
 
 
@@ -149,10 +181,8 @@ cat ("Selected parameter to plot: ", oVarsF [ov], "\n")
           text (5,5, labels = "no good data")
         }else{
           pSec (xCo
-                , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
+                , N = oVarsF [ov]      # logPAR does not plot
                 , zCol = oCol3 [[ov]]
-                #    , zCol = oColF (ov)
-                #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
                 , zlim = zR
                 , zbreaks=NULL # change this for salinity; others?
                 , custcont=10, labcex=0.6
