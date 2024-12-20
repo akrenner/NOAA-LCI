@@ -42,7 +42,8 @@ if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
 pks <- c("oce")
 for (i in seq_along(pks)){
   tst <- require (pks[i], character.only=TRUE)
-  if (!tst){install.packages (pks [i], dependencies=TRUE, quiet=TRUE)}
+  if (!tst){install.packages (pks [i], dependencies=TRUE, quiet=TRUE,
+                              repos="https://cloud.r-project.org")}
 }
 rm (pks, i, tst)
 
@@ -187,6 +188,7 @@ if (0){
                 , zlim = zR
                 , zbreaks=NULL # change this for salinity; others?
                 , custcont=10, labcex=0.6
+                , showBottom=TRUE
           )
           rm (zR)
         }
