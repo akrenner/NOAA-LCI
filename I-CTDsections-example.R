@@ -18,7 +18,7 @@
 
 ## ---------------------------- general set-up ------------------------------ ##
 rm (list = ls())
-if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
+if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){  # only TRUE on MR's machine
   base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
   ## bundle all required files into a zip archive
   tD <- "~/tmp/LCI_noaa/cache/tCTD-example"
@@ -29,12 +29,16 @@ if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){
   # file.copy ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff", tD)
   # file.copy ("~/src/oce_1.7-3.tar.gz", "~/tmp/LCI_noaa/cache/CTDexample/oce_1.7-3.tar.gz")
   unlink ("~/tmp/LCI_noaa/cache/CTDexample.zip")
-  zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip",
-       , files=dir (tD, full.names=TRUE), extras="-j") # -j drops directories in zip file
+  zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip", files=dir (tD, full.names=TRUE), extras="-j") # -j drops directories in zip file
   unlink (tD, recursive=TRUE); rm (tD)
 }else{
   if (!file.exists ("ctdwallSetup.RData")){
-    setwd(choose.dir(caption = "Select folder containing ctdwallSetup.RData"))
+    cat ("Set working directory, interactively (Windows only), or using 'setwd()'\n")
+# setwd("path to directory containing ctdwallSetup.RData")
+    ## alternatively, set this directory interactively (only works in Windows)
+    if (.Platform$OS.type=="windows"){
+      setwd(choose.dir(caption = "Select folder containing ctdwallSetup.RData"))
+    }
   }
   base::load ("ctdwallSetup.RData")
 }
@@ -56,7 +60,7 @@ source ("CTDsectionFcts.R")  # get pSec to plot sections
 ## pick date and transect
 cat ("Available survey dates: \n")
 print (levels (poAll$survey))
-sv <- 18                                        # user to pick index number
+sv <- 174                                        # user to pick index number
 
 
 cat ("Selected date:", levels (poAll$survey) [sv], "\n")
@@ -188,7 +192,7 @@ if (0){
                 , zlim = zR
                 , zbreaks=NULL # change this for salinity; others?
                 , custcont=10, labcex=0.6
-                , showBottom=TRUE
+                , showBottom=FALSE
           )
           rm (zR)
         }
