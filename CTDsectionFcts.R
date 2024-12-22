@@ -72,6 +72,7 @@ pSec <- function (xsec, N, cont = TRUE, zCol
       }
       distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
       if (length (distance) < nstation){
+        warning("distance and station N missmatch", immediate.=TRUE)
         lat <- sapply (1:nstation, function (i){xsec@data$station[[i]]@metadata$latitude})
         lon <- sapply (1:nstation, function (i){xsec@data$station[[i]]@metadata$longitude})
         distance <- geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)
