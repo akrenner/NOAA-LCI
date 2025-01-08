@@ -54,6 +54,7 @@ if (0){
   system (paste0 ("rclone sync ", GD, "data-products/ ~/tmp/LCI_noaa/data-products/ -P"))
   system ("rclone sync remote:NOAA-laptop/cache/ ~/tmp/LCI_noaa/cache/ -P")
   system (paste0 ("rclone sync ", GD, "plots/CTDsections/ ~/tmp/LCI_noaa/media/CTDsections/ -P"))
+#  system (paste0 ("rclone sync ", GD, "plots/CTDcasts/ ~/tmp/LCI_noaa/media/CTDcasts/ -P"))
   system (paste0 ("rclone sync ", GD, "plots/StateOfBay/ ~/tmp/LCI_noaa/media/StateOfBay/ -P"))
 }
 

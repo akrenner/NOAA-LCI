@@ -431,7 +431,7 @@ for (k in pickStn){
     mtext ("Depth [m]", side=2, outer=TRUE)
     dev.off()
 
-    save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
+    # save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
     # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
 
 
@@ -537,9 +537,6 @@ for (k in pickStn){
     names (clf) <- c ("Date", "Fluorescence")
     clf$Date <- as.Date (clf$Date)
 
-
-
-
     clfnorm <- longM (clf$Fluorescence, clf$Date)
     T96f <- data.frame (timeStamp=seq (min (xC$isoTime), max (xC$isoTime), by=3600*24)) ## standardize timeStamp vs isoTime
     T96f$Date <- as.Date(T96f$timeStamp)
@@ -567,6 +564,22 @@ for (k in pickStn){
             , legend=c("more", "less", "mean"), bty="n")
     abline (v = min (physOc$year):max (physOc$year), col="gray", lty="dashed")
     dev.off()
+
+
+    ## single panel of fluorescence for monthly report -- model this after temp anomaly
+    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-anomaly.png"), res=pngR
+         , height=fDim[2]*pngR/3, width=fDim[1]*pngR)
+    plot (chlN~Date, T96f, pch=19
+          , col=ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
+          , ylab=expression (Chlorophyl~a~"["*mg~m^-3*"]"))
+    lines (chl_norm~Date, T96f, col = "gray")
+    legend ("topright", lwd=c(5,5,1), col=c("darkgreen", "lightgreen", "gray")
+            , legend=c("more", "less", "mean"), bty="n")
+    abline (v = min (physOc$year):max (physOc$year), col="gray", lty="dashed")
+    dev.off()
+
+
+
     rm (T96f, clf)
 
 
@@ -958,9 +971,9 @@ for (iS in 1:length (tL)){
 
   if (tempName == ("Deep")){
     png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
-         , height=fDim [2]*pngR, width=fDim [1]*pngR*1.5)
+         , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
-    par (mfrow=c(2,1)) ## do not plot thresholds for salinity
+    # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
   }else{
     png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
@@ -980,7 +993,7 @@ for (iS in 1:length (tL)){
   abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
   TSaxis(T96f$timeStamp, verticals=FALSE)
   if (tempName=="Deep"){
-    abline (h=thTempL, lty="dashed") # mark 4 degrees C
+#    abline (h=thTempL, lty="dashed") # mark 4 degrees C
   }
   mLW <- 3
   nLW <- mLW
@@ -1001,7 +1014,7 @@ for (iS in 1:length (tL)){
 rm (anomCol, anomL, yLabt)
 
   ## plot timing of 4 degrees C over year
-  if (tempName=="Deep"){
+  if (0 & tempName=="Deep"){
     T96f$Year <- as.numeric (format (T96f$timeStamp, "%Y"))
 
     springM <- sapply (thTempL, function (y){
@@ -1070,9 +1083,23 @@ rm (anomCol, anomL, yLabt)
       abline (h=levels (factor (T96f$Year)), lty="dashed")
     }
   }
-  dev.off()
+
+
+# ## add plain deep temperature anomaly
+# if (tempName=="Deep"){
+#   png (paste0 (mediaD, "/5-",tempName ,"TS-plain.png"), res=pngR
+#        , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
+#
+#   dev.off()
+# }
+
 }
-rm (springM, thTempL, tempName, tL)
+
+
+
+
+# rm (springM)
+rm (thTempL, tempName, tL)
 rm (T96, T96f)
 
 
