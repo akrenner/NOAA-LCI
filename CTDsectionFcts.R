@@ -61,18 +61,20 @@ pSec <- function (xsec, N, cont = TRUE, zCol
     )
     , silent = TRUE)
     if (class (s) != "try-error"){
+      if (plotContours){
       # s <- xsec
-      nstation <- length(s[['station']])
-      depth <- unique(s[['depth']])
+      nstation <- length(xsec[['station']])
+      depth <- xsec [['depth']][1:length (xsec@data[['station']][[1]]@data[[N]])] # bug in xsec [['depth']]
       np <- length(depth)
       zvar <- array(NA, dim=c(nstation, np))
       for (ik in 1:nstation) {  ## populate the array
-        try (zvar [ik, ] <- s[['station']][[ik]][[ N ]])
+        try (zvar [ik, ] <- xsec[['station']][[ik]]@data[[ N ]])# , silent=TRUE)
       }
-      distance <- unique(s[['distance']])  ## fragile when duplicate stations are present
+      distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
       if (length (distance) < nstation){
-        lat <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$latitude})
-        lon <- sapply (1:nstation, function (i){s@data$station[[i]]@metadata$longitude})
+        warning("distance and station N missmatch", immediate.=TRUE)
+        lat <- sapply (1:nstation, function (i){xsec@data$station[[i]]@metadata$latitude})
+        lon <- sapply (1:nstation, function (i){xsec@data$station[[i]]@metadata$longitude})
         distance <- geodDist (longitude1=lon, latitude1=lat, alongPath=TRUE)
         ## hack to add resilience to duplicated CTD stations; repeat?
         distance <- c (ifelse (diff (distance) < 0.01, distance-0.01, distance), distance[nstation])  ## hack to make contours work?
@@ -97,7 +99,6 @@ pSec <- function (xsec, N, cont = TRUE, zCol
         zvar <- zvar [-cutS,]
         stop ("bad distance")
       }
-      if (plotContours){
         cT <- try (contour (distance, depth, zvar, add = TRUE
                             # , nlevels = 5
                             , labcex=labcex # default: labcex=0.6
