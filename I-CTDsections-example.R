@@ -51,36 +51,46 @@ for (i in seq_along(pks)){
 }
 rm (pks, i, tst)
 
-
 source ("CTDsectionFcts.R")  # get pSec to plot sections
+
+
 
 
 
 ## ------- interactive user selection of transect, date, variable ------- ##
 ## pick date and transect
-cat ("Available survey dates: \n")
-print (levels (poAll$survey))
+# cat ("Available survey dates: \n")
+# print (levels (poAll$survey))
 sv <- 174                                        # user to pick index number
 
+pkLvl <- function (x, ...){
+  fI <- select.list (choices=x, graphics=TRUE, ...)
+  which (x == fI)
+}
+sv <- pkLvl (levels (poAll$survey), preselect=sort (levels (poAll$survey),decreasing=TRUE)[1])
 
-cat ("Selected date:", levels (poAll$survey) [sv], "\n")
+
+# cat ("Selected date:", levels (poAll$survey) [sv], "\n")
 if (sv > length (levels (poAll$survey))){stop ("sv has to be smaller than ", 1+length (levels (poAll$survey)))}
 s <- subset (poAll, survey == levels (poAll$survey)[sv])
 s$Transect <- factor (s$Transect)
 
-print (levels (s$Transect))
+# print (levels (s$Transect))
 tn <- 1        # user to pick index number
+tn <- pkLvl (levels (s$Transect))
 
-cat ("Selected Transect", levels (s$Transect)[tn], "\n")
+
+# cat ("Selected Transect", levels (s$Transect)[tn], "\n")
 if (tn > length (levels (s$Transect))){stop ("tn has to be smaller than ", 1+length (levels (s$Transect)))}
 s <- subset (s, Transect==levels (s$Transect) [tn])
 s$survey <- factor (s$survey)
 s$Match_Name <- factor (s$Match_Name)
-cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
+# cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
 
-cat ("Available variables to plot:\n")
-print (oVarsF)
+# cat ("Available variables to plot:\n")
+# print (oVarsF)
 ov <- 1                                # user to pick index number
+ov <- pkLvl (oVarsF)
 
 cat ("Selected variable to plot: ", oVarsF [ov], "\n")
 
@@ -88,21 +98,6 @@ cat ("Selected variable to plot: ", oVarsF [ov], "\n")
 
 
 
-
-## ------------------- wrap interactive part into Shiny app ------------- ##
-if (0){
-  require ("shiny")
-  if (interactive()){
-    ui <- fluidPage (
-      numericInput ("sv", "Survey", 1, min=1, max=7)
-    )
-    server <- function (input, output){
-      output$value <- renderText ({input$tn})
-    }
-    shinyApp (ui, server)
-  }
-}
-## ------------------------------ end of shiny --------------------------- ##
 
 
 
