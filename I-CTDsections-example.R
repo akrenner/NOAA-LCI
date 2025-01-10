@@ -31,6 +31,10 @@ if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){  # only TRUE on MR'
   unlink ("~/tmp/LCI_noaa/cache/CTDexample.zip")
   zip (zipfile="~/tmp/LCI_noaa/cache/CTDexample.zip", files=dir (tD, full.names=TRUE), extras="-j") # -j drops directories in zip file
   unlink (tD, recursive=TRUE); rm (tD)
+  ## upload to google drive
+  # system (paste ("C:/Users/Martin.Renner/Applications/rclone-v1.65.0-windows-amd64/rclone sync"
+  # , "C:/Users/Martin.Renner/Documents/tmp/LCI_noaa/cache/CTDexample.zip"
+  # , "remote:GulfWatch/CTDexample.zip -P"))
 }else{
   if (!file.exists ("ctdwallSetup.RData")){
     cat ("Set working directory, interactively (Windows only), or using 'setwd()'\n")
@@ -67,7 +71,8 @@ pkLvl <- function (x, ...){
   fI <- select.list (choices=x, graphics=TRUE, ...)
   which (x == fI)
 }
-sv <- pkLvl (levels (poAll$survey), preselect=sort (levels (poAll$survey),decreasing=TRUE)[1])
+sv <- pkLvl (levels (poAll$survey), preselect=sort (levels (poAll$survey),decreasing=TRUE)[1]
+             , title="Select a survey")
 
 
 # cat ("Selected date:", levels (poAll$survey) [sv], "\n")
@@ -77,7 +82,7 @@ s$Transect <- factor (s$Transect)
 
 # print (levels (s$Transect))
 tn <- 1        # user to pick index number
-tn <- pkLvl (levels (s$Transect))
+tn <- pkLvl (levels (s$Transect), title="Pick a transect")
 
 
 # cat ("Selected Transect", levels (s$Transect)[tn], "\n")
@@ -90,7 +95,7 @@ s$Match_Name <- factor (s$Match_Name)
 # cat ("Available variables to plot:\n")
 # print (oVarsF)
 ov <- 1                                # user to pick index number
-ov <- pkLvl (oVarsF)
+ov <- pkLvl (oVarsF, title="Select a variable to plot")
 
 cat ("Selected variable to plot: ", oVarsF [ov], "\n")
 
