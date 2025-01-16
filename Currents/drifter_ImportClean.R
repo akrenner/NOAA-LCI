@@ -1259,13 +1259,20 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 ## cut-out manually marked boat times and redefine drifter deployments
 
 
+save.image ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
+
 ## cycle through deploys (easier to deal with multiples boatrides than cycling through dOut)
 # fixDeploy <- function (i){}
 for (i in seq_along(levels (drift$deploy))){
   dT <- subset (drift, deploy == levels (deploy)[i])
-  # dT$deployV2 <- as.character (dT$deploy)
-  dT$deployV2 <- as.character (i)
+  ## cycle through each record within a deploy, if there are black-outs
+##  if (any (dT$))
+
+
   bT <- rep (FALSE, nrow (dT))
+
+
   if (i %in% dOut$level){ ## cut out boats
     boats <- which (dOut$level %in% i)
     for (j in seq_along (boats)){
