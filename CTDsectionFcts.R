@@ -64,11 +64,16 @@ pSec <- function (xsec, N, cont = TRUE, zCol
       if (plotContours){
       # s <- xsec
       nstation <- length(xsec[['station']])
-      depth <- xsec [['depth']][1:length (xsec@data[['station']][[1]]@data[[N]])] # bug in xsec [['depth']]
+      depth <- xsec [['depth']][1:length (xsec@data[['station']][[1]]@data$scan)]
       np <- length(depth)
       zvar <- array(NA, dim=c(nstation, np))
+
       for (ik in 1:nstation) {  ## populate the array
-        try (zvar [ik, ] <- xsec[['station']][[ik]]@data[[ N ]])# , silent=TRUE)
+        if (N == "sigmaTheta"){
+          zvar [ik, ] <- swSigmaTheta(xsec@data$station[[ik]])
+        }else{
+          try (zvar [ik, ] <- xsec[['station']][[ik]]@data[[ N ]])# , silent=TRUE)
+        }
       }
       distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
       if (length (distance) < nstation){
