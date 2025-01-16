@@ -32,7 +32,7 @@ if (quarterly){
   ongoingY <- TRUE
   currentCol <- currentCol [c(3,1,2)]
   mediaD <- paste0 (mediaD, "update/")
-  mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay-quarterly"
+  # mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay-quarterly"
 }else{
   pastYear <- TRUE  # for winter/fall publication schedule
   ongoingY <- FALSE
