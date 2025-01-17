@@ -38,7 +38,7 @@ if (file.exists("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")){  # only TRUE on MR'
 }else{
   if (!file.exists ("ctdwallSetup.RData")){
     cat ("Set working directory, interactively (Windows only), or using 'setwd()'\n")
-# setwd("path to directory containing ctdwallSetup.RData")
+    # setwd("path to directory containing ctdwallSetup.RData")
     ## alternatively, set this directory interactively (only works in Windows)
     if (.Platform$OS.type=="windows"){
       setwd(choose.dir(caption = "Select folder containing ctdwallSetup.RData"))
@@ -63,42 +63,61 @@ source ("CTDsectionFcts.R")  # get pSec to plot sections
 
 ## ------- interactive user selection of transect, date, variable ------- ##
 ## pick date and transect
-# cat ("Available survey dates: \n")
-# print (levels (poAll$survey))
-sv <- 174                                        # user to pick index number
 
-pkLvl <- function (x, ...){
-  fI <- select.list (choices=x, graphics=TRUE, ...)
-  which (x == fI)
+## pick parameters interactively? (FALSE = set them manually in the script)
+interAct <- TRUE
+# interAct <- FALSE
+
+
+
+if (interAct){
+  pkLvl <- function (x, ...){
+    fI <- select.list (choices=x, graphics=TRUE, ...)
+    which (x == fI)
+  }
+  sv <- pkLvl (levels (poAll$survey), preselect=sort (levels (poAll$survey),decreasing=TRUE)[1]
+               , title="Select a survey")
+}else{
+  cat ("Available survey dates: \n")
+  print (levels (poAll$survey))
+  ## ------------------
+  sv <- 183                                        # user to pick index number
+  ## ------------------
+  cat ("Selected date:", levels (poAll$survey) [sv], "\n")
 }
-sv <- pkLvl (levels (poAll$survey), preselect=sort (levels (poAll$survey),decreasing=TRUE)[1]
-             , title="Select a survey")
 
-
-# cat ("Selected date:", levels (poAll$survey) [sv], "\n")
 if (sv > length (levels (poAll$survey))){stop ("sv has to be smaller than ", 1+length (levels (poAll$survey)))}
 s <- subset (poAll, survey == levels (poAll$survey)[sv])
 s$Transect <- factor (s$Transect)
 
-# print (levels (s$Transect))
-tn <- 1        # user to pick index number
-tn <- pkLvl (levels (s$Transect), title="Pick a transect")
+
+if (interAct){
+  tn <- pkLvl (levels (s$Transect), title="Pick a transect")
+}else{
+  print (levels (s$Transect))
+  ## ------------------
+  tn <- 1        # user to pick index number
+  ## ------------------
+  cat ("Selected Transect", levels (s$Transect)[tn], "\n")
+}
 
 
-# cat ("Selected Transect", levels (s$Transect)[tn], "\n")
 if (tn > length (levels (s$Transect))){stop ("tn has to be smaller than ", 1+length (levels (s$Transect)))}
 s <- subset (s, Transect==levels (s$Transect) [tn])
 s$survey <- factor (s$survey)
 s$Match_Name <- factor (s$Match_Name)
-# cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
+cat ("Available stations to plot:", length (levels (s$Match_Name)), "\n")
 
-# cat ("Available variables to plot:\n")
-# print (oVarsF)
-ov <- 1                                # user to pick index number
-ov <- pkLvl (oVarsF, title="Select a variable to plot")
-
-cat ("Selected variable to plot: ", oVarsF [ov], "\n")
-
+if (interAct){
+  ov <- pkLvl (oVarsF, title="Select a variable to plot")
+}else{
+  cat ("Available variables to plot:\n")
+  print (oVarsF)
+  ## ------------------
+  ov <- 3                                # user to pick index number
+  ## ------------------
+  cat ("Selected variable to plot: ", oVarsF [ov], "\n")
+}
 ## --------------- end of interactive user selection -------------------- ##
 
 
