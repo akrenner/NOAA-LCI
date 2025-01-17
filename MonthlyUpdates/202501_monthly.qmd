@@ -136,6 +136,7 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-fluorescence-anomaly.png", to=dest, overwrite=TRUE)
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png", to=dest, overwrite=TRUE)
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png", to=dest, overwrite=TRUE)
+  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png", to=dest, overwrite=TRUE)
   
    ## State-of-the-bay
     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=dest, overwrite=TRUE)
@@ -144,6 +145,9 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png", to=dest, overwrite=TRUE)
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=dest, overwrite=TRUE)
 
+    
+    # email to:
+    #   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>, Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>
   
   
   rm (fl, flS, dest, cS)
@@ -178,10 +182,9 @@ survey. Ever since December, it has been unseasonably warm.
 <!-- (@fig-Temp_Airport).  -->
 Save the odd blizzard, 
 there is little snow in town, but there is plenty of snow reported from up on the hills. 
-South-central Alaska was hit by a major storm on Sunday, 12 January, bringing hurrican-force 
+South-central Alaska was hit by a major storm on Sunday, 12 January, bringing hurricane-force 
 winds to the Anchorage area and flooding to the Anchor River. Maximal wind speeds 
-measured at Homer Airport were 26 knots sustained, gusting to 40 knots.  
-
+measured at Homer Airport during this storm were 26 knots sustained, gusting to 40 knots.
 
 <!-- ::: {#fig-elements layout-ncol="1"} -->
 <!-- ![](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
@@ -200,26 +203,36 @@ measured at Homer Airport were 26 knots sustained, gusting to 40 knots.
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Temperatures in the AlongBay transect showed some interesting patterns (@fig-tSections_AB). The shallow waters of the eastern end of the inner bay were already fully mixed, showing virtually no difference between surface and deep water salinity, temperature, or density. A pocket of warmer water persisted in the deep waters of the western inner bay. By contrast, the temperatures in the outer bay were fairly uniform in depth and along the transect line. 
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth).
+The unseasonably warm air temperatures left their mark on temperature and salinity patterns. Instead of a largely mixed water column with a the main gradient being between inner and outer bay, as seen in most years at this time, we found mostly horizontal stratification, with cold fresher water concentrated near the surface of the inner bay, 
+diffusing towards warmer and more saline water at depth and in the outer bay (@fig-tSections_AB). Similarly, the T9 transect showed little horizontal, but strong vertical change (@fig-tSections_T9).
 
-More details of this pattern were revealed by the T9 transect, which covered the area of cold surface and warm bottom water seen in the deep parts of the inner bay (@fig-tSections_T9). T9 showed that the shallower areas on both sides of the bay were mostly mixed, however, a a distinct surface front existed between the warmer south and the colder northern half of T9, jumping by as much as a full 1 $^\circ$C between two stations (100 m apart), capturing almost the entire temperature range in the entire bay! At depth, the same front was more diffuse and farther north, the depth profile of it forming a S-shaped pattern. 
 
 ### Salinity
 
-Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Safe for a tiny surface layer, there were no longer remaining signs of the summer fresh-water lens in the inner bay. Presumably, the cold air temperatures have cut-off most fresh-water influx by now, allowing the water column to mix more freely. We still see a weak horizontal gradient between saltier waters in the outer and fresher waters in the inner bay. No sharp fronts are apparet, however. Density patterns largely matched what can be seen in the salinity profile, showing a diffuse gradient from deep outer bay to shallow inner bay waters. 
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). The spatial and vertical patterns of salinity were largely 
+identical to those of temperature. Somewhat untypically for the season, spatial
+pattern of density showed that while the waters at the far end of the outer bay were largely mixed, the water column should a diffuse stratification, spreading to deeper layers the farther one moved towards the head of the bay (see @fig-tSections_AB, bvf and  σ~θ~).
 
 
 ### Turbidity
 
-Mirroring the pattern of salinity, there is a diffuse gradient of turbidity from more turbid in the inner bay to clear in the outer bay. Tracing inner-bay waters, just like salinity and turbidity, we also find a tongue of more turbid water layered over clearer deep waters in the middle of the AlongBay transect. 
-
-An odd pattern of oxygen concentration was found along T9: Concentrations were high at the surface, low at 10 m, and higher again below 15 m. Close inspection of the AlongBay transect showed the same pattern, albeit not that clearly, due to the different scaling of the color gradations. 
+Visually, the waters in the inner bay, while still relatively clear, were noticeably more turbid than in the outer bay. Measurements of turbidity showed that differences were slight, but surface waters in the inner bay were more turbid than the rest of the bay. 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Chlorophyll concentrations were generally low with little patterns discernable. Levels were slightly higher in the outer bay between 0 and 50 m depth, but overall concentrations were insignificant. 
+Chlorophyll concentrations were low throughout Kachemak Bay. A small pocket of slightly
+increased chlorophyll concentration could be found near the surface in the inner bay (@fig-tSections_AB, fluorescence). Phytoplankton samples were collected at the 
+usual three stations (AB 3, 6, and 10) at 0 and 20 m depth. 
+
+Oxygen levels can be indicative of biological activities. While overall high, highest concentrations were found near the surface in the inner bay, and lowest concentrations near the bottom in the inner bay. In this case, the simpler
+explanation for the observed patterns may be vertical mixing of oxygen from the air 
+in the outer bay and stratification inhibiting mixing in the inner bay. 
+
+There were issues with the echosounder on Edgecombe, so we could not detect any
+concentrations of deep-water backscatter. 
 
 <!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
 
@@ -243,7 +256,12 @@ Longitudinal and cross-sections of main parameters.
 
 ## Current conditions compared to long-term trends
 
-Temperature and salinity at T9-6 remain close to the long-term mean (2012-present), both in shallow and in deep water layers (@fig-TSprofile_T9). 
+Temperature and salinity at T9-6 were close to the long-term mean (2012-present), both in shallow and in deep water layers (@fig-TSprofile_T9, @fig-TempDeep, @fig-SalDeep). Compared to the cold spells and heat-waves of the past, water temperatures at T9-6 have been remarkably close to the long-term mean for about four years. 
+<!-- Reflecting the warm air -->
+<!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
+The SWMP station at Homer Harbor, recording oceanographic data continuously, has shown a 
+positive temperature anomaly since early December (@fig-SWMP-homerdeep-temp). Remarkably, the positive temperature anomaly at Homer Harbor is already at a magnitude only expected about once a decade. It remains to be seen whether this is the beginning of a long-term
+pattern or only a small blip. 
 
 <!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
 
@@ -251,11 +269,12 @@ Temperature and salinity at T9-6 remain close to the long-term mean (2012-presen
 ![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/CTDsections/time-sections/2024-11_2-9_6-TSprofile.png){#fig-TSprofile_T9}
 
 
-![Variability of surface-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-TempSurfaceTS.png){#fig-TempSurf}
+![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
 
 
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
+![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
 
 <!-- Add map with station numbers -- schematic -->

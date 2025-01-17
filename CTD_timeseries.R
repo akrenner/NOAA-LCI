@@ -46,8 +46,8 @@ require ("tidyverse")
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
-#                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
-  c("9_6", "AlongBay_3", "AlongBay_9"))
+                    #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
+                    c("9_6", "AlongBay_3", "AlongBay_9"))
 # pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 pickStn <- 87 # 9-6
 
@@ -95,7 +95,7 @@ if (kr){
   salCol <- colorRampPalette (col=rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
                               , bias=0.3)(1000) ## ODV colors
   didntlikeit <-colorRampPalette(rev (c ("#de5842", "#fcd059", "#ededea",
-                                    "#bfe1bf", "#a2d7d8")))(9)
+                                         "#bfe1bf", "#a2d7d8")))(9)
 }
 
 
@@ -389,11 +389,13 @@ for (k in pickStn){
     }
 
     ## time series of anomalies
-    # zB <- sF (xC$anTem), n=9)  XXX fix this
+    zB <- sF (xC$anTem, n=1+length (tColAn), qR=0.997)
+    zB <- c (seq (-3, -0.5, by=0.5), seq(0.5, 3, by=0.5))
+    if (length (zB) != length (tColAn)+1){stop ("Fix zB for temp anomaly")}
     plot.station (xCS, which = "anTem"
                   , zcol=tColAn
                   # , zcol = rev (brewer.pal (length (zB)-1, "RdBu"))
-                  # , zbreaks = zB
+                  , zbreaks = zB
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
     )
     TSaxis (xC$isoTime)
@@ -699,8 +701,8 @@ for (k in pickStn){
 
     ## time series of raw data
     plot.station (xCS, which="temperature"
-#                  , zcol=ODV_colours
-                 , zcol= tCol
+                  #                  , zcol=ODV_colours
+                  , zcol= tCol
                   # , zbreaks=sF (xC$Temperature_ITS90_DecC)
                   , legend.loc="" #legend.text="temperature anomaly [°C]"
                   , mar=Mr
@@ -970,7 +972,7 @@ for (iS in 1:length (tL)){
   rm (tbnorm)
 
   if (tempName == ("Deep")){
-    png (paste0 (mediaD, "/5-",tempName ,"TS.png"), res=pngR
+    png (paste0 (mediaD, "/5-T9-6_Temp",tempName ,"TS.png"), res=pngR
          , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
     anomCol <- c("red", "blue"); anomL <- c ("warmer", "colder")
     # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
@@ -993,7 +995,7 @@ for (iS in 1:length (tL)){
   abline (v=as.POSIXct (paste0 (2000:2040, "-1-1")), col="gray", lwd=1.0)
   TSaxis(T96f$timeStamp, verticals=FALSE)
   if (tempName=="Deep"){
-#    abline (h=thTempL, lty="dashed") # mark 4 degrees C
+    #    abline (h=thTempL, lty="dashed") # mark 4 degrees C
   }
   mLW <- 3
   nLW <- mLW
@@ -1001,7 +1003,7 @@ for (iS in 1:length (tL)){
           , legend=c("normal", "30 d moving-average", anomL), bty="o", ncol=2
           , bg="white", box.col="white")
   ## add lines, marking the anomaly in blue/red
-   for (j in 1:nrow (T96f)){
+  for (j in 1:nrow (T96f)){
     with (T96f, lines (x=rep (timeStamp [j], 2)
                        ,y=c(TempS_norm [j], TempSN[j])
                        , col=ifelse (TempSN [j] > TempS_norm [j], anomCol [1], anomCol [2])
@@ -1011,7 +1013,7 @@ for (iS in 1:length (tL)){
   lines (TempS_norm~timeStamp, T96f, col="gray", lwd=nLW)
   lines (TempSN~timeStamp, T96f, col="black", lwd=mLW)
   box()
-rm (anomCol, anomL, yLabt)
+  rm (anomCol, anomL, yLabt)
 
   ## plot timing of 4 degrees C over year
   if (0 & tempName=="Deep"){
@@ -1055,9 +1057,9 @@ rm (anomCol, anomL, yLabt)
       box()
       abline (h=as.Date(paste0 ("2000-0", 1:8, "-01")), lty="dashed", col="gray")
       if (tempName=="Max"){xi <-1:length (thTempL)}else{xi <- 1}
-#      if (as.numeric (format (Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
-#       springM <- springM [1:(nrow (springM)-1),]
-#      }
+      #      if (as.numeric (format (Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
+      #       springM <- springM [1:(nrow (springM)-1),]
+      #      }
       for (i in xi){
         points (springM [,i]~I(yL+0.5), col=colr [i], pch=19, cex=2)
         for (j in 1:nrow (springM)){
@@ -1073,7 +1075,6 @@ rm (anomCol, anomL, yLabt)
               , title="temperature [°C]" #expression(temperature~"["*degree~C*"]")
               , bty="o", ncol=3, pt.cex=2, pt.lwd=3)
       rm (yL, xi)
-
     }else{  ## version 2 -- year on y-axis
       plot (springM [,1], levels (factor (T96f$Year)), ylab=""
             , xlab=expression (First~day~with~temperature~at~4^o~C)
@@ -1083,15 +1084,15 @@ rm (anomCol, anomL, yLabt)
       abline (h=levels (factor (T96f$Year)), lty="dashed")
     }
   }
+  dev.off()
 
-
-# ## add plain deep temperature anomaly
-# if (tempName=="Deep"){
-#   png (paste0 (mediaD, "/5-",tempName ,"TS-plain.png"), res=pngR
-#        , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
-#
-#   dev.off()
-# }
+  # ## add plain deep temperature anomaly
+  # if (tempName=="Deep"){
+  #   png (paste0 (mediaD, "/5-",tempName ,"TS-plain.png"), res=pngR
+  #        , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
+  #
+  #   dev.off()
+  # }
 
 }
 
@@ -1191,6 +1192,8 @@ chlAd <- aggregate (Fluorescence_mg_m3 ~ DateISO, data=t96, FUN=mean, na.rm=TRUE
 chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$DateISO, chlAd$DateISO)]
 
 
+png (paste0 (mediaD, "/x-chlorophy_TS.png"), res=pngR
+     , height=fDim [2]*pngR/2, width=fDim [1]*pngR*1.5)
 
 par (xlog=TRUE, ylog=TRUE)
 plot (Fluorescence_mg_m3~deep, chlA, col="green", pch=19, log="xy")
