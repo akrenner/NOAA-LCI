@@ -15,6 +15,10 @@ rm (list=ls())
 require ("sf"); require ("TSP"); require ("foreach")
 require ("lwgeom") # for great circle random sampling
 
+
+require ("spbal") ## in place of SDraw
+
+
 ns <- 15  # number of samples
 set.seed(7)
 

@@ -9,6 +9,9 @@ keywords: NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrient
 ---
 
 
+## THIS DOCUMENT HAS BEEN SUPERSCEDED BY THE GOOGLE-DOC AT /SHARED DRIVE/KASISTNA BAY LAB/01-Administration/SOPs-Original_Files/CTD-Recurring_Oceanographic_Survey-manual-Martin
+
+
 [//]: compile this markdown document to html by issuing something like:   pandoc -s Manual.md -o manual.rtf
 
 
