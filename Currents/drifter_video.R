@@ -56,14 +56,15 @@ dPlot <- function (i, replace=FALSE){
 
     ## select appropriately sized coastline
     if (test){wMap <- worldM}else{
-      if (st_transform(dI, crs=4326) %>%
-          st_geometry() %>%
-          st_coordinates() %>%
-          min () < -154){
-        wMap <- worldMb
-      }else{
-        wMap <- worldM
-      }
+      wMap <- worldMb
+      # if (st_transform(dI, crs=4326) %>%
+      #     st_geometry() %>%
+      #     st_coordinates() %>%
+      #     min () < -154){
+      #   wMap <- worldMb
+      # }else{
+      #   wMap <- worldM
+      # }
     }
 
     av::av_capture_graphics({
