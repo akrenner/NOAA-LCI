@@ -2,6 +2,18 @@
 
 
 rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+# drift <- read.csv ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
+# outpath <- "~/tmp/LCI_noaa/media/drifter/"
+
+
+## patch up drift
+# drift <-as.data.frame (drift)
+# drift <- st_as_sf (drift, coords=c("Longitude", "Latitude")   ### why not keep if for drift?
+#                    , dim="XY", remove=FALSE, crs=4326) %>%
+#   st_transform(projection)
+
+
+
 ## -------- animation with trail for each deployment ------------- ##
 
 
@@ -17,9 +29,9 @@ test <- TRUE
 test <- FALSE
 
 
-# driftP <- subset (driftP, off_deploy==FALSE)
-driftP$deploy <- factor (driftP$deploy)
-dir.create(paste0 (outpath, "/drifterVideo/"), showWarnings=FALSE, recursive=TRUE)
+# drift$deploy <- factor (drift$Deployment)
+drift$deploy <- factor (drift$deployV2)
+dir.create(paste0 (outpath, "drifterVideo/"), showWarnings=FALSE, recursive=TRUE)
 
 
 ## bare av
@@ -31,12 +43,12 @@ dPlot <- function (i, replace=FALSE){
   tailL <- 30
   # frameR <- 7
   hC <- rev (RColorBrewer::brewer.pal(9, "YlOrRd")[2:9])
-  video_file <- paste0 (outpath, "drifterVideo/drifter_", levels (driftP$deployV2) [i], ".mp4")
+  video_file <- paste0 (outpath, "drifterVideo/", levels (drift$deploy) [i], ".mp4")
 
   makeVideo <- function (i){
-    dI <- subset (driftP, deploy == levels (driftP$deploy)[i])
+    dI <- subset (drift, deploy == levels (drift$deploy)[i])
     if (nrow (dI) > 5){
-    dstV <- c (0, st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
+    dstV <- c (0, sf::st_distance(x=st_geometry(dI)[1:(nrow (dI)-1),] # for running summary
                               , y=st_geometry (dI)[2:nrow (dI),]
                               , by_element=TRUE))
 
@@ -106,11 +118,11 @@ dPlot (8, replace=TRUE)
 
 
 
-require ("parallel")
-ncores <- detectCores()
 
-dpl <- driftP$deploy
-dLvls <- seq_along(levels (driftP$deployV2))  # big files first
+## optimize parallel processing; big deploys first
+dpl <- drift$deploy
+dLvls <- seq_along(levels (drift$deploy))  # big files first
+
 if (!test){
 dLvls <- dLvls [order (sapply (dLvls, function (i){subset (dpl, dpl==levels (dpl)[i]) |>
     length()}), decreasing=!test)]
@@ -120,12 +132,14 @@ if (test){
 }
 rm (dpl)
 
+require ("parallel") ## better with parallelly???
+ncores <- detectCores()
 if (.Platform$OS.type=="unix"){
 # if (0){
   result <- mclapply(dLvls, dPlot, mc.cores=ncores)
 }else{
   cl <- makeCluster (ncores)
-  clusterExport (cl, varlist=c ("driftP", "worldM", "worldMb", "outpath", "resolu", "test"))
+  clusterExport (cl, varlist=c ("drift", "worldM", "worldMb", "outpath", "resolu", "test"))
   result <- parLapplyLB (cl, dLvls, dPlot)
   stopCluster (cl); rm (cl)
 }

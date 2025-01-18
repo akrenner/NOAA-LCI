@@ -133,12 +133,11 @@ worldM <- subset (worldMb, st_is_valid (worldMb)) %>% ## polygon 2245 is not val
 worldMb <- subset (worldMb, st_is_valid (worldMb)) %>%
   st_crop (c(xmin=150, xmax=-115, ymin=35, ymax=70)) %>%
   sf::st_transform(projection)
-rm (worldP)
 ## somehow, polygon 2245 is not valid and cannot be made valid
 ## it's at Lon:43.83, Lat:-69.75 -- ideally fixed in gshhs source!
 # summary (st_is_valid(st_make_valid(worldM)))
 seaA <- st_difference(bbox, st_union (worldM))[1,]  ## why was this so hard?!?
-
+rm (worldP, bbox)
 
 
 
@@ -599,7 +598,7 @@ if (0){
 # invlSum/nrow (drift)
 drift$ivlNew <- drift$dT_f %in% c(10, 20, 25, 30, 35, 55, 60, 65  ## intervals around 30, 50, 240
                                   , 120, 235, 240, 245, 250)
-
+rm (invlSum)
 
 
 
@@ -1219,6 +1218,7 @@ SEtimes <- sapply (seq_along (tL), function (i){  ## translate "end" and "start"
   c (sT, eT)
 }
 )
+rm (tL)
 dOut <- cbind (dOut, t (SEtimes))
 names (dOut) <- c("level", "text", "start", "end")
 
@@ -1231,21 +1231,10 @@ dOut$endT   <- as.POSIXct(dOut$end  , tz="GMT", format="%Y-%m-%d %H:%M", optiona
 
 
 drift$ISOtime <- as.POSIXct(drift$DeviceDateTime)
-drift$deployV2 <- drift$deploy
+# drift$deployV2 <- as.numeric (factor (drift$deploy))  ## reset to original factor levels?
+drift$deploy <- factor (gsub (":", "-", drift$deploy))
+drift$deployV2 <- as.character (drift$deploy)
 
-## testing
-# dOut$start [1:20]
-# format (dOut$startT, "%H")
-# which (nchar (dOut$start) != 16)
-# which (nchar (dOut$end) != 16)
-# if (any (as.numeric (format (dOut$startT, "%H")) != 0)){stop ("times got dropped")}
-# if (any (as.numeric (format (dOut$endT, "%H")) != 0)){stop ("times got dropped")}
-# tT <- lapply (1:nrow (dOut), FUN=function(i){
-#   as.POSIXct(dOut$start [i], tz = "GMT") |> format ("%H")
-#   }) |> unlist()
-# for (i in 1:11){
-# print (dOut$start [which (tT == "00")][i] |> as.POSIXct(tz= "GMT"))
-# }
 if (any (is.na (c (dOut$startT, dOut$endT)))){stop ("bad times")}
 if (any (dOut$startT > dOut$endT)){
   print (dOut [which (dOut$startT > dOut$endT),])
@@ -1253,7 +1242,6 @@ if (any (dOut$startT > dOut$endT)){
 
 
 rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
-# dOut$deploy <- levels ()
 
 ## apply new dOut
 ## cut-out manually marked boat times and redefine drifter deployments
@@ -1262,60 +1250,108 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 save.image ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
 
+
+
+
+## --------------------------------------------
+## ---------- merge dOut into drift -----------
+## --------------------------------------------
+
+
 ## cycle through deploys (easier to deal with multiples boatrides than cycling through dOut)
-# fixDeploy <- function (i){}
 for (i in seq_along(levels (drift$deploy))){
+  ## tried to turn this into a function, but that failed -- don't try again
+  # i = 70
   dT <- subset (drift, deploy == levels (deploy)[i])
-  ## cycle through each record within a deploy, if there are black-outs
-##  if (any (dT$))
+  if (i %in% dOut$level){ ## only deploys to be split up
+    dCount <- 1 # deploy count
+    dO <- subset (dOut, level == i)
+    badDeploy <- rep (FALSE, nrow (dT))
 
-
-  bT <- rep (FALSE, nrow (dT))
-
-
-  if (i %in% dOut$level){ ## cut out boats
-    boats <- which (dOut$level %in% i)
-    for (j in seq_along (boats)){
-      ## mark times in boat
-      bT <- ifelse ((dOut$startT [boats [j]] <= dT$ISOtime) &
-                      (dT$ISOtime <= dOut$endT [boats [j]])
-                    , TRUE, bT)
-      ## redefine deploy
-      if (min (dT$ISOtime) < dOut$startT [boats [j]]){  # this implies j == 1 and  start = boat
-        ## find nearest record to startT
-        bMtch <- max (2, which.min(difftime(dT$ISOtime, dOut$startT[boats[j]]))) # 2 in case which.min = 1
-        dT$deployV2 [1:(bMtch-1)] <- paste0 (dT$deployV2[1], "-0")
-      }
-      if (length (boats) > j){ # standard case
-        dT$deployV2 [(which.min (difftime (dT$ISOtime, dOut$endT [boats [j]]))+1) :
-                      (which.min (difftime (dT$ISOtime, dOut$startT [boats [j+1]]))-1)] <-
-          paste0 (dT$deployV2[nrow (dT)], "-", j)
-#     }else if (max (dT$ISOtime) > dOut$endT [boats [j]]){ # more drift after last boat
-      }else if (difftime (dOut$endT [boats[j]], max (dT$ISOtime), units="m")>10){
-        ## find nearest record
-        bMtch <- min (c (nrow (dT)-1, which.min (difftime (dT$ISOtime, dOut$endT [boats[j]]))))
-        ## contingency for "start to end"?
-        dT$deployV2 [(bMtch+1):nrow (dT)] <- paste0 (dT$deployV2[nrow (dT)], "-", j)
+    ## consecutively mark all off-deploy records
+    ## then cycle through each record, redefining deployments
+    for (j in seq_len (nrow (dO))){
+      badDeploy <- ifelse((dO$startT [j] <= dT$ISOtime) & (dT$ISOtime <= dO$endT [j])
+                          , TRUE, badDeploy)
+    }
+    for (j in seq_len (nrow (dT))){
+      if (!badDeploy [j]){
+        if (j == 1){
+          dT$deployV2 [j] <- paste0 (dO$level [1], "-", dCount, "_", dT$deploy [j])
+        }else if (!badDeploy [j-1]){
+          dT$deployV2 [j] <- paste0 (dO$level [1], "-", dCount, "_", dT$deploy [j])
+        }else{
+          dCount <- dCount + 1
+          dT$deployV2 [j] <- paste0 (dO$level [1], "-", dCount, "_", dT$deploy [j])
+        }
+      }else if (j == 1){
+        dCount <- 1
       }
     }
-    dTN <- dT [which (!bT),]  ## apparently wrong XXX
-  }else{
-    dTN <- dT
+    dT <- subset (dT, !badDeploy)
   }
-  if (i == 1){
-    nDrift <- dTN
+  if (i==1){
+    nDrift <- dT
   }else{
-    nDrift <- rbind (nDrift, dTN)
+    nDrift <- rbind (nDrift, dT)
   }
 }
-nDrift$deployV2 <- factor (nDrift$deployV2)
-# nDrift$deployV2 <- NULL # remove temp column
+nDrift$deployV2 <- as.factor (nDrift$deployV2)
+length (levels (nDrift$deploy))
+length (levels (nDrift$deployV2))
+
 dim (drift)
 dim (nDrift)
 drift <- nDrift
-rm (nDrift, dT, boats, bT, dTN, i, j)
+rm (nDrift, dT, badDeploy, dO, i, j, dCount, dOut)
+
+## repair drift to be sf object again
+# drift <- as.data.frame (drift)
+drift <- as.data.frame (drift) %>%
+  st_as_sf(coords=c("Longitude", "Latitude")   ### why not keep if for drift?
+           , dim="XY", remove=FALSE, crs=4326) %>%
+  st_transform(projection)
+
 
 ## -------------------------------------------------------------------------------------
+
+
+
+
+
+## -----------------------------------------------------------------------------
+## save data dump for sharing and plotting
+
+cat ("\nTotal time passed from startTime:"
+     , round (difftime(Sys.time(), startTime, "minutes"),1), " min\n")
+rm (startTime)
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
+
+write.csv (x = drift %>%
+             as.data.frame() %>%
+             # filter (trimBoat==FALSE) %>%
+             #             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
+             select (Drifter, Year, Month, Day, Hour, Minute, Lat, Long,
+                     # U-Vel, V-Vel
+                     drogue_depth, DeviceName, FileName, Deployment=deployV2
+             )
+           , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
+           , row.names=FALSE)
+## -------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+## review whether any of the below is still of any use? XXXXXX
+
+
 
 
 
@@ -1327,7 +1363,6 @@ rm (nDrift, dT, boats, bT, dTN, i, j)
 ## select drifters to plot
 
 ## deployment summary table showing start dates and deployment length
-# deployment <- aggregate (.~deploy, data=drift, FUN=function (x){x[1]})
 
 ## sort short to long deployments to plot short ones first
 depL <- aggregate (DeviceDateTime~deploy, data=drift, FUN=function (x){
@@ -1341,7 +1376,7 @@ rm (depL)
 
 ## subset drifter database
 ## Port Graham to Cook Inlet: SVPI-0047
-driftP <- drift %>%
+driftPx <- drift %>%
   dplyr::arrange (depOrder, DeviceDateTime) %>%
   #  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047", "UAF-MS-0066")) %>%
   ###  dplyr::filter (DeviceName %in% c("UAF-SVPI-0046", "UAF-SVPI-0047")) %>%
@@ -1483,25 +1518,6 @@ rm (speedS, i, dIntX, ciofsF, speedTH)
 
 
 
-## -----------------------------------------------------------------------------
-## save data dump for plotting
-
-cat ("\nTotal time passed from startTime:"
-     , round (difftime(Sys.time(), startTime, "minutes"),1), " min\n")
-rm (startTime)
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
-
-write.csv (drift %>% st_drop_geometry() %>%
-             filter (off_deploy==FALSE) %>%
-             # filter (trimBoat==FALSE) %>%
-#             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
-           select (Drifter, Year, Month, Day, Hour, Minute, Lat, Long,
-                   # U-Vel, V-Vel
-                   drogue_depth, DeviceName, FileName #, Deployment
-                   )
-           , file=gzfile ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
-           , row.names=FALSE)
 
 ## call plotting code here?
 # source ("Currents/plotDrifter.R")
