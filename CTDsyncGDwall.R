@@ -69,3 +69,6 @@ if (1){
   }
 }
 
+
+## one-off
+# system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/drifter/drifterVideo/ ", GD, "plots/drifterVideo/ -P"))
