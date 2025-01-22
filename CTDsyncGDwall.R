@@ -38,9 +38,9 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/ remote:NOAA-
 ## office docs -- specific to Martin Renner's computer!
 ## from laptop to GoogleDrive
 if (1){
-if (grep ("artin", getwd())){ # portability
+  if (grep ("artin", getwd())){ # portability
     system (paste0 (rcloneDir, "rclone sync ", docs, "amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
-}
+  }
 }
 
 
