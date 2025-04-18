@@ -15,6 +15,7 @@ if (.Platform$OS.type == "unix"){
   rcloneDir <- ""
   hm <- "~/"
   docs <- paste0 (hm, "Documents/")
+  excludeF=".DS_Store"
 }else{
   rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.65.0-windows-amd64/"
   hm <- "C:/Users/Martin.Renner/Documents/"
@@ -70,5 +71,5 @@ if (1){
 }
 
 
-## one-off
+## one-off: upload drifterVideo
 # system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/drifter/drifterVideo/ ", GD, "plots/drifterVideo/ -P"))

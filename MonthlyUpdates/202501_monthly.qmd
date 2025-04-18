@@ -137,10 +137,10 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png", to=dest, overwrite=TRUE)
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png", to=dest, overwrite=TRUE)
   cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png", to=dest, overwrite=TRUE)
-  
+  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png", to=dest, overwrite=TRUE)
    ## State-of-the-bay
-    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=dest, overwrite=TRUE)
-    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=dest, overwrite=TRUE)
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=dest, overwrite=TRUE)
+#     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=dest, overwrite=TRUE)
     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png", to=dest, overwrite=TRUE)
     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png", to=dest, overwrite=TRUE)
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=dest, overwrite=TRUE)
@@ -266,7 +266,7 @@ pattern or only a small blip.
 <!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
 
 
-![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/CTDsections/time-sections/2024-11_2-9_6-TSprofile.png){#fig-TSprofile_T9}
+![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/CTDsections/time-sections/2-9_6-TSprofile){#fig-TSprofile_T9}
 
 
 ![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
