@@ -38,7 +38,7 @@ for (i in seq_along(hexF)){
   ## consistency checks:
   ## hex-header and filename report the same cast #
   headCast <- hex [grep ("\\* cast", hex)] %>%
-    substr (start=7, stop=10) %>%
+    substr (start=7, stop=11) %>%
     trimws() %>%
     as.numeric()
   fnCast <- hexF [i] %>%
@@ -77,14 +77,14 @@ for (i in seq_along(hexF)){
   # notR$Station <- ifelse (nchar (notR$Station) < 4, paste0 ("S", notR$Station)
   #                         , notR$Station)
   eHex <- c (hex [1:6]
-             , paste0 ("** Ship:", notR$Vessel)
+            # , paste0 ("** Ship: ", notR$Vessel)
              , paste0 ("** Cook Inlet LTM ", notR$Transect)
-             , paste0 ("** Station:", notR$Station)  #sprintf ("%02d", as.numeric (notR$Station)))
+             , paste0 ("** Station: ", notR$Station)  #sprintf ("%02d", as.numeric (notR$Station)))
              , paste0 ("** Date: ", notR$Date_isotxt)
              , paste0 ("** Start Time: ", notR$Time)
              , paste0 ("** Depth (m): ", notR$Depth)
-             , paste0 ("** Latitude:", notR$Lat_dDeg)
-             , paste0 ("** Longitude:", notR$Lon_dDeg)
+             , paste0 ("** Latitude: ", notR$Lat_dDeg)
+             , paste0 ("** Longitude: ", notR$Lon_dDeg)
              # , paste0 ("** Comment: ", notR$C)
              , hex [7:length (hex)])
 

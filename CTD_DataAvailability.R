@@ -155,4 +155,51 @@ for (i in 1:nT){
 dev.off()
 
 
+rm (dat, dAv, i, nColumns, nT, xAxis, yAxis, xT, CA)
+
+
+
+
+
+
+## check for duplicated surveys to look at tidal effects
+
+## for each station: sort all surveys and calculate difference to next survey
+## mark those within less than N = 7 days
+if (0){
+nD <- 7 *24  ## min time interval (days) between casts
+
+smpl <- phy [,(which (names (phy) %in% c("Match_Name", "isoTime", "File.Name")))] |>
+  unique ()
+smpl <- smpl [which (!duplicated (smpl$File.Name)),]  ## there are still duplicated files XXX
+smpl <- smpl [order (smpl$Match_Name, smpl$isoTime),]
+
+dT <- diff (smpl$isoTime, units="hours") |>
+  as.numeric()
+dT <- ifelse (dT < 0, NA, dT)
+dT <- ifelse (smpl$Match_Name [1:(nrow (smpl)-1)] == smpl$Match_Name [2:nrow(smpl)]
+              , dT, NA)
+smpl$dT <- c(NA, dT); rm (dT)
+
+dups <- which (smpl$dT <= nD)
+dups <- c (dups, dups -1) |>
+  sort() |>
+  unique()  # to avoid duplicates when >2 casts in nD-window
+repl <- smpl [dups,]; rm (dups)
+repl$dT <- ifelse (repl$dT > nD, NA, round (repl$dT, 1))
+nrow(repl)
+tail (repl, n=10)
+
+write.csv (repl, file="~/tmp/LCI_noaa/data-products/replicatesCTD.csv"
+           , row.names=FALSE, na="")
+
+pdf ("~/tmp/LCI_noaa/data-products/replicateCDT-interval.pdf")
+hist (repl$dT, main="interval between replicate casts", xlab="time [h]")
+box()
+dev.off()
+
+rm (repl, nD, smpl)
+}
+
+
 ## EOF

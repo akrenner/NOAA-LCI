@@ -37,7 +37,7 @@ wStations <- c("kachomet", "FILA2"
 
 ## --------------define functions to fetch weather data -----------------------
 
-source ("annualPlotFct.R")  ## pull these punctions into here since only used once?
+source ("annualPlotFct.R")  ## pull these functions into here since only used once?
 # currently in annualPlotFct.R
 
 
