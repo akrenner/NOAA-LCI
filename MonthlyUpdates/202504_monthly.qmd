@@ -13,7 +13,6 @@ unlink ("MonthlyUpdates/media/", recursive=TRUE)
 ## fetch data from notebook export and CTD processing
 load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
 physOc$isoDate <- as.Date (physOc$isoTime)
-physL <- subset (physOc, isoDate == max (isoDate))
 ## find survey, not just last date
 physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) == 
                    max (as.numeric (format (physOc$isoTime, "%Y"))))
@@ -25,7 +24,7 @@ rm (physOc)
 # maxT = max (c(13, 15, 14, 12))
 # sDate = as.Date (Sys.Date())
 # sDate = as.Date ("2024-08-26")
-sDate <- physL$isoDate [1]
+sDate <- max (physL$isoDate) ## check -- odd! UTC? [1]
 
 sY = as.numeric (format (sDate, "%Y"))
 sM = month.name [as.numeric (format (sDate, "%m"))]
@@ -81,17 +80,18 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
   
   # pick transects from last survey; flexible as to monthly/quarterly
   fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern="*.png")
-  flC <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE)  # pick last date
+  flC <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,7), fl, value=TRUE)  # pick last date
   
   # lastDate <- "2025-01-14"
   # lastDate <- substr(sort (fl, decreasing=TRUE)[1], 1,10)
-  lastDateT <- format (sDate, "%m/%d/%Y")
-  lastDateT <- format (sDate, "%d %B %Y")
+  lastDateT <- format (sDate, "%m/%d/%Y")  ## US style: 04/16/2025
+  lastDateT <- format (sDate, "%d %B %Y")  ## 16 April 2025
 
   
   for (i in seq_along(flC)){
     cS <- file.copy (from=paste0 (src, "CTDsections/sectionImages/", flC [i]),
-                     to=paste0 (dest, gsub (paste0 (sDate, " "), "SectionI_", flC [i]))
+                     # to=paste0 (dest, gsub (paste0 (sDate, " "), "SectionI_", flC [i]))
+                     to=paste0 (dest, "SectionI_", substr (flC [i], 12, nchar (flC [i])))
                      , overwrite=TRUE)
   }
   iStrng <- sort (list.files (dest, patter="SectionI_", full.names=TRUE), decreasing=TRUE)
@@ -179,14 +179,16 @@ editor: visual
 <!-- On `{r} sDate`, `{r} crewT`  -->
 
 This is the first of these reports since January, so I'll cover the months February, March,
-and April 2025. To keep it conscice, I will only include key graphics. A complete set up up-to-date graphs can be found on the google drive: 
-section plots: https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link 
-time sections: https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link
+and April 2025. To keep it concise, I will only include key graphics. A complete set up up-to-date graphs can be found on the google drive: 
+[section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and 
+[time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link).
 <!-- CTD wall:      https://drive.google.com/drive/folders/1VN-g95QcZHpvIeMaH-HEvDzIX0f-cSe6?usp=drive_link -->
 
-This April survey was split over two days: Hans, Kris, and Paul covered Transects 4 and 9 on the 2025-04-22. On `{r} lastDateT`, Hans, Paul, and Martin finished up with the AlongBay transect. 
+This April survey was split over two days: Hans, Kris, and Paul covered Transects 4 and 9 on the 15 April 2025, and on the 22nd, 
+<!-- `{r} lastDateT`,  -->
+Hans, Paul, and Martin finished up with the AlongBay transect. 
 <!-- (@fig-Temp_Airport).  -->
-It has been a mild winter with only limited snow coverage in and around Homer (e.g. the Homer Epic, which ran on 8 March, had no skiing event due to poor snow conditions). The days around the April survey were spring-like with air temperatures between 0 and 5 °C and the occasional light rain shower. 
+It has been a mild winter with only limited snow coverage in and around Homer (e.g. the Homer Epic, which ran on 8 March, had no skiing event due to poor snow conditions; Beluga Lake is icefree). The days around the April survey were spring-like with air temperatures between 0 °C and 5 °C and the occasional light rain shower. 
 
 <!-- ::: {#fig-elements layout-ncol="1"} -->
 <!-- ![](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
@@ -205,52 +207,32 @@ It has been a mild winter with only limited snow coverage in and around Homer (e
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures during the April survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). The months of February and March were characterized by a typical winter regime for Kachemak Bay: a largely isotherm water columns in both the inner and outer bay, but with warmer waters in the outer bay, separated from the colder inner bay waters by a horizontal front near the Homer Spit. Remenants of this pattern were still apparent in April, however, the top-most water layers have began to warm up by a couple tenths of a degree (@fig-tSections_AB). T9 happen to be well placed in this front. While often rather homegenous, the T9 transect shows rather complex patterns this April: the warmer deep water from the outer bay is evident in the southern and deeper parts, a cold-water intrusion from the inner bay can be seen between 20 and 40 m depth in near the northern shore. A thin, but distinct, surface layer along most of T9 was up to 1 K warmer than the deeper inner-bay waters (@fig-tSections_T9).
+Recorded water temperatures during the April survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). The months of February and March were characterized by a typical winter regime for Kachemak Bay: a largely isotherm water columns in both the inner and outer bay, but with warmer waters in the outer bay, separated from the colder inner bay waters by a horizontal front near the Homer Spit. Remnants of this pattern were still apparent in April, however, the top-most water layers have begun to warm up by a couple tenths of a degree (@fig-tSections_AB). T9 happen to be well placed in this front. While often rather homogeneous, the T9 transect shows rather complex patterns this April: the warmer deep water from the outer bay is evident in the southern and deeper parts, a cold-water intrusion from the inner bay can be seen between 20 and 40 m depth near the northern shore. A thin, but distinct, surface layer along most of T9 was up to 1 K warmer than the deeper inner-bay waters (@fig-tSections_T9).
 
 
 ### Salinity
 
 Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Similarly to the temperature data, a freshening of the surface layer in the inner bay
 is apparent, indicating the formation of the fresh-water-driven pycnocline, characteristic 
-of the summer months. We can still observe remenants of a peculiar salinity pattern that 
+of the summer months. We can still observe a peculiar salinity pattern that 
 appeared in February: fresher inner-bay waters being separated by only slightly saltier
-outer bay waters by a sharp wedge of more saline bottom waters, reaching from the deepest parts of Kachemak Bay all the way to the surface around AlongBay 1. The same transition could still be observed in April, but the point of highest salinity had shifted to around Pogi Point. (see @fig-tSections_AB, bvf and  σ~θ~).
-
-
-
-
-
-
-
+outer bay waters by a sharp wedge of more saline bottom waters, reaching from the deepest parts of Kachemak Bay all the way to the surface around AlongBay 1. The same transition could still be observed in April, but the point of highest salinity had shifted to around Pogi Point (see @fig-tSections_AB). It is likely that this effect is due to tidal-driven local upwelling of oceanic water. The water column here is at its most homogeneous (lowest bvf), density is actually higher than at the outermost station, and turbidity is at its lowest levels. 
 
 
 
 ### Turbidity
 
-Visually, the waters in the inner bay, while still relatively clear, were noticeably more turbid than in the outer bay. Measurements of turbidity showed that differences were slight, but surface waters in the inner bay were more turbid than the rest of the bay. 
+We did not encounter any high-turbidity surface water. Overall, waters in the inner bay and near the bottom were more turbid than outer bay waters, as usual. Turbidity levels in the outer bay were the lowest we have observed all year. Given that snow melt and plankton activity are already underway, these low turbidity may also indicate that this area of high salinity water is an ephemeral tidally driven phenomenon. 
+
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Chlorophyll concentrations were low throughout Kachemak Bay. A small pocket of slightly
-increased chlorophyll concentration could be found near the surface in the inner bay (@fig-tSections_AB, fluorescence). Phytoplankton samples were collected at the 
-usual three stations (AB 3, 6, and 10) at 0 and 20 m depth. 
-
-Oxygen levels can be indicative of biological activities. While overall high, highest concentrations were found near the surface in the inner bay, and lowest concentrations near the bottom in the inner bay. In this case, the simpler
-explanation for the observed patterns may be vertical mixing of oxygen from the air 
-in the outer bay and stratification inhibiting mixing in the inner bay. 
-
-There were issues with the echosounder on Edgecombe, so we could not detect any
-concentrations of deep-water backscatter. 
+While still low in the outer bay, chlorophyll concentrations in the upper water layers in the inner bay (just below the pycnocline, as indicated by the corresponding bvf values) were elevated compared to the winter low -- a sign of spring. Oxygen levels were correspondingly raised in these areas as well (@fig-tSections_AB).  
 
 <!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
 
-<!-- ### Zooplankton -->
-
-<!-- Backscatter? Species composition? -->
-
-<!-- ### Wildlife -->
 
 
 ::: {#fig-elements layout-ncol="1"}
@@ -258,25 +240,39 @@ concentrations of deep-water backscatter.
 
 ![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/SectionI_T-9.png){#fig-tSections_T9}
 
-<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/SectionI_T-4.png){#fig-tSections_T4} -->
+![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/SectionI_T-4.png){#fig-tSections_T4}
 
 Longitudinal and cross-sections of main parameters.
 :::
 
 
-## Current conditions compared to long-term trends
 
-Temperature and salinity at T9-6 were close to the long-term mean (2012-present), both in shallow and in deep water layers (@fig-TSprofile_T9, @fig-TempDeep, @fig-SalDeep). Compared to the cold spells and heat-waves of the past, water temperatures at T9-6 have been remarkably close to the long-term mean for about four years. 
+### Zooplankton
+
+A deep scattering layer was detected at depth between 25 (but mostly > 50) m and 150 m and sampled with opportunistic vertical tows at AlongBay 5, 7, and 8. Lisa Spittler kindly looked at the samples. The vast majority of individuals were calanoid copepods or different species and sizes. There were also a large mycid, chaetognaths, eggs, barnacle larvae, amongst other taxa. 
+
+<!-- Backscatter? Species composition? -->
+
+<!-- ### Wildlife -->
+
+
+
+## Present conditions compared to long-term trends
+
+After three years of water temperatures closely hugging the long-term mean, deep water temperatures stopped cooling in February and have put the bay into an ongoing warm-water anomaly, current temperatures being up to 1 K above the long-term seasonal mean (@fig-TempDeep). Similarly to the 2015-16 marine heatwave, this positive anomaly has been accompanied by a freshening salinity anomaly (@fig-SalDeep). Both, the temperature, and salinity anomalies are found throughout the water column, although they are slightly more pronounced below at depth (@fig-TSprofile_T9). 
+
 <!-- Reflecting the warm air -->
 <!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
 The SWMP station at Homer Harbor, recording oceanographic data continuously, has shown a 
-positive temperature anomaly since early December (@fig-SWMP-homerdeep-temp). Remarkably, the positive temperature anomaly at Homer Harbor is already at a magnitude only expected about once a decade. It remains to be seen whether this is the beginning of a long-term
-pattern or only a small blip. 
+positive temperature anomaly since early December, which intensified to a level that
+from January to until late March 2025, values were above the 90th percentile, i.e.
+at a level only expected about once a decade. Since about early April, the SWMP data
+has seen a slow return towards the long-term mean (@fig-SWMP-homerdeep-temp). 
 
 <!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
 
 
-![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/CTDsections/time-sections/2-9_6-TSprofile){#fig-TSprofile_T9}
+![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
 
 
 ![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
