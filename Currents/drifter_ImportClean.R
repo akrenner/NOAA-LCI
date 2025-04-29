@@ -698,7 +698,6 @@ if (test){
 
 
 
-if (test){save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")}
 save.image ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 ## rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftSped.RData")
 
@@ -1002,8 +1001,9 @@ if (0){
 
 ## --------------------- manually fix bad positions ------------------------- ##
 ## screening video plots
-save.image ("~/tmp/LCI_noaa/cache/drifterScreen.RData")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifterScreen.RData"); require ('dplyr'); require ("sf"); require ("stars"); require ('RColorBrewer')
+dir.create("~/tmp/LCI_noaa/inter-cache/drifter", recursive=TRUE, showWarnings=FALSE)
+save.image ("~/tmp/LCI_noaa/inter-cache/drifter/drifterScreen.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/inter-cache/drifter/drifterScreen.RData"); require ('dplyr'); require ("sf"); require ("stars"); require ('RColorBrewer')
 
 ## generate external file of deployments
 
@@ -1247,8 +1247,8 @@ rm (x, x2, x3, x3s, lvN, cT, dfix, dNand, i, nR, SEtimes)
 ## cut-out manually marked boat times and redefine drifter deployments
 
 
-save.image ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/drifter/driftDeploy2.RData")
+save.image ("~/tmp/LCI_noaa/inter-cache/drifter/driftDeploy2.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/inter-cache/drifter/driftDeploy2.RData")
 
 
 
@@ -1325,7 +1325,7 @@ drift <- as.data.frame (drift) %>%
 cat ("\nTotal time passed from startTime:"
      , round (difftime(Sys.time(), startTime, "minutes"),1), " min\n")
 rm (startTime)
-save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")
+save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")  ## for exchange
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
 write.csv (x = drift %>%
