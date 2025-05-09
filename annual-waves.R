@@ -287,12 +287,14 @@ rm (tDayP)
 
 ## find tide
 ## find daylight
-require ("rtide")
+source ("functions/tides.R") # rtide is no longer reliable -- pull data directly from NOAA instead
+wDB$tideHght  <- tide_height(DateTime=wDB$datetimestamp)$TideHeight
+
 # tStn <- tide_stations("Kasitsna.*")
-tStn <- tide_stations("Seldovia*")
-timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
-wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
-rm (tStn, timetable)
+# tStn <- tide_stations("Seldovia*")
+# timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
+# wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
+# rm (tStn, timetable)
 require ("lubridate") # time zone conversion
 wDB$localTime <- with_tz (wDB$datetimestamp, "America/Anchorage")
 require ("suncalc")

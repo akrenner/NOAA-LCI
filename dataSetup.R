@@ -33,9 +33,10 @@ printSampleDates <- FALSE
 ## source files in ~/GISdata/LCI/
 GISF <- "~/GISdata/LCI/"
 tmpF <- "~/tmp/LCI_noaa/"
-mediaF <- paste0 (tmpF, "media")
-cacheF <- paste0 (tmpF, "cache")
-dirL <- c (GISF=GISF, tmpF=tmpF, mediaF=mediaF, cacheF=cacheF)
+mediaF <- paste0 (tmpF, "media/")
+cacheF <- paste0 (tmpF, "cache/")
+dirL <- c (GISF=GISF, tmpF=tmpF, mediaF=mediaF, cacheF=cacheF
+           , cacheFt = paste0 (tmpF, "cache-t/"))  # for inter-script checkpoints
 rm (GISF, tmpF, mediaF, cacheF)
 x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 
@@ -240,21 +241,27 @@ poSS$maxDepth <- agg (physOc$Depth.saltwater..m., FUN=max, na.rm=TRUE,refDF=poSS
 
 
 ## date/time-based conditions: daylight and tidal cycle
-require ("rtide")
-tRange <- function (tstmp){
-    ## uses NOAA tide table data
-    ## only available for US, but 8x faster than webtide (with oce)
-    require ("rtide")
-    kasbay <- tide_stations ("Kasitsna.*")
-    timetable <- data.frame (Station = kasbay, DateTime =
-                               seq (tstmp -12*3600, tstmp + 12*3600, by = 600)
-                             , stringsAsFactors = FALSE)
-    ## return (diff (range (timetable$DateTime)))
-    tid <- tide_height_data (timetable)
-    return (diff (range (tid$TideHeight)))
-}
+# tRange <- function (tstmp){
+#     ## uses NOAA tide table data
+#     ## only available for US, but 8x faster than webtide (with oce)
+#     require ("rtide") #-- no longer reliable!
+#     kasbay <- tide_stations ("Kasitsna.*")
+#     timetable <- data.frame (Station = kasbay, DateTime =
+#                                seq (tstmp -12*3600, tstmp + 12*3600, by = 600)
+#                              , stringsAsFactors = FALSE)
+#     ## return (diff (range (timetable$DateTime)))
+#     tid <- tide_height_data (timetable)
+#     # tid$TideHeight <- tide_height(from=tstmp - 12*3600, to = tstmp + 12*3600# , tz =
+#     #                      )
+#
+#     ## FIX THIS XXX
+#
+#         return (diff (range (tid$TideHeight)))
+# }
 ## this step takes a while! [approx 5 min, depending on computer]
-poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores=nCPUs))
+# poSS$tideRange <- unlist (mclapply (poSS$timeStamp, FUN = tRange, mc.cores=nCPUs))
+source ("functions/tides.R")  ## for function tRange
+poSS$tideRange <- tRange (poSS$timeStamp)
 ## rerun tideRange
 if (0){ # keep in case mclapply fails
   poSS$tideRange <- as.numeric (poSS$tideRange)
@@ -273,7 +280,7 @@ if (0){ # keep in case mclapply fails
 }
 rm (tRange)
 ## tidal phase
-tPhase <- function (tstmp, lat, lon){  ## REVIEW THIS!
+tPhase <- function (tstmp, lat, lon){  ## REVIEW THIS! XXX
   ## return radians degree of tidal phase during cast
   require ("suncalc")
   poSS$sunAlt <- with (poSS, getSunlightPosition (data = data.frame (date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians

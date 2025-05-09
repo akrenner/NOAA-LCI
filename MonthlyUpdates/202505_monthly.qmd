@@ -146,9 +146,10 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=dest, overwrite=TRUE)
 
     
-    # email to:
-    #   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>, 
-     # Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>
+# email to:
+#   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>, 
+# Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>,
+# Arthur Kettle <arthur_kettle@fws.gov>
   
   
   rm (fl, flS, dest, cS)
@@ -172,6 +173,9 @@ editor: visual
 ---
 
 
+
+## Summary
+<!-- 2-3 sentences -->
 
 ## Conditions
 

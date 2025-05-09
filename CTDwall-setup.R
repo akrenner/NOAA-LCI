@@ -131,14 +131,14 @@ if (0){
 }
 
 
-save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 
 
 
 ##################### define surveys (by date-range) ##########################
 # surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
-# poAll <- poAll [order (poAll$Transect, poAll$isoTime),]
+# poAll <- poAll [order (poAll$Transect, poAll$isoTime),]data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC
 # surveyT <- factor (with (poAll, paste (Transect,)))
 #
 # for (i in 1:length (levels (factor (poAll$Transect)))){
@@ -148,11 +148,14 @@ save.image ("~/tmp/LCI_noaa/cache/ctdwall0.RData")
 poAll <- poAll [order (poAll$isoTime),]
 surveyW <- factor (poAll$DateISO)
 
+## use nominal month and year from notebook -- eventually
 for (h in 2:length (levels (surveyW))){
   if (difftime (levels (surveyW)[h], levels (surveyW)[h-1], units = "days") < 7){
     surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h-1]
   }
 }
+surveyW <- factor (format (poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
+
 poAll$survey <- factor (surveyW)  ## need to reset factor levels after combining days
 rm (surveyW, h)
 
