@@ -625,8 +625,8 @@ rm (dayF, crs, cF, crsC)
 ## 2. annual aggregates for GulfWatch export ##
 ###############################################
 
-save.image ("~/tmp/LCI_noaa/cache/CNVzipC.RData")
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVzipC.RData")  ## this to be read by dataSetup.R
+save.image ("~/tmp/LCI_noaa/cache-t//CNVzipC.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNVzipC.RData")  ## this to be read by dataSetup.R
 
 
 
@@ -656,12 +656,15 @@ dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 yr <- factor (format (phy$isoTime, "%Y"))
 phyE <- subset (phy, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
 phy2 <- subset (phy, !Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
-write.csv (phy2, file=paste0 (outD, "/extraCTD.csv"), row.names=FALSE, quote=FALSE)
+if (nrow (phy2)>0){
+  write.csv (phy2, file=paste0 (outD, "/extraCTD.csv"), row.names=FALSE, quote=FALSE)
+}
 
 ctdX <- sapply (1:length (levels (yr)), function (i){
   ctdA <- subset (phyE, yr == levels (yr)[i])
   ctdB <- with (ctdA, data.frame (Station = Match_Name
-                                  , Date, Time
+                                  , Date
+                                  , Time = format (isoTime, "%H:%M", usetz=TRUE)
                                   , Latitude_DD = latitude_DD
                                   , Longitude_DD = longitude_DD
                                   , Transect

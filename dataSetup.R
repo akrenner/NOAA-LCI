@@ -35,9 +35,10 @@ GISF <- "~/GISdata/LCI/"
 tmpF <- "~/tmp/LCI_noaa/"
 mediaF <- paste0 (tmpF, "media/")
 cacheF <- paste0 (tmpF, "cache/")
+cacheT <- paste0 (tmpF, "cache-t/")
 dirL <- c (GISF=GISF, tmpF=tmpF, mediaF=mediaF, cacheF=cacheF
            , cacheFt = paste0 (tmpF, "cache-t/"))  # for inter-script checkpoints
-rm (GISF, tmpF, mediaF, cacheF)
+rm (GISF, tmpF, mediaF, cacheF, cacheT)
 x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 
 ## check processed 'rawish' files on workspace for bad profiles, see whether these look ok
@@ -458,8 +459,8 @@ poSS$PARdepth5p<- unlist (mclapply (poSS$File.Name, FUN = thresPAR, mc.cores = n
 rm (thresPAR, minPAR)
 is.na (poSS$PARdepth5p) <- poSS$sunAlt < 0
 
-save.image ("~/tmp/LCI_noaa/cache/cachePO1.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/cachePO1.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/cachePO1.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/cachePO1.RData")
 
 
 pT <- poSS
@@ -516,8 +517,8 @@ if (printSampleDates){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/troublesPO.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/troublesPO.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/troublesPO.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/troublesPO.RData")
 
 
 ## bad geographic positions: on land, too far south, .. -- move this into CTD processing scripts
@@ -604,8 +605,8 @@ rm (poAg, poSS)
 poSS <- poID
 }
 
-save.image ("~/tmp/LCI_noaa/cache/sampleTable.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/sampleTable.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/sampleTable.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/sampleTable.RData")
 
 
 
@@ -751,8 +752,8 @@ base::load ("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
 zoop$Depth <- sam$Depth [match (zoop$SampleID, sam$SampleID)]
 zoop$Depth <- ifelse (zoop$Depth > 60, 50, zoop$Depth)
 
-save.image ("~/tmp/LCI_noaa/cache/fileDump.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/fileDump.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/fileDump.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/fileDump.RData")
 
 ## export zooplankton data to standardized file (matching first columns as in CTD aggregates)
 zoopOut <- with (zoop, data.frame (Station = Match_Name, Date = isoDate, Time
@@ -850,8 +851,8 @@ if (printSampleDates){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/zoopEnd.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/zoopEnd.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/zoopEnd.RData")
 
 
 #############
@@ -1011,8 +1012,8 @@ coast <- read_sf (dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
   st_crop (c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
 unlink (tD, TRUE); rm (tD)
 
-save.image ("~/tmp/LCI_noaa/cache/mapPlot.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/mapPlot.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/mapPlot.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/mapPlot.RData")
 
 
 
@@ -1143,8 +1144,8 @@ findBirds <- function (x){
 xo <- mclapply (1:length (lBuff), FUN = findBirds
               , mc.cores = nCPUs)
 
-## save.image ("~/tmp/LCI_noaa/cache/birdRef.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/birdRef.RData")
+## save.image ("~/tmp/LCI_noaa/cache-t/birdRef.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/birdRef.RData")
 
 ## birds <- do.call (rbind, xo)  # 20 s
 
