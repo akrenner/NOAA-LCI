@@ -174,8 +174,8 @@ if (1){ ## mean daily wave height -- for when do we have data
 
 
 
-save.image("~/tmp/LCI_noaa/cache/annual_waves2.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/annual_waves2.RData")
+save.image("~/tmp/LCI_noaa/cache-t/annual_waves2.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/annual_waves2.RData")
 source ("annualPlotFct.R")
 
 
@@ -315,8 +315,8 @@ wDB <- addTimehelpers(wDB)
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wavesSurf.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/wavesSurf.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/wavesSurf.RData")
 
 
 

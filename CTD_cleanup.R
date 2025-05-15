@@ -41,7 +41,7 @@
 
 
 rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV2.RData")  # from CTD_cnv-Import.R
-
+dir.create("~/tmp/LCI_noaa/cache-t/", recursive=TRUE, showWarnings=FALSE)
 
 
 ## fix bad/missing time/date info
@@ -583,8 +583,8 @@ for (i in 1:length (cCast)){
 }
 
 
-save.image ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNV_cache9.RData")  ## this to be read by dataSetup.R
+save.image ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")  ## this to be read by dataSetup.R
 
 summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))

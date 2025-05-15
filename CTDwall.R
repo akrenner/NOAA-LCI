@@ -284,8 +284,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
           }else{
             ## check whether there is more than one survey per survey-interval
 
-            if (test){save.image ("~/tmp/LCI_noaa/cache/wallCache1.RData")}
-            # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache1.RData"); source ("CTDsectionFcts.R")
+            if (test){save.image ("~/tmp/LCI_noaa/cache-t/wallCache1.RData")}
+            # rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/wallCache1.RData"); source ("CTDsectionFcts.R")
 
             ## allow x-day window to make up a multi-day composite transect
             ## better to apply to allPo?
@@ -342,8 +342,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
 
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
-          if (test){save.image ("~/tmp/LCI_noaa/cache/wallCache.RData")}
-          ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/wallCache.RData"); source ("CTDsectionFcts.R")
+          if (test){save.image ("~/tmp/LCI_noaa/cache-t/wallCache.RData")}
+          ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/wallCache.RData"); source ("CTDsectionFcts.R")
 
           ##
           ## construct, pad, and sort section
