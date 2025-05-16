@@ -71,17 +71,38 @@ for (dset in dsetL){
     fN <- "~/tmp/LCI_noaa/data-products/CTD.xml"
 
     }else if (dset == "zoop"){  ## zoop
-    ### zooplankton
+      ### zooplankton
 
-    data <- read.csv("~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv", skip=1) |>
-      st_as_sf (coords=c("Longitude_DD", "Latitude_DD"), crs=LLprj, remove=FALSE)
-    bbox <- st_bbox(data)
+      data <- read.csv("~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv", skip=1) |>
+        st_as_sf (coords=c("Longitude_DD", "Latitude_DD"), crs=LLprj, remove=FALSE)
+      bbox <- st_bbox(data)
 
-    abstract <- "Zooplankton samples were taken using a 1 m diameter bongo net with a mesh size of XX
-    μm. "
-    fN <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.xml"
+      abstract <- "These data are part of the Gulf Watch Alaska (GWA), Environmental
+    Drivers component, which is the long-term ecosystem monitoring program of the
+    Exxon Valdez Oil Spill Trustee Council for the marine ecosystem affected by
+    the 1989 oil spill.
 
-  }else if (dset == "phytop"){
+This dataset is two comma-separated values (csv) files containing zooplankton
+counts by species from samples collected during Lower Cook Inlet oceanographic
+surveys. One data file (named' Raw') contains the raw zooplankton counts, whereas
+the file named 'Processed' contains densities, where the counts have been divided
+by the respective water volume (calculated from the flow meter and number of splits).
+
+Zooplankton samples were collected during 2012-2019 as part of a long-term
+oceanographic monitoring project in Kachemak Bay and lower Cook Inlet.
+Zooplankton were collected quarterly in lower Cook Inlet and outer Kachemak Bay
+and monthly in Kachemak Bay with a bongo style zooplankton net: 60 cm mouth
+diameter/333 μm mesh (Aquatic Research Instruments, Hope, ID). To calculate
+sample volume, a mechanical flow meter (General Oceanics) was attached to one
+side of the bongo frame; zooplankton were sampled from the net with no flow meter
+attached. At each station, 50 m vertical tows were conducted at a tow rate of
+approximately 0.5 m/s with an average of 14.15 m3 sampled. Preserved samples were
+identified and enumerated to lowest taxonomic classification possible by the
+Prince William Sound Science Center located in Cordova, Alaska."
+      # keywords: zooplankton, copepods,
+      fN <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.xml"
+
+    }else if (dset == "phytop"){
     ### phytoplankton
 
     data <- read.csv ("~/tmp/LCI_noaa/data-products/phytoplankton.csv", skip=1) |>
