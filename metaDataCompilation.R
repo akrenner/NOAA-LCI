@@ -117,7 +117,13 @@ Prince William Sound Science Center located in Cordova, Alaska."
   }else if (dset == "chlorop"){
     ### chlorophyll
 
-    abstract <- ""
+    abstract <- "This dataset comprises drifters released within Cook Inlet,
+    droughed at depth between surface and 15 m. Data has been manually cleaned
+    for artifacts, e.g. boat times between deployments. Times when drifters have
+    been stranded or ran aground have not been removed from these positions.
+
+    Some of these records have been uploaded by Scott Pegau to the ResearchWorkspace,
+    the rest were downloaded directly from the http://pacificgyre.com/"
 
   }else if (dset == "drifter"){
     ### drifter
