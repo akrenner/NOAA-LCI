@@ -179,17 +179,15 @@ editor: visual
 
 ## Conditions
 
-<!-- On `{r} sDate`, `{r} crewT`  -->
-
-This report summarizes data collected on monthly Kachemak Bay/lower Cook Inlet oceanographic surveys in February, March, and April 2025, with a focus on April conditions. A complete set up up-to-date graphs can be found on the google drive: 
+On `{r} sDate`, Hans, Kris, and Martin conducted our monthly survey. It has been
+a fairly dry and sunny May so far, with only a minor precipitation. Conditions on during
+the survey were calm, with beauford conditions between 1 and 2. 
+<!-- `{r} crewT` -->
+A complete set up up-to-date graphs can be found on the Google Drive: 
 [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and 
 [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link).
 <!-- CTD wall:      https://drive.google.com/drive/folders/1VN-g95QcZHpvIeMaH-HEvDzIX0f-cSe6?usp=drive_link -->
-
-<!-- `{r} lastDateT`,  -->
 <!-- (@fig-Temp_Airport).  -->
-The April survey, conducted by Hans, Kris, Martin, and Paul was split over two days: Transects 4 and 9 on 15 April, and the AlongBay transect on 22 April.  
-It has been a mild winter with only limited snow coverage in and around Homer (e.g. the [Homer Epic](https://www.homercyclingclub.org/homer-epic), which ran on 8 March, had no skiing event due to poor snow conditions; Beluga Lake was icefree). The days around the April survey were spring-like with air temperatures between 0 °C and 5 °C and the occasional light rain shower. 
 
 <!-- ::: {#fig-elements layout-ncol="1"} -->
 <!-- ![](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
@@ -208,7 +206,7 @@ It has been a mild winter with only limited snow coverage in and around Homer (e
 
 <!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
 
-Recorded water temperatures during the April survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the outer bay
+Recorded water temperatures during the May survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the outer bay
 to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Spit. 
 The months of February and March were characterized by a typical winter regime for Kachemak Bay: colder surface than deep waters, but overall small differences in water temperature at at individual stations, the main differences being a warmer outer bay, separated from the colder inner bay waters by a front near the Homer Spit. Remnants of this pattern were still apparent in April, however, as a consequence of rain and break-up conditions, the top-most water layers have begun to warm up by a couple tenths of a degree (@fig-tSections_AB). T9 transect showed rather complex patterns this April: the warmer deep water from the outer bay on the southern side, cold inner-bay water near the northern shore, all of which overlayed by a thin, up to 1 K warmer surface layer (@fig-tSections_T9).
 
@@ -241,7 +239,7 @@ While still low in the outer bay, compared to February and March, chlorophyll co
 
 ![T9 Transect, across-bay, Homer Spit to China Poot Bay](./media/SectionI_T-9.png){#fig-tSections_T9}
 
-![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/SectionI_T-4.png){#fig-tSections_T4}
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/SectionI_T-4.png){#fig-tSections_T4} -->
 
 Longitudinal and cross-sections of main parameters.
 :::
@@ -250,13 +248,12 @@ Longitudinal and cross-sections of main parameters.
 
 ### Zooplankton
 
-
-A deep scattering layer was detected at depth between 25 (but mostly > 50) m and 150 m and sampled with opportunistic vertical tows at AlongBay 5, 7, and 8. Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also a large mycid, chaetognaths, eggs, barnacle larvae, amongst other taxa. 
+A diffuse weak deep scattering layer, mostly between 50 m and the bottom was detected at many stations. We sampled this layer with an oblique at T9-6 (towed at 70 m). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae. 
 
 <!-- Backscatter? Species composition? -->
 
-<!-- ### Wildlife -->
-
+### Wildlife
+Marine mammals of note included a Harbor Porpoise in the inner bay near Homer Spit and a Harbor Seal in the inner Bay. A Yellow-billed Loon was in the outer bay, and a dark morph Parasitic Jaeger in the inner bay. Small groups of Red-necked Phalaropes were present near convergences throughout the bay. 
 
 
 ## Present conditions compared to long-term trends
