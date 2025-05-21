@@ -41,7 +41,7 @@ if (0){
   deps <- renv::dependencies()
   for (i in 1:length (badP)){
     cat ("\n\n##", badP [i], "##\n")
-    print (deps [which (deps$Package==badP[i]),])
+    print (deps [which (deps$Package==badP[i]),1])
   }
   rm (badP, deps)
 
@@ -151,6 +151,9 @@ if (0){
 }
 
 
+
+## update metadata
+source ("metaDataCompilation.R")
 
 
 ## push to GoogleDrive
