@@ -535,7 +535,7 @@ for (k in pickStn){
     TSaxis (xCS@metadata$time)
 
     ## total chlorophyll time series plot
-    clf <- aggregate (Fluorescence_mg_m3~Date, xC, FUN=sum, na.rm=TRUE)
+    clf <- aggregate (Fluorescence_mg_m3~Date, xC, FUN=mean, na.rm=TRUE)  # sum of concentration makes no sense, needs to be mean
     names (clf) <- c ("Date", "Fluorescence")
     clf$Date <- as.Date (clf$Date)
 

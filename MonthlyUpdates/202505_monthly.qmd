@@ -155,7 +155,7 @@ author:
   - name: "Kris Holderied"
     affiliation:
        - name: NOAA/NCCOS Kasitsna Bay Lab
-format: html  # or html, pdf or word, email
+format: html  # or html, pdf or docx, email
 editor: visual
 
 # title-block-style: none
@@ -164,11 +164,9 @@ editor: visual
 
 ## Summary
 Compared to last April, surface waters in the inner bay are freshening and 
-warming up (maximum: `{r} tsal$temSalR[2]` °C). Chlorophyll concentrations
-quintupled since April and are now high throughout the bay. Compared to the 
-seasonal mean, waters at all depths continue to be warm and less saline  (since 
-February 2025), even though temperatures in Homer harbor have returned to close 
-to normal values. 
+warming up (maximum: `{r} tsal$temSalR[2]` °C). At all depth, waters continue to be warmer and less saline (since February 2025) than the seasonal mean, matching the criteria of a moderate marine heat wave. Chlorophyll concentrations
+quintupled since April and are now at their highest in the last four years. 
+
 <!-- 2-3 sentences -->
 
 ## Conditions
@@ -202,18 +200,11 @@ Only minor temperature differences were apparent between the north and south end
 Transect 9  (@fig-tSections_T9), showing a gradual warming from deep to shallow waters, 
 with fastest changes near the surface. In contrast to last month (and much of the winter),
 the waters in the far end of the outer bay, influenced by the Gulf of Alaska, were
-no longer noticably warmer than the main water body of Kachemak Bay. 
+no longer noticably warmer than the main water body of Kachemak Bay. Interestingly,
+satellite based measurements show that coastal waters of the Gulf of Alaska are 
+already similarly warm as Kachemak Bay, whereas much of Cook Inlet and the adjacent
+continental shelf remain about 1 K cooler (@fig-SST_GOA).
 
-
-### Salinity
-
-Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively. 
-All the way into the the eastern half of the outer bay, a distinct lens of fresher (and now warmer)
-water is apparent (@fig-tSections_AB), Consistent with much of this freshwater originating
-from the Kachemak Bay watershed, this layer of fresher surface water was about twice 
-as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9). 
-
-<!-- (@fig-tSections_T4) -->
 
 ::: {#fig-elements layout-ncol="1"}
 ![AlongBay Transect](./media/Section_T-AlongBay.png){#fig-tSections_AB}
@@ -222,25 +213,71 @@ as thick on the northern end of Transect 9, compared to the southern end (@fig-t
 
 <!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
 
-Longitudinal and cross-sections of main parameters.
+Longitudinal and cross-sections of main parameters.{#fig-tSections}
 :::
 
 
+![Sea surface temperature in the Gulf of Alaska, based on satelite remote sensing](media-2025-05/alaska.fc_2025-05-19.gif){#fig-SST_GOA}
 
+<!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
+
+After three years of water temperatures closely hugging the long-term mean, deeper 
+water temperatures were warmer than the seasonal mean starting in February. Current 
+temperatures were about 0.5 K above the long-term seasonal mean (@fig-TempDeep). 
+At the SWMP station in Homer Harbor, temperatures rose well
+above the seasonal mean already earlier, starting in December 2024 
+(@fig-SWMP-homerdeep-temp). Temperatures at the SWMP station were nearing the 
+long-term mean again, however, in the bay, the whole water column was still 
+experiencing conditions matching the criteria for a moderate marine heat wave
+ (@fig-TSprofile_T9). 
+
+<!-- Reflecting the warm air -->
+
+<!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
+![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
+
+![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
+
+
+![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
+
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+<!-- Add map with station numbers -- schematic -->
+
+
+### Salinity
+
+Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively.
+All the way into the the eastern half of the outer bay, a distinct lens of fresher (and now warmer)
+water is apparent (@fig-tSections_AB). This layer of fresher surface water was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater
+originating from the Kachemak Bay watershed. 
+
+The current positive temperature anomaly were accompanied by a low salinity 
+anomaly (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it were slightly more pronounced at depth (@fig-TSprofile_T9).
+
+![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
 
 ### Turbidity
 
-We did not encounter any high-turbidity surface water, indicative of glacial run-off during the April survey. Overall, inner bay bottom waters were more turbid than outer bay waters, as usual. Turbidity levels in the outer bay were the lowest we have observed all year. These were relatively warm, saline waters, consistent with an intrusion of Gulf of Alaska shelf water.
+We did not encounter any high-turbidity surface water, indicative of glacial run-off. 
+As expected, inner bay waters were more turbid than outer bay waters. Increased
+turbidity near the surface in the inner bay may be due to a combination of glacial
+run-off and high concentrations of phytoplankton (@fig-tSections_AB).
+
 
 ## Biological conditions
 
 ### Phytoplankton
 
-While still low in the outer bay, compared to February and March, chlorophyll concentrations were elevated in the upper water layers of the inner bay (just below the pycnocline, as indicated by the corresponding bvf values) -- a sign of spring. Oxygen levels were correspondingly raised in these areas as well (@fig-tSections_AB).
+Phytoplankton was blooming. High concentrations of chlorophyll were encountered 
+between the surface and 30 m throughout the bay, with particularly high concentrations
+in the inner bay at around 25 m depth (@fig-tSections_AB). Concentrations at T9-6
+were the highest at this station in the last four years.  
 
-
-![Seasonal anomaly of Chlorophyll concentrations](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll}
+![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll}
 
 
 ### Zooplankton
@@ -253,24 +290,6 @@ A diffuse weak deep scattering layer, mostly between 50 m and the bottom was det
 
 Marine mammals of note included a Harbor Porpoise in the inner bay near Homer Spit and a Harbor Seal in the inner Bay. A Yellow-billed Loon was in the outer bay, and a dark morph Parasitic Jaeger in the inner bay. Small groups of Red-necked Phalaropes were present near convergences throughout the bay.
 
-## Present conditions compared to long-term trends
 
-After three years of water temperatures closely hugging the long-term mean, deeper water temperatures were warmer than the seasonal mean starting in February. Current temperatures were up to 1 K above the long-term seasonal mean (@fig-TempDeep). This positive temperature anomaly has been accompanied by a low salinity anomaly (@fig-SalDeep), which is consistent with high amounts of rain in the region. Both, the temperature, and salinity anomalies are found throughout the water column, although they are slightly more pronounced at depth (@fig-TSprofile_T9).
-
-<!-- Reflecting the warm air -->
-
-<!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
-
-The SWMP station at Homer Harbor, recording oceanographic data continuously, has shown a positive temperature anomaly since early December 2024, which intensified to a level that from January to until late March 2025, values were above the 90th percentile. However, since early April, the SWMP data has seen a slow return towards the long-term mean (@fig-SWMP-homerdeep-temp).
-
-<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
-
-![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
-
-![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
-
-![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
-
-![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
-
-<!-- Add map with station numbers -- schematic -->
+### Mailing list
+Please email Martin at martin.renner@noaa.gov if you would like to be added to or removed from this mailing list. 
