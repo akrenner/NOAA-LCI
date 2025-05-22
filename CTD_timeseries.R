@@ -120,8 +120,8 @@ mediaD <- "~/tmp/LCI_noaa/media/CTDsections/time-sections"
 dir.create(mediaD, recursive=TRUE, showWarnings=FALSE)
 
 
-save.image ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdAnomalies.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/ctdAnomalies.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdAnomalies.RData")
 
 
 
@@ -433,8 +433,8 @@ for (k in pickStn){
     mtext ("Depth [m]", side=2, outer=TRUE)
     dev.off()
 
-    # save.image ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
-    # rm (list = ls()); load ("~/tmp/LCI_noaa/cache/t9ctd1.RData")
+    # save.image ("~/tmp/LCI_noaa/cache-t/t9ctd1.RData")
+    # rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/t9ctd1.RData")
 
 
     ## buoyancy
@@ -746,17 +746,8 @@ for (k in pickStn){
 rm (anoF)
 
 
-save.image ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT9S6_fw.RData")
-
-
-
-
-
-
-
-
-
+save.image ("~/tmp/LCI_noaa/cache-t/ctdT9S6_fw.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdT9S6_fw.RData")
 
 
 
@@ -929,8 +920,8 @@ if (0){
 
 
 
-save.image ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdT96-dwt.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/ctdT96-dwt.RData")
+# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdT96-dwt.RData")
 
 ########################################
 ## deep water temperature time series ##
@@ -1178,8 +1169,8 @@ if (0){  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 ## test correlation between surface and DCM chlorophyll concentration
 surface <- 2
 deep <- c (15,20)
-save.image ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
-# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/ctdTimechl.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/ctdTimechl.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache-t/ctdTimechl.RData")
 
 t96 <- subset (physOc, Match_Name=="9_6")
 # t96$Fluorescence_mg_m3 <- log (t96$Fluorescence_mg_m3)
