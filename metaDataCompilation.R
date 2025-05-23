@@ -123,6 +123,10 @@ This dataset is a comma-separated values (csv) files containing phytoplankton co
 by species from samples collected during Lower Cook Inlet/Kachemak Bay oceanographic
 surveys. Phytoplankton samples were collected during as part of a long-term
     oceanographic monitoring project in Kachemak Bay and lower Cook Inlet."
+
+    ## separate section for methods?
+    ### 40 liters of surface water filtered through a XX μm mesh
+
     fN <- "~/tmp/LCI_noaa/data-products/phytoplankton.xml"
 
   }else if (dset == "chlorop"){

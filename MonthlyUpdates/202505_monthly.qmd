@@ -221,7 +221,7 @@ Longitudinal and cross-sections of main parameters.{#fig-tSections}
 
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
-After three years of water temperatures closely hugging the long-term mean, deeper 
+After three years of water temperatures closely hugging the long-term mean, deep 
 water temperatures were warmer than the seasonal mean starting in February. Current 
 temperatures were about 0.5 K above the long-term seasonal mean (@fig-TempDeep). 
 At the SWMP station in Homer Harbor, temperatures rose well
