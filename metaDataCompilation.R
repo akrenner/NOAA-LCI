@@ -16,6 +16,7 @@
 
 rm (list=ls())
 require ("geometa")
+# require ("geoflow")  ## see https://r-consortium.org/posts/exploring-geometa-an-r-package-for-managing-geographic-metadata/
 require ("sf")
 LLprj <- 4326
 
@@ -76,6 +77,7 @@ for (dset in dsetL){
       data <- read.csv("~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv", skip=1) |>
         st_as_sf (coords=c("Longitude_DD", "Latitude_DD"), crs=LLprj, remove=FALSE)
       bbox <- st_bbox(data)
+      tbox <- range (as.POSIXct(paste (data$Date, data$Time)))
 
       abstract <- "These data are part of the Gulf Watch Alaska (GWA), Environmental
     Drivers component, which is the long-term ecosystem monitoring program of the
@@ -109,13 +111,33 @@ Prince William Sound Science Center located in Cordova, Alaska."
       subset (!is.na (Longitude_DD)) |>
       subset (!is.na (Latitude_DD)) |>
       st_as_sf (coords=c("Longitude_DD", "Latitude_DD"), crs=LLprj, remove=FALSE)
-
     bbox <- st_bbox(data)
-    abstract <- ""
+    tbox <- range (as.POSIXct(paste (data$Date, data$Time)))
+
+    abstract <- "These data are part of the Gulf Watch Alaska (GWA), Environmental
+    Drivers component, which is the long-term ecosystem monitoring program of
+    the Exxon Valdez Oil Spill Trustee Council for the marine ecosystem affected
+    by the 1989 oil spill.
+
+This dataset is a comma-separated values (csv) files containing phytoplankton counts
+by species from samples collected during Lower Cook Inlet/Kachemak Bay oceanographic
+surveys. Phytoplankton samples were collected during as part of a long-term
+    oceanographic monitoring project in Kachemak Bay and lower Cook Inlet."
     fN <- "~/tmp/LCI_noaa/data-products/phytoplankton.xml"
 
   }else if (dset == "chlorop"){
     ### chlorophyll
+
+    abstract <- ""
+
+  }else if (dset == "drifter"){
+    ### drifter
+
+    data <- read.csv ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz") |>
+      st_as_sf (coords=c("Long", "Lat"), crs=LLprj, remove=FALSE)
+    bbox <- st_bbox (data)
+    tbox <- range (as.POSIXct(with (data, paste0 (Year,"-",Month,"-",Day,
+                                                  " ", Hour, ":", Minute))))
 
     abstract <- "This dataset comprises drifters released within Cook Inlet,
     droughed at depth between surface and 15 m. Data has been manually cleaned
@@ -124,16 +146,9 @@ Prince William Sound Science Center located in Cordova, Alaska."
 
     Some of these records have been uploaded by Scott Pegau to the ResearchWorkspace,
     the rest were downloaded directly from the http://pacificgyre.com/"
-
-  }else if (dset == "drifter"){
-    ### drifter
-
-    data <- read.csv ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz") |>
-      st_as_sf (coords=c("Long", "Lat"), crs=LLprj, remove=FALSE)
-    bbox <- st_bbox (data)
-    abstract <- ""
     fN <- "~/tmp/LCI_noaa/data-products/drifter_cleaned.xml"
   }
+
 
 
   ### template from geometa documentation
@@ -144,9 +159,8 @@ Prince William Sound Science Center located in Cordova, Alaska."
   md = ISOMetadata$new()
   md$setFileIdentifier("my-metadata-identifier")
   md$setParentIdentifier("my-parent-metadata-identifier")
-  # md$setCharacterSet("utf8") # deprecated
-  # md$addCharacterSet("utf8") # already the default
-md$setLanguage("eng")
+  # md$setCharacterSet("utf8") # deprecated; utf8 already the default
+  md$setLanguage("eng")
   # md$addLanguage ("eng") ## xxx error
   # md$setDateStamp(ISOdate(2015, 1, 1, 1))
   md$setDateStamp(Sys.time())
@@ -251,8 +265,10 @@ md$setLanguage("eng")
 
   ident$addCredit("Gulf Watch Alaska")
   ident$addCredit("Kachemak Bay National Estuarine Research Reserve")
+  ident$addCredit("EVOS Trustee Council")
+
   # ident$addCredit("credit3")
-  ident$addStatus("completed")
+#  ident$addStatus("completed")
   # ident$setLanguage("eng")
   ident$addLanguage("eng")
   ident$addCharacterSet("utf8") # deprecated -- and already present
@@ -282,7 +298,7 @@ md$setLanguage("eng")
   res$setName("Kasitsna Bay Lab")
   contact$setOnlineResource(res)
   rp$setContactInfo(contact)
-  ident$addPointOfContact(rp)
+  ident$addPointOfContact(rp)  ## XXX
 
   #citation
   ct <- ISOCitation$new()   ## XXX
@@ -352,17 +368,21 @@ md$setLanguage("eng")
   # sc$setHandlingDescription("description")
   # ident$addResourceConstraints(sc)
 
-  #adding extent
+  #adding extent -- spatial and temporal
   extent <- ISOExtent$new()
-  # bbox <- ISOGeographicBoundingBox$new(minx = -180, miny = -90, maxx = 180, maxy = 90)
+  #  extent <- ISOSpatialTemporalExtent$new()
   bbx <- ISOGeographicBoundingBox$new(minx=bbox[1], miny=bbox[2], maxx=bbox[3], maxy=bbox[4])
   extent$addGeographicElement(bbx)
   # extent$addGeographicElement(data)  ## xxx easier, should work -- but doesn't
 
-  # extent$addTemporalElement()
-  # extent$addVerticalElement()
+  textent <- ISOTemporalExtent$new()
+  tbx <- GMLTimePeriod$new(beginPosition=tbox[1], endPosition=tbox[2])
+  textent$setTimePeriod(tbx)
+  extent$addTemporalElement(textent)
 
   ident$addExtent(extent)
+
+
 
 
   #add keywords
@@ -466,6 +486,8 @@ md$setLanguage("eng")
   #XML representation of the ISOMetadata
   xml <- md$encode()
 
+  # require ("xml2") -- not working
+  # xml2::write_xml (xml, file=fN)
   require ("XML")  ## why not: numerous dependencies, needs to be compiled
   XML::saveXML (xml, file=fN)
   rm (xml, fN, md, dq, dc)
