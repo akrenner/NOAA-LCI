@@ -7,6 +7,9 @@
 
 ## clear the slate
 rm (list=ls())
+# require (packrat)
+# require (rsconnect)
+
 unlink ("MonthlyUpdates/media/", recursive=TRUE)
 
 
@@ -163,57 +166,35 @@ editor: visual
 ---
 
 ## Summary
-Compared to last April, surface waters in the inner bay are freshening and 
-warming up (maximum: `{r} tsal$temSalR[2]` °C). At all depth, waters continue to be warmer and less saline (since February 2025) than the seasonal mean, matching the criteria of a moderate marine heat wave. Chlorophyll concentrations
-quintupled since April and are now at their highest in the last four years. 
+Surface waters in the inner bay are noticeably freshening and 
+warming up, compared to what was seen in April (maximum: `{r} tsal$temSalR[2]` °C). At all depths, waters continue to be warmer and less saline than the seasonal mean, matching the criteria of a moderate marine heat wave. Chlorophyll concentrations
+quintupled since April and are now amongst the highest in the last four years. 
 
 <!-- 2-3 sentences -->
 
 ## Conditions
 
-On `{r} dateAN`, Hans, Kris, and Martin conducted our monthly survey. It has been a fairly dry and sunny May so far, with only a minor precipitation. Conditions during the survey were calm, with beauford conditions between 1 and 2. 
+On `{r} dateAN`, Hans, Kris, and Martin conducted our monthly survey. It has been a fairly dry and sunny May so far, with only minor precipitation. Conditions during the survey were calm ( < beaufort 3). 
 <!-- `{r} crewT` --> 
-A complete set of up-to-date graphs can be found on the Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link). <!-- CTD wall:      https://drive.google.com/drive/folders/1VN-g95QcZHpvIeMaH-HEvDzIX0f-cSe6?usp=drive_link --> <!-- (@fig-Temp_Airport).  -->
-
-<!-- ::: {#fig-elements layout-ncol="1"} -->
-
-<!-- ![](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
-
-<!-- Recent temperature compared to their long-term means at Homer Airport. -->
-
-<!-- ::: -->
-
-<!-- Consider link to annual/sa-precip-AP.png -->
+A complete set of up-to-date graphs can be found on the Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link). 
+<!-- ![Recent temperature and precipitation at Homer Airport, compared to their seasonal means.](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
 
 ## Physical oceanography
 
-<!-- Current conditions, long-term anomalies: -->
-
 ### Temperature
 
-<!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
-
-Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the inner bay to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Spit. Surface waters in the inner bay were over three K warmer
-than deep waters, wereas only little differences in temperature or salinity were found at the western end of the 
-AlongBay transect, indicating a water column that is still vertically mixed (@fig-tSections_AB). 
-Only minor temperature differences were apparent between the north and south end of 
-Transect 9  (@fig-tSections_T9), showing a gradual warming from deep to shallow waters, 
-with fastest changes near the surface. In contrast to last month (and much of the winter),
-the waters in the far end of the outer bay, influenced by the Gulf of Alaska, were
-no longer noticably warmer than the main water body of Kachemak Bay. Interestingly,
-satellite based measurements show that coastal waters of the Gulf of Alaska are 
-already similarly warm as Kachemak Bay, whereas much of Cook Inlet and the adjacent
-continental shelf remain about 1 K cooler (@fig-SST_GOA).
+Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the inner bay to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Spit. Surface waters in the inner bay were over three K warmer than deep waters, whereas only little vertical differences in temperature or salinity were at the head of the bay, indicating a water column that is still vertically mixed (@fig-tSections_AB). 
+Only minor temperature differences were apparent between the north and south end of the mid-bay Transect 9  (@fig-tSections_T9), showing a gradual warming from deep to shallow waters, with fastest changes near the surface. In contrast to last month (and much of the winter), the waters in the far end of the outer bay, influenced by the Gulf of Alaska, were no longer noticably warmer than the main water body of Kachemak Bay, showing that we are in the spring transition between a relatively warmer ocean/cooler bay to a cooler ocean/warmer bay. Interestingly, satellite based measurements show that coastal waters of the Gulf of Alaska are already similarly warm as Kachemak Bay, whereas much of Cook Inlet and the adjacent continental shelf remain about 1 K cooler (@fig-SST_GOA).
 
 
-::: {#fig-elements layout-ncol="1"}
+::: {#fig-tSections}
 ![AlongBay Transect](./media/Section_T-AlongBay.png){#fig-tSections_AB}
 
 ![T9 Transect, across-bay, Homer Spit to China Poot Bay](./media/Section_T-9.png){#fig-tSections_T9}
 
 <!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
 
-Longitudinal and cross-sections of main parameters.{#fig-tSections}
+Longitudinal and cross-sections of main parameters.
 :::
 
 
@@ -222,18 +203,10 @@ Longitudinal and cross-sections of main parameters.{#fig-tSections}
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
 After three years of water temperatures closely hugging the long-term mean, deep 
-water temperatures were warmer than the seasonal mean starting in February. Current 
-temperatures were about 0.5 K above the long-term seasonal mean (@fig-TempDeep). 
-At the SWMP station in Homer Harbor, temperatures rose well
-above the seasonal mean already earlier, starting in December 2024 
-(@fig-SWMP-homerdeep-temp). Temperatures at the SWMP station were nearing the 
-long-term mean again, however, in the bay, the whole water column was still 
-experiencing conditions matching the criteria for a moderate marine heat wave
- (@fig-TSprofile_T9). 
+water temperatures were warmer than the seasonal mean since February. The May 
+temperatures were about 0.5 K above the seasonal mean (@fig-TempDeep). 
+At the SWMP station in Homer Harbor, temperatures rose well above the seasonal mean already earlier, starting in December 2024 (@fig-SWMP-homerdeep-temp). Temperatures at the SWMP station were nearing the long-term mean again, however, in the bay, the whole water column was warmer than normal (@fig-TSprofile_T9). 
 
-<!-- Reflecting the warm air -->
-
-<!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
 ![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
 
 ![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
@@ -250,12 +223,10 @@ experiencing conditions matching the criteria for a moderate marine heat wave
 ### Salinity
 
 Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively.
-All the way into the the eastern half of the outer bay, a distinct lens of fresher (and now warmer)
-water is apparent (@fig-tSections_AB). This layer of fresher surface water was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater
-originating from the Kachemak Bay watershed. 
+All the way into the eastern half of the outer bay, a distinct lens of fresher (and now warmer) water was apparent (@fig-tSections_AB), reflecting increased freshwater runoff from precipitation and snow melt. This freshened surface layer was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater originating from around the inner Kachemak Bay watershed, including Fox and smaller rivers. 
 
-The current positive temperature anomaly were accompanied by a low salinity 
-anomaly (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it were slightly more pronounced at depth (@fig-TSprofile_T9).
+The warm temperature anomaly was accompanied by a low salinity 
+anomaly in Kachemak Bay waters (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it was slightly more pronounced at depth (@fig-TSprofile_T9).
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
@@ -264,31 +235,31 @@ anomaly (@fig-SalDeep). Just as for temperature, the salinity anomaly was found 
 
 We did not encounter any high-turbidity surface water, indicative of glacial run-off. 
 As expected, inner bay waters were more turbid than outer bay waters. Increased
-turbidity near the surface in the inner bay may be due to a combination of glacial
-run-off and high concentrations of phytoplankton (@fig-tSections_AB).
+turbidity near the surface in the inner bay may be due to a combination of sediments from terrestrial run-off and high concentrations of phytoplankton (@fig-tSections).
 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Phytoplankton was blooming. High concentrations of chlorophyll were encountered 
-between the surface and 30 m throughout the bay, with particularly high concentrations
-in the inner bay at around 25 m depth (@fig-tSections_AB). Concentrations at T9-6
-were the highest at this station in the last four years.  
+Phytoplankton were blooming! High concentrations of chlorophyll were observed with the
+CTD fluorometer between the surface and 30 m throughout the bay, with particularly high concentrations in the inner bay at around 25 m depth (@fig-tSections_AB). Concentrations at T9-6 were amongst highest at this station in the last four years.  
 
 ![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll}
+In our surface samples, Kim Schuster and Jasmine Maurer (KBNERR) found bloom-levels of *Chaetoceros debilis* and *Pseudo-nitzschia* spp. in the inner bay at AlongBay-06 and AlongBay-10, respectively. 
 
 
 ### Zooplankton
 
-A diffuse weak deep scattering layer, mostly between 50 m and the bottom was detected at many stations. We sampled this layer with an oblique at T9-6 (towed at 70 m). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae.
+A weak deep scattering layer, mostly below 40 m was observed at many stations. We sampled this layer with an oblique at T9-6 (towed from 75 m to the surface). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae (@fig-zoop).
+
+![Zooplankton sample from T9-6, showing e.g. the head of a *Euphausia pacifica*, copepods, and barnacle nauplii](./media-2025-05/IMG_4271s2.JPG){#fig-zoop}
 
 <!-- Backscatter? Species composition? -->
 
 ### Wildlife
 
-Marine mammals of note included a Harbor Porpoise in the inner bay near Homer Spit and a Harbor Seal in the inner Bay. A Yellow-billed Loon was in the outer bay, and a dark morph Parasitic Jaeger in the inner bay. Small groups of Red-necked Phalaropes were present near convergences throughout the bay.
+Marine mammals of note included a harbor porpoise and a harbor seal in the inner bay near Homer Spit. A yellow-billed loon was in the outer bay near Seldovia, and a dark morph parasitic jaeger in the inner bay. Small groups of migratory red-necked phalaropes were present near convergences throughout the bay.
 
 
 ### Mailing list
