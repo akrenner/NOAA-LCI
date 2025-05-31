@@ -500,10 +500,10 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
 
 
   require ("riem")
-  dir.create ("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings=FALSE, recursive=TRUE)
   if (clearcache){
     unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
   }
+  dir.create ("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings=FALSE, recursive=TRUE)
   if (file.exists(paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))){
     load (paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
     lastD <- max (rW$valid) # valid = date-time

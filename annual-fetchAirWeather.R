@@ -15,6 +15,8 @@
 
 ## all NOAA stations
 stations <- c ("")
+clearcache=FALSE
+clearC=TRUE  ## if errors occur, try this
 
 
 ##########################################################
@@ -44,10 +46,10 @@ source ("annualPlotFct.R")  ## pull these functions into here since only used on
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP (station="kachomet", QAQC=TRUE)
 
-nAir <- getNOAAweather (stationID="PAHO", clearcache=FALSE)  ## function in annualPlotFct
-nAiro <- getNOAA ("HMSA2", clearcache=FALSE)  ## function in annualPlotFct
+nAir <- getNOAAweather (stationID="PAHO", clearcache=clearC)  ## function in annualPlotFct
+nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct
 
-nWave <- getNOAA(clearcache=FALSE)
+nWave <- getNOAA(clearcache=clearC)
 
 
 

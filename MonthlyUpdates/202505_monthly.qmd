@@ -222,8 +222,7 @@ At the SWMP station in Homer Harbor, temperatures rose well above the seasonal m
 
 ### Salinity
 
-Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively.
-All the way into the eastern half of the outer bay, a distinct lens of fresher (and now warmer) water was apparent (@fig-tSections_AB), reflecting increased freshwater runoff from precipitation and snow melt. This freshened surface layer was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater originating from around the inner Kachemak Bay watershed, including Fox and smaller rivers. 
+Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively. From the inner to the eastern half of the outer bay, a distinct lens of fresher (and now warmer) water was apparent (@fig-tSections_AB), reflecting increased freshwater runoff from precipitation and snow melt. This freshened surface layer was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater originating from around the inner Kachemak Bay watershed, including Fox and smaller rivers. 
 
 The warm temperature anomaly was accompanied by a low salinity 
 anomaly in Kachemak Bay waters (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it was slightly more pronounced at depth (@fig-TSprofile_T9).
