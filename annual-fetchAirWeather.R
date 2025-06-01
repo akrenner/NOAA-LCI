@@ -15,8 +15,8 @@
 
 ## all NOAA stations
 stations <- c ("")
-clearcache=FALSE
-clearC=TRUE  ## if errors occur, try this
+clearC=FALSE
+# clearC=TRUE  ## if errors occur, try this
 
 
 ##########################################################
@@ -49,7 +49,7 @@ sAir <- getSWMP (station="kachomet", QAQC=TRUE)
 nAir <- getNOAAweather (stationID="PAHO", clearcache=clearC)  ## function in annualPlotFct
 nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct
 
-nWave <- getNOAA(clearcache=clearC)
+nWave <- try (getNOAA(clearcache=clearC))
 
 
 

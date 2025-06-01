@@ -514,13 +514,18 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
   }
   rWn <- try (riem_measures (station=stationID, date_start=lastD, date_end=as.character(Sys.Date()))
               , silent=TRUE)
-  if (class (rWn)[1]=="try-error"){rm (rWn)}else{ # if computer is off-line
-    if (exists("rW")){
+
+  if (class (rWn)[1]=="try-error"){
+    if (!exists ("rW")){
+      stop ("Have to be online for initial run fetching NOAA weather data.")
+    }
+  }else{
+    if (!exists ("rW")){
+      rW <- rWn
+    }else{
       ## remove overlapping data
       rW <- subset (rW, valid < lastD)
       rW <- rbind (rW, rWn)
-    }else{
-      stop ("Have to be online for initial run fetching NOAA weather data.")
     }
   }
   rm (rWn)
