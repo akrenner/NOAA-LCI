@@ -72,10 +72,16 @@ tspS <- solve_TSP (etsp, method = "arbitrary_insertion", two_opt=TRUE, rep = nRe
 # tspS <- solve_TSP (etsp, method="concorde", control=list (clo="-v -V"))
 # stopCluster (cl)
 
+
+pdf ("~/tmp/LCI_noaa/media/Archimandritof_route.pdf")
+# plot (sa, type="n")
+# plot (wrd, col="beige", add=TRUE)
+# plot (sa, col="lightblue")
 plot (etsp, tspS, tour_col="red")
 legend ("topright", bty="n",  legend=paste0 ("tour length: "
                                    , round (tour_length(tspS)/1e3,1)," km"))
 # print (paste (round (tour_length(tspS)/1e3,1), "km"))
+dev.off()
 
 
 ## reorder to start with artificial starting point
@@ -96,10 +102,13 @@ tsp0 <- resort (as.integer (tspS))
 # points (pnts, col="yellow", pch=4)
 
 ptT <- ptT [as.integer (tsp0),]
-ptT$name <- paste0 ("AS_", seq_len(nrow (ptT)))
+ptT$name <- paste0 ("AS_", sprintf ("%03d", seq_len(nrow (ptT))))
 #ptT$name <- paste0 ("AS_", seq_len(nrow (ptT)), " (", tsp0, ")")
 
 ## export to gpx file for GPS
-write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof_N=", ns,"bas=",bas, ".gpx")
-          , driver="GPX", dataset_options="GPX_USE_EXTENSIONS=YES")
-
+dir.create("~/tmp/LCI_noaa/data-products/Archimandritof/", showWarnings=FALSE, recursive=TRUE)
+write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof/Archimandritof_N="
+                       , ns,"bas=",bas, ".gpx"), driver="GPX"
+          , dataset_options="GPX_USE_EXTENSIONS=YES")
+write.csv(ptT, file=paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof/Archimandritof_N="
+                            , ns,"bas=",bas, ".csv"))
