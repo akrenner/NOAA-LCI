@@ -23,6 +23,8 @@ bas <- TRUE
 
 require ("sf"); require ("TSP"); require ("foreach")
 require ("lwgeom") # for great circle random sampling
+# require ("terra")  # for bathymetry
+
 set.seed(7)
 
 ## study area
@@ -30,7 +32,14 @@ sa <- sf::read_sf("~/GISdata/LCI/shapefiles/ArchimandritofShoals/ArchimandritofS
 # %>%
 # st_transform(crs=3467) # alaska albert
 # sa <- st_transform(sa, crs=3467) # alaska albert
-wrd <- sf::read_sf ("~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp")
+wrd <- sf::read_sf ("~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp") |>
+  st_make_valid()
+# contour <- terra::rast ("~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc") |>
+#   as.contour (levels=0)
+
+## clip sa polygon
+# sac <- st_intersection(wrd, sa)  ## error in wk_handle.wk_wkb.... edge 746 has duplicate near loop 1
+
 
 ## non-clustered random samples
 pnts <- st_sample (sa, ns, type="random")  ##
