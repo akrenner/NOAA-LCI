@@ -12,14 +12,17 @@
 
 ## author: Martin Renner
 rm (list=ls())
+
+
+#######################################################
+ns <- 25  # number of samples
+bas <- FALSE
+bas <- TRUE
+#######################################################
+
+
 require ("sf"); require ("TSP"); require ("foreach")
 require ("lwgeom") # for great circle random sampling
-
-
-require ("spbal") ## in place of SDraw
-
-
-ns <- 15  # number of samples
 set.seed(7)
 
 ## study area
@@ -32,13 +35,20 @@ wrd <- sf::read_sf ("~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.s
 ## non-clustered random samples
 pnts <- st_sample (sa, ns, type="random")  ##
 # pnts <- st_sample (sa, ns, type="hexagonal")  ##
-# pnts <- st_sample (sa, ns, type="spatstat.random::")  ##
+# require ("spatstat.random")
+# pnts <- st_sample (sa, ns, type="Thomas", scale=1, mu=1)  ##
+# pnts <- st_sample (sa, ns, type="regular")  ##
 
 ## Spatially balanced Pseudo-random samples
 
 # require ("SDraw")             # use Trent McDonald's BAS sampling. THANK YOU, Trent!!
 ## make SDraw samples additive, i.e. non-overlapping. Can use all together.
 # spotMother <- sdraw (sa, n = sum (nSList), type = "BAS")
+
+if (bas){
+require ("spbal") ## in place of SDraw
+pnts <- spbal::BAS(sa, n=ns, minRadius=10)$sample
+}
 
 
 ## optimal Traveling Salesperson route
@@ -90,6 +100,6 @@ ptT$name <- paste0 ("AS_", seq_len(nrow (ptT)))
 #ptT$name <- paste0 ("AS_", seq_len(nrow (ptT)), " (", tsp0, ")")
 
 ## export to gpx file for GPS
-write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof_N=", ns,".gpx")
+write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof_N=", ns,"bas=",bas, ".gpx")
           , driver="GPX", dataset_options="GPX_USE_EXTENSIONS=YES")
 
