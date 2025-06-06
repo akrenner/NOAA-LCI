@@ -538,69 +538,132 @@ getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
 }
 
 
-getNOAA <- function (buoyID=46108, set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
+
+## if missing, install buoydata
+if (!require ("buoydata")){
+  renv::install ("NOAA-EDAB/buoydata", prompt=FALSE)
+}
+
+
+getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
   #  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
   #  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
-  # 2023-12-08: buoy still working with rnoaa -> use it while it works
 
-  require ("rnoaa")
+  ## rnoaa alternatives:
+  ## buoydata: download from NDBC -- realtime?
+  ## THREDDS server. Or wget from http site
+  ## GSODR: global surface summary of day stations, similar to rnoaa
+
+  buoyID <- tolower(buoyID)
+  cacheF <- paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")
+
   if (clearcache){
-    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData"))
-    unlink ("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
-    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
+    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive=TRUE)
+    unlink (cacheF)
+    # unlink ("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
+    # dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
-  ## this is slow -- cache as .RData file
-  nw <- try (base::load (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")), silent=TRUE)
-  if (class (nw) == "try-error"){
-    if (buoyID == 46108){endD <- 2011}else{endD <- 1970}
-    dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
-  }else{
-    endD <- max (as.integer (substr (wDB$time, 1, 4)))  # last cached year
+
+
+  require ("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
+  startY <- buoydata::buoyDataWorld |>
+    dplyr::filter(ID == buoyID) |>
+    dplyr::select(Y1) |>
+    as.numeric()
+
+  if (file.exists(cacheF)){
+    load (cacheF)
+    startY <- max (wDB$datetimestamp) |>
+      format ("%Y") |>
+      as.numeric() -1
   }
-  if (as.integer (format (Sys.Date(), "%Y")) - endD > -1){ # if not updated in a year
-    wB <- lapply ((endD-1):as.integer (format (Sys.Date(), "%Y"))
-                  , function (i){
-                    try (buoy (dataset=set, buoyid=buoyID
-                               , year=i), silent=TRUE)
-                  }
-    )
-    for (i in 1:length (wB)){
-      if (class (wB [[i]]) != "try-error"){
-        if (!exists ("wDB")){
-          wDB <- as.data.frame (wB[[i]]$data)
-          meta <- wB [[i]]$meta
-        }else{
-          ## not sure why this would be a problem -- bad cache? do it anyway
-          if ("datetimestamp" %in% names (wDB)){
-            wDB <- wDB [,-datetimestamp]
-          }
-          wDB <- rbind (wDB, as.data.frame (wB [[i]]$data))
-        }
-      }
+
+  buoydata::get_buoy_data(buoyid=buoyID,
+                          year=startY:as.integer(format (Sys.Date(), "%Y"))
+                          , outDir="~/tmp/LCI_noaa/cache/noaaWeather")
+  # wB <- combine_buoy_data(buoyID, variable="WVHT", inDir="~/tmp/LCI_noaa/cache/noaaWeather/")
+    wB <- list.files(path = paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/",
+                                    buoyID, "/"), patter="\\.csv$",
+                     full.names=TRUE) |>
+      readr::read_csv(id="file_name", col_names=TRUE, comment="#", na="999")
+
+  wB$datetimestamp <- with (wB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
+                                                   , hh, ":", mm), tz = "UTC"))
+
+  ## add real-time data -- check in buoydata; already fixed?
+  if (0){
+    require ("rerddap") ## another rnoaa alternative?? only for gridded data?
+    url <- 'https://coastwatch.pfeg.noaa.gov/erddap/'
+    # find all gridded datasets
+    griddedDatasets <- rerddap::ed_datasets(url=url, which = "tabledap")
+    # select chl daily 2km
+    buoy <- griddedDatasets |>
+      dplyr::filter(Dataset.ID == "cwwcNDBCMet")
+    # get info about dataset
+    info <- rerddap::info(buoy$Dataset.ID, url = url)
+    info
+
+
+    if (clearcache){
+      rerddap::cache_delete_all()
     }
+    cD <- rerddap::griddap()
+
+    ## straight from source -- AOOS erddap server for lower cook inlet wave buoy
+    test <- rerddap::tabledap(fields=c("time", "sea_water_temperature"), url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html", fmt="csv")
+
+    info (url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html")
+
+
+    ## MR search
+    noaaS <- servers() |>
+      filter(grepl ("NOAA", name)) |>
+      as.data.frame()
+
+    for (i in seq_len (nrow (noaaS))){
+      cat ("\n\n", i, noaaS$short_name [i], "\n")
+      print (try (ed_search (query="buoy", url=noaaS$url [i])))
+    }
+
+
+    out <- ed_search (query = c("aoos"), which='table')
+
+
+    ## try IOOS Sensors ERDDAP
+    url <- "https://erddap.sensors.ioos.us/erddap/"
+    datasets <- rerddap::ed_datasets(url=url, which="tabledap")
+    datasets <- rerddap::ed_search(query="buoy", url=url)
+
+    datasets$info$title
   }
 
-  ## add most recent
-  cD <- try (buoy (dataset=set, buoyid=buoyID, year=9999))  ## 9999=most up-to-date data
-  if (class (cD) == "buoy"){
-    wDB <- rbind (wDB, as.data.frame (cD$data))
-  }
-  save (wDB, meta, file=paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")) ## cache of buoy data
 
-  ## QAQC
-  wDB <- wDB [!duplicated(wDB$time),]
-  tm <- gsub ("T", " ", wDB$time)
-  tm <- gsub ("Z", "", tm)
-  wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC") # move this up?
-  rm (tm)
-  for (i in 1:length (meta)){  ## meta is a tibble...
-    mN <- which (names (wDB) == names (meta [i]))
-    is.na (wDB [,mN])[which (wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
+
+  if (exists ("wDB")){
+    wDB <- rbind (wDB, wB)
+  }else{
+    wDB <- wB
   }
-  ## ensure windspeed is m/s
-  if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
+  rm (wB)
+
+  # ## QAQC
+  wDB <- wDB [!duplicated(wDB$datetimestamp),]
+  # tm <- gsub ("T", " ", wDB$datetimestamp)
+  # tm <- gsub ("Z", "", tm)
+  # wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC") # move this up?
+  # rm (tm)
+
+  # for (i in 1:length (meta)){  ## meta is a tibble...
+  #   mN <- which (names (wDB) == names (meta [i]))
+  #   is.na (wDB [,mN])[which (wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
+  # }
+  # ## ensure windspeed is m/s
+  # if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
+  #
+
+  save (wDB, file=cacheF)
   return (wDB)
-}
+  }
 
 
 

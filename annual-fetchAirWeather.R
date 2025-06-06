@@ -25,8 +25,8 @@ metstation <- "kachomet"  # SWMP
 # metstation <- "FILA2"     # Flat Island  -- something with subsets
 # metstation <- "AUGA2"     # Augustine Island  --- subsets
 # metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
-# metstation <- "AMAA2"       # East Amatuli, Barren
-metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram
+# metstation <- "AMAA2"     # East Amatuli, Barren
+metstation <- "HMSA2"       # Homer Spit (starts in 2012) -- crash at gale pictogram
 # metstation <- "PAHO"      # Homer Airport -- using riem package
 
 
@@ -49,7 +49,7 @@ sAir <- getSWMP (station="kachomet", QAQC=TRUE)
 nAir <- getNOAAweather (stationID="PAHO", clearcache=clearC)  ## function in annualPlotFct
 nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct
 
-nWave <- try (getNOAA(clearcache=clearC))
+nWave <- try (getNOAA(buoyID="46108", clearcache=clearC))
 
 
 
