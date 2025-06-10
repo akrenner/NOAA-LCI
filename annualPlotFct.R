@@ -566,29 +566,38 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
 
 
   require ("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
-  startY <- buoydata::buoyDataWorld |>
-    dplyr::filter(ID == buoyID) |>
-    dplyr::select(Y1) |>
-    as.numeric()
-
   if (file.exists(cacheF)){
     load (cacheF)
     startY <- max (wDB$datetimestamp) |>
       format ("%Y") |>
       as.numeric() -1
+  }else{
+    startY <- buoydata::buoyDataWorld |>
+      dplyr::filter(ID == buoyID) |>
+      dplyr::select(Y1) |>
+      as.numeric()
   }
-
   buoydata::get_buoy_data(buoyid=buoyID,
                           year=startY:as.integer(format (Sys.Date(), "%Y"))
                           , outDir="~/tmp/LCI_noaa/cache/noaaWeather")
   # wB <- combine_buoy_data(buoyID, variable="WVHT", inDir="~/tmp/LCI_noaa/cache/noaaWeather/")
-    wB <- list.files(path = paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/",
-                                    buoyID, "/"), patter="\\.csv$",
-                     full.names=TRUE) |>
-      readr::read_csv(id="file_name", col_names=TRUE, comment="#", na="999")
+  wB <- list.files(path = paste0 ("~/tmp/LCI_noaa/cache/noaaWeather/",  ## should only read new files XXX
+                                  buoyID, "/"), patter="\\.csv$",
+                   full.names=TRUE) |>
+    readr::read_csv(id="file_name", col_names=TRUE, comment="#", na="999")
 
   wB$datetimestamp <- with (wB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
                                                    , hh, ":", mm), tz = "UTC"))
+
+
+  if (exists ("wDB")){
+    wDB <- rbind (wDB, wB)
+  }else{
+    wDB <- wB
+  }
+  rm (wB)
+  save (wDB, file=cacheF)
+
 
   ## add real-time data -- check in buoydata; already fixed?
   if (0){
@@ -599,6 +608,7 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
     # select chl daily 2km
     buoy <- griddedDatasets |>
       dplyr::filter(Dataset.ID == "cwwcNDBCMet")
+
     # get info about dataset
     info <- rerddap::info(buoy$Dataset.ID, url = url)
     info
@@ -607,12 +617,19 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
     if (clearcache){
       rerddap::cache_delete_all()
     }
-    cD <- rerddap::griddap()
+    cD <- rerddap::griddap(info, latitude = c(54, 60)
+                           , longitude = c(-159, -150)
+                           , fiels=c("wtmp", "wvht"))
+
 
     ## straight from source -- AOOS erddap server for lower cook inlet wave buoy
-    test <- rerddap::tabledap(fields=c("time", "sea_water_temperature"), url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html", fmt="csv")
+    test <- rerddap::tabledap(info, fields=c("time", "atmp"), url=url)
+    #                                "https://erddap.aoos.org/erddap/tabledap/aoos_204.html", fmt="csv")
 
-    info (url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html")
+    # info (url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html") ## missing datasetid
+
+
+
 
 
     ## MR search
@@ -638,13 +655,46 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   }
 
 
+  ## add real-time data -- manual from http
+  ## from https://www.ndbc.noaa.gov/download_data.php?filename=4610812025.txt.gz&dir=data/adcp/Jan/
 
-  if (exists ("wDB")){
-    wDB <- rbind (wDB, wB)
-  }else{
-    wDB <- wB
-  }
-  rm (wB)
+  # tdy <- as.POSIXct("2025-05-18")
+  tdy <- Sys.Date()
+  ## set-up file structure
+  cMon <- month.abb [1:as.numeric (format (tdy, "%m"))]
+  ## copy output of fwf_empty(noaaexamplefile.txt), as   clns <- fwf_empty("~/Desktop/4610812025.txt", skip=2)
+  clns <- list (begin=c(0L, 5L, 8L, 11L, 14L, 17L, 21L, 26L, 32L, 38L, 44L, 49L, 53L,
+                        60L, 68L, 72L, 78L, 83L),
+                end=c(4L, 7L, 10L, 13L, 16L, 20L, 25L, 30L, 36L, 42L, 48L, 52L, 59L,
+                      65L, 71L, 77L, 82L, NA)
+                , colNames=colnames(wDB)[2:ncol (wDB)]
+                # colNnames=c("YY", "DD", "hh", "mm", "WDIR", "WSPD", "GST", "WVHT", "DPD",
+                #             "APD", "MWD", "PRES", "ATMP", "WTMP", "DEWP", "VIS", "TIDE")
+  )
+  rtB <- lapply (seq_along(cMon), function (i){
+    ## form of https://www.ndbc.noaa.gov/data/adcp/Jan/4610812025.txt.gz
+    ## https://www.ndbc.noaa.gov/data/stdmet/Jan/4610812025.txt.gz
+    nD <-try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
+                                           cMon[i],"/", buoyID, i
+                                           , format (tdy, "%Y"), ".txt.gz")
+                              , col_positions = clns, skip=2 #, na=999.0
+                              , id = "file_name"), silent=TRUE)
+    if (class (nD)[1] == "try-error"){ # try again for last available month
+      nD <-try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
+                                             cMon[i],"/", buoyID, ".txt")
+                                , col_positions = clns, skip=2 #, na=999.0
+                                , id = "file_name"), silent=TRUE)
+    }
+    if (class (nD)[1] == "try-error"){nD <- wDB [0,]}
+    nD
+  })
+  # https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T08%3A00%3A00Z&time%3C%3D2025-06-10T08%3A00%3A00Z
+  # rta <- read.csv ("https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T07%3A30%3A00Z&time%3C%3D2025-06-10T07%3A30%3A00Z")
+  rtB <- do.call("rbind", rtB)
+  colnames(rtB) <- colnames (wDB)
+  rtB$datetimestamp <- with (rtB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
+                                                     , hh, ":", mm), tz = "UTC"))
+  wDB <- rbind (wDB, rtB); rm (rtB)
 
   # ## QAQC
   wDB <- wDB [!duplicated(wDB$datetimestamp),]
@@ -661,9 +711,8 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   # if (meta$wind_spd$units != "meters/second"){cat (meta$wind_spd$units); stop ("Fix wspd units")}
   #
 
-  save (wDB, file=cacheF)
   return (wDB)
-  }
+}
 
 
 
