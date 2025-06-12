@@ -31,9 +31,24 @@ metstation <- "HMSA2"       # Homer Spit (starts in 2012) -- crash at gale picto
 
 
 wStations <- c("kachomet", "FILA2"
-               # , "AUGA2" #, "46105"
-               # , "AMAA2" #, "HMSA2"
+                , "AUGA2" , "46105"
+                , "AMAA2" , "HMSA2"
 )
+wStations <- c("HOMER AIRPORT", "HOMER SPIT"
+               , "FLAT ISLAND LIGHT", "KACHEMAK BAY RESERVE"
+               , "EAST AMATULI STATION LIGHT  AK", "AUGUSTINE ISLAND")
+
+
+
+
+if (0){
+  require (buoyData)
+  buoydata::buoyDataWorld |>
+    dplyr::filter(LAT > 58, LAT < 61) |>
+    dplyr::filter (LON > -154, LON < -149) |>
+    dplyr::filter (nYEARS >= 10)
+}
+
 
 
 

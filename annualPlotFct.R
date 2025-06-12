@@ -482,6 +482,111 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 }
 
 
+# ## get ghcnd noaa weather using GSODR package
+# ## not real-time -- most current > 6 month old -- deal breaker
+# ## replacing noaaWeather.R
+#   ## get weather data from Global Surface Summary of the Day (GSOD)
+#   ## see https://github.com/ropensci/GSODR
+#   ## see noaaWeather.R for unit conversions
+# require ("GSODR")
+# nearest_stations(LAT=59.6, LON=-151.5, distance=100)
+# hmr <- get_GSOD(years=2012:(as.numeric(format (Sys.Date(), "%Y"))-1)
+#                 , station="997176-99999" # Homer Spit
+#                 )
+
+
+
+getNOAAweatherX2 <- function (station="HOMER AIRPORT", clearcache=FALSE){
+  ## utilize worldmet::importNOAA adding caching function
+
+  require ("worldmet")
+
+  ## catch errors
+  if (length (station) != 1L) stop ("Can only process one station at a time")
+
+  ## cache data
+  cacheFolder <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
+
+  if (clearcache){
+    unlink (cacheFolder, recursive=TRUE)
+  }
+  dir.create(cacheFolder, showWarnings=FALSE, recursive=TRUE)
+  fetchMeta <- function(){
+    wrldSites <- getMeta (plot=FALSE, returnMap=FALSE) ## download everything? country="US", state="AK",
+    saveRDS (wrldSites, paste0 (cacheFolder, "meta.rds"))
+    wrldSites
+  }
+
+  ## load caches
+  if (file.exists(paste0 (cacheFolder, "meta.rds"))){
+    wrldSites <- readRDS (paste0 (cacheFolder, "meta.rds"))
+  }else{
+    wrldSites <- fetchMeta()
+  }
+  if (difftime (Sys.Date(), wrldSites$end [match (station, wrldSites$station)]
+                , units="days") > 28){
+    wrldSites <- fetchMeta()
+  }
+  if (1){
+    AKpick <- wrldSites |>
+      dplyr::filter (55 < latitude & latitude < 61) |>
+      dplyr::filter (-154 < longitude & longitude < -148)
+    # print (AKpick)
+    cat ("Nearby stations:\n\n", paste (AKpick$station, collapse="\n "))
+  }
+  stn <- wrldSites [match (station, wrldSites$station),]
+
+
+  ## cache inventory
+  cYears <- list.files(cacheFolder, pattern=stn$code) |>
+    substr (start=14, 17) |>
+    as.numeric()
+
+  ## set-up years to fetch
+  yR <- as.numeric (format (stn$begin, "%Y")):
+    as.numeric (format (stn$end, "%Y"))                 # all available years
+  yR <- 2012:as.numeric (format (Sys.Date(), "%Y"))     # minimal for now
+  ## revise yR, use as many cached files, as possible
+  yR <- yR [which (!yR %in% cYears)]
+  yR <- unique (c (yR, as.numeric (format (Sys.Date(), "%Y")))) # always fetch last year again
+
+  weather <- importNOAA (code=stn$code
+                         , year=yR
+                         , hourly=TRUE
+                         , path=cacheFolder
+  )
+
+
+  cWeather <- lapply (list.files (cacheFolder, pattern=stn$code), function (i){ # relist, in case of missing data
+    readRDS (paste0 (cacheFolder, i))
+  }) |>   ## all years are cached and read again -- no need to combine them
+    dplyr::bind_rows() |>
+    dplyr::select (!year)
+  cWeather
+
+  # cWeather <- lapply (list.files (cacheFolder, pattern=stn$code), function (i){ # relist, in case of missing data
+  #   readRDS (paste0 (cacheFolder, i))
+  # })
+  # # cWeather <- do.call ("rbind", cWeather)
+  # # weather <- unique (rbind (cWeather, weather))
+  # weatherO <- do.call ("rbind", cWeather) |>
+  #   dplyr::select (!(year))
+  # #   rbind (weather) |>
+  # #   dplyr::distinct()
+  # weatherO
+
+  # hmr <- importNOAA (code="703410-25507" # PAHO, Homer airport
+  #                    , year=2000:cYear  ## starts in 1973
+  #                    , hourly=FALSE
+  #                    , path=cacheFolder)
+  # hsp <- importNOAA (code="997176-99999"
+  #                    , hourly=FALSE
+  #                    , year=2012:cYear
+  #                    , cacheFolder)
+}
+
+
+
 getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
   ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
   ## using package riem
@@ -661,7 +766,7 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   # tdy <- as.POSIXct("2025-05-18")
   tdy <- Sys.Date()
   ## set-up file structure
-  cMon <- month.abb [1:as.numeric (format (tdy, "%m"))]
+  cMon <- month.abb [1:(as.numeric (format (tdy, "%m"))-1)]
   ## copy output of fwf_empty(noaaexamplefile.txt), as   clns <- fwf_empty("~/Desktop/4610812025.txt", skip=2)
   clns <- list (begin=c(0L, 5L, 8L, 11L, 14L, 17L, 21L, 26L, 32L, 38L, 44L, 49L, 53L,
                         60L, 68L, 72L, 78L, 83L),
@@ -674,11 +779,11 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   rtB <- lapply (seq_along(cMon), function (i){
     ## form of https://www.ndbc.noaa.gov/data/adcp/Jan/4610812025.txt.gz
     ## https://www.ndbc.noaa.gov/data/stdmet/Jan/4610812025.txt.gz
-    nD <-try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
+    nD <-suppressWarnings (try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
                                            cMon[i],"/", buoyID, i
                                            , format (tdy, "%Y"), ".txt.gz")
                               , col_positions = clns, skip=2 #, na=999.0
-                              , id = "file_name"), silent=TRUE)
+                              , id = "file_name"), silent=TRUE))
     if (class (nD)[1] == "try-error"){ # try again for last available month
       nD <-try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
                                              cMon[i],"/", buoyID, ".txt")
@@ -691,10 +796,22 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   # https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T08%3A00%3A00Z&time%3C%3D2025-06-10T08%3A00%3A00Z
   # rta <- read.csv ("https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T07%3A30%3A00Z&time%3C%3D2025-06-10T07%3A30%3A00Z")
   rtB <- do.call("rbind", rtB)
+
+  ## add the last 45 days of "real time" data
+  ## example:  https://www.ndbc.noaa.gov/data/realtime2/46108.txt
+  nD <- try (readr::read_fwf(file=paste0 ("https://www.ndbc.noaa.gov/data/realtime2/"
+                                                  , topupper (buoyID), ".txt")
+                                     , col_positions = clns, skip=2 #, na=999.0
+                                     , id = "file_name"), silent=TRUE)
+  if (class (nD)[1] != "try-error"){
+    rtB <- rbind (rtB, nD)
+  }
+
   colnames(rtB) <- colnames (wDB)
   rtB$datetimestamp <- with (rtB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
                                                      , hh, ":", mm), tz = "UTC"))
   wDB <- rbind (wDB, rtB); rm (rtB)
+
 
   # ## QAQC
   wDB <- wDB [!duplicated(wDB$datetimestamp),]
