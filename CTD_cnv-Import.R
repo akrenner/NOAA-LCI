@@ -82,8 +82,6 @@
 # system ("rm -r ~/tmp/LCI_noaa/")
 # ## don't  ##  unlink ("~/tmp/LCI_noaa/", recursive = TRUE)
 
-sink ("CTD_cnv-import.log.txt")
-
 print (sTime <- Sys.time())
 runParallel <- FALSE  ## 21 minutes on Dell Latitude 5420
 runParallel <- TRUE   ##  7 minutes on same Dell (4 cores, 8 threads)
@@ -498,7 +496,5 @@ save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R
 # x$Station
 #
 # dickFdb <- subset (fileDB, file=="2019_05-14_alongbay_skb12_cast203_4141.cnv")
-
-sink()
 
 ## EOF

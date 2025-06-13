@@ -59,7 +59,7 @@ if (1){
   # source ("I-ctd_uneditedHexFiles.R")
 
   ## hex conversion and QAQC plots
-  sink (file = "ctdprocessinglog.txt", append=FALSE, split = FALSE) # show output and write to file
+  sink (file = "ctdprocessing.log", append=FALSE, split = FALSE) # show output and write to file
   cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
   source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
@@ -69,7 +69,7 @@ if (1){
 sink()
 
 
-sink (file="StateOfBay-runlog.txt", append=FALSE, split=FALSE)
+sink (file="StateOfBay-run.log", append=FALSE, split=FALSE)
 sink()
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
