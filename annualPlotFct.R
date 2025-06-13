@@ -659,6 +659,21 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
   ## THREDDS server. Or wget from http site
   ## GSODR: global surface summary of day stations, similar to rnoaa
 
+  ## NOAA seems to recommend THREDDS -- attempts:
+  if (0){
+    library(ncdf4)
+    goes.nc = nc_open("http://basin.ceoe.udel.edu/thredds/dodsC/GOESJPLSST.nc")
+    goes.nc
+
+    goes.nc = nc_open("https://www.ncei.noaa.gov/thredds-ocean/dodsC/ndbc/cmanwx/2025/03/NDBC_WPOW1_202503_D8_v00.nc.html")
+    goes.nc = nc_open("https://www.ncei.noaa.gov/thredds-ocean/fileServer/ndbc/cmanwx/2025/03/NDBC_WPOW1_202503_D8_v00.nc")
+
+    goes.nc = nc_open ("~/NDBC_WPOW1_202503_D8_v00.nc")
+
+    goes.nc
+    nc_close(goes.nc)
+  }
+
   buoyID <- tolower(buoyID)
   cacheF <- paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")
 

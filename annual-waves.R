@@ -133,6 +133,11 @@ hmr <-  meteo_pull_monitors ("USW00025507"
 
 if (1){ ## mean daily wave height -- for when do we have data
 
+  ## field names translations -- rnoaa legacy
+  wDB$wave_height <- wDB$WVHT
+  wDB$average_wpd <- wDB$APD
+  wDB$mean_wave_dir <- wDB$WDIR
+
   dailyW <- aggregate (wave_height~format (datetimestamp
                                            , "%Y-%m-%d")
                        , wDB, FUN = mean)

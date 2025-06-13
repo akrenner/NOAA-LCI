@@ -324,9 +324,9 @@ abline (a = 0, b =1, lwd = 3, col = "gray")
 legend ("topleft", legend = paste0 ("bad classifications = "
                                   , round (sum (badClass)/length (badClass), 2)*100, "%")
       , bty = "n")
-with (tempDay, abline (v = mean (days30) + c(0.5,-0.5) * sd (days30)
+with (tempDay, abline (v = mean (days30) + c(0.5,-0.5) * stats::sd (days30)
       , lty = "dashed", col = "gray"))
-with (tempDay, abline (h = mean (MonthlyAnom) + c(0.5,-0.5) * sd (MonthlyAnom)
+with (tempDay, abline (h = mean (MonthlyAnom) + c(0.5,-0.5) * stats::sd (MonthlyAnom)
       , lty = "dashed", col = "gray"))
 ## points (MonthlyAnom~days30, data = tempDay
 ##       , col = ifelse (tempDay$days30 < 0, "blue", "red")
@@ -393,7 +393,7 @@ anAx <- function (){
           )
     }
 sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
-    sdT <- aggregate (tsVar~jday, df, FUN = sd)
+    sdT <- aggregate (tsVar~jday, df, FUN = stats::sd)
     plot (sdT, type = "l"
         , xlab = "" # "time of the year"
         , ylab = yAn
