@@ -37,7 +37,8 @@ if (0){
   # x <- renv::status()
   # names (x$library$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
   # names (x$lockfile$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
-  badP <- c("maptools", "rgdal", "rgeos", "rnoaa", "rtide", "SDraw", "GVI")
+  badP <- c("maptools", "rgdal", "rgeos", "rnoaa" #, "rtide", "SDraw", "GVI"
+            )
   deps <- renv::dependencies()
   for (i in 1:length (badP)){
     cat ("\n\n##", badP [i], "##\n")

@@ -42,7 +42,7 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 
 
 if (0){
-  require (buoyData)
+  require (buoydata)
   buoydata::buoyDataWorld |>
     dplyr::filter(LAT > 58, LAT < 61) |>
     dplyr::filter (LON > -154, LON < -149) |>

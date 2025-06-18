@@ -16,6 +16,7 @@ renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
 
 renv::install (repos="https://cloud.r-project.org/")
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+renv::restore()
 require ("conflicted")
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load

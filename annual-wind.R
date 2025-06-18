@@ -142,6 +142,8 @@ if (!exists ("wStations")){wStations <- metstation}
   ## alternative: get wind (and other weather) from HMSA2, Homer Spit -- Mike says it's more
   ## representative of wind in the bay than HMRA2, Homer, Research Reserve
   if (0){  # activate once it's working to get weather from alternative NOAA source: Augustine, Flat Island, etc.
+
+
     source ("noaaWeather.R")
     hmr <- noaa
     require ("rnoaa")

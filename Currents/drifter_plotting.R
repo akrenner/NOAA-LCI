@@ -78,8 +78,10 @@ dK <- drift %>%
 ## quick'n dirty: IDW
 p <- require ('GVI')  ## for sf_to_rast
 if (!p){
+  require ("terra")
   require ("remotes")
-  remotes::install_github("STBrinkmann/GVI")
+  # remotes::install_git("https://github.com/STBrinkmann/GVI")  ## latest commit
+  remotes::install_github("STBrinkmann/GVI") ## latest tagged release
   require ("GVI")
 }; rm (p)
 require ('parallel')
