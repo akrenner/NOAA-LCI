@@ -180,11 +180,7 @@ editor: visual
 
 ## Summary
 
-Summer conditions of a stratified water column. Nutrient limitation is evident in the inner bay. 
-
-Upwelling in Cook Inlet -> cold waters
-
-Surface waters in the inner bay are noticeably freshening and warming up, compared to what was seen in April (maximum: `{r} tsal$temSalR[2]` °C). At all depths, waters continue to be warmer and less saline than the seasonal mean, matching the criteria of a moderate marine heat wave. Chlorophyll concentrations quintupled since April and are now amongst the highest in the last four years.
+With cool air temperatures, the warm-water anomaly that started at the beginning of the year was much diminished, however a fresh salinity anomaly was ongoing. Driven by freshwater influx, strong stratification of surface waters was extending from the inner into the outer bay. Chlorophyll concentrations in the inner bay had dropped from their peak last month and areas of highest concentration had shifted into the outer bay. Nutrient levels in the inner bay were likely depleted from the bloom last month with stratification preventing replenishment. Weaker stratification and proximity to upwelling in Cook Inlet were likely factors driving high chlorophyll concentrations in the outer bay through an ongoing supply of nutrients. 
 
 <!-- 2-3 sentences -->
 
@@ -210,13 +206,15 @@ Recorded water temperatures during this survey ranged from a minimum of `{r} tsa
 Longitudinal and cross-sections of main parameters.
 :::
 
-Satellite observations showed that farther out in Cook Inlet, surface waters were substantially cooler (3 K) than in the bay, and even cooler than in much of coastal Gulf of Alaska (@fig-SST_GOA). 
+Satellite observations showed that farther out in Cook Inlet, sea surface temperatures (SST) were substantially cooler (3 K) than in the bay, and even cooler than in much of coastal Gulf of Alaska (@fig-SST_GOA). 
 
 ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](media-2025-06/alaska.fc_2025-06-16.gif){#fig-SST_GOA}
+
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
 
-Since the beginning of the year, water temperatures in the middle of the bay, at station T9-6, have been warmer than the seasonal mean. This anomaly continuous in a much demished form in the deep waters (@fig-TempDeep). In line with the cool air temperatures, this anomaly is no longer evident at the surface (@fig-SWMP-homerdeep-temp, @fig-TSprofile_T9). <!-- add sob plot on air temperature -->
+Since the beginning of the year, water temperatures in the middle of the bay, at station T9-6, have been warmer than the seasonal mean. This anomaly continues in a much diminished form in deep waters (@fig-TempDeep). In line with the cool air temperatures, this anomaly is no longer evident at the surface (@fig-SWMP-homerdeep-temp, @fig-TSprofile_T9). 
+<!-- add sob plot on air temperature -->
 
 ![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
 
@@ -231,34 +229,34 @@ Since the beginning of the year, water temperatures in the middle of the bay, at
 
 ### Salinity
 
-Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Bear Cove and Seldovia, respectively. A substantial layer of fresher water, from the surface down to about 25 m depth was present in all but the outermost parts of the bay @fig-tSections_AB, @fig-tSections_T9).
+<!-- also cover density and buoyancy here -->
 
+Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Bear Cove and Seldovia, respectively. A substantial layer of fresher water, from the surface down to about 25 m depth was present in all but the outermost parts of the bay (@fig-tSections). This stratification is a defining feature of the summer months. In contrast to earlier months, this low salinity layer now extends well past the more sheltered waters of the inner bay (@fig-tSections_AB). As indicated by the Brunt–Väisälä frequency (bvf, @fig-tSections_AB), there is some stratification extending all the way to the outer bay, however, water column stability there is much weaker than in the inner bay. Even though the survey this month did not extend into lower Cook Inlet, the satellite SST data showed a pocket of cool water in lower Cook Inlet, surrounded by warmer waters (@fig-SST_GOA). The most likely cause is local upwelling (likely driven by the strong tidal currents in that area). We would predict that the water column in these areas is still fully mixed. 
 
-Very head of the bay: local upwelling (wind driven?) -- despite the nearby fox river. 
-
-
-
-From the inner bay to the eastern half of the outer bay, a distinct lens of fresher (and now warmer) water was apparent (@fig-tSections_AB), reflecting increased freshwater runoff from precipitation and snow melt. This freshened surface layer was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater originating from around the inner Kachemak Bay watershed, including Fox and smaller rivers.
-
-The warm temperature anomaly was accompanied by a low salinity anomaly in Kachemak Bay waters (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it was slightly more pronounced at depth (@fig-TSprofile_T9).
+Since the beginning of the year, salinity at T9-6 has been lower than the seasonal mean (@fig-SalDeep). In contrast to the temperature anomaly, the salinity anomaly was ongoing. The magnitude of this anomaly is now the third-largest such event in thirteen years of observations (@fig-SalDeep). 
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
 ### Turbidity
 
-We did not encounter any high-turbidity surface water, indicative of glacial run-off. As expected, inner bay waters were more turbid than outer bay waters. Increased turbidity near the surface in the inner bay may be due to a combination of sediments from terrestrial run-off and high concentrations of phytoplankton (@fig-tSections).
+We did encounter visually highly turbid surface waters, indicative of glacial run-off, at several stations in the inner bay, but also on the southern part of T9. Both transects showed two layers of turbid waters: at the surface, and near the bottom (@fig-tSections), likely caused by a combination of terrestrial and glacial run-off (surface and bottom) and phytoplankton activity (surface). 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Phytoplankton were blooming! High concentrations of chlorophyll were observed with the CTD fluorometer between the surface and 30 m throughout the bay, with particularly high concentrations in the inner bay at around 25 m depth (@fig-tSections_AB). Concentrations at T9-6 were amongst highest at this station in the last four years.
+Surface waters were noticeably green to the eye. High concentrations of chlorophyll were observed with the CTD fluorometer between the surface and 30 m throughout the bay. In contrast to the previous month, highest concentrations were now found in the outer bay (@fig-tSections_AB). At T9-6, off the Homer Spit, chlorophyll concentrations peaked last month and now dropped substantially below seasonal mean (@fig-chlorophyll). 
 
-![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll} In our surface samples, Kim Schuster and Jasmine Maurer (KBNERR) found bloom-levels of *Chaetoceros debilis* and *Pseudo-nitzschia* spp. in the inner bay at AlongBay-06 and AlongBay-10, respectively.
+Strong stratification of the water column in the inner bay is an effective barrier to vertical mixing. This is likely the reason for the observed drop in chlorophyll concentrations. The plankton bloom last month depleted nutrient concentrations and stratification prevented their replenishment. High chlorophyll concentrations in the outer bay were likely due to resupply from Cook Inlet and weaker vertical stratification forming only recently. 
+
+![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll} 
+
 
 ### Zooplankton
 
-A weak deep scattering layer, mostly below 40 m was observed at many stations. We sampled this layer with an oblique at T9-6 (towed from 75 m to the surface). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae (@fig-zoop).
+There were technical issues with the echo sounder. No samples were taken. 
+
+<!-- A weak deep scattering layer, mostly below 40 m was observed at many stations. We sampled this layer with an oblique at T9-6 (towed from 75 m to the surface). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae (@fig-zoop). -->
 
 <!-- ![Zooplankton sample from T9-6, showing e.g. the head of a *Euphausia pacifica*, copepods, and barnacle nauplii](./media-2025-05/IMG_4271s2.JPG){#fig-zoop} -->
 
