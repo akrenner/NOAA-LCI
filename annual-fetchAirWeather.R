@@ -39,8 +39,6 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
                , "EAST AMATULI STATION LIGHT  AK", "AUGUSTINE ISLAND")
 
 
-
-
 if (0){
   require (buoydata)
   buoydata::buoyDataWorld |>
@@ -65,12 +63,26 @@ nAir <- getNOAAweather (stationID="PAHO", clearcache=clearC)  ## function in ann
 nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct
 
 nWave <- try (getNOAA(buoyID="46108", clearcache=clearC))
+wave.46108 <- nWave
+
+
+# weather.homer.spit <- getNOAAweather (stationID="xxx")
+
+weather.homer.airport <- getNOAA (stationID="PAHO", clearcache=clearC)  ## Homer Airport weather station)
+weather.homer.spit <- getNOAA (stationID="kachomet", clearcache=clearC)  ## SWMP Homer Spit weather station
+weather.seldovia <- getNOAA(stationID="SLSA2", clearcache=clearC)  ## Seldovia
+weather.augustine <- getNOAA("AUGA2", clearcache=clearC) # Augustine
+weather.flatisland <- getNOAA("FILA2", clearcache=clearC) # Flat Island
+
+
 
 
 
 ## ------------clean up weather data and move to metric units ----------------
 
-## match noaa to swmp data
+## match noaa to swmp data -- move this into a annualPltFct.R function XX !
+## move all to noaa buoy dataset, rather than airport/U of Iowa
+
 hmr <- with (nAir, data.frame (datetimestamp = valid
                                , jday=as.numeric (format (valid, "%j"))
                                , year=as.numeric (format (valid, "%Y"))
@@ -83,10 +95,12 @@ hmr <- with (nAir, data.frame (datetimestamp = valid
                                # , wdir=drct
                                , sdwdir=rep (is.na (nrow (nAir)))
                                , totpar=rep (is.na (nrow (nAir)))
-                               , totprcp=p01i * 25.4 ## need to check on units -- inches -> mm
+                               , totprcp=p01i * 25.4 ## need to check on units -- inches -> mm XXX
                                , totsorad=rep (is.na (nrow (nAir)))
 ))
 rm (nAir)
+
+
 
 ## minimum NOAA stations
 ## accessible with package riem

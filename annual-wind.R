@@ -141,24 +141,18 @@ if (!exists ("wStations")){wStations <- metstation}
 
   ## alternative: get wind (and other weather) from HMSA2, Homer Spit -- Mike says it's more
   ## representative of wind in the bay than HMRA2, Homer, Research Reserve
-  if (0){  # activate once it's working to get weather from alternative NOAA source: Augustine, Flat Island, etc.
-
-
-    source ("noaaWeather.R")
-    hmr <- noaa
-    require ("rnoaa")
-    ## list/map airport-like weather stations
-    hStn <- meteo_nearby_stations(data.frame (id="Homer", latitude=59.63, longitude=-151.51)
-                                  , radius=250)
-    write.csv (hStn, file="~/tmp/LCI_noaa/cache/NoaaMetStations.csv", row.names=FALSE)
+  if (0){
+    ## useing worldmet package
+    require ("worldmet")
+    AKsites <- getMeta(plot=FALSE, returnMap=FALSE) |>
+      dplyr::filter (55 < latitude & latitude < 61) |>
+      dplyr::filter (-154 < longitude & longitude < -148)
+    write.csv (AKsites, file="~/tmp/LCI_noaa/NoaaMetStations.csv", row.names=FALSE)
 
     pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/NOAAWeatherStations.pdf", width=11.5, height=8)
-    plot (latitude~longitude, hStn$Homer, type="n")
-    text (hStn$Homer$longitude, hStn$Homer$latitude, labels=hStn$Homer$name, cex=0.5)
+    plot (latitude~longitude, AKsites, type="n", asp=2)
+    text (AKsites$longitude, AKsites$latitude, labels=AKsites$station, cex=0.5)
     dev.off()
-
-    ## list/map buoy stations
-    bs <- buoy_stations()
   }
   #######################
 

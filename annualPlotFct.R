@@ -496,7 +496,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
 
 
-getNOAAweatherX2 <- function (station="HOMER AIRPORT", clearcache=FALSE){
+getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
   ## utilize worldmet::importNOAA adding caching function
 
   require ("worldmet")
@@ -720,6 +720,7 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
 
 
   ## add real-time data -- check in buoydata; already fixed?
+  ## using erddap -- haven't figured this out
   if (0){
     require ("rerddap") ## another rnoaa alternative?? only for gridded data?
     url <- 'https://coastwatch.pfeg.noaa.gov/erddap/'
@@ -845,6 +846,30 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
 
   return (wDB)
 }
+
+
+if (0){
+## wrap with around/append to above functions!
+hmr <- with (nAir, data.frame (datetimestamp = valid
+                               , jday=as.numeric (format (valid, "%j"))
+                               , year=as.numeric (format (valid, "%Y"))
+                               , atemp=(tmpf-32)*5/9
+                               , rh=relh
+                               , bp=rep (is.na (nrow (nAir)))
+                               , wspd=sknt * 0.5144444444 # convert knots to m/s
+                               , maxwspd=peak_wind_gust * 0.5144444444
+                               , wdir=drct # peak_wind_drct
+                               # , wdir=drct
+                               , sdwdir=rep (is.na (nrow (nAir)))
+                               , totpar=rep (is.na (nrow (nAir)))
+                               , totprcp=p01i * 25.4 ## need to check on units -- inches -> mm XXX
+                               , totsorad=rep (is.na (nrow (nAir)))
+))
+rm (nAir)
+}
+
+
+
 
 
 

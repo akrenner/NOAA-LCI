@@ -422,11 +422,11 @@
     },
     "Deriv": {
       "Package": "Deriv",
-      "Version": "4.1.6",
+      "Version": "4.2.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Symbolic Differentiation",
-      "Date": "2024-09-12",
+      "Date": "2025-06-20",
       "Authors@R": "c(person(given=\"Andrew\", family=\"Clausen\", role=\"aut\"), person(given=\"Serguei\", family=\"Sokol\", role=c(\"aut\", \"cre\"), email=\"sokol@insa-toulouse.fr\", comment = c(ORCID = \"0000-0002-5674-3327\")), person(given=\"Andreas\", family=\"Rappold\", role=\"ctb\", email=\"arappold@gmx.at\"))",
       "Description": "R-based solution for symbolic differentiation. It admits user-defined function as well as function substitution in arguments of functions to be differentiated. Some symbolic simplification is part of the work.",
       "License": "GPL (>= 3)",
@@ -438,8 +438,9 @@
       "Imports": [
         "methods"
       ],
+      "Encoding": "UTF-8",
       "NeedsCompilation": "no",
-      "Author": "Andrew Clausen [aut], Serguei Sokol [aut, cre] (<https://orcid.org/0000-0002-5674-3327>), Andreas Rappold [ctb]",
+      "Author": "Andrew Clausen [aut], Serguei Sokol [aut, cre] (ORCID: <https://orcid.org/0000-0002-5674-3327>), Andreas Rappold [ctb]",
       "Maintainer": "Serguei Sokol <sokol@insa-toulouse.fr>",
       "Repository": "CRAN"
     },
@@ -3296,14 +3297,14 @@
     },
     "curl": {
       "Package": "curl",
-      "Version": "6.3.0",
+      "Version": "6.4.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Modern and Flexible Web Client for R",
       "Authors@R": "c( person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\", comment = c(ORCID = \"0000-0002-4035-0289\")), person(\"Hadley\", \"Wickham\", role = \"ctb\"), person(\"Posit Software, PBC\", role = \"cph\"))",
       "Description": "Bindings to 'libcurl' <https://curl.se/libcurl/> for performing fully configurable HTTP/FTP requests where responses can be processed in memory, on disk, or streaming via the callback or connection interfaces. Some knowledge of 'libcurl' is recommended; for a more-user-friendly web client see the  'httr2' package which builds on this package with http specific tools and logic.",
       "License": "MIT + file LICENSE",
-      "SystemRequirements": "libcurl (>= 7.62): libcurl-devel (rpm) or libcurl4-openssl-dev (deb)",
+      "SystemRequirements": "libcurl (>= 7.73): libcurl-devel (rpm) or libcurl4-openssl-dev (deb)",
       "URL": "https://jeroen.r-universe.dev/curl",
       "BugReports": "https://github.com/jeroen/curl/issues",
       "Suggests": [
@@ -4028,7 +4029,7 @@
     },
     "evaluate": {
       "Package": "evaluate",
-      "Version": "1.0.3",
+      "Version": "1.0.4",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Parsing and Evaluation Tools that Provide More Details than the Default",
@@ -4047,7 +4048,8 @@
         "lattice",
         "methods",
         "pkgload",
-        "rlang",
+        "ragg (>= 1.4.0)",
+        "rlang (>= 1.1.5)",
         "knitr",
         "testthat (>= 3.0.0)",
         "withr"
@@ -4057,7 +4059,7 @@
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Hadley Wickham [aut, cre], Yihui Xie [aut] (<https://orcid.org/0000-0003-0645-5666>), Michael Lawrence [ctb], Thomas Kluyver [ctb], Jeroen Ooms [ctb], Barret Schloerke [ctb], Adam Ryczkowski [ctb], Hiroaki Yutani [ctb], Michel Lang [ctb], Karolis Koncevičius [ctb], Posit Software, PBC [cph, fnd]",
+      "Author": "Hadley Wickham [aut, cre], Yihui Xie [aut] (ORCID: <https://orcid.org/0000-0003-0645-5666>), Michael Lawrence [ctb], Thomas Kluyver [ctb], Jeroen Ooms [ctb], Barret Schloerke [ctb], Adam Ryczkowski [ctb], Hiroaki Yutani [ctb], Michel Lang [ctb], Karolis Koncevičius [ctb], Posit Software, PBC [cph, fnd]",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
@@ -4932,30 +4934,6 @@
       "Maintainer": "David Cooley <david.cooley.au@gmail.com>",
       "Repository": "CRAN"
     },
-    "geonames": {
-      "Package": "geonames",
-      "Version": "0.999",
-      "Source": "Repository",
-      "Encoding": "UTF-8",
-      "Type": "Package",
-      "Title": "Interface to the \"Geonames\" Spatial Query Web Service",
-      "Date": "2019-02-17",
-      "Author": "Barry Rowlingson",
-      "Maintainer": "Barry Rowlingson <b.rowlingson@gmail.com>",
-      "Depends": [
-        "R (>= 2.2.0)"
-      ],
-      "Imports": [
-        "rjson"
-      ],
-      "Description": "The web service at <https://www.geonames.org/> provides a number of spatial data queries, including  administrative area hierarchies, city locations and some country postal code queries. A (free) username is required and rate limits exist.",
-      "License": "GPL-3",
-      "LazyLoad": "yes",
-      "BugReports": "https://github.com/ropensci/geonames/issues",
-      "RoxygenNote": "6.1.0",
-      "NeedsCompilation": "no",
-      "Repository": "CRAN"
-    },
     "geosphere": {
       "Package": "geosphere",
       "Version": "1.5-20",
@@ -5066,7 +5044,7 @@
     },
     "gganimate": {
       "Package": "gganimate",
-      "Version": "1.0.9",
+      "Version": "1.0.10",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Grammar of Animated Graphics",
@@ -5077,7 +5055,7 @@
       "URL": "https://gganimate.com, https://github.com/thomasp85/gganimate",
       "BugReports": "https://github.com/thomasp85/gganimate/issues",
       "Depends": [
-        "ggplot2 (>= 3.5.0)"
+        "ggplot2 (>= 3.5.2)"
       ],
       "Imports": [
         "cli",
@@ -5110,10 +5088,10 @@
       ],
       "VignetteBuilder": "knitr",
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.1",
+      "RoxygenNote": "7.3.2",
       "Collate": "'aaa.R' 'anim_save.R' 'animate.R' 'animation_store.R' 'ease-aes.R' 'gganim.R' 'gganimate-ggproto.R' 'gganimate-package.r' 'ggplot2_reimpl.R' 'group_column.R' 'import-standalone-obj-type.R' 'import-standalone-types-check.R' 'layer_type.R' 'match_shapes.R' 'plot-build.R' 'post_process.R' 'renderers.R' 'scene.R' 'shadow-.R' 'shadow-mark.R' 'shadow-null.R' 'shadow-trail.R' 'shadow-wake.R' 'transformr.R' 'transition-.R' 'transition-components.R' 'transition-events.R' 'transition-filter.R' 'transition-manual.R' 'transition-layers.R' 'transition-null.R' 'transition-states.R' 'transition-time.R' 'transition_reveal.R' 'transmute-.R' 'transmute-enter.R' 'transmute-exit.R' 'transmuters.R' 'tween_before_stat.R' 'view-.R' 'view-follow.R' 'view-static.R' 'view-step.R' 'view-step-manual.R' 'view-zoom.R' 'view-zoom-manual.R' 'zzz.R'",
       "NeedsCompilation": "no",
-      "Author": "Thomas Lin Pedersen [aut, cre] (<https://orcid.org/0000-0002-5147-4711>), David Robinson [aut], Posit, PBC [cph, fnd]",
+      "Author": "Thomas Lin Pedersen [aut, cre] (ORCID: <https://orcid.org/0000-0002-5147-4711>), David Robinson [aut], Posit, PBC [cph, fnd]",
       "Repository": "CRAN"
     },
     "ggedit": {
@@ -5164,12 +5142,11 @@
     },
     "ggfields": {
       "Package": "ggfields",
-      "Version": "0.0.6",
+      "Version": "0.0.7",
       "Source": "Repository",
       "Title": "Add Vector Field Layers to Ggplots",
-      "Date": "2024-02-26",
       "Authors@R": "c(person(\"Pepijn\", \"de Vries\", role = c(\"aut\", \"cre\"), email = \"pepijn.devries@outlook.com\", comment = c(ORCID = \"0000-0002-7961-6646\")))",
-      "Author": "Pepijn de Vries [aut, cre] (<https://orcid.org/0000-0002-7961-6646>)",
+      "Author": "Pepijn de Vries [aut, cre] (ORCID: <https://orcid.org/0000-0002-7961-6646>)",
       "Maintainer": "Pepijn de Vries <pepijn.devries@outlook.com>",
       "Description": "Add vector field layers to ggplots. Ideal for visualising wind speeds, water currents, electric/magnetic fields, etc. Accepts data.frames, simple features (sf), and spatiotemporal arrays (stars) objects as input. Vector fields are depicted as arrows starting at specified locations, and with specified angles and radii.",
       "Depends": [
@@ -6745,38 +6722,6 @@
       "Maintainer": "Edzer Pebesma <edzer.pebesma@uni-muenster.de>",
       "Repository": "CRAN"
     },
-    "isdparser": {
-      "Package": "isdparser",
-      "Version": "0.4.0",
-      "Source": "Repository",
-      "Title": "Parse 'NOAA' Integrated Surface Data Files",
-      "Description": "Tools for parsing 'NOAA' Integrated Surface Data ('ISD') files, described at <https://www.ncdc.noaa.gov/isd>. Data includes for example, wind speed and direction, temperature, cloud data, sea level pressure, and more. Includes data from approximately 35,000 stations worldwide, though best coverage is in North America/Europe/Australia. Data is stored as variable length ASCII character strings, with most fields optional. Included are tools for parsing entire files, or individual lines of data.",
-      "License": "MIT + file LICENSE",
-      "Encoding": "UTF-8",
-      "Authors@R": "c( person(\"Scott\", \"Chamberlain\", role = c(\"aut\",\"cre\"),  email = \"myrmecocystus@gmail.com\", comment = c(ORCID = \"0000-0003-1444-9135\")) )",
-      "URL": "https://docs.ropensci.org/isdparser (docs) https://github.com/ropensci/isdparser (devel)",
-      "BugReports": "https://github.com/ropensci/isdparser/issues",
-      "LazyData": "true",
-      "VignetteBuilder": "knitr",
-      "Imports": [
-        "tibble (>= 1.2)",
-        "data.table (>= 1.10.0)",
-        "lubridate"
-      ],
-      "Suggests": [
-        "testthat",
-        "rmarkdown",
-        "knitr"
-      ],
-      "RoxygenNote": "7.0.2",
-      "X-schema.org-applicationCategory": "Climate",
-      "X-schema.org-keywords": "climate, NOAA, data, ISD, stations",
-      "X-schema.org-isPartOf": "https://ropensci.org",
-      "NeedsCompilation": "no",
-      "Author": "Scott Chamberlain [aut, cre] (<https://orcid.org/0000-0003-1444-9135>)",
-      "Maintainer": "Scott Chamberlain <myrmecocystus@gmail.com>",
-      "Repository": "CRAN"
-    },
     "isoband": {
       "Package": "isoband",
       "Version": "0.2.7",
@@ -6860,38 +6805,6 @@
         "tibble"
       ],
       "NeedsCompilation": "yes",
-      "Repository": "CRAN"
-    },
-    "jose": {
-      "Package": "jose",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Type": "Package",
-      "Title": "JavaScript Object Signing and Encryption",
-      "Authors@R": "person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"),  email = \"jeroenooms@gmail.com\", comment = c(ORCID = \"0000-0002-4035-0289\"))",
-      "Description": "Read and write JSON Web Keys (JWK, rfc7517), generate and verify JSON Web Signatures (JWS, rfc7515) and encode/decode JSON Web Tokens (JWT, rfc7519) <https://datatracker.ietf.org/wg/jose/documents/>. These standards provide  modern signing and encryption formats that are natively supported by browsers via the JavaScript WebCryptoAPI <https://www.w3.org/TR/WebCryptoAPI/#jose>,  and used by services like OAuth 2.0, LetsEncrypt, and Github Apps.",
-      "License": "MIT + file LICENSE",
-      "URL": "https://r-lib.r-universe.dev/jose",
-      "BugReports": "https://github.com/r-lib/jose/issues",
-      "Depends": [
-        "openssl (>= 1.2.1)"
-      ],
-      "Imports": [
-        "jsonlite"
-      ],
-      "RoxygenNote": "7.1.2",
-      "VignetteBuilder": "knitr",
-      "Suggests": [
-        "spelling",
-        "testthat",
-        "knitr",
-        "rmarkdown"
-      ],
-      "Encoding": "UTF-8",
-      "Language": "en-US",
-      "NeedsCompilation": "no",
-      "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>)",
-      "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
       "Repository": "CRAN"
     },
     "jpeg": {
@@ -9302,13 +9215,13 @@
     },
     "permute": {
       "Package": "permute",
-      "Version": "0.9-7",
+      "Version": "0.9-8",
       "Source": "Repository",
       "Title": "Functions for Generating Restricted Permutations of Data",
-      "Date": "2022-01-27",
+      "Date": "2025-06-25",
       "Authors@R": "c(person(given = \"Gavin L.\", family = \"Simpson\", email = \"ucfagls@gmail.com\", role = c(\"aut\", \"cph\", \"cre\"), comment = c(ORCID = \"0000-0002-9084-8413\")), person(given = \"R Core Team\", role = \"cph\"), person(given = \"Douglas M.\", family = \"Bates\", role = \"ctb\"), person(given = \"Jari\", family = \"Oksanen\", role = \"ctb\"))",
       "Depends": [
-        "R (>= 2.14.0)"
+        "R (>= 3.6.0)"
       ],
       "Imports": [
         "stats"
@@ -9330,7 +9243,7 @@
       "Copyright": "see file COPYRIGHTS",
       "VignetteBuilder": "knitr",
       "NeedsCompilation": "no",
-      "Author": "Gavin L. Simpson [aut, cph, cre] (<https://orcid.org/0000-0002-9084-8413>), R Core Team [cph], Douglas M. Bates [ctb], Jari Oksanen [ctb]",
+      "Author": "Gavin L. Simpson [aut, cph, cre] (ORCID: <https://orcid.org/0000-0002-9084-8413>), R Core Team [cph], Douglas M. Bates [ctb], Jari Oksanen [ctb]",
       "Maintainer": "Gavin L. Simpson <ucfagls@gmail.com>",
       "Repository": "CRAN"
     },
@@ -9439,7 +9352,7 @@
     },
     "plotly": {
       "Package": "plotly",
-      "Version": "4.10.4",
+      "Version": "4.11.0",
       "Source": "Repository",
       "Title": "Create Interactive Web Graphics via 'plotly.js'",
       "Authors@R": "c(person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"), email = \"cpsievert1@gmail.com\", comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Chris\", \"Parmer\", role = \"aut\", email = \"chris@plot.ly\"), person(\"Toby\", \"Hocking\", role = \"aut\", email = \"tdhock5@gmail.com\"), person(\"Scott\", \"Chamberlain\", role = \"aut\", email = \"myrmecocystus@gmail.com\"), person(\"Karthik\", \"Ram\", role = \"aut\", email = \"karthik.ram@gmail.com\"), person(\"Marianne\", \"Corvellec\", role = \"aut\", email = \"marianne.corvellec@igdore.org\", comment = c(ORCID = \"0000-0002-1994-3581\")), person(\"Pedro\", \"Despouy\", role = \"aut\", email = \"pedro@plot.ly\"), person(\"Salim\", \"Brüggemann\", role = \"ctb\", email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")), person(\"Plotly Technologies Inc.\", role = \"cph\"))",
@@ -9468,7 +9381,7 @@
         "vctrs",
         "tibble",
         "lazyeval (>= 0.2.0)",
-        "rlang (>= 0.4.10)",
+        "rlang (>= 1.0.0)",
         "crosstalk",
         "purrr",
         "data.table",
@@ -9484,7 +9397,7 @@
         "testthat",
         "knitr",
         "shiny (>= 1.1.0)",
-        "shinytest (>= 1.3.0)",
+        "shinytest2",
         "curl",
         "rmarkdown",
         "Cairo",
@@ -9502,14 +9415,15 @@
         "palmerpenguins",
         "rversions",
         "reticulate",
-        "rsvg"
+        "rsvg",
+        "ggridges"
       ],
       "LazyData": "true",
-      "RoxygenNote": "7.2.3",
+      "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
-      "Config/Needs/check": "tidyverse/ggplot2, rcmdcheck, devtools, reshape2",
+      "Config/Needs/check": "tidyverse/ggplot2, ggobi/GGally, rcmdcheck, devtools, reshape2, s2",
       "NeedsCompilation": "no",
-      "Author": "Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>), Chris Parmer [aut], Toby Hocking [aut], Scott Chamberlain [aut], Karthik Ram [aut], Marianne Corvellec [aut] (<https://orcid.org/0000-0002-1994-3581>), Pedro Despouy [aut], Salim Brüggemann [ctb] (<https://orcid.org/0000-0002-5329-5987>), Plotly Technologies Inc. [cph]",
+      "Author": "Carson Sievert [aut, cre] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Chris Parmer [aut], Toby Hocking [aut], Scott Chamberlain [aut], Karthik Ram [aut], Marianne Corvellec [aut] (ORCID: <https://orcid.org/0000-0002-1994-3581>), Pedro Despouy [aut], Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>), Plotly Technologies Inc. [cph]",
       "Maintainer": "Carson Sievert <cpsievert1@gmail.com>",
       "Repository": "CRAN"
     },
@@ -9933,7 +9847,7 @@
     },
     "quantmod": {
       "Package": "quantmod",
-      "Version": "0.4.27",
+      "Version": "0.4.28",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Quantitative Financial Modelling Framework",
@@ -10611,7 +10525,7 @@
     },
     "reshape": {
       "Package": "reshape",
-      "Version": "0.8.9",
+      "Version": "0.8.10",
       "Source": "Repository",
       "Title": "Flexibly Reshape Data",
       "Description": "Flexibly restructure and aggregate data using  just two functions: melt and cast.",
@@ -10625,7 +10539,7 @@
       ],
       "License": "MIT + file LICENSE",
       "LazyData": "true",
-      "NeedsCompilation": "yes",
+      "NeedsCompilation": "no",
       "Author": "Hadley Wickham [aut, cre]",
       "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
       "Repository": "CRAN"
@@ -10881,23 +10795,6 @@
       "Maintainer": "Maëlle Salmon <maelle.salmon@yahoo.se>",
       "Repository": "CRAN"
     },
-    "rjson": {
-      "Package": "rjson",
-      "Version": "0.2.23",
-      "Source": "Repository",
-      "Title": "JSON for R",
-      "Author": "Alex Couture-Beil [aut, cre]",
-      "Authors@R": "person(given = \"Alex\", family = \"Couture-Beil\", role = c(\"aut\", \"cre\"), email = \"rjson_pkg@mofo.ca\")",
-      "Maintainer": "Alex Couture-Beil <rjson_pkg@mofo.ca>",
-      "Depends": [
-        "R (>= 4.0.0)"
-      ],
-      "Description": "Converts R object into JSON objects and vice-versa.",
-      "URL": "https://github.com/alexcb/rjson",
-      "License": "GPL-2",
-      "Repository": "CRAN",
-      "NeedsCompilation": "yes"
-    },
     "rlang": {
       "Package": "rlang",
       "Version": "1.1.6",
@@ -11053,59 +10950,6 @@
       "Maintainer": "Philippe Massicotte <pmassicotte@hotmail.com>",
       "Repository": "CRAN"
     },
-    "rnoaa": {
-      "Package": "rnoaa",
-      "Version": "1.4.0",
-      "Source": "Repository",
-      "Title": "'NOAA' Weather Data from R",
-      "Description": "Client for many 'NOAA' data sources including the 'NCDC' climate 'API' at <https://www.ncdc.noaa.gov/cdo-web/webservices/v2>, with functions for each of the 'API' 'endpoints': data, data categories, data sets, data types, locations, location categories, and stations. In addition, we have an interface for 'NOAA' sea ice data, the 'NOAA' severe weather inventory, 'NOAA' Historical Observing 'Metadata' Repository ('HOMR') data, 'NOAA' storm data via 'IBTrACS', tornado data via the 'NOAA' storm prediction center, and more.",
-      "License": "MIT + file LICENSE",
-      "Encoding": "UTF-8",
-      "Language": "en-US",
-      "Authors@R": "c( person(\"Scott\", \"Chamberlain\", role = c(\"aut\"), email = \"myrmecocystus@gmail.com\", comment = c(ORCID = \"0000-0003-1444-9135\")), person(\"Daniel\", \"Hocking\", role = c(\"aut\",\"cre\"), email = \"djhocking@gmail.com\", comment = c(ORCID = \"0000-0003-1889-9184\")), person(\"Brooke\", \"Anderson\", role = \"ctb\"), person(\"Maëlle\", \"Salmon\", role = \"ctb\"), person(\"Adam\", \"Erickson\", role = \"ctb\"), person(\"Nicholas\", \"Potter\", role = \"ctb\"), person(\"Joseph\", \"Stachelek\", role = \"ctb\"), person(\"Alex\", \"Simmons\", role = \"ctb\"), person(\"Karthik\", \"Ram\", role = \"ctb\"), person(\"Hart\", \"Edmund\", role = \"ctb\"), person(\"rOpenSci\", role = \"fnd\", comment = \"https://ropensci.org\") )",
-      "URL": "https://docs.ropensci.org/rnoaa/ (docs), https://github.com/ropensci/rnoaa (devel)",
-      "BugReports": "https://github.com/ropensci/rnoaa/issues",
-      "LazyData": "true",
-      "Imports": [
-        "utils",
-        "crul (>= 0.7.0)",
-        "lubridate",
-        "dplyr",
-        "tidyr",
-        "tidyselect",
-        "ggplot2",
-        "scales",
-        "XML",
-        "xml2",
-        "jsonlite",
-        "gridExtra",
-        "tibble",
-        "isdparser (>= 0.2.0)",
-        "geonames",
-        "hoardr (>= 0.5.2)",
-        "data.table"
-      ],
-      "Suggests": [
-        "roxygen2 (>= 7.1.0)",
-        "testthat",
-        "taxize",
-        "ncdf4",
-        "raster",
-        "leaflet",
-        "rgdal",
-        "purrr",
-        "vcr (>= 0.5.4)",
-        "webmockr"
-      ],
-      "RoxygenNote": "7.2.1",
-      "X-schema.org-applicationCategory": "Climate",
-      "X-schema.org-keywords": "earth, science, climate, precipitation, temperature, storm, buoy, NCDC, NOAA, tornadoe, sea ice, ISD",
-      "X-schema.org-isPartOf": "https://ropensci.org",
-      "NeedsCompilation": "no",
-      "Author": "Scott Chamberlain [aut] (<https://orcid.org/0000-0003-1444-9135>), Daniel Hocking [aut, cre] (<https://orcid.org/0000-0003-1889-9184>), Brooke Anderson [ctb], Maëlle Salmon [ctb], Adam Erickson [ctb], Nicholas Potter [ctb], Joseph Stachelek [ctb], Alex Simmons [ctb], Karthik Ram [ctb], Hart Edmund [ctb], rOpenSci [fnd] (https://ropensci.org)",
-      "Maintainer": "Daniel Hocking <djhocking@gmail.com>",
-      "Repository": "CRAN"
-    },
     "rosm": {
       "Package": "rosm",
       "Version": "0.3.0",
@@ -11210,7 +11054,7 @@
     },
     "rsconnect": {
       "Package": "rsconnect",
-      "Version": "1.4.1",
+      "Version": "1.5.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Deploy Docs, Apps, and APIs to 'Posit Connect', 'shinyapps.io', and 'RPubs'",
@@ -11234,10 +11078,9 @@
         "renv (>= 1.0.0)",
         "rlang (>= 1.0.0)",
         "rstudioapi (>= 0.5)",
+        "snowflakeauth",
         "tools",
         "yaml (>= 2.1.5)",
-        "RcppTOML",
-        "jose",
         "utils"
       ],
       "Suggests": [
@@ -11867,11 +11710,11 @@
     },
     "shiny": {
       "Package": "shiny",
-      "Version": "1.10.0",
+      "Version": "1.11.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Web Application Framework for R",
-      "Authors@R": "c( person(\"Winston\", \"Chang\", role = c(\"aut\", \"cre\"), email = \"winston@posit.co\", comment = c(ORCID = \"0000-0002-1576-2126\")), person(\"Joe\", \"Cheng\", role = \"aut\", email = \"joe@posit.co\"), person(\"JJ\", \"Allaire\", role = \"aut\", email = \"jj@posit.co\"), person(\"Carson\", \"Sievert\", role = \"aut\", email = \"carson@posit.co\", comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Barret\", \"Schloerke\", role = \"aut\", email = \"barret@posit.co\", comment = c(ORCID = \"0000-0001-9986-114X\")), person(\"Yihui\", \"Xie\", role = \"aut\", email = \"yihui@posit.co\"), person(\"Jeff\", \"Allen\", role = \"aut\"), person(\"Jonathan\", \"McPherson\", role = \"aut\", email = \"jonathan@posit.co\"), person(\"Alan\", \"Dipert\", role = \"aut\"), person(\"Barbara\", \"Borges\", role = \"aut\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(family = \"jQuery Foundation\", role = \"cph\", comment = \"jQuery library and jQuery UI library\"), person(family = \"jQuery contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"), person(family = \"jQuery UI contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt\"), person(\"Mark\", \"Otto\", role = \"ctb\", comment = \"Bootstrap library\"), person(\"Jacob\", \"Thornton\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Bootstrap contributors\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Twitter, Inc\", role = \"cph\", comment = \"Bootstrap library\"), person(\"Prem Nawaz\", \"Khan\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Victor\", \"Tsaran\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Dennis\", \"Lembree\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Srinivasu\", \"Chakravarthula\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Cathy\", \"O'Connor\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(family = \"PayPal, Inc\", role = \"cph\", comment = \"Bootstrap accessibility plugin\"), person(\"Stefan\", \"Petre\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap-datepicker library\"), person(\"Andrew\", \"Rowls\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap-datepicker library\"), person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"), comment = \"selectize.js library\"), person(\"Salmen\", \"Bejaoui\", role = c(\"ctb\", \"cph\"), comment = \"selectize-plugin-a11y library\"), person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"), comment = \"ion.rangeSlider library\"), person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"), comment = \"Javascript strftime library\"), person(family = \"SpryMedia Limited\", role = c(\"ctb\", \"cph\"), comment = \"DataTables library\"), person(\"John\", \"Fraser\", role = c(\"ctb\", \"cph\"), comment = \"showdown.js library\"), person(\"John\", \"Gruber\", role = c(\"ctb\", \"cph\"), comment = \"showdown.js library\"), person(\"Ivan\", \"Sagalaev\", role = c(\"ctb\", \"cph\"), comment = \"highlight.js library\"), person(family = \"R Core Team\", role = c(\"ctb\", \"cph\"), comment = \"tar implementation from R\") )",
+      "Authors@R": "c( person(\"Winston\", \"Chang\", role = c(\"aut\", \"cre\"), email = \"winston@posit.co\", comment = c(ORCID = \"0000-0002-1576-2126\")), person(\"Joe\", \"Cheng\", role = \"aut\", email = \"joe@posit.co\"), person(\"JJ\", \"Allaire\", role = \"aut\", email = \"jj@posit.co\"), person(\"Carson\", \"Sievert\", role = \"aut\", email = \"carson@posit.co\", comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Barret\", \"Schloerke\", role = \"aut\", email = \"barret@posit.co\", comment = c(ORCID = \"0000-0001-9986-114X\")), person(\"Yihui\", \"Xie\", role = \"aut\", email = \"yihui@posit.co\"), person(\"Jeff\", \"Allen\", role = \"aut\"), person(\"Jonathan\", \"McPherson\", role = \"aut\", email = \"jonathan@posit.co\"), person(\"Alan\", \"Dipert\", role = \"aut\"), person(\"Barbara\", \"Borges\", role = \"aut\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(family = \"jQuery Foundation\", role = \"cph\", comment = \"jQuery library and jQuery UI library\"), person(family = \"jQuery contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"), person(family = \"jQuery UI contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt\"), person(\"Mark\", \"Otto\", role = \"ctb\", comment = \"Bootstrap library\"), person(\"Jacob\", \"Thornton\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Bootstrap contributors\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Twitter, Inc\", role = \"cph\", comment = \"Bootstrap library\"), person(\"Prem Nawaz\", \"Khan\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Victor\", \"Tsaran\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Dennis\", \"Lembree\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Srinivasu\", \"Chakravarthula\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(\"Cathy\", \"O'Connor\", role = \"ctb\", comment = \"Bootstrap accessibility plugin\"), person(family = \"PayPal, Inc\", role = \"cph\", comment = \"Bootstrap accessibility plugin\"), person(\"Stefan\", \"Petre\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap-datepicker library\"), person(\"Andrew\", \"Rowls\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap-datepicker library\"), person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"), comment = \"selectize.js library\"), person(\"Salmen\", \"Bejaoui\", role = c(\"ctb\", \"cph\"), comment = \"selectize-plugin-a11y library\"), person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"), comment = \"ion.rangeSlider library\"), person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"), comment = \"Javascript strftime library\"), person(family = \"SpryMedia Limited\", role = c(\"ctb\", \"cph\"), comment = \"DataTables library\"), person(\"John\", \"Fraser\", role = c(\"ctb\", \"cph\"), comment = \"showdown.js library\"), person(\"John\", \"Gruber\", role = c(\"ctb\", \"cph\"), comment = \"showdown.js library\"), person(\"Ivan\", \"Sagalaev\", role = c(\"ctb\", \"cph\"), comment = \"highlight.js library\"), person(given = \"R Core Team\", role = c(\"ctb\", \"cph\"), comment = \"tar implementation from R\") )",
       "Description": "Makes it incredibly easy to build interactive web applications with R. Automatic \"reactive\" binding between inputs and outputs and extensive prebuilt widgets make it possible to build beautiful, responsive, and powerful applications with minimal effort.",
       "License": "GPL-3 | file LICENSE",
       "Depends": [
@@ -11892,7 +11735,7 @@
         "later (>= 1.0.0)",
         "promises (>= 1.3.2)",
         "tools",
-        "crayon",
+        "cli",
         "rlang (>= 0.4.10)",
         "fastmap (>= 1.1.1)",
         "withr",
@@ -11907,7 +11750,7 @@
         "datasets",
         "DT",
         "Cairo (>= 1.5-5)",
-        "testthat (>= 3.0.0)",
+        "testthat (>= 3.2.1)",
         "knitr (>= 1.6)",
         "markdown",
         "rmarkdown",
@@ -11915,22 +11758,23 @@
         "reactlog (>= 1.0.0)",
         "magrittr",
         "yaml",
+        "mirai",
         "future",
         "dygraphs",
         "ragg",
         "showtext",
-        "sass"
+        "sass",
+        "watcher"
       ],
       "URL": "https://shiny.posit.co/, https://github.com/rstudio/shiny",
       "BugReports": "https://github.com/rstudio/shiny/issues",
       "Collate": "'globals.R' 'app-state.R' 'app_template.R' 'bind-cache.R' 'bind-event.R' 'bookmark-state-local.R' 'bookmark-state.R' 'bootstrap-deprecated.R' 'bootstrap-layout.R' 'conditions.R' 'map.R' 'utils.R' 'bootstrap.R' 'busy-indicators-spinners.R' 'busy-indicators.R' 'cache-utils.R' 'deprecated.R' 'devmode.R' 'diagnose.R' 'extended-task.R' 'fileupload.R' 'graph.R' 'reactives.R' 'reactive-domains.R' 'history.R' 'hooks.R' 'html-deps.R' 'image-interact-opts.R' 'image-interact.R' 'imageutils.R' 'input-action.R' 'input-checkbox.R' 'input-checkboxgroup.R' 'input-date.R' 'input-daterange.R' 'input-file.R' 'input-numeric.R' 'input-password.R' 'input-radiobuttons.R' 'input-select.R' 'input-slider.R' 'input-submit.R' 'input-text.R' 'input-textarea.R' 'input-utils.R' 'insert-tab.R' 'insert-ui.R' 'jqueryui.R' 'knitr.R' 'middleware-shiny.R' 'middleware.R' 'timer.R' 'shiny.R' 'mock-session.R' 'modal.R' 'modules.R' 'notifications.R' 'priorityqueue.R' 'progress.R' 'react.R' 'reexports.R' 'render-cached-plot.R' 'render-plot.R' 'render-table.R' 'run-url.R' 'runapp.R' 'serializers.R' 'server-input-handlers.R' 'server-resource-paths.R' 'server.R' 'shiny-options.R' 'shiny-package.R' 'shinyapp.R' 'shinyui.R' 'shinywrappers.R' 'showcase.R' 'snapshot.R' 'staticimports.R' 'tar.R' 'test-export.R' 'test-server.R' 'test.R' 'update-input.R' 'utils-lang.R' 'version_bs_date_picker.R' 'version_ion_range_slider.R' 'version_jquery.R' 'version_jqueryui.R' 'version_selectize.R' 'version_strftime.R' 'viewer.R'",
       "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
-      "RdMacros": "lifecycle",
       "Config/testthat/edition": "3",
       "Config/Needs/check": "shinytest2",
       "NeedsCompilation": "no",
-      "Author": "Winston Chang [aut, cre] (<https://orcid.org/0000-0002-1576-2126>), Joe Cheng [aut], JJ Allaire [aut], Carson Sievert [aut] (<https://orcid.org/0000-0002-4958-2844>), Barret Schloerke [aut] (<https://orcid.org/0000-0001-9986-114X>), Yihui Xie [aut], Jeff Allen [aut], Jonathan McPherson [aut], Alan Dipert [aut], Barbara Borges [aut], Posit Software, PBC [cph, fnd], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt), jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt), Mark Otto [ctb] (Bootstrap library), Jacob Thornton [ctb] (Bootstrap library), Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin), Victor Tsaran [ctb] (Bootstrap accessibility plugin), Dennis Lembree [ctb] (Bootstrap accessibility plugin), Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin), Cathy O'Connor [ctb] (Bootstrap accessibility plugin), PayPal, Inc [cph] (Bootstrap accessibility plugin), Stefan Petre [ctb, cph] (Bootstrap-datepicker library), Andrew Rowls [ctb, cph] (Bootstrap-datepicker library), Brian Reavis [ctb, cph] (selectize.js library), Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library), Denis Ineshin [ctb, cph] (ion.rangeSlider library), Sami Samhuri [ctb, cph] (Javascript strftime library), SpryMedia Limited [ctb, cph] (DataTables library), John Fraser [ctb, cph] (showdown.js library), John Gruber [ctb, cph] (showdown.js library), Ivan Sagalaev [ctb, cph] (highlight.js library), R Core Team [ctb, cph] (tar implementation from R)",
+      "Author": "Winston Chang [aut, cre] (ORCID: <https://orcid.org/0000-0002-1576-2126>), Joe Cheng [aut], JJ Allaire [aut], Carson Sievert [aut] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>), Yihui Xie [aut], Jeff Allen [aut], Jonathan McPherson [aut], Alan Dipert [aut], Barbara Borges [aut], Posit Software, PBC [cph, fnd], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt), jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt), Mark Otto [ctb] (Bootstrap library), Jacob Thornton [ctb] (Bootstrap library), Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin), Victor Tsaran [ctb] (Bootstrap accessibility plugin), Dennis Lembree [ctb] (Bootstrap accessibility plugin), Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin), Cathy O'Connor [ctb] (Bootstrap accessibility plugin), PayPal, Inc [cph] (Bootstrap accessibility plugin), Stefan Petre [ctb, cph] (Bootstrap-datepicker library), Andrew Rowls [ctb, cph] (Bootstrap-datepicker library), Brian Reavis [ctb, cph] (selectize.js library), Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library), Denis Ineshin [ctb, cph] (ion.rangeSlider library), Sami Samhuri [ctb, cph] (Javascript strftime library), SpryMedia Limited [ctb, cph] (DataTables library), John Fraser [ctb, cph] (showdown.js library), John Gruber [ctb, cph] (showdown.js library), Ivan Sagalaev [ctb, cph] (highlight.js library), R Core Team [ctb, cph] (tar implementation from R)",
       "Maintainer": "Winston Chang <winston@posit.co>",
       "Repository": "CRAN"
     },
@@ -12117,7 +11961,7 @@
     },
     "smoothr": {
       "Package": "smoothr",
-      "Version": "1.0.1",
+      "Version": "1.1.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Smooth and Tidy Spatial Features",
@@ -12132,7 +11976,7 @@
       "Imports": [
         "sf",
         "stats",
-        "terra (>= 1.6-3)",
+        "terra",
         "units"
       ],
       "Suggests": [
@@ -12147,9 +11991,9 @@
       "VignetteBuilder": "knitr",
       "Encoding": "UTF-8",
       "LazyData": "true",
-      "RoxygenNote": "7.2.1",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Matthew Strimas-Mackey [aut, cre] (<https://orcid.org/0000-0001-8929-7776>)",
+      "Author": "Matthew Strimas-Mackey [aut, cre] (ORCID: <https://orcid.org/0000-0001-8929-7776>)",
       "Maintainer": "Matthew Strimas-Mackey <mstrimas@gmail.com>",
       "Repository": "CRAN"
     },
@@ -12192,6 +12036,37 @@
       "NeedsCompilation": "no",
       "Author": "Koen Hufkens [aut, cre] (<https://orcid.org/0000-0002-5070-8109>), BlueGreen Labs [cph, fnd]",
       "Maintainer": "Koen Hufkens <koen.hufkens@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "snowflakeauth": {
+      "Package": "snowflakeauth",
+      "Version": "0.1.2",
+      "Source": "Repository",
+      "Title": "Authentication Helpers for 'Snowflake'",
+      "Authors@R": "c( person(\"Aaron\", \"Jacobs\", , \"aaron.jacobs@posit.co\", role = c(\"aut\")), person(\"E. David\", \"Aja\", , \"david@posit.co\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Description": "Authentication helpers for 'Snowflake'. It provides compatibility with authentication approaches supported by the 'Snowflake Connector for Python' <https://pypi.org/project/snowflake-connector-python> and the 'Snowflake CLI' <https://pypi.org/project/snowflake-cli>.",
+      "License": "MIT + file LICENSE",
+      "Encoding": "UTF-8",
+      "Imports": [
+        "cli",
+        "curl",
+        "jsonlite",
+        "RcppTOML",
+        "rlang"
+      ],
+      "Suggests": [
+        "jose",
+        "openssl",
+        "testthat (>= 3.0.0)",
+        "withr"
+      ],
+      "RoxygenNote": "7.3.2",
+      "Config/testthat/edition": "3",
+      "URL": "https://posit-dev.github.io/snowflakeauth/, https://github.com/posit-dev/snowflakeauth",
+      "BugReports": "https://github.com/posit-dev/snowflakeauth/issues",
+      "NeedsCompilation": "no",
+      "Author": "Aaron Jacobs [aut], E. David Aja [aut, cre], Posit Software, PBC [cph, fnd]",
+      "Maintainer": "E. David Aja <david@posit.co>",
       "Repository": "CRAN"
     },
     "sourcetools": {
@@ -12933,7 +12808,7 @@
     },
     "thematic": {
       "Package": "thematic",
-      "Version": "0.1.6",
+      "Version": "0.1.7",
       "Source": "Repository",
       "Title": "Unified and Automatic 'Theming' of 'ggplot2', 'lattice', and 'base' R Graphics",
       "Authors@R": "c( person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Barret\", \"Schloerke\", , \"barret@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0001-9986-114X\")), person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
@@ -12978,14 +12853,15 @@
         "vdiffr (>= 1.0.0)",
         "withr"
       ],
-      "Config/Needs/check": "shinytest, callr, sf, ggthemes, patchwork, gridExtra, tinytex, devtools, rversions",
-      "Config/Needs/routine": "ggrepel",
-      "Config/Needs/website": "GGally, RColorBrewer, patchwork, apreshill/quillt",
+      "Config/testthat/edition": "3",
+      "Config/Needs/check": "shinytest2, callr, sf, ggthemes, patchwork, gridExtra, tinytex, devtools, rversions",
+      "Config/Needs/routine": "ggrepel, r-lib/evaluate",
+      "Config/Needs/website": "GGally, RColorBrewer, patchwork, apreshill/quillt, r-lib/evaluate",
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.2",
-      "Collate": "'auto.R' 'base.R' 'cache.R' 'gfonts.R' 'ggplot.R' 'globals.R' 'hooks.R' 'knitr.R' 'lattice.R' 'onLoad.R' 'thematic-package.R' 'thematic-save-plot.R' 'thematic.R' 'utils.R' 'view-shinytest.R'",
+      "Collate": "'auto.R' 'base.R' 'cache.R' 'gfonts.R' 'ggplot.R' 'globals.R' 'hooks.R' 'knitr.R' 'lattice.R' 'onLoad.R' 'thematic-package.R' 'thematic-save-plot.R' 'thematic.R' 'utils.R'",
       "NeedsCompilation": "no",
-      "Author": "Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>), Barret Schloerke [aut] (<https://orcid.org/0000-0001-9986-114X>), Joe Cheng [aut], Posit Software, PBC [cph, fnd]",
+      "Author": "Carson Sievert [aut, cre] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>), Joe Cheng [aut], Posit Software, PBC [cph, fnd]",
       "Maintainer": "Carson Sievert <carson@posit.co>",
       "Repository": "CRAN"
     },

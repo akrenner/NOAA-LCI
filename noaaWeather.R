@@ -6,7 +6,7 @@
 
 # if (!require("pacman")) install.packages("pacman"
 #                                          , repos = "http://cran.fhcrc.org/", dependencies = TRUE)
-require ("rnoaa")
+# require ("rnoaa")
 ## see https://recology.info/2015/07/weather-data-with-rnoaa/
 ## GHCND          daily summaries
 ## PRECIP_HLY     Precipitation Hourly
