@@ -40,6 +40,7 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 
 
 if (0){
+  ## list availabel buoy stations nearby
   require (buoydata)
   buoydata::buoyDataWorld |>
     dplyr::filter(LAT > 58, LAT < 61) |>
@@ -59,20 +60,24 @@ source ("annualPlotFct.R")  ## pull these functions into here since only used on
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP (station="kachomet", QAQC=TRUE)
 
-nAir <- getNOAAweather (stationID="PAHO", clearcache=clearC)  ## function in annualPlotFct
-nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct
+nAir <- getNOAAweather_airports (stationID="PAHO", clearcache=clearC)  ## function in annualPlotFct
+nAiro <- getNOAA ("HMSA2", clearcache=clearC)  ## function in annualPlotFct -- NDBC site
 
 nWave <- try (getNOAA(buoyID="46108", clearcache=clearC))
 wave.46108 <- nWave
 
 
+
 # weather.homer.spit <- getNOAAweather (stationID="xxx")
 
-weather.homer.airport <- getNOAA (stationID="PAHO", clearcache=clearC)  ## Homer Airport weather station)
-weather.homer.spit <- getNOAA (stationID="kachomet", clearcache=clearC)  ## SWMP Homer Spit weather station
-weather.seldovia <- getNOAA(stationID="SLSA2", clearcache=clearC)  ## Seldovia
-weather.augustine <- getNOAA("AUGA2", clearcache=clearC) # Augustine
-weather.flatisland <- getNOAA("FILA2", clearcache=clearC) # Flat Island
+cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
+
+weather.homer.airport <- gNOAAS (station="Homer Airport", clearcache=clearC, cacheF=cF, showsites=TRUE)  ## Homer Airport weather station)
+weather.homer.spit.buoy <- getNOAA (buoyID="hmsa2", clearcache=clearC) |>  ## SWMP Homer Spit weather station
+weather.homer.spit2 <- gNOAAS (station="KACHEMAK BAY RESERVE", clearcache=clearC, cacheF=cF)  ## SWMP Homer Spit weather station
+weather.augustine <- gNOAAS (station="Augustine Island", clearcache=clearC, cacheF=cF)  ## Augustine Island weather station
+weather.flat.island <- gNOAAS (station="Flat Island Light", clearcache=clearC, cacheF=cF)  ## Flat Island weather station
+weather.east.amatuli <- gNOAAS (station="East Amatuli Station Light  AK", clearcache=clearC, cacheF=cF)  ## East Amatuli weather station
 
 
 
@@ -115,6 +120,6 @@ save (nWave, file="~/tmp/LCI_noaa/cache/annual-Wave.RData")
 save (hmr, file="~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")
 save (hmr=sAir, file="~/tmp/LCI_noaa/cache/annual-SWMPAirWeather.RData")
 
-# save.image ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
+save.image ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 save (nWave, hmr, sAir, file="~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 ## EOF

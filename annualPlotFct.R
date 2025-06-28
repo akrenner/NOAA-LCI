@@ -496,7 +496,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
 
 
 
-getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
+getNOAAweather <- function (station="HOMER AIRPORT", clearcache=FALSE, cacheF=FALSE, showsites=FALSE){
   ## utilize worldmet::importNOAA adding caching function
 
   require ("worldmet")
@@ -505,17 +505,24 @@ getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
   if (length (station) != 1L) stop ("Can only process one station at a time")
 
   ## cache data
-  cacheFolder <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
+  if (class (cacheF)== "character"){
+    cacheFolder <- cacheF
+    dir.create(cacheFolder, showWarnings=FALSE, recursive=TRUE)
+  }else{
+    cacheFolder <- tempdir()
+  }
 
   if (clearcache){
     unlink (cacheFolder, recursive=TRUE)
   }
-  dir.create(cacheFolder, showWarnings=FALSE, recursive=TRUE)
+
+
   fetchMeta <- function(){
     wrldSites <- getMeta (plot=FALSE, returnMap=FALSE) ## download everything? country="US", state="AK",
     saveRDS (wrldSites, paste0 (cacheFolder, "meta.rds"))
     wrldSites
   }
+
 
   ## load caches
   if (file.exists(paste0 (cacheFolder, "meta.rds"))){
@@ -523,11 +530,15 @@ getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
   }else{
     wrldSites <- fetchMeta()
   }
-  if (difftime (Sys.Date(), wrldSites$end [match (station, wrldSites$station)]
+  station <- toupper(station)
+  if (!station %in% wrldSites$station){
+    stop (paste ("Station", station, "not found in worldmet meta data."))
+  }
+  if (difftime (Sys.Date(), as.Date (wrldSites$end [match (station, wrldSites$station)])
                 , units="days") > 28){
     wrldSites <- fetchMeta()
   }
-  if (1){
+  if (showsites){
     AKpick <- wrldSites |>
       dplyr::filter (55 < latitude & latitude < 61) |>
       dplyr::filter (-154 < longitude & longitude < -148)
@@ -545,7 +556,7 @@ getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
   ## set-up years to fetch
   yR <- as.numeric (format (stn$begin, "%Y")):
     as.numeric (format (stn$end, "%Y"))                 # all available years
-  yR <- 2012:as.numeric (format (Sys.Date(), "%Y"))     # minimal for now
+  # yR <- 2022:as.numeric (format (Sys.Date(), "%Y"))   # minimal for testing
   ## revise yR, use as many cached files, as possible
   yR <- yR [which (!yR %in% cYears)]
   yR <- unique (c (yR, as.numeric (format (Sys.Date(), "%Y")))) # always fetch last year again
@@ -562,6 +573,7 @@ getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
   }) |>   ## all years are cached and read again -- no need to combine them
     dplyr::bind_rows() |>
     dplyr::select (!year)
+
   cWeather
 
   # cWeather <- lapply (list.files (cacheFolder, pattern=stn$code), function (i){ # relist, in case of missing data
@@ -586,8 +598,39 @@ getNOAAweatherG <- function (station="HOMER AIRPORT", clearcache=FALSE){
 }
 
 
+gNOAAS <- function (station, clearcache, cacheF=FALSE, showsites=FALSE){
+  NWeather2SWMP <- function (dat){  ## convert to SWMP format
+    fixF <- function (field){
+      if (field %in% names (dat)){
+        out <- dat [[field]]
+      }else{
+        out <- rep (NA, nrow (dat))
+      }
+    }
+    with (dat, data.frame(
+      datetimestamp=date
+      , jday=as.numeric (format (date, "%j"))
+      , year=as.numeric (format (date, "%Y"))
+      , atemp=air_temp
+      , rh=RH
+      , bp=rep (NA, nrow (dat))
+      , wspd=ws  # XXXXX conversion to wind speed to m/s??
+      , maxwspd=fixF ("peak_wind_gust")# rep (NA, nrow (dat))
+      , wdir=wd
+      , sdwdir=rep (NA, nrow (dat))
+      , totpar=rep (NA, nrow (dat))
+      , toprcp=fixF ("precip_6") # total precipitation in 6 hours
+      , totsorad=rep (NA, nrow (dat))
+    ))
+  }
 
-getNOAAweather <- function (stationID="PAHO", clearcache=FALSE){
+  getNOAAweather(station=station, clearcache=clearcache, cacheF=cacheF, showsites=showsites) |>
+    NWeather2SWMP()
+}
+
+
+
+getNOAAweather_airports <- function (stationID="PAHO", clearcache=FALSE){
   ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
   ## using package riem
   ## data from University of Iowa. Downside: not covering every NOAA station (has Homer airport, but not spit or Flat Island)
