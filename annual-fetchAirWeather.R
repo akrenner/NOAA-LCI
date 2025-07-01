@@ -72,14 +72,13 @@ wave.46108 <- nWave
 
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
 
-weather.homer.airport <- gNOAAS (station="Homer Airport", clearcache=clearC, cacheF=cF, showsites=TRUE)  ## Homer Airport weather station)
-weather.homer.spit.buoy <- getNOAA (buoyID="hmsa2", clearcache=clearC) |>  ## SWMP Homer Spit weather station
-weather.homer.spit2 <- gNOAAS (station="KACHEMAK BAY RESERVE", clearcache=clearC, cacheF=cF)  ## SWMP Homer Spit weather station
-weather.augustine <- gNOAAS (station="Augustine Island", clearcache=clearC, cacheF=cF)  ## Augustine Island weather station
-weather.flat.island <- gNOAAS (station="Flat Island Light", clearcache=clearC, cacheF=cF)  ## Flat Island weather station
-weather.east.amatuli <- gNOAAS (station="East Amatuli Station Light  AK", clearcache=clearC, cacheF=cF)  ## East Amatuli weather station
-
-
+weatherD <- list (homer.airport=gNOAAS (station="Homer Airport", clearcache=clearC, cacheF=cF, showsites=TRUE)  ## Homer Airport weather station)
+                  ,homer.spit.buoy=getNOAA (buoyID="hmsa2", clearcache=clearC)   ## SWMP Homer Spit weather station
+                  ,homer.spit2=gNOAAS (station="KACHEMAK BAY RESERVE", clearcache=clearC, cacheF=cF)  ## SWMP Homer Spit weather station
+                  ,augustine=gNOAAS (station="Augustine Island", clearcache=clearC, cacheF=cF)  ## Augustine Island weather station
+                  ,flat.island=gNOAAS (station="Flat Island Light", clearcache=clearC, cacheF=cF)  ## Flat Island weather station
+                  ,east.amatuli=gNOAAS (station="East Amatuli Station Light  AK", clearcache=clearC, cacheF=cF)  ## East Amatuli weather station
+)
 
 
 

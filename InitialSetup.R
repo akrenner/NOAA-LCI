@@ -12,7 +12,7 @@ if (!require("renv")){
 }
 renv::status()
 renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
-# renv::init(bioconductor = "3.17")
+# renv::init(bioconductor = "3.21")
 
 renv::install (repos="https://cloud.r-project.org/")
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
