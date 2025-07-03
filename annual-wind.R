@@ -8,7 +8,6 @@ if (!exists ("quarterly")){
   rm (list=ls())
   quarterly <- TRUE
 }
-source ("annualPlotFct.R")
 
 
 # setwd("~/myDocs/amyfiles/NOAA-LCI/")
@@ -17,22 +16,6 @@ source ("annualPlotFct.R")
 
 ##########################################################
 ## parameters to agree upon
-metstation <- "kachomet"  # SWMP
-# metstation <- "FILA2"     # Flat Island  -- something with subsets
-# metstation <- "AUGA2"     # Augustine Island  --- subsets
-# metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
-# metstation <- "AMAA2"       # East Amatuli, Barren
-# metstation <- "HMSA2"     # Homer Spit (starts in 2012) -- crash at gale pictogram -- Mike's preferred station
-metstation <- "HMRA2"       # Homer Spit, research reserve
-metstation <- "PAHO"      # Homer Airport -- using riem package
-
-
-wStations <- c("kachomet", "FILA2"
-               # , "AUGA2" #, "46105"
-               # , "AMAA2" #, "HMSA2"
-)
-wStations <- c("PAHO", "FILA2")
-rm (wStations)
 
 
 
@@ -44,6 +27,10 @@ stormT <- 48 # threshold for max wind speed to count as storm
 galeT <- 34  # max wind speed for gale
 scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained or frequent gusts
 # currentCol <- c ("blue", "lightblue", "black") # colors for past, current, ongoing year
+
+## worldmet does not provide maxwspd -- use swmp data instead (back up): sAir
+
+
 
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
@@ -68,6 +55,7 @@ windT <- c(SCA=scAdvT, gale=galeT, storm=stormT)
 
 ## --------- get weather data ---------- ##
 load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") ## loads hmr
+source ("annualPlotFct.R")
 
 
 
@@ -77,15 +65,16 @@ dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 ## cycle through all wStations
-if (!exists ("wStations")){wStations <- metstation}
+# if (!exists ("wStations")){wStations <- metstation}
 # for (k in seq_along(wStations)){
-  k <- 1
-  metstation <- wStations [k]
+for (k in seq_along(weatherL)){
+  # k <- 1
+  metstation <- names (weatherL) [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")
   suppressWarnings(rm (hmr))
 
 
-  stationL <- "Homer Airport"
+  # stationL <- "Homer Airport"
   # stationL <- c ("Homer Spit", "Flat Island", "Augustine Island", "East Amatuli")[k]
   #
   #
@@ -129,8 +118,8 @@ if (!exists ("wStations")){wStations <- metstation}
   #   rm (hmr2)
   # }
 
-      load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  # hmr,  Homer Airport
-
+  #    load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  # hmr,  Homer Airport
+  hmr <- weatherL [[k]]
 
 
   ## apply QAQC flaggs ##
@@ -163,7 +152,7 @@ if (!exists ("wStations")){wStations <- metstation}
   ## also consider: sd on a log-scale
 
   if (exists (vUnit)){ #} == "knots"){
-    hmr$wspd <- hmr$wspd * 1.94384   ## 1 knot=1.94384 m/s
+    hmr$wspd <- hmr$wspd * 1.94384   ## 1 m/s=1.94384 knots
     hmr$maxwspd <- hmr$maxwspd * 1.94384
     wCaption <- "wind speed [knots]"
   }else{
@@ -227,10 +216,11 @@ if (!exists ("wStations")){wStations <- metstation}
   ## XXXX ---  this needs fixing to make it consistent throughout ###
   ## table of number of gales/storms -- mean vs current year
   ## count number of days with max wind above threshold
-  windSum <- nEvents (hmr, "maxwspd", thrht=windT)
+#  windSum <- nEvents (hmr, "maxwspd", thrht=windT)
+  windSum <- nEvents (hmr, "wspd", thrht=windT)
   windSum$mean <- round (windSum$mean, 1)
   row.names (windSum) <- c ("SCA", "gales", "storms")
-  cat ("\n\n# number of gales and storms per year, ", wStations [k],"\n")
+  cat ("\n\n# number of gales and storms per year, ", names (weatherL) [k],"\n")
   print (windSum [,1:(ncol (windSum)-1)]) # cut-out ongoing year
   rm (windSum)
 
@@ -242,7 +232,7 @@ if (!exists ("wStations")){wStations <- metstation}
   windSum <- nEvents (hw, "maxwspd", thrht=windT)
   windSum$mean <- round (windSum$mean, 1)
   row.names (windSum) <- c ("SCA", "gales", "storms")
-  cat ("\n\n# number of WINTER gales and storms per year, ", wStations [k],"\n")
+  cat ("\n\n# number of WINTER gales and storms per year, ", names (weatherL) [k],"\n")
   print (windSum)
   rm (windSum, hw)
 
@@ -501,7 +491,7 @@ if (!exists ("wStations")){wStations <- metstation}
              # , ylim=c(0,25)
 #             , ylim=c(0,15) # for spit only
 , ylim=c(0,8) # for Homer Airport
-             , main=stationL)
+             , main=metstation)
 
   oP <- par()
   ## windrose insert
@@ -787,7 +777,8 @@ if (!exists ("wStations")){wStations <- metstation}
 
   # png ("~/tmp/LCI_noaa/media/climateDiag.png", width=480, height=960)
   # par (mfrow=c(2,1))
-  if (metstation == "kachomet"){
+  if (0){
+  # if (metstation == "kachomet"){
     cat ("\nTry to make climate diagram [requires full year of precip data]\n")
     pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/climateDiag.pdf")
     ## alternative: wldiag in dgolicher/giscourse on github
@@ -861,6 +852,7 @@ if (metstation == "kachomet"){
            #, max.freq=30
   )
   dev.off()
+}
 }
 
 cat ("Finished annual-wind.R\n")

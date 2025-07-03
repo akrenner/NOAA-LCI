@@ -618,8 +618,8 @@ gNOAAS <- function (station, clearcache, cacheF=FALSE, showsites=FALSE){
       , maxwspd=fixF ("peak_wind_gust")# rep (NA, nrow (dat))
       , wdir=wd
       , sdwdir=rep (NA, nrow (dat))
-      , totpar=rep (NA, nrow (dat))
-      , toprcp=fixF ("precip_6") # total precipitation in 6 hours
+      , totpar=fixF ("precip_6") # total precipitation in 6 hours
+      , toprcp=rep (NA, nrow (dat))  ## probability of precipitation
       , totsorad=rep (NA, nrow (dat))
     ))
   }
@@ -694,9 +694,6 @@ if (!require ("buoydata")){
 
 
 getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # default=kachemak bay wavebuoy
-  #  require ("riem")  ## get data from mesonet.argon.iastate.edu as recommended by Brian Brettschneider
-  #  riem_measures (station="VOHY", date_start="2014-01-01", date_end=as.character (Sys.Date()))
-
   ## rnoaa alternatives:
   ## buoydata: download from NDBC -- realtime?
   ## THREDDS server. Or wget from http site
@@ -889,6 +886,28 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
 
   return (wDB)
 }
+
+gNOAAbuoy <- function (buoyID, clearcache=FALSE){
+  ## wrapper for getNOAA to fix units and field names to fit SWAMP data
+  dat <- getNOAA (buoyID=buoyID, clearcache=clearcache)
+out <- with (dat, data.frame(
+    datetimestamp=datetimestamp
+    , jday=as.numeric (format (datetimestamp, "%j"))
+    , year=as.numeric (format (datetimestamp, "%Y"))
+    , atemp=air_temp
+    , rh=rep (NA, nrow(dat))  # no relative humidity in buoy data
+    , bp=rep (NA, nrow(dat))  # no barometric pressure in buoy data
+    , wspd=wspd * 0.5144444444  # convert knots to m/s
+    , maxwspd=rep (NA, nrow(dat))  # no peak wind gust in buoy data
+    , wdir=wd
+    , sdwdir=rep (NA, nrow(dat))
+    , totpar=rep (NA, nrow(dat))  # no total PAR in buoy data
+    , totprcp=rep (NA, nrow(dat))  # no total precipitation in buoy data
+    , totsorad=rep (NA, nrow(dat))  # no total solar radiation in buoy data
+  ))
+  return (out)
+}
+
 
 
 if (0){

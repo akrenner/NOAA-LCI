@@ -39,8 +39,17 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
                , "EAST AMATULI STATION LIGHT  AK", "AUGUSTINE ISLAND")
 
 
+## weather stations above are largely moot, coming from rnoaa. Two options now:
+## worldmet package or buoydata package. buoydata has not been updated recently,
+## so worldmet seems like a safer bet for long-term stability.
+## Issue pull-request for caching additions to worldmet package.
+
+
+
+
 if (0){
   ## list availabel buoy stations nearby
+  ## less refined than worldmet, so only use this for waverider buoy!
   require (buoydata)
   buoydata::buoyDataWorld |>
     dplyr::filter(LAT > 58, LAT < 61) |>
@@ -72,13 +81,15 @@ wave.46108 <- nWave
 
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
 
-weatherD <- list (homer.airport=gNOAAS (station="Homer Airport", clearcache=clearC, cacheF=cF, showsites=TRUE)  ## Homer Airport weather station)
-                  ,homer.spit.buoy=getNOAA (buoyID="hmsa2", clearcache=clearC)   ## SWMP Homer Spit weather station
+weatherL <- list (homer.airport=gNOAAS (station="Homer Airport", clearcache=clearC, cacheF=cF, showsites=TRUE)  ## Homer Airport weather station)
+                  , homer.spit=gNOAAS (station="Homer Spit", clearcache=clearC, cacheF=cF)  ## Homer Spit weather station
                   ,homer.spit2=gNOAAS (station="KACHEMAK BAY RESERVE", clearcache=clearC, cacheF=cF)  ## SWMP Homer Spit weather station
+                  ,kachomet=sAir
                   ,augustine=gNOAAS (station="Augustine Island", clearcache=clearC, cacheF=cF)  ## Augustine Island weather station
                   ,flat.island=gNOAAS (station="Flat Island Light", clearcache=clearC, cacheF=cF)  ## Flat Island weather station
                   ,east.amatuli=gNOAAS (station="East Amatuli Station Light  AK", clearcache=clearC, cacheF=cF)  ## East Amatuli weather station
 )
+weather.spit.buoy <- getNOAA (buoyID="hmsa2", clearcache=clearC)   ## SWMP Homer Spit weather station
 
 
 
@@ -120,5 +131,6 @@ save (hmr, file="~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")
 save (hmr=sAir, file="~/tmp/LCI_noaa/cache/annual-SWMPAirWeather.RData")
 
 save.image ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
-save (nWave, hmr, sAir, file="~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
+save (nWave, hmr, sAir, weatherL, file="~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 ## EOF
