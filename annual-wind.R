@@ -65,9 +65,13 @@ dir.create(mediaD, showWarnings=FALSE, recursive=TRUE)
 
 
 ## cycle through all wStations
+
+kmK <- which (names (weatherL)=="kachomet")
+
 # if (!exists ("wStations")){wStations <- metstation}
 # for (k in seq_along(wStations)){
-for (k in seq_along(weatherL)){
+# for (k in seq_along(weatherL)){
+for (i in kmK){
   # k <- 1
   metstation <- names (weatherL) [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")

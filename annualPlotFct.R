@@ -518,7 +518,7 @@ getNOAAweather <- function (station="HOMER AIRPORT", clearcache=FALSE, cacheF=FA
 
 
   fetchMeta <- function(){
-    wrldSites <- getMeta (plot=FALSE, returnMap=FALSE) ## download everything? country="US", state="AK",
+    wrldSites <- worldmet::getMeta (plot=FALSE, returnMap=FALSE) ## download everything? country="US", state="AK",
     saveRDS (wrldSites, paste0 (cacheFolder, "meta.rds"))
     wrldSites
   }
