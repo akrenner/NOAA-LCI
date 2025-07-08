@@ -80,6 +80,11 @@ if (0){
 source ("annualPlotFct.R")
 # wDB <- getNOAA (buoyID = 46108)
 load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+if (difftime (Sys.time(), max (nWave$datetimestamp), units="days") > 40){
+  cat ("\nFetching new buoy data from NOAA...\n")
+  source ("annual-fetchAirWeather.R")
+  load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+}
 wDB <- nWave
 
 hmr <- weatherL$augustine
@@ -133,48 +138,48 @@ hmr <-  meteo_pull_monitors ("USW00025507"
 
 
 
-if (1){ ## mean daily wave height -- for when do we have data
+## mean daily wave height -- for when do we have data
 
-  ## field names translations -- rnoaa legacy
-  wDB$wave_height <- ifelse (wDB$WVHT==99, NA, wDB$WVHT)
-  wDB$average_wpd <- ifelse (wDB$APD==99, NA, wDB$APD)
-  wDB$mean_wave_dir <- ifelse (wDB$MWD==999, NA, wDB$MWD)
-  wDB$dominant_wpd <- ifelse (wDB$DPD==99, NA, wDB$DPD)
-  wDB$air_temperature <- ifelse (wDB$ATMP==999, NA, wDB$ATMP)
+## field names translations -- rnoaa legacy
+wDB$wave_height <- ifelse (wDB$WVHT==99, NA, wDB$WVHT)
+wDB$average_wpd <- ifelse (wDB$APD==99, NA, wDB$APD)
+wDB$mean_wave_dir <- ifelse (wDB$MWD==999, NA, wDB$MWD)
+wDB$dominant_wpd <- ifelse (wDB$DPD==99, NA, wDB$DPD)
+wDB$air_temperature <- ifelse (wDB$ATMP==999, NA, wDB$ATMP)
 
-  dailyW <- aggregate (wave_height~format (datetimestamp
-                                           , "%Y-%m-%d")
-                       , wDB, FUN = mean)
-  names (dailyW)[1] <- "date"
-  ## max daily wave height
-  dailyW$maxW <- aggregate (wave_height~format (datetimestamp
-                                                , "%Y-%m-%d")
-                            , wDB, FUN = max)$wave_height
-  dailyW$date <- as.POSIXct (dailyW$date, format = "%Y-%m-%d")
+dailyW <- aggregate (wave_height~format (datetimestamp
+                                         , "%Y-%m-%d")
+                     , wDB, FUN = mean)
+names (dailyW)[1] <- "date"
+## max daily wave height
+dailyW$maxW <- aggregate (wave_height~format (datetimestamp
+                                              , "%Y-%m-%d")
+                          , wDB, FUN = max)$wave_height
+dailyW$date <- as.POSIXct (dailyW$date, format = "%Y-%m-%d")
 
-  pdf ("~/tmp/LCI_noaa/media/waveData.pdf")
-  plot (wave_height~datetimestamp, wDB, type = "l")
-  plot (wave_height~date, dailyW, type = "l")
-  plot (wave_height~average_wpd, wDB)
-  # hist (wDB$mean_wave_dir)
-  abline (v = c(50, 150, 290))
-  wDB$wave_dir_cat <- cut (wDB$mean_wave_dir, breaks = c(0, 50, 150, 290, 365)
-                           , labels = c("NW", "E", "SW", "NW")
-                           , include.lowest = TRUE, right = TRUE) # right = closed to right, open on left
-  for (i in 1:length (levels (wDB$wave_dir_cat))){
-    plot (wave_height~average_wpd, wDB
-          , subset = wDB$wave_dir_cat == levels (wDB$wave_dir_cat)[i]
-          , main = levels (wDB$wave_dir_cat)[i]
-          , ylim = range (wDB$wave_height, na.rm = TRUE)
-          , xlim = range (wDB$average_wpd, na.rm = TRUE)
-          )
-  }
-  wDBx <- wDB [order (wDB$wave_dir_cat),]
-  plot (wave_height~average_wpd, wDBx, col = wDB$wave_dir_cat)
-  rm (wDBx)
-  dev.off()
-  rm (dailyW, i)
+pdf ("~/tmp/LCI_noaa/media/waveData.pdf")
+plot (wave_height~datetimestamp, wDB, type = "l")
+plot (wave_height~date, dailyW, type = "l")
+plot (wave_height~average_wpd, wDB)
+# hist (wDB$mean_wave_dir)
+abline (v = c(50, 150, 290))
+wDB$wave_dir_cat <- cut (wDB$mean_wave_dir, breaks = c(0, 50, 150, 290, 365)
+                         , labels = c("NW", "E", "SW", "NW")
+                         , include.lowest = TRUE, right = TRUE) # right = closed to right, open on left
+for (i in 1:length (levels (wDB$wave_dir_cat))){
+  plot (wave_height~average_wpd, wDB
+        , subset = wDB$wave_dir_cat == levels (wDB$wave_dir_cat)[i]
+        , main = levels (wDB$wave_dir_cat)[i]
+        , ylim = range (wDB$wave_height, na.rm = TRUE)
+        , xlim = range (wDB$average_wpd, na.rm = TRUE)
+  )
 }
+wDBx <- wDB [order (wDB$wave_dir_cat),]
+plot (wave_height~average_wpd, wDBx, col = wDB$wave_dir_cat)
+rm (wDBx)
+dev.off()
+rm (dailyW, i)
+
 
 # pdf ("~/tmp/LCI_noaa/media/wavePeriod.pdf")
 # plot (wave_height~dominant_wpd, tDay)
@@ -477,26 +482,19 @@ cLegend ("top"
 
 
 ## airtemp when surf is great
-if (0){  ## current buoy data has no good air temp
-  ## find closest airport temperature for every reported wave buoy record
-  ## see https://stackoverflow.com/questions/43472234/fastest-way-to-find-nearest-value-in-vector
+## find closest airport temperature for every reported wave buoy record
+## see https://stackoverflow.com/questions/43472234/fastest-way-to-find-nearest-value-in-vector
 
-  hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp),]
-  b <- hap$datetimestamp
-  cuts <- c(-Inf, b[-1]-diff(b)/2, Inf)
-  idx <- cut (wDB$datetimestamp, cuts, labels=b)
+hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp),]
+hap <- unique (hap, by = "datetimestamp") # remove duplicates
+b <- as.numeric (hap$datetimestamp)
+cuts <- c(-Inf, b[-1]-diff(b)/2, Inf)
+idx <- cut (as.numeric (wDB$datetimestamp), cuts, labels=b)
+wDB$air_temperature <- hap$atemp [idx]
 
-
-
-#XXX  wdB$air_temperature <- weatherL$homer$air_temperature [XXX find closest matching time]
-
-
-
-wdB$air_temperature <- weatherL$homer$air_temperature [which.min(abs (weatherL$homer$datetimestamp - wDB$datetimestamp))]
 hist (subset (wDB$air_temperature, wDB$surf > 1)
       , main = "Air temperature when surf is good"
       , xlab = expression ('air'~'temperature '~'['*degree~'C'*']'))
-## could pull that data from homer airport, if really desired
 
 
 wSpd <- wDB$windspd / 1.852
@@ -508,7 +506,7 @@ hist (subset (windchill, wDB$surf >= 1)
 # hist (subset (wDB$sea_surface_temperature, wDB$surf > 4)
 #       , main = "Water temperature when surf is good"
 #       , xlab = "temperature [C]")
-}
+
 
 dev.off()
 
@@ -732,5 +730,6 @@ getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
 # require ("pbs")
 # mdl <- glm (surf~pbs:pbs (jday, df = 4, Boundary.knots = c(1,366)), data = surfC)
 
+cat ("\n## \n## End of annual-waves.R\n##\n")
 
 ## EOF
