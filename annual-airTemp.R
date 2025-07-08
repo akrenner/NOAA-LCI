@@ -46,7 +46,7 @@ load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  #hmr,  Homer Airport
 # if (SWMP){
 #   load ("~/tmp/LCI_noaa/cache/metDat.RData") # from annual-wind.R -- SWMP
 # }else{
-#   source ("noaaWeather.R")
+#   source ("eather.R")
 #   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 # }
 
@@ -127,25 +127,29 @@ dev.off()
 ## for the gardeners: ##
 ########################
 ## what's the likelihood of frost? What's the last day of frost?
-rm (hmr)
+# rm (hmr)
 frostTH <- c (-5, -3, -2, 0, 2, 5)
 frostTH <- c (-5, -3, -2, 0)
 ## tomatoes: stay above 50 F -> mintemp 10 C
 
 
-source ("noaaWeather.R")
-
-load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
+# source ("noaaWeather.R")
+#
+# load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 suppressMessages (require ("zoo"))
-hmr$atemp <- hmr$mintemp # caring about frost, not average!?
+load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  #hmr, Homer Airport
+hmrMin <- aggregate (atemp~jday+year, data=hmr, min)  # min daily temperature
+# hmr$atemp <- hmr$mintemp # caring about frost, not average!?
 # hmr$atemp <- with (hmr, rowMeans (cbind (mintemp, maxtemp)))
+hmrMin$medtemp <- aggregate(atemp~jday+year, data=hmr, mean)$atemp
+hmr <- hmrMin
 
 ## min of min and max? min? , atemp?
 ## supply a list of logical vectors instead of a threshold? To allow min and mean temperatures
 frostM <- list (hmr$atemp < 0  ## recent years
                 , hmr$medtemp < -2 ## hardy tubbers?  -- AFTER 14 days of overall mean > 0?
                 , hmr$medtemp < 0    ## lettuce?
-                , hmr$mintemp < 10)  ## tomatoes
+                , hmr$atemp < 10)  ## tomatoes
 dFrostL <- lapply (1:length (frostM), function (i){
   dF <- hmr [,names (hmr)%in% c("jday", "year")]
   dF$fro <- frostM [[i]]

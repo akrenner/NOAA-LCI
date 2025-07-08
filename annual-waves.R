@@ -78,9 +78,11 @@ if (0){
 # to reset: unlink ("~/tmp/LCI_noaa/cache/noaawaves.RData")
 
 source ("annualPlotFct.R")
-wDB <- getNOAA (buoyID = 46108)
+# wDB <- getNOAA (buoyID = 46108)
+load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+wDB <- nWave
 
-
+hmr <- weatherL$augustine
 ## is all the Augustine Island part obsolete? replicated elsewhere? XXX
 ## Augustine Island wind -- as covariate to KBay wind?
 # Aug <- isd ("994700", wban = 99999, year = 2020)
@@ -109,7 +111,7 @@ if (0){
   rm (tl)
   aDB$datetimestamp <- as.POSIXct (with (aDB, paste (date, time)), format = "%Y%m%d %H%M")
   aDB <- addTimehelpers(aDB)
-}
+
 
 require ("dplyr")
 hmr <-  meteo_pull_monitors ("USW00025507"
@@ -120,7 +122,7 @@ hmr <-  meteo_pull_monitors ("USW00025507"
                  #, atemp = tavg
                  , wspd = awnd, maxwspd = wsfg, wdir = wdfg) %>%
   addTimehelpers ()
-
+}
 ## cross-correlation wind and waves
 ## linear model waves~windH + windA
 
@@ -134,9 +136,11 @@ hmr <-  meteo_pull_monitors ("USW00025507"
 if (1){ ## mean daily wave height -- for when do we have data
 
   ## field names translations -- rnoaa legacy
-  wDB$wave_height <- wDB$WVHT
-  wDB$average_wpd <- wDB$APD
-  wDB$mean_wave_dir <- wDB$WDIR
+  wDB$wave_height <- ifelse (wDB$WVHT==99, NA, wDB$WVHT)
+  wDB$average_wpd <- ifelse (wDB$APD==99, NA, wDB$APD)
+  wDB$mean_wave_dir <- ifelse (wDB$MWD==999, NA, wDB$MWD)
+  wDB$dominant_wpd <- ifelse (wDB$DPD==99, NA, wDB$DPD)
+  wDB$air_temperature <- ifelse (wDB$ATMP==999, NA, wDB$ATMP)
 
   dailyW <- aggregate (wave_height~format (datetimestamp
                                            , "%Y-%m-%d")
@@ -152,7 +156,7 @@ if (1){ ## mean daily wave height -- for when do we have data
   plot (wave_height~datetimestamp, wDB, type = "l")
   plot (wave_height~date, dailyW, type = "l")
   plot (wave_height~average_wpd, wDB)
-  hist (wDB$mean_wave_dir)
+  # hist (wDB$mean_wave_dir)
   abline (v = c(50, 150, 290))
   wDB$wave_dir_cat <- cut (wDB$mean_wave_dir, breaks = c(0, 50, 150, 290, 365)
                            , labels = c("NW", "E", "SW", "NW")
@@ -471,10 +475,29 @@ cLegend ("top"
          , cYcol = currentCol
 )
 
+
 ## airtemp when surf is great
+if (0){  ## current buoy data has no good air temp
+  ## find closest airport temperature for every reported wave buoy record
+  ## see https://stackoverflow.com/questions/43472234/fastest-way-to-find-nearest-value-in-vector
+
+  hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp),]
+  b <- hap$datetimestamp
+  cuts <- c(-Inf, b[-1]-diff(b)/2, Inf)
+  idx <- cut (wDB$datetimestamp, cuts, labels=b)
+
+
+
+#XXX  wdB$air_temperature <- weatherL$homer$air_temperature [XXX find closest matching time]
+
+
+
+wdB$air_temperature <- weatherL$homer$air_temperature [which.min(abs (weatherL$homer$datetimestamp - wDB$datetimestamp))]
 hist (subset (wDB$air_temperature, wDB$surf > 1)
       , main = "Air temperature when surf is good"
       , xlab = expression ('air'~'temperature '~'['*degree~'C'*']'))
+## could pull that data from homer airport, if really desired
+
 
 wSpd <- wDB$windspd / 1.852
 windchill <- 13.12 + 0.6215*wDB$air_temperature - 11.37 * wSpd ^ 0.16 +
@@ -485,7 +508,7 @@ hist (subset (windchill, wDB$surf >= 1)
 # hist (subset (wDB$sea_surface_temperature, wDB$surf > 4)
 #       , main = "Water temperature when surf is good"
 #       , xlab = "temperature [C]")
-
+}
 
 dev.off()
 

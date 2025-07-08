@@ -71,7 +71,8 @@ kmK <- which (names (weatherL)=="kachomet")
 # if (!exists ("wStations")){wStations <- metstation}
 # for (k in seq_along(wStations)){
 # for (k in seq_along(weatherL)){
-for (i in kmK){
+k <- kmK
+# for (k in kmK){
   # k <- 1
   metstation <- names (weatherL) [k]
   cat ("\n\n######\n", metstation, "started\n######\n\n")
@@ -269,7 +270,7 @@ for (i in kmK){
   # png (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".png")
   #      , width=1200, height=1200, res=300)
   pdf (paste0 ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-WindStack_", metstation, ".pdf")
-       , width=4, height=4)
+       , width=7, height=4)
   par (mar=c (4,5,1,1))
   # barplot (sTab [which (row.names(sTab)%in% c("galeS", "storm", "stormC", "galeC")),]  ## excluding SCA, storms to bottom
 
@@ -280,11 +281,14 @@ for (i in kmK){
     lP <- "topright"
     yR <- NULL
   }
+  startY <- min (as.numeric (colnames(sTab)))
   barplot (sTab [c(3,5,7,6),]  ## excluding SCA, storms to bottom
            , col=gCols# [4:1]
            , ylab="High-wind days per year"
            , ylim=yR
+           , xaxp=c(startY, currentYear, currentYear-startY+1)
   )
+  rm (startY)
   if (metstation=="kachomet"){
     title (main="Homer Spit")
   }else if (metstation=="FILA2"){
@@ -298,6 +302,8 @@ for (i in kmK){
   #          , probs=c(0.05,0.95), na.rm=TRUE), lty="dashed", lwd=1)
   legend (lP, legend=c ("gale", "storm") # row.names(sTab)[1:2]
           , fill=gCols[c(2,1)], bty="n", ncol=1)
+  # axis (side=1, tick=TRUE)
+  box()
   dev.off()
   rm (cGale, yGale, gCols, sTab, lP)
   ## end of wind summary
@@ -810,35 +816,36 @@ for (i in kmK){
 
 
 ## Compare wind roses of Homer Spit and Flat Island
+if (0){
 if (metstation == "kachomet"){
 
-  hmr2 <- getNOAA ("FILA2") # fetch Flat Island data from NOAA
-  fi <- with (hmr2, data.frame (datetimestamp, atemp=air_temperature
-                                , rh=rep (is.na (nrow (hmr2)))  # barometric pressure
-                                , bp=rep (is.na (nrow (hmr2)))  # relative humidity
-                                , wspd=wind_spd # m/s -- same as SWMP  # NOAA wspd in m/s
-                                , maxwspd=gust
-                                , wdir=wind_dir
-                                , sdwdir=rep (is.na (nrow (hmr2)))
-                                , totpar=rep (is.na (nrow (hmr2)))
-                                , totprcp=rep (is.na (nrow (hmr2)))
-                                , totsorad=rep (is.na (nrow (hmr2)))
-  ))
-  if (exists (vUnit)){ #} == "knots"){
-    fi$wspd <- fi$wspd * 1.94384   ## 1 knot=1.94384 m/s
-    fi$maxwspd <- fi$maxwspd * 1.94384
-    wCaption <- "wind speed [knots]"
-  }else{
-    wCaption <- "wind speed [m/s]"
-  }
-  fi <- addTimehelpers (fi)
-  hmrS <- rbind (cbind (station=paste0 ("Flat Island - ", currentYear), fi)
+  # hmr2 <- getNOAA ("FILA2") # fetch Flat Island data from NOAA
+  # fi <- with (hmr2, data.frame (datetimestamp, atemp=air_temperature
+  #                               , rh=rep (is.na (nrow (hmr2)))  # barometric pressure
+  #                               , bp=rep (is.na (nrow (hmr2)))  # relative humidity
+  #                               , wspd=wind_spd # m/s -- same as SWMP  # NOAA wspd in m/s
+  #                               , maxwspd=gust
+  #                               , wdir=wind_dir
+  #                               , sdwdir=rep (is.na (nrow (hmr2)))
+  #                               , totpar=rep (is.na (nrow (hmr2)))
+  #                               , totprcp=rep (is.na (nrow (hmr2)))
+  #                               , totsorad=rep (is.na (nrow (hmr2)))
+  # ))
+  # if (exists (vUnit)){ #} == "knots"){
+  #   fi$wspd <- fi$wspd * 1.94384   ## 1 knot=1.94384 m/s
+  #   fi$maxwspd <- fi$maxwspd * 1.94384
+  #   wCaption <- "wind speed [knots]"
+  # }else{
+  #   wCaption <- "wind speed [m/s]"
+  # }
+  # fi <- addTimehelpers (fi)
+  hmr2 <- weatherL$flat.island  ## no maxwspd in worldmet data
+  hmrS <- rbind (cbind (station=paste0 ("Flat Island - ", currentYear), hmr2)
                  , cbind (station=paste0 ("Homer Spit - ", currentYear), hmr))
   rm (hmr2)
   hmrS <- subset (hmrS, year == currentYear)  ## make sure this stays (see label)
   hmrS$date <- as.POSIXct(hmrS$datetimestamp)
   hmrS$station <- as.factor (hmrS$station)
-
 
 
   ## compare wind Flat Island with Homer Spit -- windroses
@@ -857,7 +864,8 @@ if (metstation == "kachomet"){
   )
   dev.off()
 }
-}
+  }
+# }
 
 cat ("Finished annual-wind.R\n")
 # EOF

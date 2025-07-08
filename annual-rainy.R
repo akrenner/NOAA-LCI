@@ -39,7 +39,13 @@ source ("annualPlotFct.R") # important to call after defining currentCol!
 #   source ("noaaWeather.R")  ## test whether re-run is necessary, somehow
 #   load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
 # }
-load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData") # hmr -- from annual-fetchAirWeather.R
+x <- load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData") # hmr -- from annual-fetchAirWeather.R
+x <- load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # hmr -- from annual-fetchAirWeather.R
+
+
+## hmr: as before, University of Iowa
+## weatherL$homer.airport: worldmet
+## weatherL$kachomet = sAir: SWMP Homer Spit
 
 
 

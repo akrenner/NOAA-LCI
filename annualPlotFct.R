@@ -254,6 +254,7 @@ prepDF <- function (dat, varName, sumFct=function (x){mean (x, na.rm=TRUE)}
   # }
 
   ## flexible for varName to be a vector!!  -- XXX extra feature
+  dat <- as.data.frame (dat) # error when using tibble/table
   dat$xVar <- dat [,which (names (dat) == varName)]
 
   suppressPackageStartupMessages(require ("zoo"))
