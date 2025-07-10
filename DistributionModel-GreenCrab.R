@@ -18,6 +18,9 @@ rm (list = ls())
 ## use 90% quantiles/box of habitat data
 ## test and examine output
 
+## resurrect? currently has synta error getting data from online sources
+
+
 ##################
 ## native range ##
 ##################
@@ -131,7 +134,7 @@ if (0){
   }
   tStr <- paste0 ("T", month.name, collapse=", ")
   getT <- paste ("c (", tStr, ", along='t_an')")
-  temp <- eval (str2lang (getT))
+  temp <- eval (str2lang (getT))  ## XXXX NetCDF DAP server error
 #  names (temp) <- "degC"
   tMin <- st_apply (c (temp), 1:2, min)
   tMax <- st_apply (c (temp), 1:2, max)
@@ -154,13 +157,16 @@ rm (sss, tMin, tMax, tMean)
 #####################
 
 ## shoreline
-require ("maptools")
-require ("zip")
-tD <- tempdir()
-unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
-       , junkpaths = TRUE, exdir = tD)
 require ("sf")
-coastG <- st_read (dsn = tD, layer = "GSHHS_l_L1") ## select f, h, i, l, c  ---  doesn't need to be fine-scale here
+coastG <- st_read(dsn="~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/i/"
+                  , layer="GSHHS_i_L1")
+# require ("maptools")
+# require ("zip")
+# tD <- tempdir()
+# unzip ("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
+#        , junkpaths = TRUE, exdir = tD)
+# require ("sf")
+# coastG <- st_read (dsn = tD, layer = "GSHHS_l_L1") ## select f, h, i, l, c  ---  doesn't need to be fine-scale here
 
 ## clip to bounding box: NW Atlantic
 b <- st_bbox (coastG)
