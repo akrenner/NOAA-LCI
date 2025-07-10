@@ -4,13 +4,17 @@
 ## using automap to interpolate stations (kriging)
 ## do one map per season
 
+## old script, currently broken -- cool results, though, worth to resurrect?
+## need to migrate all code from sp to sf
+
+
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData") # from dataSetup.R
 ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ecoAn.RData") # from ecoAn.R
 
 require (parallel)
 require (automap)
 require (geoR)
-require (rgdal)
+# require (rgdal)
 
 nCPUs <- detectCores()
 gRes <- 2e3
@@ -49,7 +53,7 @@ grd <- expand.grid (seq (-15e3, 180e3, by = gRes)
                     )
 ## better yet: start with a polygon
 coordinates (grd) <- ~Var1+Var2
-proj4string (grd) <- CRS (proj4string (poSS))
+proj4string (grd) <- CRS (proj4string (poSS))  ## XXX currently broken
 grd <- SpatialPixels (grd)
 
 ## plot (grd)
@@ -248,7 +252,7 @@ plotKrige <- function (i){
         ## require (graticule)
         ## graticule
         ## or in rgdal
-        require (rgdal)
+#        require (rgdal)
         llgridlines (kout, lty = 3, side = "WS", offset = -0.5, lwd = 0.5, cex = 0.5)
     }
 
