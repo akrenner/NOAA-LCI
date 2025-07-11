@@ -65,25 +65,25 @@ if (0){ ## plot zoop stations to be sure:
   lines (coast)
   rm (Tx)
 }
-zD <- zooCenv@data
+zD <- zooCenv
 suppressWarnings({
   zD$Match_Name <- ifelse ((zD$Transect == "3") & (as.numeric (zD$Station) > 10),  "3_E", zD$Match_Name) # 4, 8, 12, 13, 14
   zD$Match_Name <- ifelse ((zD$Transect == "7") & (as.numeric (zD$Station) > 10),  "7_E", zD$Match_Name) # 1, 3, 4, 5, 9, 11, 25
   zD$Match_Name <- ifelse ((zD$Transect == "6") & (as.numeric (zD$Station) < 9),  "6_E", zD$Match_Name) # 1, 3, 4, 5, 9, 11, 25 -- order reversed
-  zooCenv@data <- zD
+  zooCenv <- zD
   rm (zD)
 })
 
 sort (summary (factor (zooCenv$Match_Name)))
-zooCenv@data [which (zooCenv$Match_Name == "6_9"),]
-x <- zooCenv@data [which (zooCenv$Date == "23-Sep-14"),]  ## there's no notebook for that date. 2014-09-25 notebook has other times and only T9.
+zooCenv [which (zooCenv$Match_Name == "6_9"),]
+x <- zooCenv [which (zooCenv$Date == "23-Sep-14"),]  ## there's no notebook for that date. 2014-09-25 notebook has other times and only T9.
 x [order (x$timeStamp),]
 
-zooCenv@data [which (zooCenv$Match_Name == "AlongBay_1"),]## looks legit
-zooCenv@data [which (zooCenv$Match_Name == "AlongBay_5"),]## looks legit
-zooCenv@data [which (zooCenv$Match_Name == "AlongBay_8"),]## legit
+zooCenv [which (zooCenv$Match_Name == "AlongBay_1"),]## looks legit
+zooCenv [which (zooCenv$Match_Name == "AlongBay_5"),]## looks legit
+zooCenv [which (zooCenv$Match_Name == "AlongBay_8"),]## legit
 
-zooCenv@data [which (zooCenv$Match_Name == "AlongBay_9"),]## check!
+zooCenv [which (zooCenv$Match_Name == "AlongBay_9"),]## check!
 
 
 
@@ -91,7 +91,7 @@ zooCenv@data [which (zooCenv$Match_Name == "AlongBay_9"),]## check!
 ## exclude stations that were only sampled once or twice -- remove one-offs
 ## pick out stations that were present in each year-season combination
 ## copied/adapted from zooCommunity-note.R
-year_season <- with (zooCenv@data, paste (Year, season, sep = "-"))
+year_season <- with (zooCenv, paste (Year, season, sep = "-"))
 sttn <- gsub ("_", "-", zooCenv$Match_Name)  # with (zooCenv@data, paste (Transect, Station, sep = "-"))
 xT <- table (year_season, sttn)
 print (t (xT))
@@ -227,10 +227,16 @@ agZPt <- subset (zooCenv, !duplicated(zooCenv$Match_Name))  # remove extras
 agZPt$clust <- factor (bioG [match (agZPt$Match_Name, names (bioG))])
 rm (bioG)
 
-bb <- bbox (agZPt)
-kBs <- rbind (bb [,1],c (bb [1,1], bb [2,2])
-              ,bb [,2],c (bb [1,2], bb [2,1])
-              , bb [,1])
+## make polygon from bounding box to nudge to Kachemak Bay dimensions
+kBs <- st_bbox (agZPt) |>
+  st_as_sfc() |>
+  st_coordinates() |>
+  as.data.frame() |>
+  dplyr::select (X,Y)
+
+### XXX the rest is still broken as a result of sp to sf migration XXX #########
+
+
 kBs [1,] <- c (105000, 1032000) # SW corner -- near Pnt Pogibshi
 kBs [1,] <- c (105000, 1021000) # SW corner -- incl. T3_E
 kBs [5,] <- kBs [1,]
@@ -241,7 +247,7 @@ p <- SpatialPolygons (list (Polygons (list (Polygon (kBs)), 1)))
 proj4string(p) <- CRS (proj4string(zooCenv))
 
 ## restrict study area to water (cookie-cutter)
-require ("rgeos")
+######### [required for the old code, edited out to make renv compliant]  require ("rgeos")
 studyA <- gDifference (p, coast)
 # plot (studyA)
 # plot (agZPt, add = TRUE, col = "red")
