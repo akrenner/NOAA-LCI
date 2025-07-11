@@ -35,7 +35,7 @@ vars <- c("PO4F", "NH4F"
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/sa-Nutrients.pdf")
 par (mfrow=c(2,2), mar=c(3,4,3,1))
 
-for (i in 1:length (vars)){
+for (i in seq_along (vars)){
   sL <- prepDF (dat=nut, varName=tolower (vars [i]), maO=maO
                 , currentYear=currentYear, qntl=qntl)
   sL <- subset (sL, !is.na (sL [,2]))

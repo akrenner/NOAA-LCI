@@ -46,7 +46,7 @@ if (0){
              ,'pwind', 'stdmet', 'swden', 'wlevel')
   stn <- c (46105, 46108, "HMRA2")  # near Barrens, outer KBay, spit
 
-  for (i in 1:length (dset)){
+  for (i in seq_along (dset)){
     cat (dset [i])
     try (print (head (buoy (dset [i], buoyid = stn [1]))))
   }
@@ -101,7 +101,7 @@ if (0){
       with (as.data.frame (df), data.frame (date, time, date_flag, quality, wind_direction, wind_direction_quality
                                             , wind_code, wind_speed, wind_speed_quality))
     }
-    for (i in 1:length (aB)){
+    for (i in seq_along (aB)){
       if (!exists ("aDB")){
         aDB <- pF (aB [[i]])
       }else{
@@ -166,7 +166,7 @@ abline (v = c(50, 150, 290))
 wDB$wave_dir_cat <- cut (wDB$mean_wave_dir, breaks = c(0, 50, 150, 290, 365)
                          , labels = c("NW", "E", "SW", "NW")
                          , include.lowest = TRUE, right = TRUE) # right = closed to right, open on left
-for (i in 1:length (levels (wDB$wave_dir_cat))){
+for (i in seq_along (levels (wDB$wave_dir_cat))){
   plot (wave_height~average_wpd, wDB
         , subset = wDB$wave_dir_cat == levels (wDB$wave_dir_cat)[i]
         , main = levels (wDB$wave_dir_cat)[i]

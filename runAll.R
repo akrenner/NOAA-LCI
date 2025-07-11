@@ -1,31 +1,30 @@
 #! /usr/bin/env Rscript
 
-## execute all Kachemak Bay/Cook Inlet scripts, 2020
-## if this is a new installation, it may be necessary to disconnect from VPN
-## to avoid timeouts
-## to run up-to-date analysis, connect to VPN in order to download latest data from SWMP
-## expect approximately 3 hours for a full run
-## (2023-04 on Latitude 5420; 11th Gen Intel Core i7 1185G7 @3.0 GHz/1.8 GHz)
+## Execute all Kachemak Bay/Cook Inlet scripts, 2020
+## If this is a new installation, it may be necessary to disconnect from VPN
+## to avoid timeouts. To run up-to-date analysis, connect to VPN in order to
+## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
+## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
-rm (list = ls())
+rm(list = ls())
 sT <- Sys.time()
 
 # pastYear <- FALSE  # plot currentYear-1 ?
 # ongoingY <- TRUE
 
-if (.Platform$OS.type=="windows"){
+if (.Platform$OS.type == "windows") {
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-}else{ ## Linux or macOS platform
+} else { ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
 
-if (!require ("oce")){
+if (!require ("oce")) {
   source ("InitialSetup.R")
 }
 
 
-if (0){
+if (0) {
   ## to update packages: 0-- trouble on MacOS?
   require (usethis) ## for github rate limits
   usethis::create_github_token()
@@ -34,19 +33,16 @@ if (0){
 
 
   ## troubleshoot dependencies:
-  # x <- renv::status()
-  # names (x$library$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
-  # names (x$lockfile$Packages) [which (!names (x$library$Packages) %in% names (x$lockfile$Packages))]
-  badP <- c("rgdal", "rgeos" , "maptools", "rnoaa", "rtide", "SDraw"
-            )
+  badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw"
+  )
   deps <- renv::dependencies()
-  for (i in 1:length (badP)){
+  for (i in seq_along (badP)) {
     cat ("\n\n##", badP [i], "##\n")
-    print (deps [which (deps$Package==badP[i]),1])
+    print (deps [which (deps$Package == badP[i]), 1])
   }
   rm (badP, deps)
 
-  renv::update(exclude=c("oce")) ## rerun for all/specific packages to update
+  renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
   # renv::install ("~/src/oce_1.7-10.tar.gz")
   renv::clean()
   renv::snapshot()
@@ -55,30 +51,28 @@ if (0){
 
 
 
-if (1){
+if (1) {
   ## run the first script interactively! :
   # source ("I-ctd_uneditedHexFiles.R")
 
   ## hex conversion and QAQC plots
-  sink (file = "ctdprocessing.log", append=FALSE, split = FALSE) # show output and write to file
+  sink (file = "ctdprocessing.log", append = FALSE, split = FALSE)
   cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
   source ("FieldNotesDB.R") # first because it doesn't depend on anything else
   source ("ctd_workflow.R")              ## approx. 1:30 hours
   source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat ("Finished CTD hex conversion and processing at: ", as.character (Sys.time()), "\n")
+  sink()
 }
-sink()
 
 
-sink (file="StateOfBay-run.log", append=FALSE, split=FALSE)
-sink()
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source ("datasetup.R")
 ## separate out CTD-specific stuff??
-#; bathymetry
-#; coastline
-#; CTD data
+# ; bathymetry
+# ; coastline
+# ; CTD data
 
 ## set up required work environment and external files/data (bathymetry)
 source ("EnvironmentSetup.R")
@@ -99,7 +93,7 @@ source ("CTDwall.R")
 
 
 ## 2017 contract
-if (0){ ## 2017 contract
+if (0) { ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
   ## Breaking this reference would be desirable, although it would increase file size of all temporary
@@ -118,7 +112,7 @@ if (0){ ## 2017 contract
 
 
 ## 2019 seasonality
-if (0){ # Dec 2019 seasonality
+if (0) { # Dec 2019 seasonality
   source ("zoopCommunity.R")
   source ("phytopCommunity.R")
 
@@ -135,8 +129,10 @@ if (0){ # Dec 2019 seasonality
 ## only for SoB? -- mv down?
 ## source ("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
 
+sink (file = "StateOfBay-run.log", append = FALSE, split = FALSE)
 ## State of the Bay Report
 source ("AnnualStateOfTheBay.R")
+sink()
 
 
 ## how to execute report?
@@ -144,7 +140,7 @@ source ("AnnualStateOfTheBay.R")
 
 
 ## one-offs
-if (0){
+if (0) {
   source ("Currents/bathymetry-merge.R")
   source ("Currents/ciofs_maxCurrent.r")
   source ("Currents/drifter.R")
@@ -160,7 +156,7 @@ source ("metaDataCompilation.R")
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
-if (length (grep ("[M|m]artin", getwd()))>0){
+if (length (grep ("[M|m]artin", getwd())) > 0) {
   source ("CTDsyncGDwall.R")
   ## send email that run is completed
   source ("CTD_finishnotification.R")

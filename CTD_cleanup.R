@@ -153,8 +153,8 @@ stnFNex <- gsub ("2012-07-02-kbaysubays-cast152-tub_", "2012-07-02-subbays-tutka
 ## extract Station and Transect numbers
 stnSp <- strsplit(gsub ("_", "-", stnFNex), "-")
 ## if all is well, order or elements in list should be sufficient. Just correct bad files?
-stN <- sapply (1:length (stnSp), function (i){stnSp[[i]][3]}) # 3 is station
-tnN <- sapply (1:length (stnSp), function (i){stnSp[[i]][2]}) # 2 is transect
+stN <- sapply (seq_along(stnSp), function (i){stnSp[[i]][3]}) # 3 is station
+tnN <- sapply (seq_along(stnSp), function (i){stnSp[[i]][2]}) # 2 is transect
 
 x <- which (stN == "tran3")
 stnSp [[x[1]]]
@@ -186,10 +186,10 @@ levels (factor (physOc$File.Name [bS]))
 rm (bS)
 
 if (0){
-  stN <- sapply (1:length (stnSp), function (i){
+  stN <- sapply (seq_along(stnSp), function (i){
     grep ("^(s|S)[0:9]", stnSp[[i]], value = TRUE)[1]
   })
-  tnN <- sapply (1:length (stnSp), function (i){
+  tnN <- sapply (seq_along(stnSp), function (i){
     grep ("^(t|along|sub|tutk|sadi|seld|jac|kabaysu|kbays|ab)"
           , stnSp[[i]], value = TRUE)[1]
   })
@@ -407,7 +407,7 @@ summary (physOc)
 ## a fair number of casts have highest density/salinity at the surface. Remove those impossible data points.
 badDens <- function (i){
   ctd <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
-  cntx <- subset (1:nrow (physOc), physOc$File.Name == levels (physOc$File.Name)[i])
+  cntx <- subset (seq_len (nrow (physOc)), physOc$File.Name == levels (physOc$File.Name)[i])
   if (!is.na (sum (ctd$Density_sigma.theta.kg.m.3[c(1,2)]))){ # bad/missing values Density_sigma.theta.kg.m.3
     if (ctd$Density_sigma.theta.kg.m.3 [1] >
         ctd$Density_sigma.theta.kg.m.3 [2]){
@@ -421,14 +421,14 @@ badDens <- function (i){
 }
 # bCntr <- unlist (mclapply (1:length (levels (physOc$File.Name)), FUN = badDens
 #                          , mc.cores = nCPUs))
-bCntr <- unlist (lapply (1:length (levels (physOc$File.Name)), FUN = badDens))
+bCntr <- unlist (lapply (seq_along(levels (physOc$File.Name)), FUN = badDens))
 
 physOc$File.Name <- factor (physOc$File.Name)
 cat ("\n\nRemoved first data point from ", length (bCntr), " out of ",
      length (levels (physOc$File.Name)), "CTD casts ("
      , round (length (bCntr)/length (levels (physOc$File.Name))*100)
      ,"%) because surface density \nwas higher than in subsequent samples.\n\n")
-physOc <- subset (physOc, !(1:nrow (physOc)) %in% bCntr)
+physOc <- subset (physOc, !(seq_len (nrow (physOc))) %in% bCntr)
 rm (bCntr, badDens)
 
 
@@ -510,7 +510,7 @@ plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen.Saturation.Garcia.Gordon.mg.l
       , col = as.numeric (xY) # YEAR!!
       , pch = 19
 )
-legend ("topright", col = 1:length (levels (xY)), pch = 19, legend = levels (xY))
+legend ("topright", col = seq_along(levels (xY)), pch = 19, legend = levels (xY))
 rm (xY)
 
 plot (physOc$Temperature_ITS90_DegC, physOc$Oxygen_SBE.43..mg.l.
@@ -540,7 +540,7 @@ plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc, col = year)
 # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = year)
 # legend ("bottomleft", col = levels (physOc$year), pch = 19, legend = levels (physOc$year))
 # plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc, col = as.numeric (CTD.serial))
-for (i in 1:length (levels (year))){
+for (i in seq_along(levels (year))){
   #  plot (Oxygen_SBE.43..mg.l. ~ Temperature_ITS90_DegC, data = physOc
   plot (Oxygen_umol_kg ~ Temperature_ITS90_DegC, data = physOc
         , subset = year == levels (year)[i], col = as.numeric (CTD.serial))
@@ -573,7 +573,7 @@ require ("oce")
 cCast <- levels (factor (physOc$File.Name))
 outF <- "~/tmp/LCI_noaa/media/CTDtests/profilePlots/"
 dir.create(outF, recursive = TRUE, showWarnings = FALSE)
-for (i in 1:length (cCast)){
+for (i in seq_along(cCast)){
   ## make oce-ctd 0bject
   pdf (paste0 (outF, cCast [i], ".pdf"))
   ## plot profile
@@ -599,13 +599,13 @@ physOc <- subset (physOc, !is.na (longitude_DD))
 ## QAQC: plot each day, station in order
 pdf ("~/tmp/LCI_noaa/media/CTDstationTest.pdf")
 dayF <- factor (physOc$Date)
-for (i in 1:length (levels (dayF))){
+for (i in seq_along(levels (dayF))){
   crs <- subset (physOc, dayF == levels (dayF)[i])
   crs <- subset (crs, duplicated(crs$Match_Name) == FALSE)
   crs <- crs [order (crs$isoTime),]
   if (nrow (crs) > 0){
     cF <- factor (crs$CTD.serial)
-    for (j in 1:length (levels (cF))){
+    for (j in seq_along(levels (cF))){
       crsC <- subset (crs, cF == levels (cF)[j])
       plot (latitude_DD~longitude_DD, crsC
             , main = paste (levels (dayF)[i], paste (cF [j], levels (factor (crsC$Transect)), collapse = " and "))
@@ -660,7 +660,7 @@ if (nrow (phy2)>0){
   write.csv (phy2, file=paste0 (outD, "/extraCTD.csv"), row.names=FALSE, quote=FALSE)
 }
 
-ctdX <- sapply (1:length (levels (yr)), function (i){
+ctdX <- sapply (seq_along(levels (yr)), function (i){
   ctdA <- subset (phyE, yr == levels (yr)[i])
   ctdB <- with (ctdA, data.frame (Station = Match_Name
                                   , Date

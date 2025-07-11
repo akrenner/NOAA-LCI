@@ -61,13 +61,13 @@ dAv$sTime <- factor (paste (dAv$year, dAv$month, sep = "-")
 xT <- xtabs(Station~sTime+Transect, dAv)
 
 ## data prep for image-plot
-xTs <- sapply (1:ncol (xT), function (i){  # express transect as proportion sampled
+xTs <- sapply (seq_len (ncol (xT)), function (i){  # express transect as proportion sampled
   xT [,i] / max (xT [,i], na.rm = TRUE)
 })
 dimnames(xTs) <- dimnames(xT)
 xT <- xTs; rm (xTs)
 xT <- ifelse (xT == 0, NA, xT)  # not sampled = white
-xT <- xT [nrow (xT):1,]   # top = first samples
+xT <- xT [rev(seq_len(nrow (xT))),]   # top = first samples
 
 
 
@@ -76,7 +76,7 @@ yL <- function (mx){  ##  BUG in here?
   ## construct labels for y-axis from rownames of matrix of from YYYY-MM
   yr <- factor (substr (row.names(mx), 1, 4))
   mt <- factor (1:12, ordered = TRUE)
-  lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
+  lbl <- paste (as.character (sapply (seq_along(levels (yr)), FUN = function (i){
     c(levels (yr)[i], rep ("", 11))  ## label only first month with year
     }))
     , rep (levels (mt), length (levels (yr))))
@@ -87,12 +87,12 @@ yL <- function (mx){  ##  BUG in here?
 }
 
 xAxis <- function (side=3, ...){
-  axis (side=side, at = ((1:ncol (xT))-1)/(ncol (xT)-1)
+  axis (side=side, at = ((seq_len(ncol (xT)))-1)/(ncol (xT)-1)
         , labels = colnames(xT), tick = FALSE, cex.axis = Cx, ...) # axis is 0:1
 }
 
 yAxis <- function (lab, mx, ...){
-  axis (2, at = ((1:nrow (mx))-1)/(nrow (mx)-1)
+  axis (2, at = ((seq_len(nrow (mx)))-1)/(nrow (mx)-1)
         , labels = rev (lab)
         , tick = FALSE, cex.axis = CA # any bigger and labels will skip
         , ...)
@@ -117,7 +117,7 @@ dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings=FALSE, recursive=TR
 pdf ("~/tmp/LCI_noaa/media/CTDsections/availability.pdf", height = 11, width = 8.5)
 par (mfrow = c(1,nColumns))
 par (las = las, mar = c(4,5,5,1))
-for (i in length (xTL):1){
+for (i in rev(seq_along (xTL))){
   image (t (xTL [[i]]), axes = FALSE)
   xAxis (side=3); xAxis (side=1)
   xL <- yL (xTL [[i]])
@@ -145,7 +145,7 @@ for (i in 1:nT){
   is.na (xT)[xT == 0] <- TRUE
   xT <- xT / max (xT, na.rm = TRUE)
 #  image (t (xT)[nrow (xT:1),], axes=FALSE)  # watch out to rotate xT correctly
-  image (t (xT [nrow (xT):1,]), axes=FALSE)  # watch out to rotate xT correctly
+  image (t (xT [rev(seq_len(nrow (xT))),]), axes=FALSE)  # watch out to rotate xT correctly
   title (main = levels (dAv$Transect)[i], line = 2.5)
   yAxis (row.names(xT), xT)
   axis (3, at = ((1:12)-1)/(12-1), labels = 1:12 #month.abb

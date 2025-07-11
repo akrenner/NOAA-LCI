@@ -143,12 +143,12 @@ badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't c
 badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
            , "2012_10-28_t6_s23_cast006_4141", badF)
 
-for (i in 1:length (badF)){
-  if (length (grep (badF [i], fNf)) > 0){
+for (i in seq_along(badF)){
+  if (length (grep(badF [i], fNf)) > 0){
     fNf <- fNf [-grep (badF [i], fNf)]
   }
 }
-rm (badF)
+rm(badF)
 fN <- gsub ("^.*/", "", fNf)
 
 
@@ -191,7 +191,7 @@ if (runParallel){
   fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
   ## shut down cluster farther down
 }else{
-  fileDB <- lapply (1:length (fNf), FUN = getMeta)
+  fileDB <- lapply (seq_along(fNf), FUN = getMeta)
 }
 
 rm (getMeta)

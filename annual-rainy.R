@@ -233,7 +233,7 @@ if (1){
   yL <- levels (factor (hmr$year))
   pdf ("~/tmp/LCI_noaa/media/precipX.pdf", width=9, height=6)
 
-  for (i in 1:length (yL)){
+  for (i in seq_along (yL)){
     tDay <- prepDF (varName="totprcp", dat=subset (hmr, hmr$year != yL [i])  # but but year in Q
                     , maO=31, qntl=c(0.5, 0.75)
     )

@@ -73,7 +73,7 @@ hmr <- subset (hmr, !is.na (atemp))
 if (0){  ## plot all years -- rainbow spaghetti
   hmr$yearF <- factor (hmr$year)
   plot (atemp~jday,data=hmr, type="n")
-  for (i in 1:length (levels (hmr$yearF))){
+  for (i in seq_along (levels (hmr$yearF))){
     #  plot (atemp ~ jday, data=hmr, subset=hmr$yearF == levels (hmr$yearF)[i], col=i, type="l")
     lines (atemp ~ jday, data=hmr, subset=hmr$yearF == levels (hmr$yearF)[i], col=i)
   }
@@ -150,7 +150,7 @@ frostM <- list (hmr$atemp < 0  ## recent years
                 , hmr$medtemp < -2 ## hardy tubbers?  -- AFTER 14 days of overall mean > 0?
                 , hmr$medtemp < 0    ## lettuce?
                 , hmr$atemp < 10)  ## tomatoes
-dFrostL <- lapply (1:length (frostM), function (i){
+dFrostL <- lapply (seq_along (frostM), function (i){
   dF <- hmr [,names (hmr)%in% c("jday", "year")]
   dF$fro <- frostM [[i]]
   cdFrost <- rbind (dF [,names (dF)%in% c("fro", "jday", "year")]
@@ -173,7 +173,7 @@ dFrostL <- lapply (1:length (frostM), function (i){
 #   dFrost$fY <- factor (dFrost$year)
 #     dFrost
 # })
-yFrostL <- lapply (1:length (frostTH), function (x){aggregate (atemp~jday
+yFrostL <- lapply (seq_along (frostTH), function (x){aggregate (atemp~jday
                                                                , data=dFrostL [[x]]
                                                                , mean
                                                                , subset=year < currentYear)})
@@ -186,7 +186,7 @@ require ("RColorBrewer")
 ## cls <- GnBu, Spectral, RdYIGn
 cls <- brewer.pal (length (frostTH), "RdYlGn")
 cls <- brewer.pal (length (frostTH), "Blues")
-for (i in length (frostTH):1){  ## reverse to plot cold THs last
+for (i in rev (seq_along (frostTH))){  ## reverse to plot cold THs last
   lines (atemp~jday, yFrostL [[i]], col=cls [i])
   points (I(atemp-1)~jday, subset (dFrostL[[i]], year == currentYear)
          , col=cls [i], pch=19)  # (atemp-1) to plot points low in graph
@@ -250,7 +250,7 @@ dev.off()
 
 yL <- 1:(length (levels (dFrostL[[1]]$fY))-1)
 springL <- sapply (yL, function (i){
-  sapply (1:length (frostTH), function (j){
+  sapply (seq_along (frostTH), function (j){
     y <- subset (dFrostL [[j]], fY == levels (fY)[i])
     if (nrow (y) > 350){  ## some early years are incomplete
       return (min (subset (y$jday, !y$atemp)))
@@ -267,7 +267,7 @@ plot (as.numeric (colnames (springL)), springL[1,], type="n"
       , ylim=range (as.numeric (springL), na.rm=TRUE)
       , ylab="first frost-free period"
       , xlab="year", axes=FALSE)
-for (i in 1:nrow (springL)){
+for (i in seq_len (nrow (springL))){
   lines (as.numeric (colnames (springL)), springL [i,]
          , col=cls [i], type="b")
 }
@@ -320,7 +320,7 @@ if (1){
   yL <- levels (factor (hmr$year))
   pdf ("~/tmp/LCI_noaa/media/precipX.pdf", width=9, height=6)
 
-  for (i in 1:length (yL)){
+  for (i in seq_along (yL)){
     tDay <- prepDF (varName="totprcp", dat=subset (hmr, hmr$year != yL [i])  # but but year in Q
                     , maO=31, qntl=c(0.5, 0.75)
     )

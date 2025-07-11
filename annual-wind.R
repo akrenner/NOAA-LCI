@@ -344,8 +344,10 @@ k <- kmK
   meanWind <- function (u,v){ # weatherclasses.com as above
     if (any (is.na (c (u,v)))){
       out <- rep (NA, length (u))
-    }# else
-    180+(180/pi*atan2 (u,v))
+    }else{
+      out <- 180+(180/pi*atan2 (u,v))
+    }
+    out
   }
   dMeans$wdir <- with (dMeans, meanWind (uw, vw))
   dMeans$windSpd <- with (dMeans, sqrt (uw^2+vw^2))
@@ -483,11 +485,11 @@ k <- kmK
     lW=1.0
     xGrenz <- c(5,360)
     par (mar=c(0,4,0,0.1))
-    plot (1:nrow (tDay), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
+    plot (seq_len (nrow (tDay)), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
           , axes=FALSE, xlab="", ylab="long-term", xlim=xGrenz)
     with  (tDay, segments(x0=jday, y0=0, x1=jday - uw*sF, y1=0 - vw*sF, col="blue"
                           , lwd=lW))
-    plot (1:nrow (tDay), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
+    plot (seq_len (nrow (tDay)), seq (-10, 10, length.out=nrow (tDay)), type="n", asp=1
           , axes=FALSE, xlab="", ylab=currentYear, xlim=xGrenz)
     with (tDay, segments(x0=jday, y0=0, x1=jday - p365uw*sF, y1=0 - p365vw*sF
                          , col=ifelse (p365scaDay == 1, "black", "red")

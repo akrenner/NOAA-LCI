@@ -85,7 +85,7 @@ aPlot <- function (df, vName, MA=TRUE
     maxV <- df [,which (names (df) == paste0 ("maxMA_", vName))]
     minV <- df [,which (names (df) == paste0 ("minMA_", vName))]
     #allY <- df [,which (names (df) == paste0 ("y_")]
-    allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
+    # allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
   }else{ ## these need updates if ever used again!!
     longMean <- df [,which (names (df) == vName)]
     percL <- df [,which (names (df) == paste0 ("perL1_", vName))]
@@ -145,7 +145,7 @@ addGraphs <- function (longMean, percL, percU # means and upper/lower percentile
     polygon (pCo, col=qantCol [1], border=NA)
     pCo <- data.frame (x=c (jday, rev (jday))
                        , y=c(perc2L, rev (perc2U)))
-    pCo <- subset (pCo, !is.na (y))
+    pCo <- subset (pCo, !is.na (pCo$y))
     polygon (pCo, col=qantCol [2], border=NA)
   }else{
     if (plotRange){
@@ -231,7 +231,7 @@ seasonalMA <- function (var, jday, width=maO){
   )
   stop ("need to change rollapply to roll_meanr")
   sMAy <- subset (sMA, dfAng$jds%in%1:365)
-  sMay
+  sMAy
 }
 
 
@@ -301,7 +301,7 @@ tDay$MA <- saggregate (MA~jday, data=dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$
 
 
   #  for (j in c (varName, MA)){
-  for (i in 1:length (qntl)){
+  for (i in seq_along (qntl)){
     tDay$perL <- saggregate (xVar~jday, dLTmean, FUN=quantile, probs=0.5-0.5*qntl [i], refDF=tDay)$xVar
     tDay$perU <- saggregate (xVar~jday, dLTmean, FUN=quantile, probs=0.5+0.5*qntl [i], refDF=tDay)$xVar
     names (tDay)[which (names (tDay) == "perL")] <- paste0 ("perL", i)
@@ -318,7 +318,7 @@ tDay$MA <- saggregate (MA~jday, data=dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$
 
   # is this critically needed?? -- N years of data per date
   tDay$yearN <- saggregate ((!is.na (xVar))~jday, data=dMeans, FUN=sum
-                            , na.rm=TRUE, refDF=tDay)[1:nrow (tDay),2] # some scripts fail at 366
+                            , na.rm=TRUE, refDF=tDay)[seq_len (nrow (tDay)),2] # some scripts fail at 366
 
   ## previous year
   pcY <- subset (dMeans, year == (currentYear-1))
@@ -340,7 +340,7 @@ tDay$MA <- saggregate (MA~jday, data=dLTmean, FUN=mean, na.rm=TRUE, refDF=tDay)$
 
   ## all years
   dMeans$year <- factor (dMeans$year)
-  yr <- sapply (1:length (levels (dMeans$year)), function (x){
+  yr <- sapply (seq_along(levels (dMeans$year)), function (x){
     pY <- subset (dMeans, dMeans$year == levels (dMeans$year)[x])
     pY$MA [match (tDay$jday, pY$jday)]
   })
@@ -448,7 +448,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
   #smp <- smp [!is.na (smp$datetimestamp),]
   fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  if ((2 < fN) & (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
+  if ((2 < fN) && (fN < 5*365.25)){ # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
     smp2 <- try (all_params (station
                              , Max=ceiling (as.numeric(fN)*4*24))
@@ -465,7 +465,7 @@ getSWMP <- function (station="kachdwq", QAQC=TRUE){
         }
         ## order of field names does not match between hmr2 and hmr
         ## re-assemble and remove duplicates
-        smp3 <- smp2 [,sapply (1:ncol (smp), FUN=function (i){
+        smp3 <- smp2 [,sapply (seq_len (ncol (smp)), FUN=function (i){
           which (names (smp)[i] == names (smp2))
         })]
         smp <- rbind (smp, smp3)
@@ -942,7 +942,7 @@ nEvents <- function (dat, varName, thrht){
   ## use for wind (storms and gales) and surf and others
   vN <- which (names (dat) == varName)
   names (dat)[vN] <- "xvar"  # for convenience
-  eventL <- sapply (1:length (thrht)
+  eventL <- sapply (seq_along(thrht)
                     , function (i){
                       agY <- aggregate (xvar~year
                                         , data=aggregate (xvar~jday+year
@@ -968,7 +968,7 @@ cDir <- function (wd, nDir=8){
   ## classify direction into cardinal categories
   ## following https://community.rstudio.com/t/convert-wind-direction-degrees-into-factors-in-a-data-frame/14636/4
   if (!(nDir %in% c(4,8,16))){
-    error ("nDir has to be 4, 8, or 16")
+    stop ("nDir has to be 4, 8, or 16")
   }
   if (nDir == 4){
     rose_breaks <- c (0, 360/8, (1/8 + (1:3 / 4)) * 360, 360)

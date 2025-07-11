@@ -32,9 +32,9 @@ agStn <- function (MN){
     MN <- ifelse (grepl ("ChinaPoot_[AB]", MN), "AlongBay_9", MN)
     MN <- ifelse (grepl ("Kasitsna_[AB]", MN), "AlongBay_9", MN)
     MN <- ifelse (grepl ("Peterson_[AB]", MN), "AlongBay_9", MN)
-    MN <- ifelse (grepl ("Sadie_[AB]", MN), "AlongBay_9", MN)    
-    MN <- ifelse (grepl ("Tutka_[AB]", MN), "AlongBay_9", MN)    
-    MN <- ifelse (grepl ("Seldovia_[AB]", MN), "AlongBay_9", MN)    
+    MN <- ifelse (grepl ("Sadie_[AB]", MN), "AlongBay_9", MN)
+    MN <- ifelse (grepl ("Tutka_[AB]", MN), "AlongBay_9", MN)
+    MN <- ifelse (grepl ("Seldovia_[AB]", MN), "AlongBay_9", MN)
     return (MN)
 }
 
@@ -71,7 +71,7 @@ names (phypCF)[1:2] <- c ("season", "Match_Name")
 zoopCF <- cTab (zooC, agL = list (zooCenv$season, factor (zooCenv$Match_Name)))
 names (zoopCF)[1:2] <- c ("season", "Match_Name")
 
-birdCF <- cTab (birdC, agL = list (birdS$season, factor (birdS$Match_Name))) # test!@ 
+birdCF <- cTab (birdC, agL = list (birdS$season, factor (birdS$Match_Name))) # test!@
 names (birdCF)[1:2] <- c ("season", "Match_Name")
 
 
@@ -86,7 +86,7 @@ plotComm <- function (mtx, subW = TRUE, colName = "Accent", main = ""
 
     ## overplotLine <- FALSE
     overplotLine <- TRUE                # abundance line in same panel as spp frequency
-    
+
     p4 <- "+proj=longlat +datum=WGS84 +ellps=WGS84"
     stnC <- coordinates (spTransform (stn, CRS (p4)))
     lonL <- c (-153.5, -151.2)
@@ -99,13 +99,13 @@ plotComm <- function (mtx, subW = TRUE, colName = "Accent", main = ""
 
     ## add bathymetry or turbidity or similar as underlying image
 #   image (bath, add = TRUE)
-    
+
                                         # plot (lonL, latL, type = "n")
     mtx$Match_Name <- factor (mtx$Match_Name)
 
     legend ( "topleft"
           , legend = gsub (".", " ", names (mtx)[3:ncol (mtx)], fixed = TRUE)
-          , fill = colB (ncol (mtx)-2)      
+          , fill = colB (ncol (mtx)-2)
           , bty = "n"
             ## , inset = 0.01
             )
@@ -118,8 +118,8 @@ plotComm <- function (mtx, subW = TRUE, colName = "Accent", main = ""
            , size = c (0.7, 0.7)
            , type = "fig", pars = list (mar = rep (0,4), las = 2)
              )
-    
-    for (i in 1:length (levels (mtx$Match_Name))){
+
+    for (i in seq_along(levels (mtx$Match_Name))){
         cmS <- subset (mtx, mtx$Match_Name == levels (mtx$Match_Name)[i])
         row.names (cmS) <- cmS$season
         if (subW){
@@ -145,7 +145,7 @@ plotComm <- function (mtx, subW = TRUE, colName = "Accent", main = ""
                 lines (bX, 1.1 + seaAb*0.9, lwd = 2)
                 points (bX, 1.1 + seaAb*0.9, pch = 19)
                                         # abline (h = 1.1)
-            }                
+            }
         }
         subplot (barplotB (pMtx, col = colB (ncol (mtx)-2), axes = FALSE
                          , names.arg = rep ("", ncol (pMtx))
@@ -153,7 +153,7 @@ plotComm <- function (mtx, subW = TRUE, colName = "Accent", main = ""
                            )
                , x = stnC [match (cmS$Match_Name [1], stn$Match_Name), 1]
                , y = stnC [match (cmS$Match_Name [1], stn$Match_Name), 2]
-                                        # overplotLine: 
+                                        # overplotLine:
                                         #               , size = c(0.7, 1)
                                         # regular:
                , size = c (0.7, 0.7)
@@ -190,7 +190,7 @@ yL <- list (cY, wY)
 
 PDF ("PhyYearsMap.pdf", height = 8, width = 8)
 # par (mfrow = c(2,1))
-for (i in 1:length (yL)){
+for (i in seq_along(yL)){
     pyC <- subset (phypC, phypCenv$year %in% yL [[i]])
     pyCe <- subset (phypCenv, phypCenv$year %in% yL [[i]])
     yP <- cTab (pyC, agL = list (factor (pyCe$season), factor (pyCe$Match_Name)))
@@ -213,7 +213,7 @@ print (names (zooC))
 
 PDF ("ZoopYearsMap.pdf", height = 8, width = 8)
 # par (mfrow = c(2,1))
-for (i in 1:length (yL)){
+for (i in seq_along(yL)){
     print (yL[[i]])
     zooCenv$year <- as.numeric (as.character (zooCenv$year))
     pyC <- subset (zooC, zooCenv$year %in% yL [[i]])
@@ -250,9 +250,9 @@ pngC ("~/tmp/LCI_noaa/media/ZoopcomMap.pdf")
 
 
 #require (mapplots)
-#draw.barplot2D  ## by season? 
+#draw.barplot2D  ## by season?
 # nice pie-chart alternative otherwise
-# draw.xy {mapplots}                      # that's the ticket! 
+# draw.xy {mapplots}                      # that's the ticket!
 
 ## most abundand species only
-    
+

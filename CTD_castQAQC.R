@@ -58,8 +58,8 @@ plotTS <- function (sbst = NULL, fctr = NULL, fn){
         plot (Temperature_ITS90_DegC~Salinity_PSU, cT, col = fctr, pch = 19
             , xlim = c(13.5, 33.5), ylim = c(-1.1,16)
               )
-        legend ("bottomleft", legend = levels (fctr), col = 1:length (levels (fctr))
-              , pch = 19)
+        legend("bottomleft", legend = levels(fctr)
+               , col = seq_along(levels (fctr)), pch = 19)
     }else{
         plot (Temperature_ITS90_DegC~Salinity_PSU, cT, pch = 19
             , smoothScatter = TRUE)
@@ -76,7 +76,7 @@ if (0){
 physOc$season <- Seasonal (physOc$month)
 ## Transects 3,6,5,6,9
 # physOc$Transect <- grep ("^[A:Z,a-b,0-9]+_", physOc$Match_Name, value = TRUE)            # overwrite
-plotTS ((1:nrow (physOc)) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
+plotTS ((seq_len (nrow (physOc))) %in% grep ("^[9653]_", physOc$Match_Name), "Transect"
         , fn = "T9653")
 
 
@@ -104,7 +104,7 @@ require ("oce")
 cat ("\ncount to: ", length (levels (physOc$File.Name)), " \n")
 plotCTDprof <- function (i){
 
-  if (i %% 2 == 2){cat (i, " ")}; if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
+  if (i %% 2==2){cat (i, " ")}; if (i %% 10 == 0){cat ("/", length (levels (physOc$File.Name)), "\n")}
 
   ctd <- subset (physOc, physOc$File.Name == levels (physOc$File.Name)[i])
   if (nrow (ctd) > 3){
@@ -264,7 +264,7 @@ KBay$dateP <- with (KBay, isoTime)
 ## subset to summer months
 
 require ("oce")
- for (j in 1:length (levels (KBay$season))){
+ for (j in seq_along(levels (KBay$season))){
 # j <- 1
    pdf (paste ("~/tmp/LCI_noaa/media/KBayCTDplots_", levels (KBay$season)[j]
               , ".pdf", sep = ""))
@@ -288,7 +288,7 @@ ctdX <- subset (ctdS, (File.Name == levels (ctdS$File.Name)[i]))
 
 
 require ("oce")
-for (j in 1:length (levels (KBay$season))){
+for (j in seq_along(levels (KBay$season))){
     pdf (paste ("~/tmp/LCI_noaa/media/KBayCTDplots_EndStation_", levels (KBay$season)[j]
               , ".pdf", sep = ""))
     ctdS <- subset (KBay, season == levels (KBay$season)[j])
@@ -300,7 +300,7 @@ for (j in 1:length (levels (KBay$season))){
     ctdS$pressC <- ctdS$Pressure..Strain.Gauge..db.
     ctdS <- with (ctdS, aggregate (cbind (Salinity_PSU, Temperature_ITS90_DegC, longitude_DD, latitude_DD) ~ pressC+Match_Name, FUN = mean))
 
-    for (i in 1:length (levels (ctdS$Match_Name))){
+    for (i in seq_along(levels (ctdS$Match_Name))){
         ctdX <- subset (ctdS, (Match_Name == levels (ctdS$Match_Name)[i]))
         ctdF <- with (ctdX, as.ctd (salinity = Salinity_PSU
                                   , temperature = Temperature_ITS90_DegC

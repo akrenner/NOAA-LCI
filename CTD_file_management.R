@@ -44,9 +44,9 @@ set.seed (8)
 ## define new destinations
 nD <- paste0 (hexCache, "edited_hex/")
 instL <- c ("4141", "5028", "8138")  # do this from data?
-x <- lapply (1:length (instL), FUN=function (i){unlink (paste0 (nD, instL [i], "/"), recursive=TRUE)})
+x <- lapply (seq_along(instL), FUN=function (i){unlink (paste0 (nD, instL [i], "/"), recursive=TRUE)})
 # print (x)
-for (i in 1:length (instL)){
+for (i in seq_along(instL)){
  dir.create (paste0 (nD, instL [i]), recursive = TRUE)
 }
 rm (x, instL)
@@ -102,7 +102,7 @@ rm (fL)
 # if (0){ ## for whatever reason, this is now causing trouble under windows (but not MacOS)
 ## redundant (see below)
 require ("cli")
-fDB$sha <- sapply (1:nrow (fDB), function (i){
+fDB$sha <- sapply (seq_len(nrow (fDB)), function (i){
   hash_file_sha256(fDB$file [i])
 })
 dF <- duplicated (fDB$sha)
@@ -124,7 +124,7 @@ fDB$hexStart <- character(nrow (fDB))
 fDB$copy <- logical (nrow (fDB))
 fDB$batteryOK <- logical (nrow (fDB))
 fDB$file <- as.character (fDB$file)
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))){
   hF <- file (fDB$file [i], open="r", raw = TRUE)
   hx <- readLines(hF, n = 100)
   close (hF)
@@ -171,7 +171,7 @@ if (latestonly){
 ## move files into new folder structure -- the main action item ##
 ##################################################################
 
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))){
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
   hx <- readLines(hF, n = 100)
   close (hF)
@@ -234,7 +234,7 @@ fixMeta <- function (patternfind, goodDate){
   if (0){ ## do nothing -- no longer needed
   badMeta <- list.files (nD, pattern = patternfind # need to fix files before starting fDB
                        ,recursive = TRUE, full.names = TRUE)
-  for (i in 1:length (badMeta)){
+  for (i in seq_along(badMeta)){
     hF <- file (badMeta [i], open = "r", raw = TRUE)
     hX <- readLines (hF)
     close (hF)
@@ -436,7 +436,7 @@ rm (x)
 ## gather metadata dates
 ## use these to check against filename dates
 
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))){
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
   hX <- readLines(hF, n = 90)
   close (hF)
@@ -496,7 +496,7 @@ lBad <- length (fDB$shortFN [is.na (fDB$metDate)])
 if (lBad > 0){
   warning ("Still got files with bad metadata dates.
            Inspect these manually and fix in code above.")
-  for (i in 1:length (lBad)){
+  for (i in seq_along(lBad)){
     fixMeta (fDB$shortFN [i], fDB$fnDate)
   }
   # fDB$metDate <- ifelse (is.na (fDB$metDate), fDB$fnDate, fDB$metDate) # messes up POSIXct -- BUG!?
@@ -559,7 +559,7 @@ if (any (abs (fDB$tErr) > 1)){
 ## manipulate shortF, short filename to implement corrections
 ## (ultimately, skip all the in-file corrections above)
 # add instrument-serial to filename for troubleshooting later (temp?)
-fDB$shortFNx <- sapply (1:nrow (fDB), function (i){
+fDB$shortFNx <- sapply (seq_len(nrow (fDB)), function (i){
   gsub (".hex$", paste0 ("_", fDB$instN [i], ".hex"), fDB$shortFN [i])
   })
 
@@ -582,7 +582,7 @@ cFDB$dir <- paste0 (hexCache, "hex2process/"
                     , cFDB$date, "/")
 cFDB$inst <- substr (x = cFDB$file, start = 11, stop = 14)
 
-for (i in 1:nrow (cFDB)){ # copy config files to their folders
+for (i in seq_len(nrow (cFDB))){ # copy config files to their folders
   dir.create (cFDB$dir [i], showWarnings = FALSE, recursive = TRUE)
   file.copy (from = paste0 (cDir, cFDB$file [i]), to = cFDB$dir [i]) #, copy.date = TRUE)
 }
@@ -597,7 +597,7 @@ cFDB <- cFDB [order (cFDB$date),]
 rm (i, cDir)
 
 if (0){ ## read calibration date
-for (i in 1:nrow (cFDB)){
+for (i in seq_len(nrow (cFDB))){
   hX <- file (paste (cFDB$dir [i], cFDB$file [i], sep = "/"))
   hD <- readLines(hX)
   close (hX)
@@ -626,7 +626,7 @@ for (i in 1:nrow (cFDB)){
 ## assign appropriate con file to each HEX file
 fDB$procDir <- character (nrow (fDB))
 fDB$calDist <- numeric (nrow (fDB)) # days since calibration
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))){
   ## assume file name date to be more reliable than metadata throughout!
 #  dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
   dT <- as.numeric (difftime(fDB$fnDate [i], cFDB$date, units = "days"))

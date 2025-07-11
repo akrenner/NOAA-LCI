@@ -141,7 +141,7 @@ waterL <- list (homerS, homer, sldviaS, sldvia)
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow=c(2,2), mar=c(3,4,3,1))
 
-for (i in 1:length (waterL)){
+for (i in seq_along (waterL)){
   hM <- try (prepDF (dat=waterL [[i]], varName="chlfluor", maO=maO
                      , currentYear=currentYear, qntl=qntl))
   if (class (hM) != "try-error"){
@@ -298,7 +298,7 @@ save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
 # load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
 # dat=list (sldviaS, sldvia, homerS, homer)[[j]] ; varName="temp"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
-for (j in 1: length (instSite)){
+for (j in seq_along (instSite)){
   tDay <- prepDF (dat=list (sldviaS, sldvia, homerS, homer)[[j]], varName="temp" # c ("temp", "tempF")[i]
                   , qntl=qntl, maO=maO
                   , currentYear=currentYear)

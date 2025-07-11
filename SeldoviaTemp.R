@@ -388,8 +388,8 @@ tempDay$year <- factor (tempDay$year)
 
 anAx <- function (){
     monD <- cumsum (c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))-31
-    axis (1, at = monD [which ((1:length (monD))%%2 == 0)]
-          , label = month.abb [which (1:length (month.abb)%%2 == 0)]
+    axis (1, at = monD [which ((seq_along(monD))%%2 == 0)]
+          , label = month.abb [which (seq_along(month.abb)%%2 == 0)]
           )
     }
 sdPlot <- function (tsVar, df = tempDay, ax1 = TRUE, yAn = ""){
@@ -431,7 +431,7 @@ plot (Temp~jday, tempDay, ylab = "daily temperature [°C]"
 axis (2)
 # anAx()
 box()
-for (i in 1:length (levels (tempDay$year))){
+for (i in seq_along(levels (tempDay$year))){
     lines (Temp~jday, subset = year == levels (year)[i], data = tempDay
          , col = tsCol [i], lwd = 2#, lty = ifelse (i <= 8,"dashed", "dotted")
            )
@@ -454,7 +454,7 @@ plot (Sal~jday, tempDay, ylab = "daily salinity"
 axis (2)
 anAx()
 box()
-for (i in 1:length (levels (tempDay$year))){
+for (i in seq_along(levels (tempDay$year))){
     lines (Sal~jday, subset = year == levels (year)[i], data = tempDay
          , col = tsCol [i], lwd = 2#, lty = ifelse (i <= 8,"dashed", "dotted")
            )
