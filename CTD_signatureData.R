@@ -7,7 +7,7 @@
 ## also see CTD_climatologies.R for inspiration
 ##
 
-rm (list=ls())
+rm (list = ls())
 base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData") ## from dataSetup.R: stn, physOc, poSS
 
 

@@ -9,7 +9,7 @@ require ("raster")
 require ("vegan")
 dir.create ("~/tmp/LCI_noaa/media/2019-zoop/", recursive = TRUE, showWarnings = FALSE)
 
-PDF <- function (fN, ...){
+PDF <- function(fN, ...) {
   pdf (paste0 ("~/tmp/LCI_noaa/media/2019-zoop/", fN, ".pdf"), ...)
 }
 
@@ -26,20 +26,20 @@ summary (duplicated (zooCenv$SampleID))
 ## sttn <- subset (sttn, sttn != "-")
 xT <- table (year_season, sttn)
 print (t (xT))
-stCount <- apply (xT, 2, FUN = function (x){sum (x > 0)})
+stCount <- apply (xT, 2, FUN = function(x) {sum (x > 0)})
 print (sort (stCount, decreasing = TRUE))
 print (length (levels (factor (year_season))))
 
 ## based on above, select all of Transect 9, 4, 6-5, 7-20, 3-13, and 3-4
 # keepSt <- sttn %in% names (which (stCount > 16)) # 100 FALSE, 325 TRUE
 keepSt <- sttn %in% names (which (stCount >= 10)) # 100 FALSE, 325 TRUE
-if (1){                                          # remove stations sampled only rarely
-    zooC <- subset (zooC, keepSt)
-    zooCenv <- subset (zooCenv, keepSt)
-    ## remove zero-species
-    zS <- apply (zooC, 2, sum)
-    zooC <- zooC [,which (zS > 0)]
-    rm (zS)
+if (1) {                                          # remove stations sampled only rarely
+  zooC <- subset (zooC, keepSt)
+  zooCenv <- subset (zooCenv, keepSt)
+  ## remove zero-species
+  zS <- apply (zooC, 2, sum)
+  zooC <- zooC [, which (zS > 0)]
+  rm (zS)
 }
 rm (year_season, sttn, xT, stCount, keepSt)
 
@@ -56,10 +56,10 @@ zooCenv$month <- as.numeric (strftime (zooCenv$timeStamp, format = "%m"))
 
 
 
-nMScores <- scores (nM, "sites") #, choices = c(1,2,3))
+nMScores <- scores (nM, "sites") # , choices = c(1,2,3))
 spScores <- scores (nM, "species")
-head (spScores [order (spScores [,1], spScores [,2]),])
-tail (spScores [order (spScores [,1], spScores [,2]),])
+head (spScores [order (spScores [, 1], spScores [, 2]), ])
+tail (spScores [order (spScores [, 1], spScores [, 2]), ])
 
 
 ## nMCol <- nMScores
@@ -76,24 +76,24 @@ save.image ("~/tmp/LCI_noaa/cache/zoopCommVar.RData")
 
 
 
-cH <- function (fac,colC, pts = nMScores [,1:2], hull = FALSE){
-    X <- subset (pts, fac)
-    envX <- subset (zooCenv, fac)
-   # X <- subset (X, envX$Transect != 9)
-    hpts <- chull (X)
-    hpts <- c(hpts, hpts [1])
-    require (mixtools)
-    ## collect points of ellipse and draw filled polygon
-    if (hull){
-        ## lines (X [hpts,], col = colC, lwd = 2)
-        polygon (X [hpts,], col = adjustcolor (colC, alpha.f = 0.4))
-    }else{
-        elpt <- ellipse (mu = colMeans (X), sigma = cov (X), alpha = 0.05
-           , col = colC, lwd = 2
-           , draw = FALSE
-           )
-         polygon (elpt, col = adjustcolor (colC, alpha.f = 0.4))
-    }
+cH <- function(fac, colC, pts = nMScores [, 1:2], hull = FALSE) {
+  X <- subset (pts, fac)
+  envX <- subset (zooCenv, fac)
+  # X <- subset (X, envX$Transect != 9)
+  hpts <- chull (X)
+  hpts <- c(hpts, hpts [1])
+  require (mixtools)
+  ## collect points of ellipse and draw filled polygon
+  if (hull) {
+    ## lines (X [hpts,], col = colC, lwd = 2)
+    polygon (X [hpts, ], col = adjustcolor (colC, alpha.f = 0.4))
+  } else {
+    elpt <- ellipse (mu = colMeans (X), sigma = cov (X), alpha = 0.05
+      , col = colC, lwd = 2
+      , draw = FALSE
+    )
+    polygon (elpt, col = adjustcolor (colC, alpha.f = 0.4))
+  }
 }
 
 
@@ -127,31 +127,31 @@ fCol <- rainbow_hcl (12, alpha = 0.5)
 # PDF ("2019/Zoop_nMDS_seasonal")
 pdf ("~/tmp/LCI_noaa/media/2019-zoop/Zoop_nMDS_seasonalX.pdf")
 # png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
-plot (nMScores [,1:2], type = "n")
+plot (nMScores [, 1:2], type = "n")
 ## add convex hulls
-for (i in 1:length (levels (nMCol))){
-    cH (nMCol == levels (nMCol)[i], fCol [i], hull = TRUE)
+for (i in 1:length (levels (nMCol))) {
+  cH (nMCol == levels (nMCol)[i], fCol [i], hull = TRUE)
 }
-points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
-      , cex = ifelse (zooCenv$Match_Name == "9_6", 2, 1)
-      , pch = 19
-      #, cex = ifelse (zooCenv$Transect == 4, 2, 1)
-        )
+points (nMScores [, 1:2], col = fCol [as.numeric (nMCol)]
+  , cex = ifelse (zooCenv$Match_Name == "9_6", 2, 1)
+  , pch = 19
+  # , cex = ifelse (zooCenv$Transect == 4, 2, 1)
+)
 # T4 <- nMScore [order (zooCenv$month),]
 # # T4 <- nMScores [grep ("^4_", row.names (nMScores)),]
 # T4 <- T4 [grep ("^4_", row.names (T4)),]
 # lines (T4 [,1:2])
 # text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
-text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], month.abb)
+text (aggregate (nMScores [, 1:2] ~ nMCol, FUN = mean)[, 2:3], month.abb)
 ## pSym <- c(25,1,17)
 ## legend ("bottomleft", legend = levels (factor (zooCenv$warmCat))
 ##       , pch = pSym [1:length (levels (zooCenv$warmCat))]
 ##       , bty = "n")
 legend ("topright", legend = c("T9-6", "others")
-        , pch = 19 #c(1, 19, 19)
-        , pt.cex = c(2, 1)
-        , bty = "n"
-        )
+  , pch = 19 # c(1, 19, 19)
+  , pt.cex = c(2, 1)
+  , bty = "n"
+)
 dev.off()
 ## system ("convertHQ ~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.pdf ~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
 

@@ -3,11 +3,11 @@
 
 ## align wd with html dir
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
-## can this from from standard NOAA-LCI ? 
+## can this from from standard NOAA-LCI ?
 
 ## clear the slate
-rm (list=ls())
-unlink ("MonthlyUpdates/media/", recursive=TRUE)
+rm (list = ls())
+unlink ("MonthlyUpdates/media/", recursive = TRUE)
 
 
 ## fetch data from notebook export and CTD processing
@@ -15,10 +15,10 @@ load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains phy
 physOc$isoDate <- as.Date (physOc$isoTime)
 physL <- subset (physOc, isoDate == max (isoDate))
 ## find survey, not just last date
-physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) == 
-                   max (as.numeric (format (physOc$isoTime, "%Y"))))
+physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) ==
+  max (as.numeric (format (physOc$isoTime, "%Y"))))
 physL <- subset (physL, as.numeric (format (physL$isoTime, "%m")) ==
-                   max (as.numeric (format (physL$isoTime, "%m"))))
+  max (as.numeric (format (physL$isoTime, "%m"))))
 rm (physOc)
 
 # minT = min (c(10.5, 10.6, 9.8, 11))
@@ -29,26 +29,26 @@ sDate <- physL$isoDate [1]
 
 sY = as.numeric (format (sDate, "%Y"))
 sM = month.name [as.numeric (format (sDate, "%m"))]
-sSlot= paste (sM, sY)
+sSlot = paste (sM, sY)
 
 crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
-crewT = paste0 (c (paste0 (crew [1:(length (crew)-1)], collapse = ", "),
-                 paste0 (crew [length (crew)])), collapse = ", and ")
+crewT = paste0 (c (paste0 (crew [1:(length (crew) - 1)], collapse = ", "),
+  paste0 (crew [length (crew)])), collapse = ", and ")
 
 
-tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm=TRUE),
-                                             max (Temperature_ITS90_DegC, na.rm=TRUE),
-                                             min (Salinity_PSU, na.rm=TRUE),
-                                             max (Salinity_PSU, na.rm=TRUE)),
-                                  stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
-                                          Match_Name [which.max (Temperature_ITS90_DegC)],
-                                          Match_Name [which.min (Salinity_PSU)],
-                                          Match_Name [which.max (Salinity_PSU)]),
-                                  depth= c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
-                                          Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
-                                          Depth.saltwater..m. [which.min (Salinity_PSU)],
-                                          Depth.saltwater..m. [which.max (Salinity_PSU)])
-                                  ))
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm = TRUE),
+  max (Temperature_ITS90_DegC, na.rm = TRUE),
+  min (Salinity_PSU, na.rm = TRUE),
+  max (Salinity_PSU, na.rm = TRUE)),
+stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+  Match_Name [which.max (Temperature_ITS90_DegC)],
+  Match_Name [which.min (Salinity_PSU)],
+  Match_Name [which.max (Salinity_PSU)]),
+depth = c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.min (Salinity_PSU)],
+  Depth.saltwater..m. [which.max (Salinity_PSU)])
+))
 tsal$stn <- gsub ("_", "-", tsal$stn)
 tsal$temSalR <- round (tsal$temSal, 1)
 tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
@@ -59,9 +59,9 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
 # tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
 
 
-## to-do: 
+## to-do:
 ## tweak title layout : remove "author" and "affiliation"
-## add date? 
+## add date?
 ## add background graphics, NCCOS logo
 
 
@@ -71,86 +71,86 @@ tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
 
 # Struggling with path settings -- circumvent this issue by copying relevant file to local directory
 
-  ## find files
-  ## construct mark-down code (all sections of the day, monthly / quarterly)
-  dest <- "media/CTDsections/sectionImages/"
-  dest <- "./media/"
-  
-  dir.create(dest, showWarnings=FALSE, recursive=TRUE)
-  src <- "~/tmp/LCI_noaa/media/"
-  
-  # pick transects from last survey; flexible as to monthly/quarterly
-  fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern="*.png")
-  flC <- grep (substr(sort (fl, decreasing=TRUE)[1], 1,10), fl, value=TRUE)  # pick last date
-  
-  # lastDate <- "2025-01-14"
-  # lastDate <- substr(sort (fl, decreasing=TRUE)[1], 1,10)
-  lastDateT <- format (sDate, "%m/%d/%Y")
-  lastDateT <- format (sDate, "%d %B %Y")
+## find files
+## construct mark-down code (all sections of the day, monthly / quarterly)
+dest <- "media/CTDsections/sectionImages/"
+dest <- "./media/"
 
-  
-  for (i in seq_along(flC)){
-    cS <- file.copy (from=paste0 (src, "CTDsections/sectionImages/", flC [i]),
-                     to=paste0 (dest, gsub (paste0 (sDate, " "), "SectionI_", flC [i]))
-                     , overwrite=TRUE)
-  }
-  iStrng <- sort (list.files (dest, patter="SectionI_", full.names=TRUE), decreasing=TRUE)
-  
+dir.create(dest, showWarnings = FALSE, recursive = TRUE)
+src <- "~/tmp/LCI_noaa/media/"
+
+# pick transects from last survey; flexible as to monthly/quarterly
+fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern = "*.png")
+flC <- grep (substr(sort (fl, decreasing = TRUE)[1], 1, 10), fl, value = TRUE)  # pick last date
+
+# lastDate <- "2025-01-14"
+# lastDate <- substr(sort (fl, decreasing=TRUE)[1], 1,10)
+lastDateT <- format (sDate, "%m/%d/%Y")
+lastDateT <- format (sDate, "%d %B %Y")
+
+
+for (i in seq_along(flC)) {
+  cS <- file.copy (from = paste0 (src, "CTDsections/sectionImages/", flC [i]),
+    to = paste0 (dest, gsub (paste0 (sDate, " "), "SectionI_", flC [i]))
+    , overwrite = TRUE)
+}
+iStrng <- sort (list.files (dest, patter = "SectionI_", full.names = TRUE), decreasing = TRUE)
+
 #   cS <- file.copy(from=paste0 (src, "CTDsections/sectionImages/", flS),
 #             to=paste0 (dest), overwrite=TRUE
 #             )
 #   fl <- list.files (dest, pattern="*.png")
 #   Tran <- substr (fl, 12, nchar (fl))
 #   Tran <- gsub (".png", "", Tran, fixed=TRUE)
-#   
+#
 #   ## generating strings for all transects -- not yet working
 # #  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
 #   iStrng <- paste0 (dest, fl)
 # #  iStrng <- paste0 ("MonthlyUpdates/", dest, fl)
-  # transectSection1 <- iStrng [1]
-  # transectSection2 <- iStrng [2]
-  # 
-  # try ({
-  #   transectSection3 <- iStrng [3]
-  #   transectSection4 <- iStrng [4]
-  # })
-  
-  
-  
-  ## Chlorophyll
-  # dest="media/CTDsections/time-sections/"
-  # dir.create(dest, showWarnings=FALSE, recursive=TRUE)
-  flS <- list.files (paste0 ("~/tmp/LCI_noaa/CTDsections/time-sections", dest), pattern="*.png")
-  cS <- file.copy (from=paste0 ("~/tmp/LCI_noaa/", dest, flS)
-                   , to=dest, overwrite=TRUE)
-  TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
-  TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
-  TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
-  TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
-  
-  
-  ## NOAA weather -- replace from rNOAA
-  
-  ## signature data-set graphs
-  # check that updates were successful!
-  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-fluorescence-anomaly.png", to=dest, overwrite=TRUE)
-  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png", to=dest, overwrite=TRUE)
-  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png", to=dest, overwrite=TRUE)
-  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png", to=dest, overwrite=TRUE)
-  cS <- file.copy (from="~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png", to=dest, overwrite=TRUE)
-   ## State-of-the-bay
+# transectSection1 <- iStrng [1]
+# transectSection2 <- iStrng [2]
+#
+# try ({
+#   transectSection3 <- iStrng [3]
+#   transectSection4 <- iStrng [4]
+# })
+
+
+
+## Chlorophyll
+# dest="media/CTDsections/time-sections/"
+# dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+flS <- list.files (paste0 ("~/tmp/LCI_noaa/CTDsections/time-sections", dest), pattern = "*.png")
+cS <- file.copy (from = paste0 ("~/tmp/LCI_noaa/", dest, flS)
+  , to = dest, overwrite = TRUE)
+TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
+TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
+TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
+TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
+
+
+## NOAA weather -- replace from rNOAA
+
+## signature data-set graphs
+# check that updates were successful!
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-fluorescence-anomaly.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png", to = dest, overwrite = TRUE)
+## State-of-the-bay
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=dest, overwrite=TRUE)
 #     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=dest, overwrite=TRUE)
-    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png", to=dest, overwrite=TRUE)
-    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png", to=dest, overwrite=TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png", to = dest, overwrite = TRUE)
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=dest, overwrite=TRUE)
 
-    
-    # email to:
-    #   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>, Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>
-  
-  
-  rm (fl, flS, dest, cS)
+
+# email to:
+#   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>, Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>
+
+
+rm (fl, flS, dest, cS)
 ```
 
 ---

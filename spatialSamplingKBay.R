@@ -5,14 +5,14 @@ rm (list = ls())
 
 ## set-up for processing on HPC facility
 tr <- require ("pacman")
-if (!tr){
+if (!tr) {
   install.packages ("pacman")
 }
 tr <- try (load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")) # from dataSetup.R -- of interest: zooC and zooCenv
-if (class (tr) == "try-error"){
+if (class (tr) == "try-error") {
   dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
   file.copy (from = "P:/My Documents/Documents/tmp/LCI_noaa/cache/dataSetupEnd.RData"
-             , to = "~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+    , to = "~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
   load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 }
 set.seed (9)
@@ -26,14 +26,14 @@ dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
 
 ## fix duplicate station names
 zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "AlongBay_3", "4_3", zooCenv$Match_Name)
-#not relevant here...
+# not relevant here...
 zooCenv$Match_Name <- ifelse (zooCenv$Match_Name == "AlongBay_6", "9_6", zooCenv$Match_Name)
 
 ## reduce to core stations -- build index to subset
 keep <- which (zooCenv$Transect %in% c ("KB", "4", "9"))
 # keep <- c (keep, which (zooCenv$Match_Name %in% c ("3_E", "7_E", "6_E")))
-zooC <- zooC [keep,]
-zooCenv <- zooCenv [keep,]
+zooC <- zooC [keep, ]
+zooCenv <- zooCenv [keep, ]
 rm (keep)
 coast <- st_make_valid(coast)  ## ensure coast is valid geometry
 
@@ -47,8 +47,8 @@ area <- "GWA-area"
 bbox <- c(-154.3, -150.7, 58.6, 61) ## restricted to stay within memory limits
 ## Kachemak Bay only
 bbox <- c(-152.0, -150.95, 59.32, 59.8) ## restricted to stay within memory limits
-kBs <- data.frame (lon=c(bbox[1], bbox[2]), lat=c(bbox[3], bbox[4])) %>%  ## gebco is -157 -143 55 62
-  st_as_sf (coords=c("lon", "lat"), crs=4326) |>
+kBs <- data.frame (lon = c(bbox[1], bbox[2]), lat = c(bbox[3], bbox[4])) %>%  ## gebco is -157 -143 55 62
+  st_as_sf (coords = c("lon", "lat"), crs = 4326) |>
   st_bbox() |>
   st_as_sfc()
 # ## cookie-cutter a box
@@ -93,7 +93,7 @@ studyA <- st_difference (kBs, st_union (coast))
 
 
 ## for station distribution, sufficient to plot only unique stations
-zooCenv <- zooCenv [!duplicated (zooCenv$Station),]  ## keep only unique stations
+zooCenv <- zooCenv [!duplicated (zooCenv$Station), ]  ## keep only unique stations
 
 
 pdf ("~/tmp/LCI_noaa/media/KBayZoopSampling.pdf", width = 11, height = 8.5)
@@ -147,17 +147,17 @@ dev.off()
 ## compare current to BAS to ransom, to regular sampling
 require ("spbal")
 pntL <- list (current = st_union (zooCenv)
-              , BAS = spbal::BAS (studyA, n=nrow (zooCenv), minRadius=10)$sample
-              , random = st_sample(studyA, size=nrow(zooCenv), type="random")
-              , regular = st_sample(studyA, size=nrow(zooCenv), type="regular")
+  , BAS = spbal::BAS (studyA, n = nrow (zooCenv), minRadius = 10)$sample
+  , random = st_sample(studyA, size = nrow(zooCenv), type = "random")
+  , regular = st_sample(studyA, size = nrow(zooCenv), type = "regular")
 )
 
 
 pdf ("~/tmp/LCI_noaa/media/KBayZoopSampling.pdf", width = 11, height = 8.5)
-for (i in 1:length (pntL)){
+for (i in 1:length (pntL)) {
   plot (studyA, main = names (pntL)[i])
   plot (st_union (coast), col = "beige", add = TRUE)
-  plot (pntL[[i]], col = i, pch=19, add=TRUE)
+  plot (pntL[[i]], col = i, pch = 19, add = TRUE)
 }
 dev.off()
 

@@ -14,7 +14,7 @@ library ("ape")
 
 
 
-if (!requireNamespace("BiocManager", quietly = TRUE)){
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
 
@@ -25,8 +25,8 @@ require ("ConsensusClusterPlus")
 
 ## not suitable, I think
 # ConsensusClusterPlus(d = dataXX, distance = 'manhatten')
-ConsensusClusterPlus (d=distanceMatrix, clusterAlg = "hc")  # hclust
-ConsensusClusterPlus (d=distanceMatrix, clusterAlg = "km")  # k-means
+ConsensusClusterPlus (d = distanceMatrix, clusterAlg = "hc")  # hclust
+ConsensusClusterPlus (d = distanceMatrix, clusterAlg = "km")  # k-means
 
 
 ## better?

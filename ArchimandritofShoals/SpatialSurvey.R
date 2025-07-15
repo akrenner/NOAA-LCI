@@ -11,7 +11,7 @@
 
 
 ## author: Martin Renner
-rm (list=ls())
+rm (list = ls())
 
 
 #######################################################
@@ -32,7 +32,7 @@ sa <- sf::read_sf("~/GISdata/LCI/shapefiles/ArchimandritofShoals/ArchimandritofS
 # %>%
 # st_transform(crs=3467) # alaska albert
 # sa <- st_transform(sa, crs=3467) # alaska albert
-if (0){
+if (0) {
   wrd <- sf::read_sf ("~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp") |>
     st_make_valid()
   # contour <- terra::rast ("~/GISdata/LCI/bathymetry/Kachemak_Bay_DEM_1239/kachemak_bay_ak.asc") |>
@@ -43,25 +43,25 @@ if (0){
 }
 
 ## non-clustered random samples
-pnts <- st_sample (sa, ns, type="random")  ##
+pnts <- st_sample (sa, ns, type = "random")  ##
 
 ## Spatially balanced Pseudo-random samples
-if (bas){
+if (bas) {
   # require ("SDraw")             # use Trent McDonald's BAS sampling. THANK YOU, Trent!!
   ## make SDraw samples additive, i.e. non-overlapping. Can use all together.
   # spotMother <- sdraw (sa, n = sum (nSList), type = "BAS")
 
   require ("spbal") ## in place of SDraw
-  pnts <- spbal::BAS(sa, n=ns, minRadius=10)$sample
+  pnts <- spbal::BAS(sa, n = ns, minRadius = 10)$sample
 }
 
 
 ## optimal Traveling Salesperson route
 ## starting point
 
-ptT <- rbind (st_coordinates (pnts)[,1:2], c(-151.52321, 59.63387)) |> ## start at my house
+ptT <- rbind (st_coordinates (pnts)[, 1:2], c(-151.52321, 59.63387)) |> ## start at my house
   as.data.frame() |>
-  st_as_sf (crs=4326, coords=c("X", "Y"))
+  st_as_sf (crs = 4326, coords = c("X", "Y"))
 rm (pnts)
 
 
@@ -70,9 +70,9 @@ require ("doParallel")
 registerDoParallel (8)
 ## transform to UTM and solve TSP problem
 etsp <- ETSP (ptT %>%
-                st_transform(3467) %>%
-                st_coordinates())
-tspS <- solve_TSP (etsp, method = "arbitrary_insertion", two_opt=TRUE, rep = nRep)
+  st_transform(3467) %>%
+  st_coordinates())
+tspS <- solve_TSP (etsp, method = "arbitrary_insertion", two_opt = TRUE, rep = nRep)
 
 ## concorde -- requires cygwin or mac/linux
 # concorde_path("/Users/Martin.Renner/Applications/concorde.exe")
@@ -84,26 +84,26 @@ pdf ("~/tmp/LCI_noaa/media/Archimandritof_route.pdf")
 # plot (sa, type="n")
 # plot (wrd, col="beige", add=TRUE)
 # plot (sa, col="lightblue")
-plot (etsp, tspS, tour_col="red")
-legend ("topright", bty="n",  legend=paste0 ("tour length: "
-                                             , round (tour_length(tspS)/1e3,1)," km"))
+plot (etsp, tspS, tour_col = "red")
+legend ("topright", bty = "n",  legend = paste0 ("tour length: "
+  , round (tour_length(tspS) / 1e3, 1), " km"))
 # print (paste (round (tour_length(tspS)/1e3,1), "km"))
 dev.off()
 rm (etsp)
 
 
 ## reorder to start with artificial starting point
-resort <- function (idx, startI=length (idx)){
-  if (startI==idx[length (idx)]){
+resort <- function(idx, startI = length (idx)) {
+  if (startI == idx[length (idx)]) {
     idx <- rev (idx)
-  }else{
-    idx <- c (idx [which (idx==startI): length (idx)]
-              , idx [1:(which (idx == startI)-1)])
+  } else {
+    idx <- c (idx [which (idx == startI):length (idx)]
+      , idx [1:(which (idx == startI) - 1)])
   }
   idx
 }
 tsp0 <- resort (as.integer (tspS))
-ptT <- ptT [as.integer (tsp0),]
+ptT <- ptT [as.integer (tsp0), ]
 ptT$name <- paste0 ("AS_", sprintf ("%03d", seq_len(nrow (ptT))))
 
 ## points to route
@@ -115,9 +115,9 @@ ptT$name <- paste0 ("AS_", sprintf ("%03d", seq_len(nrow (ptT))))
 
 
 ## export to gpx file for GPS
-dir.create("~/tmp/LCI_noaa/data-products/Archimandritof/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/data-products/Archimandritof/", showWarnings = FALSE, recursive = TRUE)
 write_sf (ptT, paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof/Archimandritof_N="
-                       , ns,"bas=",bas, ".gpx"), driver="GPX"
-          , dataset_options="GPX_USE_EXTENSIONS=YES")
-write.csv(ptT, file=paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof/Archimandritof_N="
-                            , ns,"bas=",bas, ".csv"))
+  , ns, "bas=", bas, ".gpx"), driver = "GPX"
+, dataset_options = "GPX_USE_EXTENSIONS=YES")
+write.csv(ptT, file = paste0 ("~/tmp/LCI_noaa/data-products/Archimandritof/Archimandritof_N="
+  , ns, "bas=", bas, ".csv"))

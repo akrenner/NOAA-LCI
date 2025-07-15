@@ -25,8 +25,8 @@ rm (list = ls())
 ## native range ##
 ##################
 
-natLat <- c(0,89)
-natLon <- c(-25,36)
+natLat <- c(0, 89)
+natLon <- c(-25, 36)
 natLon <- c(-80, 36) ## include East-coast -- Australia not much use to define cold end
 # natLat <- c(-80,89)
 # natLon <- c (-170,170)
@@ -70,19 +70,19 @@ require ("readr")
 # download GBIF occurrence data for this species; this takes time if there are many data points!
 ## check cache first
 cF <- paste0 ("~/tmp/LCI_noaa/cache/speciesDistribution/", myspecies, ".RData")
-if (file.exists(cF)){
+if (file.exists(cF)) {
   load (cF)
-}else{
-  gbif_data <- try (occ_data(scientificName=myspecies, hasCoordinate=TRUE, limit=20000))
-  if (class (gbif_data)=="try-error"){
-    gbif_data <- try (occ_data(scientificName=myspecies, hasCoordinate=TRUE, limit=20000))
-    if (class (gbif_data)=="try-error"){
-      gbif_data <- occ_data(scientificName=myspecies, hasCoordinate=TRUE, limit=20000)
+} else {
+  gbif_data <- try (occ_data(scientificName = myspecies, hasCoordinate = TRUE, limit = 20000))
+  if (class (gbif_data) == "try-error") {
+    gbif_data <- try (occ_data(scientificName = myspecies, hasCoordinate = TRUE, limit = 20000))
+    if (class (gbif_data) == "try-error") {
+      gbif_data <- occ_data(scientificName = myspecies, hasCoordinate = TRUE, limit = 20000)
     }} ## try three times, if time-out on first attempt
   # take a look at the downloaded data:
-#  gbif_data
-  dir.create("~/tmp/LCI_noaa/cache/speciesDistribution/", recursive=TRUE, showWarnings=FALSE)
-  save (gbif_data, file=cF)
+  #  gbif_data
+  dir.create("~/tmp/LCI_noaa/cache/speciesDistribution/", recursive = TRUE, showWarnings = FALSE)
+  save (gbif_data, file = cF)
   ## keep all other data for later cross-validation
 }
 rm (cF)
@@ -90,7 +90,7 @@ rm (cF)
 gbifP <- subset (gbif_data$data, decimalLongitude > -25) %>%    # include Australia -- established
   subset (individualCount > 0) %>%
   subset (decimalLongitude < 36) %>%  # for testing only XXXXXXXXXXXXXX
-  st_as_sf (coords=c("decimalLongitude", "decimalLatitude"), crs="EPSG:4326")
+  st_as_sf (coords = c("decimalLongitude", "decimalLatitude"), crs = "EPSG:4326")
 
 
 ##############################################
@@ -100,42 +100,42 @@ gbifP <- subset (gbif_data$data, decimalLongitude > -25) %>%    # include Austra
 
 
 require ("oceanexplorer")  # works with stars
-if (1){
-  gN <- function (...){
+if (1) {
+  gN <- function(...) {
     require ("readr")
-    get_NOAA (..., spat_res=1, cache=TRUE) %>%
-      filter_NOAA (depth=0)  ##
+    get_NOAA (..., spat_res = 1, cache = TRUE) %>%
+      filter_NOAA (depth = 0)  ##
   }
-}else{
+} else {
   ## manual download to ~/GISdata/data/world-ocean-atlas/
   # https://www.ncei.noaa.gov/thredds-ocean/fileServer/ncei/woa/salinity/decav/0.25/woa18_decav_s00_04.nc
-  gN <- function (var="temperature", av_period="January"){
+  gN <- function(var = "temperature", av_period = "January") {
     require ("stars")
-    if (var=="temperature"){
+    if (var == "temperature") {
       dCub <- st_read (paste0 ("~/GISdata/data/world-ocean-atlas/temperature/woa18_decav_t"
-                               , sprintf ("%02i", which (month.name %in% av_period))
-                               , "_04.nc")) %>%
-        filter_NOAA (depth=0)
+        , sprintf ("%02i", which (month.name %in% av_period))
+        , "_04.nc")) %>%
+        filter_NOAA (depth = 0)
     }
-    if (var=="salinity"){
+    if (var == "salinity") {
       dCub <- st_read ("~/GISdata/data/world-ocean-atlas/salinity/woa18_decav_s00_04.nc") %>%
-        filter_NOAA (depth=0)
+        filter_NOAA (depth = 0)
     }
   }
 }
-if (0){
-  sstW <- gN ("temperature", av_period="winter")
-  sstS <- gN ("temperature", av_period="summer")
-  tMin <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, min)
-  tMax <- st_apply (c(c(sstW, sstS, along="t_an")), 1:2, max)
-}else{
-  for (m in month.name){
-    assign (paste0 ("T", m), gN ("temperature", av_period=m))
+if (0) {
+  sstW <- gN ("temperature", av_period = "winter")
+  sstS <- gN ("temperature", av_period = "summer")
+  tMin <- st_apply (c(c(sstW, sstS, along = "t_an")), 1:2, min)
+  tMax <- st_apply (c(c(sstW, sstS, along = "t_an")), 1:2, max)
+} else {
+  for (m in month.name) {
+    assign (paste0 ("T", m), gN ("temperature", av_period = m))
   }
-  tStr <- paste0 ("T", month.name, collapse=", ")
+  tStr <- paste0 ("T", month.name, collapse = ", ")
   getT <- paste ("c (", tStr, ", along='t_an')")
   temp <- eval (str2lang (getT))  ## XXXX NetCDF DAP server error
-#  names (temp) <- "degC"
+  #  names (temp) <- "degC"
   tMin <- st_apply (c (temp), 1:2, min)
   tMax <- st_apply (c (temp), 1:2, max)
   tMean <- st_apply (c (temp), 1:2, mean)
@@ -143,10 +143,10 @@ if (0){
   eval (str2lang (paste0 ("rm (", tStr, ")")))
   rm (getT, tStr, temp)
 }
-sss <- gN ("salinity", av_period="annual")  # split up by month and look for range?
+sss <- gN ("salinity", av_period = "annual")  # split up by month and look for range?
 rm (gN)
 
-sea <- c (sss, tMin, tMax, tMean, nms=c("sal", "Tmin", "Tmax", "Tmean"))
+sea <- c (sss, tMin, tMax, tMean, nms = c("sal", "Tmin", "Tmax", "Tmean"))
 rm (sss, tMin, tMax, tMean)
 ## stars/raster stack for point extraction and prediction
 # sea$sal
@@ -158,8 +158,8 @@ rm (sss, tMin, tMax, tMean)
 
 ## shoreline
 require ("sf")
-coastG <- st_read(dsn="~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/i/"
-                  , layer="GSHHS_i_L1")
+coastG <- st_read(dsn = "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/i/"
+  , layer = "GSHHS_i_L1")
 # require ("maptools")
 # require ("zip")
 # tD <- tempdir()
@@ -170,11 +170,11 @@ coastG <- st_read(dsn="~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/i/"
 
 ## clip to bounding box: NW Atlantic
 b <- st_bbox (coastG)
-b[c(1,3)] <- natLon
-b[c(2,4)] <- natLat
+b[c(1, 3)] <- natLon
+b[c(2, 4)] <- natLat
 rm (natLon, natLat)
 
-bP <- st_as_sfc (b, crs=st_crs (coastG))
+bP <- st_as_sfc (b, crs = st_crs (coastG))
 coastE <- st_intersection (coastG, bP)
 unlink (tD, TRUE); rm (tD)
 rm (b)
@@ -192,17 +192,17 @@ save.image ("~/tmp/LCI_noaa/cache/specDist1.RData")
 # rm (list = ls()); load  ("~/tmp/LCI_noaa/cache/specDist1.RData"); require (sf)
 
 
-if (coastal){
-  cb <- st_buffer (coastE, dist=distX) %>%
+if (coastal) {
+  cb <- st_buffer (coastE, dist = distX) %>%
     st_union() %>%
     st_sf() %>%
     st_make_valid
 
   cbX <- cb
-  for (i in 1:length (coastE)){ # cut out every individual polygon
-    cbX <- st_sym_difference(cbX, coastE [i,])
+  for (i in 1:length (coastE)) { # cut out every individual polygon
+    cbX <- st_sym_difference(cbX, coastE [i, ])
   }
-}else{
+} else {
   cbX <- bP
 }
 rPt <- st_sample(cbX, nrow (gbifP), type = "random") ## stuck/extremely slow?
@@ -216,26 +216,26 @@ rm (distX, cbX, cb)
 # randPt <- st_extract (sea, rPt)
 # plot (subset (randPt, !is.na (sal)))
 
-if (1){
+if (1) {
   ## interpolate NA values from neighbours
   seax <- sea
   require ("zoo") ## use na.approx -- not ideal, but does the trick for now. ideal: r.neighbors
-  for (i in 1:length (seax)){
+  for (i in 1:length (seax)) {
     seax [[i]] <- na.approx (seax [[i]])
   }
   # image (na.approx (mtx))
   observed <- st_extract (seax, gbifP)  ## old version -- mostly NAs
   rm (seax)
-}else{
+} else {
   ## idea: apply buffer to gbifP, then find sea values in that buffer to avoid NAs
   ## for unknown reasons, it's actually getting worse. Also tried with terra::buffer
   observed <- aggregate (sea
-                         , by = st_buffer (gbifP, nQuadSegs=4, dist=100e3) # 100 km may be reasonable with current raster
-                         , FUN=function (x){mean (x, na.rm=TRUE)}
-                         # , FUN=mean, na.rm=TRUE
-                         # , as.points=FALSE
+    , by = st_buffer (gbifP, nQuadSegs = 4, dist = 100e3) # 100 km may be reasonable with current raster
+    , FUN = function(x) {mean (x, na.rm = TRUE)}
+    # , FUN=mean, na.rm=TRUE
+    # , as.points=FALSE
   )
-  if (sum (is.na (observed$sal)) > 40){stop ("still busted")}
+  if (sum (is.na (observed$sal)) > 40) {stop ("still busted")}
   ## XXXXXXXXXXXXXX
 }
 
@@ -259,17 +259,17 @@ save.image ("~/tmp/LCI_noaa/cache/specDist2.RData")
 
 ### fudge Tmin and Tmax to reflect the idea behind them
 ## high Tmin in tropics should not drive the function
-mMean <- mean (subset (mDF$T$mean, mDF$status==1))
-mDF$Tmin <- ifelse (mDF$status==1 & mDF$Tmin > mMean, mMean, mDF$Tmin)
-mDF$Tmax <- ifelse (mDF$status==1 & mDF$Tmax < mMean, mMean, mDF$Tmax)
+mMean <- mean (subset (mDF$T$mean, mDF$status == 1))
+mDF$Tmin <- ifelse (mDF$status == 1 & mDF$Tmin > mMean, mMean, mDF$Tmin)
+mDF$Tmax <- ifelse (mDF$status == 1 & mDF$Tmax < mMean, mMean, mDF$Tmax)
 
 
 ## scale predictive variables
-scale2 <- function (var, ref=NULL){
-  if (length (ref) < 1){
+scale2 <- function(var, ref = NULL) {
+  if (length (ref) < 1) {
     ref <- var
   }
-  (var - mean (ref, na.rm=TRUE))/sd (ref, na.rm=TRUE)
+  (var - mean (ref, na.rm = TRUE)) / sd (ref, na.rm = TRUE)
 }
 mDF$TminS <- scale2 (mDF$Tmin)
 mDF$TmaxS <- scale2 (mDF$Tmax)
@@ -282,25 +282,25 @@ sea$salS <- scale2 (sea$sal, mDF$sal)
 
 
 ## logistic regression
-m1 <- glm (factor (status)~TminS+TmaxS+salS, mDF, family=binomial(link="logit"))
+m1 <- glm (factor (status) ~ TminS + TmaxS + salS, mDF, family = binomial(link = "logit"))
 summary (m1)
 # plot (m1)
 
-sea$pred <- predict (m1, newdata=sea, type="response")  # type= "link"/"response"/"terms"
+sea$pred <- predict (m1, newdata = sea, type = "response")  # type= "link"/"response"/"terms"
 require ("viridis")
-png ("~/tmp/LCI_noaa/media/GreenCrab.png", width=1600, height=900, res=100)
-plot (sea ['pred'], col = inferno(12), breaks="equal")
+png ("~/tmp/LCI_noaa/media/GreenCrab.png", width = 1600, height = 900, res = 100)
+plot (sea ['pred'], col = inferno(12), breaks = "equal")
 dev.off()
 # image (sea$pred)
-write_stars (sea, dsn="~/tmp/LCI_noaa/data-products/EuroGreenCrab.tif", layer="pred")
+write_stars (sea, dsn = "~/tmp/LCI_noaa/data-products/EuroGreenCrab.tif", layer = "pred")
 
 
 
 
 require ("ResourceSelection")
-m1 <- ResourceSelection::rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=999)
-m2 <- ResourceSelection::rsf (status~Tmin+Tmax, mDF, m=0, B=999)
-m3 <- ResourceSelection::rsf (status~Tmin+sal, mDF, m=0, B=999)
+m1 <- ResourceSelection::rsf (status ~ Tmin + Tmax + Tmean + sal, mDF, m = 0, B = 999)
+m2 <- ResourceSelection::rsf (status ~ Tmin + Tmax, mDF, m = 0, B = 999)
+m3 <- ResourceSelection::rsf (status ~ Tmin + sal, mDF, m = 0, B = 999)
 CAIC (m1, m2, m3) # m1 is better
 
 summary(m1)
@@ -308,7 +308,7 @@ plot (m1)
 mep (m1)
 kdepairs (m1)
 
-sea$rsf <- predict (m1, newdata=sea) #, type="response")
+sea$rsf <- predict (m1, newdata = sea) # , type="response")
 
 ## apply RSF to global dataset
 # predict (m1, )
@@ -316,7 +316,7 @@ sea$rsf <- predict (m1, newdata=sea) #, type="response")
 
 ## rsf -- same as "ResourceSelection" ??
 require ("rsf")
-m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
+m1 <- rsf (status ~ Tmin + Tmax + Tmean + sal, mDF, m = 0, B = 99)
 
 ## maxent
 # require ("dismo")
@@ -324,4 +324,3 @@ m1 <- rsf (status~Tmin+Tmax+Tmean+sal, mDF, m=0, B=99)
 
 
 ## project 50 years of global warming
-

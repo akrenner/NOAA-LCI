@@ -33,8 +33,8 @@ odbcClose (db)
 rm (db)
 
 ## combine degrees and minutes for QGIS
-tSe$LonDD <- tSe$LongitudeDeg - tSe$LongitudeMins/60
-tSe$LatDD <- tSe$LatitudeDeg + tSe$LatitudeMins/60
+tSe$LonDD <- tSe$LongitudeDeg - tSe$LongitudeMins / 60
+tSe$LatDD <- tSe$LatitudeDeg + tSe$LatitudeMins / 60
 
 ## treat bad data
 tSe$LonDD <- ifelse (tSe$LonDD == 0, NA, tSe$LonDD)

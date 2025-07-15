@@ -1,5 +1,5 @@
 ## map maximal currents during biggest tide from CIOFS
-rm (list=ls())
+rm (list = ls())
 
 
 ## biggest tide:   8.242 m,       2014-01-31 21:23:00
@@ -31,7 +31,7 @@ rm (list=ls())
 
 
 
-###-----  use OpenDrift.R instead???  ------
+### -----  use OpenDrift.R instead???  ------
 
 
 ## u, v, w, rho
@@ -77,16 +77,16 @@ worldP <- "~/GISdata/data/coastline/gshhg-shp/GSHHS_shp/f/GSHHS_f_L1.shp"   ## f
 
 require ("ncdf4")
 require ("stars")
-dir.create("~/tmp/LCI_noaa/data-products/CIOFS/", showWarnings=FALSE, recursive=TRUE)
+dir.create("~/tmp/LCI_noaa/data-products/CIOFS/", showWarnings = FALSE, recursive = TRUE)
 
 
-if (0){  ## old code using Kristin's max-speed export -- obsolete?
+if (0) {  ## old code using Kristin's max-speed export -- obsolete?
 nc <- ncdf4::nc_open(ncF)
-#print (nc)
-#names (nc$dim)
-#names (nc$var)
-nX <- function (vid){
-  v <- ncvar_get (nc, varid=vid)
+# print (nc)
+# names (nc$dim)
+# names (nc$var)
+nX <- function(vid) {
+  v <- ncvar_get (nc, varid = vid)
   v <- as.numeric(v)
   v
 }
@@ -96,10 +96,10 @@ require ("dplyr")
 # s_rho=depth -- constant in this nc
 maxS <- data.frame (lon = nX ("lon_rho"),
                       lat = nX ("lat_rho"),
-                      speed=nX ("speed")) %>%
+                      speed = nX ("speed")) %>%
   filter (!is.na (speed)) %>%
-  st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
-  st_transform(crs=prjct)
+  st_as_sf (coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(crs = prjct)
 ncdf4::nc_close (nc)
 rm (nc)
 
@@ -116,9 +116,9 @@ rm (nc)
 ## define grid
 seaAEx <- st_bbox (maxS) %>%
   st_as_sfc()
-pgon <- st_make_grid(seaAEx, square=TRUE, cellsize=rep (grid_spacing, 2)) %>%
+pgon <- st_make_grid(seaAEx, square = TRUE, cellsize = rep (grid_spacing, 2)) %>%
   st_as_sf() %>%
-   mutate (ID=row_number())
+   mutate (ID = row_number())
 A <- st_intersection (pgon, seaAEx)  ## grid -- suppress warning
 rm (seaAEx, pgon)
 
@@ -127,32 +127,32 @@ pointsID <- maxS %>%
   st_join (A) %>%
   as.data.frame() %>%
   group_by (ID) %>%
-  summarize (maxSpeed=max (speed, na.rm=TRUE))
-speedPol <- left_join(A, pointsID, by="ID")
+  summarize (maxSpeed = max (speed, na.rm = TRUE))
+speedPol <- left_join(A, pointsID, by = "ID")
 rm (pointsID)
 
-speedS <- st_rasterize (speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
+speedS <- st_rasterize (speedPol ["maxSpeed"], dx = grid_spacing, dy = grid_spacing)
 
 
 
 ## aggregate CIOFS data over new grid
-if (0){  ## seems super slow -- needs testing
-  gridPts <- function (pts, grid_spacing, var="speed"){
+if (0) {  ## seems super slow -- needs testing
+  gridPts <- function(pts, grid_spacing, var = "speed") {
     seaAx <- st_bbox (pts) %>%
       st_as_sfc()
-    pgon <- st_make_grid(seaAx, square=TRUE, cellsize = rep (grid_spacing, 2)) %>%
+    pgon <- st_make_grid(seaAx, square = TRUE, cellsize = rep (grid_spacing, 2)) %>%
       st_as_sf() %>%
-      mutate(ID=row_number())
+      mutate(ID = row_number())
     Ax <- st_intersection(pgon, seaAx)
     # generalize variable name
-    pts$speedX <- pts [,which (names (pts)==var)]
+    pts$speedX <- pts [, which (names (pts) == var)]
     pointsID <- pts %>%
       st_join(Ax) %>%
       as.data.frame() %>%
       group_by (ID) %>%
-      summarize (maxSpeed=max (speedX, na.rm=TRUE))  ## need to generalize this!
-    speedPol <- left_join(A, pointsID, by=ID)
-    speedS <- st_rasterize(speedPol ["maxSpeed"], dx=grid_spacing, dy=grid_spacing)
+      summarize (maxSpeed = max (speedX, na.rm = TRUE))  ## need to generalize this!
+    speedPol <- left_join(A, pointsID, by = ID)
+    speedS <- st_rasterize(speedPol ["maxSpeed"], dx = grid_spacing, dy = grid_spacing)
     speedS
   }
 
@@ -162,12 +162,12 @@ if (0){  ## seems super slow -- needs testing
 
 
 
-dir.create("~/tmp/LCI_noaa/media/CIOFS/", showWarnings=FALSE, recursive=FALSE)
+dir.create("~/tmp/LCI_noaa/media/CIOFS/", showWarnings = FALSE, recursive = FALSE)
 png ("~/tmp/LCI_noaa/media/CIOFS/ciofs_maxspeed.png")
 plot (speedS)
 dev.off()
 
-save (speedS, file="~/tmp/LCI_noaa/cache/ciofs_maxspeed.RData")
+save (speedS, file = "~/tmp/LCI_noaa/cache/ciofs_maxspeed.RData")
 write_stars (speedS, dsn = paste0 ("~/tmp/LCI_noaa/data-products/maxSpeed_CIOFS"
              , grid_spacing, ".tif"))
 
@@ -211,35 +211,35 @@ uV <- ncvar_get (nc, "u")  ## u is 1 short of v
 
 ## dimLimit -- ensure all dimensions are of same length
 dR <- rbind (dim (wV), dim (vV), dim (uV)) %>%
-  apply (MARGIN=2, FUN=min) %>%
-  lapply (FUN=function (x, sv=1){seq(sv, x)})
+  apply (MARGIN = 2, FUN = min) %>%
+  lapply (FUN = function(x, sv = 1) {seq(sv, x)})
 
 ## 0: easy: max w
-wV <- wV[dR[[1]],dR[[2]],,dR[[4]]]   ## use any depth for w, surface for v and u
-vV <- vV [dR[[1]],dR[[2]],1,dR[[4]]]
-uV <- uV [dR[[1]],dR[[2]],1,dR[[4]]]
+wV <- wV[dR[[1]], dR[[2]], , dR[[4]]]   ## use any depth for w, surface for v and u
+vV <- vV [dR[[1]], dR[[2]], 1, dR[[4]]]
+uV <- uV [dR[[1]], dR[[2]], 1, dR[[4]]]
 
 
-wU <- array (dim=dim(wV)[1:2])
+wU <- array (dim = dim(wV)[1:2])
 wD <- wU # wU: up, wD: down
-for (i in 1:dim (wU)[1]){
-  for (j in 1:dim (wU)[2]){
-    if (!any (!is.na (wV [i,j,,]))){  # all values are NA/NaN
-      wU [i,j] <- NA
-      wD [i,j] <- NA
-    }else{
+for (i in 1:dim (wU)[1]) {
+  for (j in 1:dim (wU)[2]) {
+    if (!any (!is.na (wV [i, j, , ]))) {  # all values are NA/NaN
+      wU [i, j] <- NA
+      wD [i, j] <- NA
+    } else {
       # XXXX  add: average upwelling, upwelling in top layer
-      wU [i,j] <- max (wV [i,j,,], na.rm=TRUE)
-      wD [i,j] <- min (wV [i,j,,], na.rm=TRUE)
-      maxT <- which.max (wV [i,j,1,]) # time is last
-      minT <- which.min (wV [i,j,1,]) # other end of tide
+      wU [i, j] <- max (wV [i, j, , ], na.rm = TRUE)
+      wD [i, j] <- min (wV [i, j, , ], na.rm = TRUE)
+      maxT <- which.max (wV [i, j, 1, ]) # time is last
+      minT <- which.min (wV [i, j, 1, ]) # other end of tide
      # meanUP <- mean  (subset (wV [i,j,,maxT], wV [i,j,,maxT] > 0), na.rm=TRUE)  ## all NAs
     }
   }
 }
 
-wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid="lon_rho")[dR[[1]],dR[[2]] ]),
-                   lat = as.numeric (ncvar_get (nc, varid="lat_rho")[dR[[1]],dR[[2]] ]),
+wDF <- data.frame (lon = as.numeric (ncvar_get (nc, varid = "lon_rho")[dR[[1]], dR[[2]]]),
+                   lat = as.numeric (ncvar_get (nc, varid = "lat_rho")[dR[[1]], dR[[2]]]),
                    wu = as.numeric (wU), # already applied dR
                    wd = as.numeric (wD)  # already applied dR
 #                   wuM = as.numeric (meanUP)  # mean upwelling in the watercolumn at time of max upwelling  ## XXX not working yet -- all NA
@@ -256,21 +256,21 @@ speed <- sqrt (as.numeric (vV)^2 + as.numeric(uV)^2) |>
 
 ## -------------------------start with trigonometry ---------------------------- ##
 ## calculate direction -- in ROMS and then in projected coordinates
-alphaR <- (atan (vV/uV) + pi/2) * -1  #   0 = north; -pi to pi     /pi*360  ## N = 0 degrees, E: pi/2 -- check XXX -- N/S correct?
+alphaR <- (atan (vV / uV) + pi / 2) * -1  #   0 = north; -pi to pi     /pi*360  ## N = 0 degrees, E: pi/2 -- check XXX -- N/S correct?
 ## calculate angle between ROMS cells in projected coordinates
 ## transform into projected coordinates
-lon <- ncvar_get(nc, varid="lon_rho")[dR[[1]], dR[[2]]]
-lat <- ncvar_get(nc, varid="lat_rho")[dR[[1]], dR[[2]]]
+lon <- ncvar_get(nc, varid = "lon_rho")[dR[[1]], dR[[2]]]
+lat <- ncvar_get(nc, varid = "lat_rho")[dR[[1]], dR[[2]]]
 ## find angle between current cell and cell to the north in ROMS-grid
-lA <- sapply (1:ncol (lon), function (i){ ## process column by column. lat goes from south to north
+lA <- sapply (1:ncol (lon), function(i) { ## process column by column. lat goes from south to north
   # or use gear::angle2d?
   require ("useful")
-  lldf <- data.frame (lon=lon [,i], lat=lat [,i]) %>%
-    st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
-    st_transform(crs=prjct) %>%
+  lldf <- data.frame (lon = lon [, i], lat = lat [, i]) %>%
+    st_as_sf (coords = c("lon", "lat"), crs = 4326) %>%
+    st_transform(crs = prjct) %>%
     st_coordinates()
   dC <- diff (lldf) %>% as.data.frame()
-  angl <- (cart2pol (dC$X, dC$Y, degrees=FALSE)$theta)  # + pi/2 ## 0-2pi, 0 degrees = N -- VERIFY XXXX
+  angl <- (cart2pol (dC$X, dC$Y, degrees = FALSE)$theta)  # + pi/2 ## 0-2pi, 0 degrees = N -- VERIFY XXXX
   angl
 })
 
@@ -280,8 +280,8 @@ ncdf4::nc_close (nc)
 
 ## combine uv-angle with lA chart curvature
 aR <- array (dim = dim (alphaR))
-for (i in 1:dim (alphaR)[3]){
-  aR [,,i] <- (alphaR [,,i] + lA [c(1:nrow (lA), nrow (lA)),]) %% (pi/2) ## duplicate last row to make lA conformal
+for (i in 1:dim (alphaR)[3]) {
+  aR [, , i] <- (alphaR [, , i] + lA [c(1:nrow (lA), nrow (lA)), ]) %% (pi / 2) ## duplicate last row to make lA conformal
 }
 # aR <- ifelse (aR > )
 rm (alphaR, lon, lat, lA, i)
@@ -294,33 +294,33 @@ rm (alphaR, lon, lat, lA, i)
 ## anywhere in water column or only at the surface?
 topAr <- array (dim = c (dim (speed)[1:2], 5))  # last dimension: max speed, mtheta, surface speed, stheta
 speedDepth <- rep (NA, dim (speed)[1])
-for (i in 1:dim (speed)[1]){
-  for (j in 1:dim (speed)[2]){
-    if (all (is.na (speed [i,j,]))){
-      topAr [i,j,] <- rep (NA, dim (topAr)[3])
-    }else{
-      mIJ <- which.max (speed [i,j,])
+for (i in 1:dim (speed)[1]) {
+  for (j in 1:dim (speed)[2]) {
+    if (all (is.na (speed [i, j, ]))) {
+      topAr [i, j, ] <- rep (NA, dim (topAr)[3])
+    } else {
+      mIJ <- which.max (speed [i, j, ])
       speedDepth [i] <- mIJ
-      topAr [i,j,1] <- speed [i,j,mIJ]
-      topAr [i,j,2] <- aR [i,j,mIJ]
-      topAr [i,j,3] <- speed [i,j,1]
-      topAr [i,j,4] <- aR [i,j,1]
-      topAr [i,j,5] <- mean (speed [i,j,], na.rm=TRUE)
+      topAr [i, j, 1] <- speed [i, j, mIJ]
+      topAr [i, j, 2] <- aR [i, j, mIJ]
+      topAr [i, j, 3] <- speed [i, j, 1]
+      topAr [i, j, 4] <- aR [i, j, 1]
+      topAr [i, j, 5] <- mean (speed [i, j, ], na.rm = TRUE)
     }
   }
 }
 ## assemple big DF for export
 wDF <- cbind (wDF,
-              speedM = as.numeric (topAr [,,1]),
-              thetaM = as.numeric (topAr [,,2]),
-              speedS0 = as.numeric (topAr [,,3]),
-              thetaS0 = as.numeric (topAr [,,4]))
+              speedM = as.numeric (topAr [, , 1]),
+              thetaM = as.numeric (topAr [, , 2]),
+              speedS0 = as.numeric (topAr [, , 3]),
+              thetaS0 = as.numeric (topAr [, , 4]))
 ## add projected u and v
 wDF$prU <- sin (wDF$thetaM) * wDF$speedM
 wDF$prV <- cos (wDF$thetaM) * wDF$speedM
 
 ## clean-up
-rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i,j, mIJ)
+rm (nc, topAr, speed, uV, vV, wV, wU, wD, ncF, dR, i, j, mIJ)
 
 
 ## trim to original export domain (unknown why there is more data than that)
@@ -341,37 +341,37 @@ save.image ("~/tmp/LCI_noaa/cache/maxCurrentCIOFS3.RData")
 
 
 
-wDFsf <- st_as_sf (wDF, coords=c("lon", "lat"), crs=4326) %>%
-  st_transform(crs=prjct)
+wDFsf <- st_as_sf (wDF, coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(crs = prjct)
 rm (wDF)
 
 require ("interp")
-for (i in seq_len(length (names (wDFsf))-1)){
-  tDF <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
-                     , z=st_drop_geometry(wDFsf [,i])[,1]) %>%
+for (i in seq_len(length (names (wDFsf)) - 1)) {
+  tDF <- data.frame (x = st_coordinates(wDFsf)[, 1], y = st_coordinates(wDFsf)[, 2]
+                     , z = st_drop_geometry(wDFsf [, i])[, 1]) %>%
     dplyr::filter (!is.na (z))
-  wdS <- interp::interp (x=tDF$x, y=tDF$y, z=tDF$z
-                           , input="points", output="grid"
-                           , linear=bicubic  ## bi-cubic can result in negative speeds!!
-                           , baryweight=TRUE
-                           , na.rm=TRUE, extrap=FALSE, duplicate="error"
-                           , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
-                           , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
+  wdS <- interp::interp (x = tDF$x, y = tDF$y, z = tDF$z
+                           , input = "points", output = "grid"
+                           , linear = bicubic  ## bi-cubic can result in negative speeds!!
+                           , baryweight = TRUE
+                           , na.rm = TRUE, extrap = FALSE, duplicate = "error"
+                           , nx = diff (range (st_coordinates (wDFsf)[, 1])) / grid_spacing + 1
+                           , ny = diff (range (st_coordinates (wDFsf)[, 2])) / grid_spacing + 1
   ) %>%
-    interp::interp2xyz(data.frame=TRUE) %>%   ## assemble stars object
-    st_as_sf (coords=c("x", "y"), crs=prjct)
+    interp::interp2xyz(data.frame = TRUE) %>%   ## assemble stars object
+    st_as_sf (coords = c("x", "y"), crs = prjct)
   ## interp::interp2grid () -- not applicable, at least not until stars version available
 
 
   ## cut-out land
-  if (!exists ("worldM")){
-    worldM <- sf::st_read (worldP, quiet=TRUE, crs=4326) %>% st_geometry()
+  if (!exists ("worldM")) {
+    worldM <- sf::st_read (worldP, quiet = TRUE, crs = 4326) %>% st_geometry()
     worldM <- subset (worldM, st_is_valid (worldM)) %>% ## polygon 2245 is not valid
-      st_crop (c(xmin=-154, xmax=-149, ymin=58, ymax=61.5)) %>%   ## or could use bbox above
+      st_crop (c(xmin = -154, xmax = -149, ymin = 58, ymax = 61.5)) %>%   ## or could use bbox above
       sf::st_transform(prjct)
     rm (worldP)
   }
-  if (0){
+  if (0) {
     onLand <- st_intersects(wdS, worldM) %>% as.numeric () ##
     wdS <- subset (wdS, isFALSE(onLand)); rm (onLand)
   }
@@ -380,18 +380,18 @@ for (i in seq_len(length (names (wDFsf))-1)){
 
   ## plot
   png (paste0 ("~/tmp/LCI_noaa/media/CIOFS/", names (wDFsf)[i]
-               , c("_linear", "_bc")[bicubic+1], ".png")
-       , width = 6*300, height=8*300, res=300)
+               , c("_linear", "_bc")[bicubic + 1], ".png")
+       , width = 6 * 300, height = 8 * 300, res = 300)
   plot (wdS)
-  plot (worldM, add=TRUE, col = "beige")
+  plot (worldM, add = TRUE, col = "beige")
   dev.off()
 
 
   ## save to geoTIFF
   write_stars (wdS %>% st_rasterize()
-               , dsn=paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
+               , dsn = paste0 ("~/tmp/LCI_noaa/data-products/CIOFS/coifs_maxspeeds_"
                              , names (wDFsf)[i]
-                             , c("_linear", "_bc")[bicubic+1], ".tif"))
+                             , c("_linear", "_bc")[bicubic + 1], ".tif"))
   rm (wdS)
   cat (i, "\n")
 }
@@ -432,25 +432,25 @@ require ('ggspatial')
 
 ## unified data frame with u, v, speed, and theta
 ## export csv file for use in here or GIS
-tDFx <- data.frame (x=st_coordinates(wDFsf)[,1], y=st_coordinates(wDFsf)[,2]
+tDFx <- data.frame (x = st_coordinates(wDFsf)[, 1], y = st_coordinates(wDFsf)[, 2]
                     , speedS0 = wDFsf$speedS0, thetaS0 = wDFsf$thetaS0
                     , u = wDFsf$prU, v = wDFsf$prV)
-for (i in 3:ncol (tDF)){
+for (i in 3:ncol (tDF)) {
   tDF <- tDFx %>%
-    dplyr::filter (!is.na (tDFx [,i]))  ## move outside loop?
-  wDFbc <- interp::interp (x=tDF$x, y=tDF$y, z=tDF[,i]
-                           , input="points", output="grid"
-                           , linear=TRUE  ## bi-cubic can result in negative speeds!!
+    dplyr::filter (!is.na (tDFx [, i]))  ## move outside loop?
+  wDFbc <- interp::interp (x = tDF$x, y = tDF$y, z = tDF[, i]
+                           , input = "points", output = "grid"
+                           , linear = TRUE  ## bi-cubic can result in negative speeds!!
                            # , linear=FALSE, baryweight=TRUE
-                           , na.rm=TRUE
-                           , extrap=FALSE, duplicate="error"
-                           , nx = diff (range (st_coordinates (wDFsf)[,1])) / grid_spacing + 1
-                           , ny = diff (range (st_coordinates (wDFsf)[,2])) / grid_spacing + 1
+                           , na.rm = TRUE
+                           , extrap = FALSE, duplicate = "error"
+                           , nx = diff (range (st_coordinates (wDFsf)[, 1])) / grid_spacing + 1
+                           , ny = diff (range (st_coordinates (wDFsf)[, 2])) / grid_spacing + 1
   ) %>%
-    interp::interp2xyz(data.frame=TRUE)
-  if (i == 3){
+    interp::interp2xyz(data.frame = TRUE)
+  if (i == 3) {
     wDS <- wDFbc
-  }else{
+  } else {
     wDS <- cbind (wDS, wDFbc$z)
   }
 }
@@ -462,15 +462,15 @@ wDS %>%
   dplyr::filter (!is.na (speedS0), !is.na (thetaS0)) %>%
   dplyr::filter ((1:length (x)) %% 1000 == 0) %>%  ## subsample
 write.csv(file = "~/tmp/LCI_noaa/data-products/CIOFS/Current_vectorfield.csv"
-          , row.names=FALSE) ## QGIS doesn't read from compressed CSV
+          , row.names = FALSE) ## QGIS doesn't read from compressed CSV
 
 
 
 ## plot in R (maybe easier to do that iterative?)
 
-wDS <- st_as_sf (wDFbc, coords=c("x", "y"), crs=prjct)
-wdS <- interp::interp2xyz(wDFbc, data.frame=TRUE) %>%
-  st_as_sf (coords=c("x", "y"), crs=prjct)
+wDS <- st_as_sf (wDFbc, coords = c("x", "y"), crs = prjct)
+wdS <- interp::interp2xyz(wDFbc, data.frame = TRUE) %>%
+  st_as_sf (coords = c("x", "y"), crs = prjct)
 rm (tDF)
 
 
@@ -503,11 +503,11 @@ ggplot() +
 
 
 ### code in progress -- or to be deleted
-if (0){
+if (0) {
 
 
 ## the hard part: get data from AOOS/Axiom server -- failed so far
-if (0){
+if (0) {
 ## 1. Thrreds -- server has been down
 ## 2. zarr -- also flaky at times. Preferred, but python/R interaction non-trivial
 
@@ -515,7 +515,7 @@ if (0){
 ## THRREDs
 
 ## server may still be done -- couldn't resolve host name
-if (0){
+if (0) {
   require ('RNetCDF')
   # nc <- open.nc ("https://thredds.aoos.org/thredds/ncss/grid/AXIOM_CIOFS_HINDCAST.nc")
   # nc <- open.nc ("https://thredds.aoos.org/thredds/ncss/grid/AXIOM_CIOFS_HINDCAST.nc/dataset.html")
@@ -547,7 +547,7 @@ if (0){
 
 
 
-if (0){
+if (0) {
 
   ## use zarr -- access through python
   require ("reticulate")
@@ -556,15 +556,15 @@ if (0){
   # reticulate::install_python(version="3.12:latest")  ## use only once?
   reticulate::install_python()  ## use only once?
   # use_python()
-  if (virtualenv_exists("zarrDL")){
+  if (virtualenv_exists("zarrDL")) {
     use_virtualenv("zarrDL")
-  }else{
+  } else {
     ## automatically install seabirdscientific using pip into virtual environment
     # virtualenv_create("zarrDL", version="3.12")
     virtualenv_create("zarrDL")
-    virtualenv_install (envname="zarrDL"
-                        , packages= c("xarray", "zarr", "fsspec", "requests", "aiohttp")
-                        , ignore_installed=TRUE)
+    virtualenv_install (envname = "zarrDL"
+                        , packages = c("xarray", "zarr", "fsspec", "requests", "aiohttp")
+                        , ignore_installed = TRUE)
   }
   ## set up fathom processing
   # reticulate::import ("xarray", delay_load=TRUE)
@@ -573,10 +573,10 @@ if (0){
 
 
 
-  if (0){
-    xr <- reticulate::import ("xarray", as="xr", delay_load=TRUE)
+  if (0) {
+    xr <- reticulate::import ("xarray", as = "xr", delay_load = TRUE)
     ds <- xr$open_zarr ("http://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/zarr/")
-    ds <- ds.sel (ocean_time=slice ("2014-01-01 18:00", "2014-02-01 06:00"))
+    ds <- ds.sel (ocean_time = slice ("2014-01-01 18:00", "2014-02-01 06:00"))
     #  ds <- ds [["u", 'v', "w"]]
 
     # lon = np.array ([-152, -150.5])
@@ -617,20 +617,20 @@ print (ds)
     # print (ds.coord_names)
     # print (ds)
     # print (ds.variables)
-  }else{
+  } else {
     ## or run script -- still need to import ncdf
     py_run_file ("Currents/dlZarr.py")
   }
 
 
 
-  ci <- py_to_r ("ds", convert=TRUE)
+  ci <- py_to_r ("ds", convert = TRUE)
 }
 
 # virtualenv_remove("zarrDL")
 
 
-if (0){
+if (0) {
 # # see https://ptaconet.github.io/modisfast/
 # if (!require (modisfast)){
 #   if(!require(devtools)){renv::install("devtools")}
@@ -639,16 +639,16 @@ if (0){
 # }  ## formerly opendapr
 
 ## ROI and time range
-roi <- st_as_sf (data.frame (id="any", geom="POLOYGON ((-156 58, -156 61, -149 61, -149 58, -156 58))",
-                             wkt="geom", crs=4326))
+roi <- st_as_sf (data.frame (id = "any", geom = "POLOYGON ((-156 58, -156 61, -149 61, -149 58, -156 58))",
+                             wkt = "geom", crs = 4326))
 time_range <- as.Date (c("2020-05-05", "2020-05-06"))
 
 
 
 
 # https://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/axiom.ciofs.fields.hindcast.2014_0031.nc
-download.file(url="https://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/axiom.ciofs.fields.hindcast.2014_0031.nc"
-              , destfile="test.nc")
+download.file(url = "https://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/axiom.ciofs.fields.hindcast.2014_0031.nc"
+              , destfile = "test.nc")
 
 ## as per Kristen's email: access CIOFS model output (hindcast) with zarr
 # xr.open_zarr ("http://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/zarr/")
@@ -664,14 +664,14 @@ dsn <- paste0 ('ZARR:/vsicurl/"', axlnk, '/:psl.zarr"')
 
 
 dsn <- 'ZARR:/vsicurl/"http://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/zarr"'  ## not all wrong
-(r = read_mdim (dsn #, bounds=bounds
+(r = read_mdim (dsn # , bounds=bounds
                 , count = c(NA, NA, 10)))
 
-r <- read_mdim (dsn, variable="?", count=c(5,5,5,5,5,5,5,5,5,5,5))
+r <- read_mdim (dsn, variable = "?", count = c(5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5))
 
 dsn <- 'ZARR:/vsicurl/"http://xpublish-ciofs.srv.axds.co/datasets/ciofs_hindcast/zarr"'  ## not all wrong
-bounds <- c(longitude="lon_bounds", latitude="lat_bounds")
-(r = read_mdim (dsn, bounds=bounds, count = c(NA, NA, 10)))
+bounds <- c(longitude = "lon_bounds", latitude = "lat_bounds")
+(r = read_mdim (dsn, bounds = bounds, count = c(NA, NA, 10)))
 
 
 

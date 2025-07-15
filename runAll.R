@@ -84,8 +84,8 @@ source ("CTD_DataAvailability.R")
 ## the Wall
 source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 source ("CTDwall-setup.R")
-indivPlots <- FALSE; source ("CTDsections.R", local=TRUE)
-indivPlots <- TRUE; source ("CTDsections.R", local=TRUE); rm (indivPlots)
+indivPlots <- FALSE; source ("CTDsections.R", local = TRUE)
+indivPlots <- TRUE; source ("CTDsections.R", local = TRUE); rm (indivPlots)
 source ("CTDwall_normals.R")
 source ("CTDwall.R")
 # source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
