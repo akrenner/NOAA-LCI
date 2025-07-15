@@ -176,7 +176,7 @@ rm (surveyW, h)
 ## check --- QAQC
 if (0) {
   cat ("Surveys window QAQC -- testing code\n")
-  for (i in 1:length (levels (poAll$survey))) {
+  for (i in seq_along(levels (poAll$survey))) {
     x <- subset (poAll, survey == levels (poAll$survey)[i])
     if (1) {  # length (levels (factor (x$DataISO))) > 1){
       cat (i, levels (factor (x$DateISO)), "\n")

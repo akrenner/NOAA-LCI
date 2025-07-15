@@ -38,7 +38,7 @@ for (sv in iX) {
   if (sv %% 10 == 0) {cat (" ", sv, "/", max (iX), "\n", sep = "")}
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor (s$Transect)
-  if (test) {iY <- 1} else {iY <-  1:length (levels (s$Transect))} # by transect
+  if (test) {iY <- 1} else {iY <-  seq_along(levels(s$Transect))} # by transect
 
   ## standardize some measures across all casts off one survey -- from CTDwall-setup.R
   oRangeS <- t (sapply (c ("Temperature_ITS90_DegC"
@@ -75,7 +75,7 @@ for (sv in iX) {
       # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
       fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
       # nS <- -3:0
-      for (k in 1:length (fS)) {
+      for (k in seq_along(fS)) {
         s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
       }
     }

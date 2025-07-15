@@ -101,26 +101,26 @@ if (0) {
 
 ## create and call batch files
 ## great if this could run in parallel -- probably not on Windows?
-for (i in 1:length (conF)) {
+for (i in seq_along(conF)) {
   # for (i in 8){  # restore 2_edited_hex/2024 from local git and test
   # sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
-  tL <- paste (tLB, i, sep = "/")
-  tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
+  tL <- paste(tLB, i, sep = "/")
+  tLD <- paste(dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 
-  for (j in 1:length (tL)) {dir.create (tL [j], recursive = TRUE)}
+  for (j in seq_along(tL)) {dir.create(tL [j], recursive = TRUE)}
 
   ##
   ## need to add code here for new CTD !!
   ## does it report turbidity or attenuation??
   ##
   if (length (grep ("\\.CON$", conF [i])) > 0) {    # earliest con file excludes turbidity
-    psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
+    psa <- psaL [grep("SBEDataProcessing-Win32", psaL)]
   } else {
-    ctdS <- gsub (paste0 (dirname(conF [i]), "/SBE19plus_"), "", conF [i]) |>  ## isolate serial #
+    ctdS <- gsub (paste0(dirname(conF [i]), "/SBE19plus_"), "", conF [i]) |>  ## isolate serial #
       substr(1, 4)
-    psa <- psaL [grep (ctdS, psaL)]
+    psa <- psaL [grep(ctdS, psaL)]
     rm (ctdS)
   }
 

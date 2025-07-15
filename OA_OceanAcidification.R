@@ -56,7 +56,7 @@ pdf ("~/tmp/LCI_noaa/media/EVOS/oa.pdf")
 for (i in oVar) {
   plot (oa2$jday, oa2 [, i], type = "n", main = paste (names (oa2)[i], "2017-2021")
     , xlab = "day of year", ylab = "")
-  for (j in 1:length (levels (oa2$station))) {
+  for (j in seq_along(levels (oa2$station))) {
     sD <- subset (oa2, station == levels (oa2$station)[j])
     lines (sD$jday, sD[, i], col = j)
   }
@@ -69,7 +69,7 @@ pdf ("~/tmp/LCI_noaa/media/EVOS/oa-year.pdf")
 for (i in oVar) {
   plot (oa2$jday, oa2 [, i], type = "n", main = paste (names (oa2)[i], "2017-2021")
     , xlab = "day of year", ylab = "")
-  for (j in 1:length (levels (oa2$year))) {
+  for (j in seq_along(levels (oa2$year))) {
     sD <- subset (oa2, year == levels (oa2$year)[j])
     lines (sD$jday, sD[, i], col = j)
   }

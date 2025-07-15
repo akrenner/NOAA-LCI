@@ -48,7 +48,7 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
   #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
   c("9_6", "AlongBay_3", "AlongBay_9"))
-# pickStn <- 1:length (levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
+# pickStn <- seq_along(levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 pickStn <- 87 # 9-6
 
 
@@ -168,7 +168,7 @@ anoF <- function(varN, df = sDF) {
       , df, subset = depthR == i
       , span = 0.25)$fitted[(1:12) + 12]
   })
-  sapply (1:nrow (ctdAgg), FUN = function(i) {
+  sapply (seq_len(nrow(ctdAgg)), FUN = function(i) {
     sOut [ctdAgg$monthI [i], ctdAgg$depthR [i]]
   })
 }
@@ -197,7 +197,7 @@ mkSection <- function(xC) {  ## use CTDfunctions insted?!
   require (oce)
   xC <- xC [order (xC$isoTime), ]
   xC$Date <- factor (xC$DateISO)
-  cL <- lapply (1:length (levels (xC$Date))
+  cL <- lapply (seq_along(levels (xC$Date))
     , FUN = function(i) {
       sCTD <- subset (xC, xC$Date == levels (xC$Date)[i])
       ocOb <- with (sCTD,
@@ -473,7 +473,7 @@ for (k in pickStn) {
     dTimes <- as.POSIXct(c("1999-12-15"
       , paste0 ("2000-", 1:12, "-15")
       , "2001-01-15"))
-    cT9 [['station']] <- lapply (1:length (cT9 [['station']])
+    cT9 [['station']] <- lapply (seq_along(cT9 [['station']])
       , function(i) {
         oceSetMetadata(cT9 [['station']][[i]], 'startTime'
           , dTimes [i]
@@ -942,7 +942,7 @@ tL <- c("Deep", "Max", "SalDeep", "TempSurface", "SalSurface")
 titleL <- c ("Deep-Water Temperature", "Maximum Temperature", "Deep-Water Salinity"
   , "Surface Temperature", "Surface Salinity")
 ## deep-water: mean at depth > 15 m
-for (iS in 1:length (tL)) {
+for (iS in seq_along(tL)) {
   T96$TempS <- with (T96, list (TempDeep, TempMax, SalDeep, TempSurface, SalSurface))[[iS]]
   tempName <- tL [iS]
 
@@ -994,7 +994,7 @@ for (iS in 1:length (tL)) {
     , legend = c("normal", "30 d moving-average", anomL), bty = "o", ncol = 2
     , bg = "white", box.col = "white")
   ## add lines, marking the anomaly in blue/red
-  for (j in 1:nrow (T96f)) {
+  for (j in seq_len(nrow(T96f))) {
     with (T96f, lines (x = rep (timeStamp [j], 2)
       , y = c(TempS_norm [j], TempSN[j])
       , col = ifelse (TempSN [j] > TempS_norm [j], anomCol [1], anomCol [2])
@@ -1012,12 +1012,12 @@ for (iS in 1:length (tL)) {
 
     springM <- sapply (thTempL, function(y) {
       aggregate (TempSN ~ Year, data = T96f, function(x, thTemp = y) {
-        lD <- min ((1:length (x[1:(366 / 2)]))[x >= thTemp], na.rm = TRUE)
+        lD <- min ((seq_along(x[1:(366 / 2)]))[x >= thTemp], na.rm = TRUE)
         x <- c (-1, x)
         #        if (tempName=="Max"){
-        #          x4 <- min ((1:length (x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
+        #          x4 <- min ((seq_along(x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
         #        }else{
-        x4 <- max ((1:length (x[1:(366 / 2)]))[x <= thTemp], na.rm = TRUE)
+        x4 <- max ((seq_along(x[1:(366 / 2)]))[x <= thTemp], na.rm = TRUE)
         #        }
         lD <- ifelse (x4 == 1, NA, x4)   ## review this further!!  2024 isn't right XXX
         # lD <- ifelse (x4>=364/2, NA, lD)
@@ -1047,13 +1047,13 @@ for (iS in 1:length (tL)) {
       axis (1, tick = FALSE, labels = yL, at = yL + 0.5)
       box()
       abline (h = as.Date(paste0 ("2000-0", 1:8, "-01")), lty = "dashed", col = "gray")
-      if (tempName == "Max") {xi <- 1:length (thTempL)} else {xi <- 1}
+      if (tempName == "Max") {xi <- seq_along(thTempL)} else {xi <- 1}
       #      if (as.numeric (format (Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
       #       springM <- springM [1:(nrow (springM)-1),]
       #      }
       for (i in xi) {
         points (springM [, i] ~ I(yL + 0.5), col = colr [i], pch = 19, cex = 2)
-        for (j in 1:nrow (springM)) {
+        for (j in seq_len(nrow(springM))) {
           lines (c(0.1, 0.9) + yL [j], springM [c(j, j), i], col = colr [i], lwd = 3)
         }
         # lines (springM [,i]~yL, col=colr [i], lwd=3, type="s")
@@ -1132,7 +1132,7 @@ if (0) {  ## need to look at gak-line, not gak1=mooring!  mooring is too far ins
   gak$depthF <- ifelse (gak$depth < 40, 30, gak$depth)
   gak$depthF <- factor (gak$depthF)
 
-  gakS <- lapply (1:length (levels (gak$depthF))
+  gakS <- lapply (seq_along(levels (gak$depthF))
     , function(i) {
       gax <- subset (gak, depthF == levels (gak$depthF)[i])
       with (gax, as.ctd (salinity, temperature

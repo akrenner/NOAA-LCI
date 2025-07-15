@@ -64,7 +64,7 @@ pSec <- function(xsec, N, cont = TRUE, zCol
       if (plotContours) {
         # s <- xsec
         nstation <- length(xsec[['station']])
-        depth <- xsec [['depth']][1:length (xsec@data[['station']][[1]]@data$scan)]
+        depth <- xsec [['depth']][seq_along(xsec@data[['station']][[1]]@data$scan)]
         np <- length(depth)
         zvar <- array(NA, dim = c(nstation, np))
 
@@ -163,7 +163,7 @@ pSec0 <- function(xsec, N, cont = TRUE, custcont = NULL, zcol, ...) {
 KBsectionSort <- function(xCo) {
   ## sort section -- Kasitsna-Bay-Lab specific
   ## sort in here, rather than separately
-  for (i in 1:length (xCo@data$station)) {
+  for (i in seq_along(xCo@data$station)) {
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
@@ -204,7 +204,7 @@ makeSection <- function(xC, stn) {
   require ("oce")
   # xC = data.frame of ctd data
   # stn defining the stations and their order
-  as.section (lapply (1:length (levels (stn))
+  as.section (lapply (seq_along(levels (stn))
     , FUN = function(x) {
       sCTD <- subset (xC, stn == levels (stn)[x])
       ocOb <- with (sCTD,
@@ -268,7 +268,7 @@ is.night <- function(ctd) {
 isNightsection <- function(ctdsection) {
   ## check whether sun is below horizon at any one station
   sM <- ctdsection@metadata
-  sunAlt <- sapply (1:length (sM$time), FUN = function(i) {
+  sunAlt <- sapply (seq_along(sM$time), FUN = function(i) {
     getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
   })
   sunDeg <- sunAlt / pi * 180
@@ -308,7 +308,7 @@ climatologyCTDcast <- function(cast, timeVar) {
 #   physOcY$Depth.saltwater..m. <- factor (physOcY$Depth.saltwater..m.)
 #   agCTD <- with (physOcY, expand.grid())
 #
-#   for (j in 1:length (levels (physOcY$Match_Name))){ ## otherwise size blows up?!
+#   for (j in seq_along(levels (physOcY$Match_Name))){ ## otherwise size blows up?!
 #     pDF <- subset (physOcY, Match_Name == levels (physOcY$Match_Name)[j])
 #     pDF$tV <- factor (pDF$tV); pDF$Depth.saltwater..m. <- factor (pDF$Depth.saltwater..m.)
 #     agCTD <- with (pDF, expand.grid (tV, Depth.saltwater..m.))
@@ -347,7 +347,7 @@ cloneCTD <- function(ctd, latitude = ctd@metadata$latitude
                      , bottom = NULL) {
   # data (ctd)
   ## NA-out all data, other than depth and pressure
-  for (i in 1:length (ctd@data)) {
+  for (i in seq_along(ctd@data)) {
     # if (!names (ctd@data)[i] %in% c ("pressure", "depth")
     if (names (ctd@data)[i] != "pressure") {
       is.na (ctd@data[[i]]) <- TRUE
@@ -403,7 +403,7 @@ sectionPad <- function(sect, transect, ...) {
   ## match by stationId or geographic proximity? The later would need a threshold.
   ## determine whether section represents a complete transect
   ## will have to sectionSort at the end!!
-  # for (i in 1:length (transect$stationId)){
+  # for (i in seq_along(transect$stationId)){
 
   ## sort transect correctly! (esp. for AlongBay!)
   if (transect$line [1] == "AlongBay") {
@@ -414,12 +414,11 @@ sectionPad <- function(sect, transect, ...) {
     transect <- transect [order (transect$longitude, decreasing = FALSE), ]
   }
 
-  # for (i in c(1,nrow (transect))){
-  for (i in 1:nrow (transect)) {
+  for (i in seq_len(nrow(transect))) {
     ## only insert dummy first and last stations. skip all others to avoid overdoing things
     #  for (i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
     #   if (!transect$stationId [i]  %in% levels (section@metadata$stationId)){
-    stationIDs <- sapply (1:length (sect@data$station), FUN = function(k) {
+    stationIDs <- sapply (seq_along(sect@data$station), FUN = function(k) {
       sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
     if (!transect$station [i]  %in% stationIDs) {  ## current results are horrid. Not why=?
       # if (!as.character (transect$station [i])  %in% levels (sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX

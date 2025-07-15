@@ -102,21 +102,21 @@ aPlot(tDay, "atemp"
   , currentCol = currentCol, MA = TRUE
   , pastYear = pastYear, ongoingYear = ongoingY
 )
-if (SWMP) {title (main = "Air Temperature at Homer Spit")} else {
-  title (main = "Air Temperature at Homer Airport")
-  }
+if (SWMP) {title(main = "Air Temperature at Homer Spit")} else {
+  title(main = "Air Temperature at Homer Airport")
+ }
 # for (i in 1:length (levels (factor (hmr$year)))){
 #   lines (atemp~jday, subset (hmr, year == levels (factor (hmr$year))[i]))
 # }
 # fAxis (c (-15, 15), mT=expression ('air'~'temperature '~'['*degree~'F'*']'))
-fAxis (c (-15, 15), mT = "air temperature [°F]")
+fAxis(c(-15, 15), mT = "air temperature [°F]")
 box()
 ## legend
-cLegend ( # "bottom"# , inset=0.07
+cLegend( # "bottom"# , inset=0.07
   105, 2
-  , currentYear = currentYear, mRange = c (min (hmr$year), currentYear - 1)
+  , currentYear = currentYear, mRange = c(min(hmr$year), currentYear - 1)
   , cYcol = currentCol
-  , title = paste (maO, "day moving average")
+  , title = paste(maO, "day moving average")
   , qntl = qntl
   , pastYear = pastYear, ongoingYear = ongoingY
 )
@@ -132,16 +132,16 @@ dev.off()
 ########################
 ## what's the likelihood of frost? What's the last day of frost?
 # rm (hmr)
-frostTH <- c (-5, -3, -2, 0, 2, 5)
-frostTH <- c (-5, -3, -2, 0)
+frostTH <- c(-5, -3, -2, 0, 2, 5)
+frostTH <- c(-5, -3, -2, 0)
 ## tomatoes: stay above 50 F -> mintemp 10 C
 
 
 # source ("noaaWeather.R")
 #
 # load ("~/tmp/LCI_noaa/cache/HomerAirport.RData") # from noaaWeather.R -- Airport
-suppressMessages(require ("zoo"))
-load ("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  # hmr, Homer Airport
+suppressMessages(require("zoo"))
+load("~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")  # hmr, Homer Airport
 hmrMin <- aggregate(atemp ~ jday + year, data = hmr, min)  # min daily temperature
 # hmr$atemp <- hmr$mintemp # caring about frost, not average!?
 # hmr$atemp <- with (hmr, rowMeans (cbind (mintemp, maxtemp)))
@@ -151,62 +151,62 @@ hmr <- hmrMin
 ## min of min and max? min? , atemp?
 ## supply a list of logical vectors instead of a threshold? To allow min and mean temperatures
 frostM <- list(hmr$atemp < 0  ## recent years
-  , hmr$medtemp < -2 ## hardy tubbers?  -- AFTER 14 days of overall mean > 0?
-  , hmr$medtemp < 0    ## lettuce?
-  , hmr$atemp < 10)  ## tomatoes
-dFrostL <- lapply(seq_along (frostM), function(i) {
-  dF <- hmr [, names (hmr) %in% c("jday", "year")]
+ , hmr$medtemp < -2 ## hardy tubbers?  -- AFTER 14 days of overall mean > 0?
+ , hmr$medtemp < 0    ## lettuce?
+ , hmr$atemp < 10)  ## tomatoes
+dFrostL <- lapply(seq_along(frostM), function(i) {
+  dF <- hmr [, names(hmr) %in% c("jday", "year")]
   dF$fro <- frostM [[i]]
-  cdFrost <- rbind(dF [, names (dF) %in% c("fro", "jday", "year")]
-    , with(dF, data.frame(fro, jday = jday + 365, year)))
-  cdFrost <- cdFrost [order (cdFrost$year, cdFrost$jday), ]
+  cdFrost <- rbind(dF [, names(dF) %in% c("fro", "jday", "year")]
+   , with(dF, data.frame(fro, jday = jday + 365, year)))
+  cdFrost <- cdFrost [order(cdFrost$year, cdFrost$jday), ]
   cdFrost$MA <- rollapply(cdFrost$fro, width = 28, FUN = any, align = "left", fill = NA)
-  dF$atemp <- cdFrost$MA [match (with (dF, paste(year, jday))  ## circular -> match
-    , with (cdFrost, paste (year, jday)))]
+  dF$atemp <- cdFrost$MA [match(with(dF, paste(year, jday))  ## circular -> match
+   , with(cdFrost, paste(year, jday)))]
   dF$fY <- factor(dF$year)
   dF
 })
 
 # hmr <- subset (hmr, !is.na (atemp))  ## records prior to 1990s are NA
 # dFrostLx <- lapply (frostTH, FUN=function (x){
-#   dFrost <- aggregate (atemp~jday+year, data=hmr, function (y){any (y < x)})
-#   cdFrost <- rbind (dFrost, with (dFrost, data.frame (atemp, jday=jday + 365, year)))
+#   dFrost <- aggregate(atemp~jday+year, data=hmr, function (y){any (y < x)})
+#   cdFrost <- rbind(dFrost, with (dFrost, data.frame (atemp, jday=jday + 365,year)))
 #   cdFrost <- cdFrost [order (cdFrost$year, cdFrost$jday),]
-#   cdFrost$MA <- rollapply (cdFrost$atemp, width=38, FUN=any, align="left", fill=NA)
+#   cdFrost$MA <- rollapply(cdFrost$atemp, width=38, FUN=any, align="left", fill=NA)
 #   dFrost$atemp <- cdFrost$MA [match (with (dFrost, paste (year, jday)), with (cdFrost, paste (year,jday)))]
 #   dFrost$fY <- factor (dFrost$year)
 #     dFrost
 # })
-yFrostL <- lapply (seq_along (frostTH), function(x) {aggregate (atemp ~ jday
-  , data = dFrostL [[x]]
-  , mean
-  , subset = year < currentYear)})
+yFrostL <- lapply(seq_along(frostTH), function(x) {aggregate(atemp ~ jday
+ , data = dFrostL [[x]]
+ , mean
+ , subset = year < currentYear)})
 
-pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDaysM.pdf")
-plotSetup (yFrostL[[1]]$atemp, yFrostL[[1]]$atemp, ylim = c(0, 1)
+pdf("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDaysM.pdf")
+plotSetup(yFrostL[[1]]$atemp, yFrostL[[1]]$atemp, ylim = c(0, 1)
   , ylab = paste0 ("likelihood of frost (", min(hmr$year)
     , "-", currentYear - 1, ")"))
-require ("RColorBrewer")
+require("RColorBrewer")
 ## cls <- GnBu, Spectral, RdYIGn
-cls <- brewer.pal (length (frostTH), "RdYlGn")
-cls <- brewer.pal (length (frostTH), "Blues")
-for (i in rev (seq_along (frostTH))) {  ## reverse to plot cold THs last
-  lines (atemp ~ jday, yFrostL [[i]], col = cls [i])
-  points (I(atemp - 1) ~ jday, subset (dFrostL[[i]], year == currentYear)
+cls <- brewer.pal(length (frostTH), "RdYlGn")
+cls <- brewer.pal(length (frostTH), "Blues")
+for (i in rev(seq_along (frostTH))) {  ## reverse to plot cold THs last
+  lines(atemp ~ jday, yFrostL [[i]], col = cls [i])
+  points(I(atemp - 1) ~ jday, subset (dFrostL[[i]], year == currentYear)
     , col = cls [i], pch = 19)  # (atemp-1) to plot points low in graph
 }
-legend ("right", pch = 19, col = cls, legend = paste (frostTH
+legend("right", pch = 19, col = cls, legend = paste (frostTH
   , " °C")
 , bty = "n"
 , title = paste ("Periods in", currentYear, "with\ntemperatures below")
 )
 
-require ("jpeg")
+require("jpeg")
 img2 <- readJPEG ("pictograms/akgrown.jfif")
 ## calculate coordinates for raster-image, to avoid readjusting it each year
 ## or keep fixed y-axis?
 (220 - 90) / 365 * 1 + 0.2
-rasterImage (img2, xleft = 120, ybottom = 0.21
+rasterImage(img2, xleft = 120, ybottom = 0.21
   , xright = 225, ytop = 0.55, interpolate = FALSE)
 box()
 dev.off()
@@ -214,14 +214,14 @@ dev.off()
 
 
 ## old, single-category version
-dFrost <- aggregate (atemp ~ jday + year, data = hmr, function(x) {any (x < frostTH)})
-cdFrost <- rbind (dFrost,  ## circular Dec -> Jan
+dFrost <- aggregate(atemp ~ jday + year, data = hmr, function(x) {any (x < frostTH)})
+cdFrost <- rbind(dFrost,  ## circular Dec -> Jan
   with (dFrost, data.frame (atemp, jday = jday + 365, year)))
 cdFrost <- cdFrost [order (cdFrost$year, cdFrost$jday), ]
 cdFrost$MA <- rollapply (cdFrost$atemp, width = 38, FUN = any, align = "left", fill = NA)
 dFrost$atemp <- cdFrost$MA [match (with (dFrost, paste (year, jday)), with (cdFrost, paste (year, jday)))]
 rm (cdFrost)
-yFrost <- aggregate  (atemp ~ jday, data = dFrost, mean, subset = year < currentYear) # proportion of frost
+yFrost <- aggregate(atemp ~ jday, data = dFrost, mean, subset = year < currentYear) # proportion of frost
 
 
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FrostDays.pdf")

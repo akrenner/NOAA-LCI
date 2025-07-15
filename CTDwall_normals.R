@@ -53,7 +53,7 @@ dir.create ("~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/", showWarnings = 
 if (0) {  ## not ready yet! XXX
 
   poNorm$Transect <- factor (stn$Line [match (poNorm$Match_Name, stn$Match_Name)])
-  for (tn in 1:length (levels (poNorm$Transect))) {
+  for (tn in seq_along(levels(poNorm$Transect))) {
     ## doubly-used stations:
     stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
     poNorm$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]

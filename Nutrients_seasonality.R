@@ -69,7 +69,7 @@ par (mfrow = c(2, 2))
 par (mar = c(3, 4.5, 3, 1))
 
 
-# for (i in 1:length (nutL)){
+# for (i in seq_along(nutL)){
 for (i in c(2, 1, 3, 4)) {  ## nicer arrangement
   nut$x <- nut [, which (names (nut) == nutL[i])]
 
@@ -94,7 +94,7 @@ for (i in c(2, 1, 3, 4)) {  ## nicer arrangement
     title (ylab = expression ("Concentration [" ~ mg ~ l^-1 ~ "]"))
   }
   abline (h = nut [1, which (names (nut) == nutL[i]) + 1], lty = "dotted", lwd = 2) # show detection limit
-  for (j in 1:length (stations)) {
+  for (j in seq_along(stations)) {
     lines (x ~ Date, nutS, subset = Station == stations [j], lwd = 3, col = brewer.pal(length (stations), "Set2")[j])
     lines (x ~ Date, nutD, subset = Station == stations [j], lwd = 3, col = brewer.pal(length (stations), "Set2")[j]
       , lty = "dashed")
@@ -177,7 +177,7 @@ nutL <- c ("Phosphate", "Ammonia", "Nitrate/Nitrite", "Chlorophyll")
 
 
 pdf ("~/tmp/LCI_noaa/media/EVOS/nutSWMP_historgrams.pdf")
-for (i in 1:length (nL)) {
+for (i in seq_along(nL)) {
   nusw$var <- nusw [, which (names (nusw) == nL[i])]
   hist (nusw$var, main = nL[i])
   abline (v = mean (nusw$var, na.rm = TRUE))
@@ -190,13 +190,13 @@ dev.off()
 
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutrients.pdf") ## keep it for QAQC
 par (mfrow = c(2, 2))
-for (j in 1:length (levels (nusw$station.depth))) {
+for (j in seq_along(levels (nusw$station.depth))) {
   nda <- subset (nusw, nusw$station.depth == levels (nusw$station.depth)[j])
-  for (i in 1:length (nL)) {
+  for (i in seq_along(nL)) {
     nda$var <- nda [, which (names (nda) == nL[i])]
     plot (var ~ jday, nda, type = "n", main = "")
     title (main = paste (nutL[i], levels (nusw$station.depth)[j]))
-    for (k in 1:length (levels (nda$year))) {
+    for (k in seq_along(levels (nda$year))) {
       yD <- subset (as.data.frame (nda), nda$year == levels (nda$year)[k])
       lines (var ~ jday, yD, col = k)
       #  lines (var~jday, subset (as.data.frame (nda), nda$year==levels (nda$year)[k]))
@@ -212,7 +212,7 @@ nusw <- nusw [order (nusw$datetimestamp), ]
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalSpagetti.pdf"
   , width = 8, height = 6)
 par (mfrow = c(2, 2))
-for (j in 1:length (nL)) {
+for (j in seq_along(nL)) {
   nusw$var <- nusw [, which (names (nusw) == nL[j])]
   n1 <- nusw
   ## QC
@@ -224,17 +224,17 @@ for (j in 1:length (nL)) {
   axis (1)
   axis (2)
   box()
-  for (k in 1:length (levels (nusw$year))) {
+  for (k in seq_along(levels (nusw$year))) {
     n2 <- subset (n1, year == levels (nusw$year)[k])
-    for (l in 1:length (levels (n2$depth))) {
+    for (l in seq_along(levels (n2$depth))) {
       n3 <- subset (n2, depth == levels (n2$depth)[l])
-      for (m in 1:length (levels (n3$station))) {
+      for (m in seq_along(levels (n3$station))) {
         lines (var ~ month, n3, lty = l, col = k)
       }
     }
   }
   if (j == 1) {
-    legend ("top", lty = 1:length (levels (n1$depth)), legend = levels (n2$depth), bty = "n")
+    legend ("top", lty = seq_along(levels (n1$depth)), legend = levels (n2$depth), bty = "n")
   }
 }
 dev.off()
@@ -247,7 +247,7 @@ dev.off()
 pdf ("~/tmp/LCI_noaa/media/EVOS/swmpNutSeasonalMeans.pdf"
   , width = 8, height = 6)
 par (mfrow = c(2, 2))  ## -- make individual plots
-for (j in 1:length (nL)) {
+for (j in seq_along(nL)) {
   nusw$var <- nusw [, which (names (nusw) == nL[j])]
   nSeason <- aggregate (var ~ month + depth + station, nusw, mean, na.rm = TRUE)
 
@@ -264,7 +264,7 @@ for (j in 1:length (nL)) {
   axis (2)
   box()
   abline (h = nut [1, which (names (nut) == nutL[j]) + 1], lty = "dotted")
-  for (k in 1:length (levels (nusw$station))) {
+  for (k in seq_along(levels (nusw$station))) {
     lines (var ~ month, subset (nSeason, depth == "deep" & station == levels (station)[k])
       , lty = "dashed", lwd = 2, col = k)
     lines (var ~ month, subset (nSeason, depth == "shallow" & station == levels (station)[k])

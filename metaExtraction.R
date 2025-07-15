@@ -60,7 +60,7 @@ fN <- list.files ("~/GISdata/LCI/CTD/4_aggregated/", "_LowerCookInlet_ProcessedC
 regStr <- "^([a-zA-Z.0]{3})([a-zA-Z0-9_.]+)"
 
 
-for (i in 1:length (fN)) {
+for (i in seq_along(fN)) {
   agF <- read.csv (fN [i], na.strings = "N/A")
   names (agF) <- gsub (regStr, "\\1", names (agF))
   names (agF)[ncol(agF)] <- "O2Sat"

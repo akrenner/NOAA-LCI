@@ -32,15 +32,15 @@ levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
 
 
 if (test) {
-  oceanvarC <- 1:length (oVarsF) #
+  oceanvarC <- seq_along(oVarsF) #
   oceanvarC <- 8
   oceanvarC <- c (1, 2)
-  # oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect))
+  # oceanvarC <- seq_along(oVarsF)
+  transectC <- seq_along(levels (poAll$Transect))
   transectC <- 6 # AlongBay
 } else {
-  oceanvarC <- 1:length (oVarsF)
-  transectC <- 1:length (levels (poAll$Transect)) # by transect. 5: T9
+  oceanvarC <- seq_along(oVarsF)
+  transectC <- seq_along(levels (poAll$Transect)) # by transect. 5: T9
   # transectC <- c(5,6,7)  ## T9, AB, ABext
 }
 
@@ -232,7 +232,7 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
     # }
 
     ## test-option
-    yearC <- 1:length (year.select)  ## or fix subset below
+    yearC <- seq_along(year.select)  ## or fix subset below
     for (iY in yearC) {
       ## for testing:
       # iY <- 7 # pick 2018
@@ -253,9 +253,9 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
 
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
-      #      if (test){sL <- 1:5}else{sL <-  1:length (levels (factor (physOc$transDate)))}
-      sL <-  1:length (levels (factor (physOc$transDate)))
-      # sL <-  1:length (levels (physOc$transDate))
+      #      if (test){sL <- 1:5}else{sL <-  seq_along(levels (factor (physOc$transDate)))}
+      sL <-  seq_along(levels (factor (physOc$transDate)))
+      # sL <-  seq_along(levels (physOc$transDate))
       for (iS in sL) {              # cycle through individual survey
         # iS <- 1  # for testing
         cat (iS, " ")
@@ -307,16 +307,16 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
             if (length (levels (xC$File.Name)) != length (levels (posF))) {
               ## there are duplicate stations
               ## identify duplicate file names; remove time outlier
-              nFN <- sapply (1:length (levels (posF)), function(iQ) {
+              nFN <- sapply (seq_along(levels (posF)), function(iQ) {
                 length (unique (subset (xC, posF == levels (posF)[iQ])$File.Name))
               })
               mT <- mean (xC$isoTime)
 
-              for (iQ in 1:length (levels (posF))) {
+              for (iQ in seq_along(levels (posF))) {
                 sec <- subset (xC, posF == levels (posF)[iQ])
                 sec$File.Name <- factor (sec$File.Name)
                 if (nFN [iQ] > 1) {
-                  bF <- sapply (1:length (levels (sec$File.Name)), function(iQ) {
+                  bF <- sapply (seq_along(levels (sec$File.Name)), function(iQ) {
                     cx <- subset (sec, File.Name == levels (sec$File.Name)[iQ])
                     # qal <- nrow (cx)
                     qal <- 1 / abs (as.numeric (difftime (mT, cx$isoTime [1], "minutes")))
@@ -366,7 +366,7 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
 
           ## test, QAQC
           if (0) {
-            sapply (1:length (xCo@data$station), function(i) {
+            sapply (seq_along(xCo@data$station), function(i) {
               #  xCo@data$station[[i]]@data$temperature
               xCo@data$station[[i]]@metadata$stationId
               # xCo@data$station[[i]]@metadata$waterDepth
@@ -421,7 +421,7 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
         , side = 2, line = 1.4, outer = TRUE, cex = omcex
         , at = 1 - ((iY - 1) %% yearPP) / yearPP - 0.5 / yearPP
       )
-      for (n in 1:length (omText)) {
+      for (n in seq_along(omText)) {
         mtext (text = omText [n], side = 3, line = -0.5, outer = TRUE, cex = omcex
           , at = (n - 1) / length(omText) + 0.5 / length(omText))
       }

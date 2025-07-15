@@ -151,10 +151,10 @@ x <- data.frame (stationEv, stationErr) [which (stationErr$posError > 1852 * 1.0
 if (nrow (x) > 3) {
   ## notebook positions that deviate from original positions -> Jim to check
   print ("Stations with large positional error, exported to badDBpos.csv")
-  print (x [order (x$timeStamp)[1:nrow (x)],
+  print (x [order (x$timeStamp)[seq_len(nrow (x))],
     which (names (x) %in% c("timeStamp", "Match_Name", "nm"))])
   # c(21,23,24,25,26,27,29,30, 31, 28, 7)])
-  write.csv(x [order (x$timeStamp)[1:nrow (x)], c(21, 23, 24, 25, 26, 27, 29, 30, 31, 28, 7)]
+  write.csv(x [order (x$timeStamp)[seq_len(nrow (x))], c(21, 23, 24, 25, 26, 27, 29, 30, 31, 28, 7)]
     , file = paste0(dirL [[3]], "badDBPos.csv"), row.names = FALSE)
 }
 rm (x)
@@ -249,7 +249,7 @@ fixN <- c ("2012_04-26_T9_S05_cast299.cnv", "2012_04-26_T9_S06_cast299.cnv"
 fixT <- as.POSIXct (paste ("2012-04-26"
   , c ("18:50", "18:58", "19:20", "19:30", "19:39", "19:57")
   , "AKDT"))
-for (i in 1:length (fixN)) {
+for (i in seq_along(fixN)) {
   fileDB$localTime [which (fileDB$file == fixN [i])] <- fixT [i]
 }
 rm (fixN, fixT, i, tEr)
@@ -262,7 +262,7 @@ save.image ("~/tmp/LCI_noaa/cache/CNVy3.RData")
 ## run the actual matching by time stamps ##
 ############################################
 # dbLog <- data.frame (i = numeric(), fn = character(), err = numeric()) # for QAQC
-for (i in 1:nrow (fileDB)) { # could/should use sapply
+for (i in seq_len(nrow(fileDB))) { # could/should use sapply
   fDt <- fileDB$localTime [i]
   dT <- as.numeric (difftime (fDt, stationEv$timeStam, units = "mins"))
   tMatch <- which.min (ifelse (dT > 0, dT, -1 * dT + 5)) ## station recorded before CTD. find smallest positive value (with penalty)
@@ -318,7 +318,7 @@ fnDate <- strsplit (fnDate, "-")
 ## find bad file names -- loop over names
 fnDDF <- data.frame (y = integer(), m = integer(), d = integer()
   , T = character(), S = character())
-for (i in 1:length (fnDate)) {
+for (i in seq_along(fnDate)) {
   fnDDF [i, ] <- fnDate [[i]][1:5]
 }
 # fnDate <- do.call (rbind, fnDate)  # fails
@@ -364,7 +364,7 @@ summary (fileDB$time [is.na (fileDB$match_time)]) # distribution of missing matc
 ############################################
 ## match by date and station -- to find time zone errors and fix remainders
 ## use date from CTD rather than file name. Use T-station from file name
-fileDB$matchN <- sapply (1:nrow (fileDB), FUN = function(i) {
+fileDB$matchN <- sapply (seq_len(nrow(fileDB)), FUN = function(i) {
   stn <- gsub ("-", "_", fileDB$file [i])
   stn <- strsplit(stn, "_")[[1]] # returned as list
   stnL <- tolower (stn)
@@ -396,7 +396,7 @@ fileDB$matchN <- sapply (1:nrow (fileDB), FUN = function(i) {
   match (fixFileN, nbName)
 })
 ## deal with multiple matches -- all from subbays and one-offs
-y <- sapply (1:nrow (fileDB), function(i) {length (fileDB$matchN [[i]])})
+y <- sapply (seq_len(nrow(fileDB)), function(i) {length (fileDB$matchN [[i]])})
 fileDB$file [which (y > 1)]  ## multiple matches are all subbays and similar one-offs
 is.na (fileDB$matchN)[which (y > 1)] <- TRUE
 fileDB$matchN <- unlist (fileDB$matchN)
@@ -423,7 +423,7 @@ fileDB$chsm <- ifelse (is.na (fileDB$match_time), 0, 2) +
 fileDB$chsm <- with (fileDB, ifelse ((chsm == 3) & (matchN != match_time), -1, chsm))
 fileDB$chsm <- factor (fileDB$chsm)
 summary (fileDB$chsm)
-row.names(fileDB) <- 1:nrow (fileDB) # reset for troubleshooting
+row.names(fileDB) <- seq_len(nrow(fileDB)) # reset for troubleshooting
 ## 1. check that existing matches are correct
 ##   chsm == -1: conflict -- trust file name IF time-error small  (still resolve correct time)
 ##   chsm == 0: missing notebook?? -- use station-list only
@@ -462,9 +462,9 @@ fileDB$consensNo <- fileDB$match_time
 
 ## hundreds -- need a different fix -- looking for which issue again??
 if (0) {
-  for (j in 1:nrow (x)) {  ## hundreds -- need a different fix
-    i <- as.numeric (row.names(x)[j])
-    row.names(x) <- 1:nrow (x)
+  for (j in seq_len(nrow(x))) {  ## hundreds -- need a different fix
+    i <- as.numeric(row.names(x)[j])
+    row.names(x) <- seq_len(nrow(x))
     x [, c(6, 2, 3, 4, 5)]
     cat ("\n\n###\n", j, "\n")
     print (x$localTime [j]) # ctd meta
@@ -501,7 +501,7 @@ rm (fDt, tS)
 ## lots! 304 files!!
 print ("files with matching time stamps (duplicates)")
 dF <- fileDB [which (duplicated(fileDB$localTime)), ]
-dubFiles <- unlist (lapply (1:nrow (dF), FUN = function(i) {
+dubFiles <- unlist (lapply (seq_len(nrow(dF)), FUN = function(i) {
   fileDB [which (fileDB$localTime == dF$localTime [i]), c(2, 6, 9)]
 }))
 print (dubFiles)
@@ -512,7 +512,7 @@ if (0) {
   fX <- fileDB
   cX <- CTD1
   if (length (dubFiles) > 0) {
-    for (i in 1:length (dubFiles)) { ## remove one of dubFiles-pair from CDT1
+    for (i in seq_along(dubFiles)) { ## remove one of dubFiles-pair from CDT1
       killCand <- fileDB$file [which (fileDB$localTime == dF$localTime [i])]
       ## pick best file to drop
       killName <- killCand [2] # default to keeping 2nd name
@@ -552,7 +552,7 @@ if (0) { ## MATCH file names to database --- WHAT to do about doubles??? (same s
 
   ## grep-link with actual cnv file-names
   fNEnd <- unlist (strsplit (fN, "/"))
-  fNEnd <- fNEnd [which ((1:length (fNEnd)) %% 3 == 0)]
+  fNEnd <- fNEnd [which ((seq_along(fNEnd)) %% 3 == 0)]
   ## problem: dates in filenames are inconsistent: 2018_10-17_T9_S08_cast072.hex vs 04_24_2019_AlongBay_
 
   ## test with small example first
@@ -560,7 +560,7 @@ if (0) { ## MATCH file names to database --- WHAT to do about doubles??? (same s
 
 
   ## reverse -- identify surveys in notebook with no matching CTD-CNV file
-  for (i in 1:length (fNDB)) { # move to apply
+  for (i in seq_along(fNDB)) { # move to apply
     tS <- as.POSIXct(stationEv$timeStamp)[i]
     stDB <- with (stationEv [i, ], paste0 (ifelse (Transect %in% as.character (3:9), "T", "")
       , Transect

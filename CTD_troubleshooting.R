@@ -6,8 +6,8 @@ fL <- list.files("~/GISdata/LCI/CTD-processing/Workspace/", pattern = "2018_06-2
   , full.names = TRUE)
 
 
-aD <- sapply (1:length (fL), function(i) {readLines(fL [i], n = 200)})
-mt <- sapply (1:ncol (aD), function(i) {grep ("^\\* cast", aD [, i], value = TRUE)})
+aD <- sapply (seq_along(fL), function(i) {readLines(fL [i], n = 200)})
+mt <- sapply (seq_len(ncol(aD)), function(i) {grep ("^\\* cast", aD [, i], value = TRUE)})
 
 strt <- as.numeric (substr(mt, 41, 46))
 stp <- as.numeric (substr(mt, 51, 56))

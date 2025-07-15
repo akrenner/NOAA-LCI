@@ -72,7 +72,7 @@ tRange <- function(tstmp, station = 9455500) {
     dt <- data.table (tide, )
   }
 
-  range <- sapply (1:length (tstmp), FUN = function(i) {
+  range <- sapply (seq_along(tstmp), FUN = function(i) {
     h <- subset (tide, Type == "H")
     H <- h$Prediction [which.min (abs (tstmp[i] - h$Date.Time))]
     l <- subset (tide, Type == "L")
@@ -191,7 +191,7 @@ if (0) {
   aTide$range <- aggregate (range ~ year, data = rTble, FUN = max, subset = year > 2009)$range
   aTide$rDate <- as.POSIXct(nrow (aTide))
 
-  for (i in 1:nrow (aTide)) {
+  for (i in seq_len(nrow(aTide))) {
     aTide$date  [i] <- rTble$date [which (rTble$tSpeed == aTide$tSpeed [i])]
     aTide$rDate [i] <- rTble$date [which (rTble$range == aTide$range [i])]
   }
