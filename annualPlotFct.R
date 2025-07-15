@@ -800,7 +800,6 @@ getNOAA <- function (buoyID="46108", set = "stdmet", clearcache=FALSE){  # defau
     noaaS <- servers() |>
       filter(grepl ("NOAA", name)) |>
       as.data.frame()
-
     for (i in seq_len (nrow (noaaS))){
       cat ("\n\n", i, noaaS$short_name [i], "\n")
       print (try (ed_search (query="buoy", url=noaaS$url [i])))
