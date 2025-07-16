@@ -92,7 +92,7 @@ GISF <- "~/GISdata/LCI/"
 tmpF <- "~/tmp/LCI_noaa/"
 mediaF <- paste0 (tmpF, "media/")
 cacheF <- paste0 (tmpF, "cache/")
-dirL <- c (GISF=GISF, tmpF=tmpF, mediaF=mediaF, cacheF=cacheF)
+dirL <- c (GISF = GISF, tmpF = tmpF, mediaF = mediaF, cacheF = cacheF)
 rm (GISF, tmpF, mediaF, cacheF)
 x <- lapply (dirL, dir.create, showWarnings = FALSE, recursive = TRUE); rm (x)
 
@@ -124,31 +124,31 @@ set.seed(7)
 
 require (oce)
 ## read in processed files of individual CTD casts
-fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names=TRUE, ignore.case=TRUE)  # break tmp-file reliance?
+fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names = TRUE, ignore.case = TRUE)  # break tmp-file reliance?
 # fNf <- list.files ("~/GISdata/LCI/CTD-processing/", ".hex", full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 
 
 ## cut-out bad files for now -- fix this later -- why bad?
 badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't cause major trouble
-           , "2012_10-29_t4_s07b_cast065_4141"
-           , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
-           , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
-           , "2013_04-19_t6_s05b_cast076_5028"  ## same as above?!
-           , "2013_04-20_t3_s05_cast117_5028"
-           , "2015_06-26_t9_s01b_cast117_5028"
-           , "2015_06-26_t9_s06b_cast111_5028"
-           , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"
-           )
+  , "2012_10-29_t4_s07b_cast065_4141"
+  , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
+  , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
+  , "2013_04-19_t6_s05b_cast076_5028"  ## same as above?!
+  , "2013_04-20_t3_s05_cast117_5028"
+  , "2015_06-26_t9_s01b_cast117_5028"
+  , "2015_06-26_t9_s06b_cast111_5028"
+  , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"
+)
 ## casts that crash readCNV()
 badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
-           , "2012_10-28_t6_s23_cast006_4141", badF)
+  , "2012_10-28_t6_s23_cast006_4141", badF)
 
-for (i in 1:length (badF)){
-  if (length (grep (badF [i], fNf)) > 0){
+for (i in seq_along(badF)) {
+  if (length (grep(badF [i], fNf)) > 0) {
     fNf <- fNf [-grep (badF [i], fNf)]
   }
 }
-rm (badF)
+rm(badF)
 fN <- gsub ("^.*/", "", fNf)
 
 
@@ -157,10 +157,10 @@ fN <- gsub ("^.*/", "", fNf)
 ## find dates to link to notebook DB
 ## deem file-names inherently unreliable and go with CTD metadata-dates instead
 ## match time-stamps to closest timestamps in notebooks and hope for the best
-getMeta <- function (i){  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
+getMeta <- function(i) {  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
   require ("oce")
   ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
-  if (class (ctdF) == "try-error"){
+  if (class (ctdF) == "try-error") {
     print (i)
     print (fNf[i])
     ## as of 2021-02-02, this affects 7 casts could address this in hex-conversion or drop them
@@ -169,29 +169,29 @@ getMeta <- function (i){  # slow and inefficient to read files twice, once just 
     cT <- NA
     instSerNo <- NA
     depth_bottom <- NA
-  }else{
+  } else {
     cT <- ctdF@metadata$startTime   # fix time zone later, because import is slow
     instSerNo <- trimws (ctdF@metadata$serialNumberTemperature) # serial number of CTD instrument
     depth_bottom <- ctdF@metadata$waterDepth
   }
   outDF <- data.frame (time = cT
-                       , file = fN [i], path = fNf [i]
-                       , instSerNo, depth_bottom
+    , file = fN [i], path = fNf [i]
+    , instSerNo, depth_bottom
   )
   return (outDF)
 }
 
 
 
-if (runParallel){
+if (runParallel) {
   require ("parallel") ## revert to require ("parallel")
-  cl <- makeCluster (detectCores()-1, type="PSOCK")
+  cl <- makeCluster (detectCores() - 1, type = "PSOCK")
   # registerDoParallel (cl)
-  clusterExport (cl=cl, list ("getMeta", "fNf", "read.ctd", "fN"))
-  fileDB <- parLapply (cl=cl, seq_along (fNf), fun=getMeta)
+  clusterExport (cl = cl, list ("getMeta", "fNf", "read.ctd", "fN"))
+  fileDB <- parLapply (cl = cl, seq_along (fNf), fun = getMeta)
   ## shut down cluster farther down
-}else{
-  fileDB <- lapply (1:length (fNf), FUN = getMeta)
+} else {
+  fileDB <- lapply (seq_along(fNf), FUN = getMeta)
 }
 
 rm (getMeta)
@@ -211,14 +211,14 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 ## build flat table combining data and some metadata
 
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
-readCNV <- function (i){
+readCNV <- function(i) {
   require (oce)
   ctdF <- try (read.ctd (fNf [i]
-                         # , columns = "define name of dV/dT"
-                         , deploymentType = "profile"
-                         ))
-  if (class (ctdF) == "try-error"){
-  } #else{
+    # , columns = "define name of dV/dT"
+    , deploymentType = "profile"
+  ))
+  if (class (ctdF) == "try-error") {
+  } # else{
   ## more CTD import processing steps
   ## zero-depth
   ## cut-out surface, up-cast?
@@ -230,68 +230,68 @@ readCNV <- function (i){
   # ?plotScan
 
   ## fix-up missing fields
-  meta <- function (x){rep (x, length (ctdF@data$temperature))}
-  if ("upoly" %in% names (ctdF@data)){
+  meta <- function(x) {rep (x, length (ctdF@data$temperature))}
+  if ("upoly" %in% names (ctdF@data)) {
     names (ctdF@data)[which (names (ctdF@data) == "upoly")] <- "turbidity"
   }
-    if (!"beamAttenuation" %in% names (ctdF@data)){
-      ctdF@data$beamAttenuation <- meta (NA)
-      ctdF@data$beamTransmission <- meta (NA)
-    }
-  if (!"turbidity" %in% names (ctdF@data)){
+  if (!"beamAttenuation" %in% names (ctdF@data)) {
+    ctdF@data$beamAttenuation <- meta (NA)
+    ctdF@data$beamTransmission <- meta (NA)
+  }
+  if (!"turbidity" %in% names (ctdF@data)) {
     ctdF@data$turbidity <- meta (NA)
   }
   ## temporary fix for 8138 until par translation is working XXXX
-  if (!"par" %in% names (ctdF@data)){
+  if (!"par" %in% names (ctdF@data)) {
     ctdF@data$par <- meta (NA)
   }
 
   # print (ctdF@metadata$units)
   cDFo <- data.frame (File.Name = meta (gsub (".cnv$", "", fN [i]))
-                      , path = meta (fNf [i])
-                      #, timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
-                      , depth_bottom = meta (ctdF@metadata$waterDepth)
-                      #, CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
-                      , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
-                      , depth = ctdF@data$depth
-                      , oxygen_umol_kg = ctdF@data$oxygen4 # umol/kg
-                      , Oxygen_SBE.43..mg.l. = ctdF@data$oxygen
-                      , O2percsat = ctdF@data$oxygen3 # SBE43 %
-                      , O2GGsat_umol_kg = ctdF@data$oxygen8
-                      , par = ctdF@data$par
-                      , salinity = ctdF@data$salinity
-                      , temperature = ctdF@data$temperature
-                      , pressure = ctdF@data$pressure
-                      , nitrogen = ctdF@data$nitrogenSaturation  # mg/l
-                      , fluorescence = ctdF@data$fluorescence
-                      , turbidity = ctdF@data$turbidity
-                      , beamAttenuation = ctdF@data$beamAttenuation
-                      , beamTransmission = ctdF@data$beamTransmission
+    , path = meta (fNf [i])
+    # , timestamp = meta (ctdF@metadata$startTime)  ## NOT needed here -- cut!
+    , depth_bottom = meta (ctdF@metadata$waterDepth)
+    # , CTDserial = trimws (meta (ctdF@metadata$serialNumberTemperature))
+    , density = ctdF@data$sigmaTheta # use sigmaTheta preferable when comparing samples from different depth
+    , depth = ctdF@data$depth
+    , oxygen_umol_kg = ctdF@data$oxygen4 # umol/kg
+    , Oxygen_SBE.43..mg.l. = ctdF@data$oxygen
+    , O2percsat = ctdF@data$oxygen3 # SBE43 %
+    , O2GGsat_umol_kg = ctdF@data$oxygen8
+    , par = ctdF@data$par
+    , salinity = ctdF@data$salinity
+    , temperature = ctdF@data$temperature
+    , pressure = ctdF@data$pressure
+    , nitrogen = ctdF@data$nitrogenSaturation  # mg/l
+    , fluorescence = ctdF@data$fluorescence
+    , turbidity = ctdF@data$turbidity
+    , beamAttenuation = ctdF@data$beamAttenuation
+    , beamTransmission = ctdF@data$beamTransmission
   )
   cDF <- subset (cDFo, density > 0) ## still necessary?
-  if (0){
+  if (0) {
     ## depth bins
-    cDo <- subset (cDF, density >0)
+    cDo <- subset (cDF, density > 0)
     depthBin <- factor (floor (cDFo$depth))
-    cDF <- aggregate (.~File.Name+depthBin, cDFo, fun=mean, na.rm=TRUE)
+    cDF <- aggregate (. ~ File.Name + depthBin, cDFo, fun = mean, na.rm = TRUE)
   }
   return (cDF)
 }
 
 
-rCNV <- function (i){
+rCNV <- function(i) {
   x <- try (readCNV (i))
-  if (class (x) == "try-error"){
+  if (class (x) == "try-error") {
     cat (i, fNf [i], "\n\n")
-  }else{return (x)}
+  } else {return (x)}
 }
 
-if (runParallel){
-  clusterExport(cl=cl, list ("rCNV", "fNf", "readCNV"))
-  CTDx <- parLapply (cl=cl, seq_along (fNf), rCNV)
+if (runParallel) {
+  clusterExport(cl = cl, list ("rCNV", "fNf", "readCNV"))
+  CTDx <- parLapply (cl = cl, seq_along (fNf), rCNV)
   stopCluster (cl)
   rm (cl)
-}else{
+} else {
   CTDx <- lapply (seq_along (fNf), rCNV)
 }
 CTD1 <- as.data.frame (do.call (rbind, CTDx))
@@ -330,8 +330,8 @@ fileDB$FN_transect <- substring (fileDB$file, 12, 15) %>%
 ## station number
 fileDB$FN_station <- fileDB$file %>%
   str_replace_all("[-,_]", " ") %>%
-  word (start=5L) %>%
-  str_replace_all ("^(spgrm|sptgm|sptgr|ptgm|ptgr|pgrm)", "PGRM")%>%
+  word (start = 5L) %>%
+  str_replace_all ("^(spgrm|sptgm|sptgr|ptgm|ptgr|pgrm)", "PGRM") %>%
   str_replace ("spogi|pogibshi|pogipoint|pt.pogi|pogi", "POGI") %>%
   str_replace ("^(skb|kb|s)([0-9])", "\\2") %>%  # AlongBay variations
   str_replace ("^jbay", "jakolof") %>%
@@ -343,13 +343,13 @@ fileDB$FN_station <- fileDB$file %>%
 
 ## fixing lots of small one-off casts
 sbbStns <- c ("bear", "chinapoot", "halibut", "jakolof", "kasitsna", "peterson"
-              , "sadie", "seldovia", "tutka")
-for (i in seq_along(sbbStns)){
+  , "sadie", "seldovia", "tutka")
+for (i in seq_along(sbbStns)) {
   fileDB$FN_transect [grep (toupper(sbbStns [i])
-                            , toupper (fileDB$FN_station))] <- "Subbay" # some are "AlongBay"
+    , toupper (fileDB$FN_station))] <- "Subbay" # some are "AlongBay"
   fileDB$FN_station <- str_replace_all (toupper (fileDB$FN_station)
-                                        , paste0 ("(", toupper (sbbStns [i]), ")([A-D])")
-                                        , paste0 (tools::toTitleCase (sbbStns [i]), "_\\2"))
+    , paste0 ("(", toupper (sbbStns [i]), ")([A-D])")
+    , paste0 (tools::toTitleCase (sbbStns [i]), "_\\2"))
 }
 rm (sbbStns, i)
 # summary (factor (fileDB$FN_transect))
@@ -369,14 +369,14 @@ fileDB$FN_cast <- fileDB$file %>%
 
 ## main station list
 stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
-fileDB$FN_matchname <- with (fileDB, paste (FN_transect, FN_station, sep="_")) %>%
+fileDB$FN_matchname <- with (fileDB, paste (FN_transect, FN_station, sep = "_")) %>%
   str_replace_all("Subbay_", "")
 fileDB$match <- match (toupper (fileDB$FN_matchname), toupper (stnMaster$Match_Name))
 ## alert if there are any new mismatches
 badM <- which (is.na (fileDB$match))
-if (length (badM) != 59){
+if (length (badM) != 59) {
   cat ("\n\n##\n## The following casts don't have a match in main station table:\n")
-  print (fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))])
+  print (fileDB [badM, which (names (fileDB) %in% c("file", "FN_matchname"))])
   stop ("The number of non-matched CTD casts has changed from 59\n\n")
 }
 rm (badM)
@@ -392,17 +392,17 @@ rm (badM)
 
 # mdata <- .....    # cook-up from notebooks
 mdata <- with (fileDB, data.frame (isoTime = as.POSIXct (paste (format (FN_date, "%Y-%m-%d")  # mix filename and metadata
-                                                                , format (time, "%H:%M:%S"))) # localTime
-                                   , File.Name = gsub (".cnv", "", file, fixed = TRUE)
-                                   , Date = format (FN_date,  "%Y-%m-%d") # format (localTime, "%Y-%m-%d") #??
-                                   , Transect = FN_transect               # stationEv$Transect [consensNo]
-                                   , Station = FN_station                 # stationEv$Station [consensNo]
-                                   , Time = format (time, "%H:%M")        # CTD instrument time
-                                   , CTD.serial = instSerNo
-                                   , latitude_DD =  stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LatNotes [consensNo]
-                                   , longitude_DD = stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LonNotes [consensNo]
-                                   , Bottom.Depth = depth_bottom # rep (NA, length (consensNo))## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
-                                   , comment="" # , comments = stationEv$Comments [consensNo]
+  , format (time, "%H:%M:%S"))) # localTime
+, File.Name = gsub (".cnv", "", file, fixed = TRUE)
+, Date = format (FN_date,  "%Y-%m-%d") # format (localTime, "%Y-%m-%d") #??
+, Transect = FN_transect               # stationEv$Transect [consensNo]
+, Station = FN_station                 # stationEv$Station [consensNo]
+, Time = format (time, "%H:%M")        # CTD instrument time
+, CTD.serial = instSerNo
+, latitude_DD =  stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LatNotes [consensNo]
+, longitude_DD = stnMaster$Lat_decDegree [match (FN_matchname, stnMaster$Match_Name)] # stationEv$LonNotes [consensNo]
+, Bottom.Depth = depth_bottom # rep (NA, length (consensNo))## put into FileDB from metatdata/masterstation -- should also be in stationEv, but isn't
+, comment = "" # , comments = stationEv$Comments [consensNo]
 ))
 summary (mdata)
 # summary (fileDB$consensNo)
@@ -411,16 +411,16 @@ summary (mdata)
 ## FIX here: lat-long: all NA!
 
 
-  ## glue it all together: add transect, station, lat, lon to CTD1
-  # stationMatch <- stationEv [match (),]
-  # fileDB <- cbind (fileDB, )
-  #
-  #
-  # physOc <- with (CTD1, data.frame (timestamp, File.Name,
-  #                                   stationEv$Station
-  #                                   )
+## glue it all together: add transect, station, lat, lon to CTD1
+# stationMatch <- stationEv [match (),]
+# fileDB <- cbind (fileDB, )
+#
+#
+# physOc <- with (CTD1, data.frame (timestamp, File.Name,
+#                                   stationEv$Station
+#                                   )
 
-if (0){
+if (0) {
   ## read in metadata and match based on File.Name
   ## metadata currently harvested from aggregated files.
   ## In future, should be kept from field-notes DB
@@ -435,8 +435,8 @@ length (badFileNames)                   # < 26 -- not too bad
 print (badFileNames)
 rm (badFileNames)
 
-physOc <- data.frame (mdata [xmatch,]
-                      , CTD1 [,which (names (CTD1) == "density"):ncol (CTD1)]) # watch out for isoTime
+physOc <- data.frame (mdata [xmatch, ]
+  , CTD1 [, which (names (CTD1) == "density"):ncol (CTD1)]) # watch out for isoTime
 # physOc <- data.frame (mdata [xmatch,2:ncol (mdata)], CTD1)
 rm (xmatch, CTD1, mdata)
 
@@ -445,30 +445,30 @@ rm (xmatch, CTD1, mdata)
 ## DANGEROUS -- REVERSE?!?
 print (names (physOc))
 nNames <- c ("isoTime"
-                     , "File.Name", "Date", "Transect", "Station"
-                     , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
-                     , "Bottom.Depth", "comments"
-                     # , "timestamp"
-                     # , "depth_bottom" # , "CTDserial"
-                     , "Density_sigma.theta.kg.m.3"
-                     , "Depth.saltwater..m."
-                     , "Oxygen_umol_kg"  # verify which is exported!!
-                     , "Oxygen_SBE.43..mg.l."
-                     , "Oxygen_sat.perc."
-                     , "Oxygen.Saturation.Garcia.Gordon.umol_kg"
-                     , "PAR.Irradiance"
-                     , "Salinity_PSU"
-                     , "Temperature_ITS90_DegC"
-                     , "Pressure..Strain.Gauge..db."
-                     , "Nitrogen.saturation..mg.l."
-                     , "Fluorescence_mg_m3"
-                     , "turbidity"
-                     , "beamAttenuation"
-                     , "beamTransmission"
+  , "File.Name", "Date", "Transect", "Station"
+  , "Time", "CTD.serial", "latitude_DD", "longitude_DD"
+  , "Bottom.Depth", "comments"
+  # , "timestamp"
+  # , "depth_bottom" # , "CTDserial"
+  , "Density_sigma.theta.kg.m.3"
+  , "Depth.saltwater..m."
+  , "Oxygen_umol_kg"  # verify which is exported!!
+  , "Oxygen_SBE.43..mg.l."
+  , "Oxygen_sat.perc."
+  , "Oxygen.Saturation.Garcia.Gordon.umol_kg"
+  , "PAR.Irradiance"
+  , "Salinity_PSU"
+  , "Temperature_ITS90_DegC"
+  , "Pressure..Strain.Gauge..db."
+  , "Nitrogen.saturation..mg.l."
+  , "Fluorescence_mg_m3"
+  , "turbidity"
+  , "beamAttenuation"
+  , "beamTransmission"
 )
-if (length (nNames) == ncol (physOc)){
+if (length (nNames) == ncol (physOc)) {
   names (physOc) <- nNames
-}else{stop ("Lenght of new names does not match number of columns in physOc\n")}
+} else {stop ("Lenght of new names does not match number of columns in physOc\n")}
 # print (summary (physOc))
 rm (nNames)
 
@@ -477,8 +477,8 @@ rm (nNames)
 cat ("\n\n#\n#\n#\n# ")
 print (round (difftime(Sys.time(), sTime)))
 cat ("\n# ", format (Sys.time(), format = "%Y-%m-%d %H:%M"
-                            , usetz = FALSE)
-     , " \n# \n# End of CTD_cnv-Import.R\n#\n#\n")
+  , usetz = FALSE)
+, " \n# \n# End of CTD_cnv-Import.R\n#\n#\n")
 rm (sTime)
 
 save.image ("~/tmp/LCI_noaa/cache/CNV2.RData")   ## to be used by CTD_cleanup.R

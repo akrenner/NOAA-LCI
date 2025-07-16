@@ -8,7 +8,6 @@ f3D <- f2D
 
 f2D <- as.POSIXct(f2D, tryFormats = c("%Y_%m-%d"))
 
-tst$Date <- strftime( f2D,  format = "%m/%d/%Y")
+tst$Date <- strftime(f2D,  format = "%m/%d/%Y")
 write.csv (tst, file = "~/GISdata/LCI/CTD/2017-21/4_ctd-aggregated-files/2018_Aggregatedfiles2.csv"
-           , row.names = FALSE, na = "")
-
+  , row.names = FALSE, na = "")

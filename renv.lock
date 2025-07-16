@@ -1029,10 +1029,10 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.14",
+      "Version": "1.1.0",
       "Source": "Repository",
       "Title": "Seamless R and C++ Integration",
-      "Date": "2025-01-11",
+      "Date": "2025-07-01",
       "Authors@R": "c(person(\"Dirk\", \"Eddelbuettel\", role = c(\"aut\", \"cre\"), email = \"edd@debian.org\", comment = c(ORCID = \"0000-0001-6419-907X\")), person(\"Romain\", \"Francois\", role = \"aut\", comment = c(ORCID = \"0000-0002-2444-4226\")), person(\"JJ\", \"Allaire\", role = \"aut\", comment = c(ORCID = \"0000-0003-0174-9868\")), person(\"Kevin\", \"Ushey\", role = \"aut\", comment = c(ORCID = \"0000-0003-2880-7407\")), person(\"Qiang\", \"Kou\", role = \"aut\", comment = c(ORCID = \"0000-0001-6786-5453\")), person(\"Nathan\", \"Russell\", role = \"aut\"), person(\"Iñaki\", \"Ucar\", role = \"aut\", comment = c(ORCID = \"0000-0001-6403-5550\")), person(\"Doug\", \"Bates\", role = \"aut\", comment = c(ORCID = \"0000-0001-8316-9503\")), person(\"John\", \"Chambers\", role = \"aut\"))",
       "Description": "The 'Rcpp' package provides R functions as well as C++ classes which offer a seamless integration of R and C++. Many R data types and objects can be mapped back and forth to C++ equivalents which facilitates both writing of new code as well as easier integration of third-party libraries. Documentation about 'Rcpp' is provided by several vignettes included in this package, via the 'Rcpp Gallery' site at <https://gallery.rcpp.org>, the paper by Eddelbuettel and Francois (2011, <doi:10.18637/jss.v040.i08>), the book by Eddelbuettel (2013, <doi:10.1007/978-1-4614-6868-4>) and the paper by Eddelbuettel and Balamuta (2018, <doi:10.1080/00031305.2017.1375990>); see 'citation(\"Rcpp\")' for details.",
       "Imports": [
@@ -1052,17 +1052,17 @@
       "RoxygenNote": "6.1.1",
       "Encoding": "UTF-8",
       "NeedsCompilation": "yes",
-      "Author": "Dirk Eddelbuettel [aut, cre] (<https://orcid.org/0000-0001-6419-907X>), Romain Francois [aut] (<https://orcid.org/0000-0002-2444-4226>), JJ Allaire [aut] (<https://orcid.org/0000-0003-0174-9868>), Kevin Ushey [aut] (<https://orcid.org/0000-0003-2880-7407>), Qiang Kou [aut] (<https://orcid.org/0000-0001-6786-5453>), Nathan Russell [aut], Iñaki Ucar [aut] (<https://orcid.org/0000-0001-6403-5550>), Doug Bates [aut] (<https://orcid.org/0000-0001-8316-9503>), John Chambers [aut]",
+      "Author": "Dirk Eddelbuettel [aut, cre] (ORCID: <https://orcid.org/0000-0001-6419-907X>), Romain Francois [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>), JJ Allaire [aut] (ORCID: <https://orcid.org/0000-0003-0174-9868>), Kevin Ushey [aut] (ORCID: <https://orcid.org/0000-0003-2880-7407>), Qiang Kou [aut] (ORCID: <https://orcid.org/0000-0001-6786-5453>), Nathan Russell [aut], Iñaki Ucar [aut] (ORCID: <https://orcid.org/0000-0001-6403-5550>), Doug Bates [aut] (ORCID: <https://orcid.org/0000-0001-8316-9503>), John Chambers [aut]",
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
       "Repository": "CRAN"
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "14.4.3-1",
+      "Version": "14.6.0-1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "'Rcpp' Integration for the 'Armadillo' Templated Linear Algebra Library",
-      "Date": "2025-05-21",
+      "Date": "2025-07-02",
       "Authors@R": "c(person(\"Dirk\", \"Eddelbuettel\", role = c(\"aut\", \"cre\"), email = \"edd@debian.org\", comment = c(ORCID = \"0000-0001-6419-907X\")), person(\"Romain\", \"Francois\", role = \"aut\", comment = c(ORCID = \"0000-0002-2444-4226\")), person(\"Doug\", \"Bates\", role = \"aut\", comment = c(ORCID = \"0000-0001-8316-9503\")), person(\"Binxiang\", \"Ni\", role = \"aut\"), person(\"Conrad\", \"Sanderson\", role = \"aut\", comment = c(ORCID = \"0000-0002-0049-4501\")))",
       "Description": "'Armadillo' is a templated C++ linear algebra library (by Conrad Sanderson) that aims towards a good balance between speed and ease of use. Integer, floating point and complex numbers are supported, as well as a subset of trigonometric and statistics functions. Various matrix decompositions are provided through optional integration with LAPACK and ATLAS libraries.  The 'RcppArmadillo' package includes the header files from the templated 'Armadillo' library. Thus users do not need to install 'Armadillo' itself in order to use 'RcppArmadillo'. From release 7.800.0 on, 'Armadillo' is licensed under Apache License 2; previous releases were under licensed as MPL 2.0 from version 3.800.0 onwards and LGPL-3 prior to that; 'RcppArmadillo' (the 'Rcpp' bindings/bridge to Armadillo) is licensed under the GNU GPL version 2 or later, as is the rest of 'Rcpp'.",
       "License": "GPL (>= 2)",
@@ -2924,7 +2924,7 @@
     },
     "commonmark": {
       "Package": "commonmark",
-      "Version": "1.9.5",
+      "Version": "2.0.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "High Performance CommonMark and Github Markdown Rendering in R",
@@ -2942,7 +2942,7 @@
       "Language": "en-US",
       "Encoding": "UTF-8",
       "NeedsCompilation": "yes",
-      "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>), John MacFarlane [cph] (Author of cmark)",
+      "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), John MacFarlane [cph] (Author of cmark)",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
       "Repository": "CRAN"
     },
@@ -3034,7 +3034,7 @@
     },
     "cowplot": {
       "Package": "cowplot",
-      "Version": "1.1.3",
+      "Version": "1.2.0",
       "Source": "Repository",
       "Title": "Streamlined Plot Theme and Plot Annotations for 'ggplot2'",
       "Authors@R": "person( given = \"Claus O.\", family = \"Wilke\", role = c(\"aut\", \"cre\"), email = \"wilke@austin.utexas.edu\", comment = c(ORCID = \"0000-0002-7470-9261\") )",
@@ -3045,7 +3045,7 @@
         "R (>= 3.5.0)"
       ],
       "Imports": [
-        "ggplot2 (>= 3.4.0)",
+        "ggplot2 (>= 3.5.2)",
         "grid",
         "gtable",
         "grDevices",
@@ -3075,10 +3075,10 @@
       ],
       "VignetteBuilder": "knitr",
       "Collate": "'add_sub.R' 'align_plots.R' 'as_grob.R' 'as_gtable.R' 'axis_canvas.R' 'cowplot.R' 'draw.R' 'get_plot_component.R' 'get_axes.R' 'get_titles.R' 'get_legend.R' 'get_panel.R' 'gtable.R' 'key_glyph.R' 'plot_grid.R' 'save.R' 'set_null_device.R' 'setup.R' 'stamp.R' 'themes.R' 'utils_ggplot2.R'",
-      "RoxygenNote": "7.2.3",
+      "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
       "NeedsCompilation": "no",
-      "Author": "Claus O. Wilke [aut, cre] (<https://orcid.org/0000-0002-7470-9261>)",
+      "Author": "Claus O. Wilke [aut, cre] (ORCID: <https://orcid.org/0000-0002-7470-9261>)",
       "Maintainer": "Claus O. Wilke <wilke@austin.utexas.edu>",
       "Repository": "CRAN"
     },
@@ -3330,7 +3330,7 @@
     },
     "data.table": {
       "Package": "data.table",
-      "Version": "1.17.6",
+      "Version": "1.17.8",
       "Source": "Repository",
       "Title": "Extension of `data.frame`",
       "Depends": [
@@ -3921,11 +3921,11 @@
     },
     "emmeans": {
       "Package": "emmeans",
-      "Version": "1.11.1",
+      "Version": "1.11.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Estimated Marginal Means, aka Least-Squares Means",
-      "Date": "2025-05-03",
+      "Date": "2025-07-11",
       "Authors@R": "c(person(\"Russell V.\", \"Lenth\", role = c(\"aut\", \"cre\", \"cph\"),  email = \"russell-lenth@uiowa.edu\"), person(\"Balazs\", \"Banfai\", role = \"ctb\"), person(\"Ben\", \"Bolker\", role = \"ctb\"), person(\"Paul\", \"Buerkner\", role = \"ctb\"), person(\"Iago\", \"Giné-Vázquez\", role = \"ctb\"), person(\"Maxime\", \"Herve\", role = \"ctb\"), person(\"Maarten\", \"Jung\", role = \"ctb\"), person(\"Jonathon\", \"Love\", role = \"ctb\"), person(\"Fernando\", \"Miguez\", role = \"ctb\"), person(\"Julia\", \"Piaskowski\", role = \"ctb\"), person(\"Hannes\", \"Riebl\", role = \"ctb\"), person(\"Henrik\", \"Singmann\", role = \"ctb\"))",
       "Depends": [
         "R (>= 4.1.0)"
@@ -4485,36 +4485,6 @@
       "NeedsCompilation": "yes",
       "Author": "Rob Hyndman [aut, cre, cph] (<https://orcid.org/0000-0002-2140-5352>), George Athanasopoulos [aut] (<https://orcid.org/0000-0002-5389-2802>), Christoph Bergmeir [aut] (<https://orcid.org/0000-0002-3665-9021>), Gabriel Caceres [aut] (<https://orcid.org/0000-0002-2947-2023>), Leanne Chhay [aut], Kirill Kuroptev [aut], Mitchell O'Hara-Wild [aut] (<https://orcid.org/0000-0001-6729-7695>), Fotios Petropoulos [aut] (<https://orcid.org/0000-0003-3039-4955>), Slava Razbash [aut], Earo Wang [aut] (<https://orcid.org/0000-0001-6448-5260>), Farah Yasmeen [aut] (<https://orcid.org/0000-0002-1479-5401>), Federico Garza [ctb], Daniele Girolimetto [ctb], Ross Ihaka [ctb, cph], R Core Team [ctb, cph], Daniel Reid [ctb], David Shaub [ctb], Yuan Tang [ctb] (<https://orcid.org/0000-0001-5243-233X>), Xiaoqian Wang [ctb], Zhenyu Zhou [ctb]",
       "Maintainer": "Rob Hyndman <Rob.Hyndman@monash.edu>",
-      "Repository": "CRAN"
-    },
-    "foreign": {
-      "Package": "foreign",
-      "Version": "0.8-90",
-      "Source": "Repository",
-      "Priority": "recommended",
-      "Date": "2025-03-31",
-      "Title": "Read Data Stored by 'Minitab', 'S', 'SAS', 'SPSS', 'Stata', 'Systat', 'Weka', 'dBase', ...",
-      "Depends": [
-        "R (>= 4.0.0)"
-      ],
-      "Imports": [
-        "methods",
-        "utils",
-        "stats"
-      ],
-      "Authors@R": "c( person(\"R Core Team\", email = \"R-core@R-project.org\", role = c(\"aut\", \"cph\", \"cre\"), comment = c(ROR = \"02zz1nj61\")), person(\"Roger\", \"Bivand\", role = c(\"ctb\", \"cph\")), person(c(\"Vincent\", \"J.\"), \"Carey\", role = c(\"ctb\", \"cph\")), person(\"Saikat\", \"DebRoy\", role = c(\"ctb\", \"cph\")), person(\"Stephen\", \"Eglen\", role = c(\"ctb\", \"cph\")), person(\"Rajarshi\", \"Guha\", role = c(\"ctb\", \"cph\")), person(\"Swetlana\", \"Herbrandt\", role = \"ctb\"), person(\"Nicholas\", \"Lewin-Koh\", role = c(\"ctb\", \"cph\")), person(\"Mark\", \"Myatt\", role = c(\"ctb\", \"cph\")), person(\"Michael\", \"Nelson\", role = \"ctb\"), person(\"Ben\", \"Pfaff\", role = \"ctb\"), person(\"Brian\", \"Quistorff\", role = \"ctb\"), person(\"Frank\", \"Warmerdam\", role = c(\"ctb\", \"cph\")), person(\"Stephen\", \"Weigand\", role = c(\"ctb\", \"cph\")), person(\"Free Software Foundation, Inc.\", role = \"cph\"))",
-      "Contact": "see 'MailingList'",
-      "Copyright": "see file COPYRIGHTS",
-      "Description": "Reading and writing data stored by some versions of 'Epi Info', 'Minitab', 'S', 'SAS', 'SPSS', 'Stata', 'Systat', 'Weka', and for reading and writing some 'dBase' files.",
-      "ByteCompile": "yes",
-      "Biarch": "yes",
-      "License": "GPL (>= 2)",
-      "BugReports": "https://bugs.r-project.org",
-      "MailingList": "R-help@r-project.org",
-      "URL": "https://svn.r-project.org/R-packages/trunk/foreign/",
-      "NeedsCompilation": "yes",
-      "Author": "R Core Team [aut, cph, cre] (02zz1nj61), Roger Bivand [ctb, cph], Vincent J. Carey [ctb, cph], Saikat DebRoy [ctb, cph], Stephen Eglen [ctb, cph], Rajarshi Guha [ctb, cph], Swetlana Herbrandt [ctb], Nicholas Lewin-Koh [ctb, cph], Mark Myatt [ctb, cph], Michael Nelson [ctb], Ben Pfaff [ctb], Brian Quistorff [ctb], Frank Warmerdam [ctb, cph], Stephen Weigand [ctb, cph], Free Software Foundation, Inc. [cph]",
-      "Maintainer": "R Core Team <R-core@R-project.org>",
       "Repository": "CRAN"
     },
     "fracdiff": {
@@ -5936,7 +5906,7 @@
     },
     "gstat": {
       "Package": "gstat",
-      "Version": "2.1-3",
+      "Version": "2.1-4",
       "Source": "Repository",
       "Title": "Spatial and Spatio-Temporal Geostatistical Modelling, Prediction and Simulation",
       "Authors@R": "c(person(given = \"Edzer\",  family = \"Pebesma\",  role = c(\"aut\", \"cre\"), email = \"edzer.pebesma@uni-muenster.de\", comment = c(ORCID = \"0000-0001-8049-7069\")), person(\"Benedikt\", \"Graeler\", role = \"aut\"))",
@@ -5976,7 +5946,7 @@
       "BugReports": "https://github.com/r-spatial/gstat/issues/",
       "NeedsCompilation": "yes",
       "RoxygenNote": "6.1.1",
-      "Author": "Edzer Pebesma [aut, cre] (<https://orcid.org/0000-0001-8049-7069>), Benedikt Graeler [aut]",
+      "Author": "Edzer Pebesma [aut, cre] (ORCID: <https://orcid.org/0000-0001-8049-7069>), Benedikt Graeler [aut]",
       "Maintainer": "Edzer Pebesma <edzer.pebesma@uni-muenster.de>",
       "Repository": "CRAN"
     },
@@ -7824,48 +7794,6 @@
       "Author": "Richard A. Becker [aut] (Original S code), Allan R. Wilks [aut] (Original S code), Ray Brownrigg [trl, aut] (R version), Thomas P. Minka [aut] (Enhancements), Alex Deckmyn [aut, cre] (ORCID: <https://orcid.org/0009-0002-2010-8310>)",
       "Maintainer": "Alex Deckmyn <alex.deckmyn@meteo.be>"
     },
-    "maptools": {
-      "Package": "maptools",
-      "Version": "1.1-8",
-      "Source": "Repository",
-      "Date": "2023-07-18",
-      "Title": "Tools for Handling Spatial Objects",
-      "Authors@R": "c( person(\"Roger\", \"Bivand\", role = c(\"cre\", \"aut\"), email = \"Roger.Bivand@nhh.no\", comment=c(ORCID=\"0000-0003-2392-6140\")), person(\"Nicholas\", \"Lewin-Koh\", role = \"aut\"), person(\"Edzer\", \"Pebesma\", role = \"ctb\"), person(\"Eric\", \"Archer\", role = \"ctb\"), person(\"Adrian\", \"Baddeley\", role = \"ctb\"), person(\"Nick\", \"Bearman\", role = \"ctb\"), person(\"Hans-Jörg\", \"Bibiko\", role = \"ctb\"), person(\"Steven\", \"Brey\", role = \"ctb\"), person(\"Jonathan\", \"Callahan\", role = \"ctb\"), person(\"German\", \"Carrillo\", role = \"ctb\"), person(\"Stéphane\", \"Dray\", role = \"ctb\"), person(\"David\", \"Forrest\", role = \"ctb\"), person(\"Michael\", \"Friendly\", role = \"ctb\"), person(\"Patrick\", \"Giraudoux\", role = \"ctb\"), person(\"Duncan\", \"Golicher\", role = \"ctb\"), person(\"Virgilio\", \"Gómez Rubio\", role = \"ctb\"), person(\"Patrick\", \"Hausmann\", role = \"ctb\"), person(\"Karl Ove\", \"Hufthammer\", role = \"ctb\"), person(\"Thomas\", \"Jagger\", role = \"ctb\"), person(\"Kent\", \"Johnson\", role = \"ctb\"), person(\"Matthew\", \"Lewis\", role = \"ctb\", comment=c(ORCID=\"0000-0003-2244-4078\")), person(\"Sebastian\", \"Luque\", role = \"ctb\"), person(\"Don\", \"MacQueen\", role = \"ctb\"), person(\"Andrew\", \"Niccolai\", role = \"ctb\"), person(\"Edzer\", \"Pebesma\", role = \"ctb\"), person(\"Oscar\", \"Perpiñán Lamigueiro\", role = \"ctb\"), person(\"Ethan\", \"Plunkett\", role = \"ctb\"), person(\"Ege\", \"Rubak\", role = \"ctb\", comment=c(ORCID=\"0000-0002-6675-533X\")), person(\"Tom\", \"Short\", role = \"ctb\"), person(\"Greg\", \"Snow\", role = \"ctb\"), person(\"Ben\", \"Stabler\", role = \"ctb\"), person(\"Murray\", \"Stokely\", role = \"ctb\"), person(\"Rolf\", \"Turner\", role = \"ctb\"))",
-      "Encoding": "UTF-8",
-      "Depends": [
-        "R (>= 2.10)",
-        "sp (>= 1.0-11)"
-      ],
-      "Imports": [
-        "foreign (>= 0.8)",
-        "methods",
-        "grid",
-        "lattice",
-        "stats",
-        "utils",
-        "grDevices"
-      ],
-      "Suggests": [
-        "rgeos (>= 0.1-8)",
-        "spatstat.geom (>= 1.65-0)",
-        "PBSmapping",
-        "maps",
-        "RColorBrewer",
-        "raster",
-        "polyclip",
-        "plotrix",
-        "spatstat.linnet (>= 1.65-3)",
-        "spatstat.utils (>= 1.19.0)",
-        "spatstat (>= 2.0-0)"
-      ],
-      "Description": "Please note that 'maptools' will be retired during October 2023, plan transition at your earliest convenience (see <https://r-spatial.org/r/2023/05/15/evolution4.html> and earlier blogs for guidance); some functionality will be moved to 'sp'. Set of tools for manipulating geographic data. The package also provides interface wrappers for exchanging spatial objects with packages such as 'PBSmapping', 'spatstat.geom', 'maps', and others.",
-      "License": "GPL (>= 2)",
-      "URL": "http://maptools.r-forge.r-project.org/, https://r-forge.r-project.org/projects/maptools/",
-      "NeedsCompilation": "yes",
-      "Author": "Roger Bivand [cre, aut] (<https://orcid.org/0000-0003-2392-6140>), Nicholas Lewin-Koh [aut], Edzer Pebesma [ctb], Eric Archer [ctb], Adrian Baddeley [ctb], Nick Bearman [ctb], Hans-Jörg Bibiko [ctb], Steven Brey [ctb], Jonathan Callahan [ctb], German Carrillo [ctb], Stéphane Dray [ctb], David Forrest [ctb], Michael Friendly [ctb], Patrick Giraudoux [ctb], Duncan Golicher [ctb], Virgilio Gómez Rubio [ctb], Patrick Hausmann [ctb], Karl Ove Hufthammer [ctb], Thomas Jagger [ctb], Kent Johnson [ctb], Matthew Lewis [ctb] (<https://orcid.org/0000-0003-2244-4078>), Sebastian Luque [ctb], Don MacQueen [ctb], Andrew Niccolai [ctb], Edzer Pebesma [ctb], Oscar Perpiñán Lamigueiro [ctb], Ethan Plunkett [ctb], Ege Rubak [ctb] (<https://orcid.org/0000-0002-6675-533X>), Tom Short [ctb], Greg Snow [ctb], Ben Stabler [ctb], Murray Stokely [ctb], Rolf Turner [ctb]",
-      "Maintainer": "Roger Bivand <Roger.Bivand@nhh.no>",
-      "Repository": "CRAN"
-    },
     "mapview": {
       "Package": "mapview",
       "Version": "2.11.2",
@@ -9248,7 +9176,7 @@
     },
     "pillar": {
       "Package": "pillar",
-      "Version": "1.10.2",
+      "Version": "1.11.0",
       "Source": "Repository",
       "Title": "Coloured Formatting for Columns",
       "Authors@R": "c(person(given = \"Kirill\", family = \"M\\u00fcller\", role = c(\"aut\", \"cre\"), email = \"kirill@cynkra.com\", comment = c(ORCID = \"0000-0002-1416-3412\")), person(given = \"Hadley\", family = \"Wickham\", role = \"aut\"), person(given = \"RStudio\", role = \"cph\"))",
@@ -9299,7 +9227,7 @@
       "Config/gha/extra-packages": "units=?ignore-before-r=4.3.0",
       "Config/Needs/website": "tidyverse/tidytemplate",
       "NeedsCompilation": "no",
-      "Author": "Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], RStudio [cph]",
+      "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], RStudio [cph]",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
       "Repository": "CRAN"
     },
@@ -9782,16 +9710,16 @@
     },
     "purrr": {
       "Package": "purrr",
-      "Version": "1.0.4",
+      "Version": "1.1.0",
       "Source": "Repository",
       "Title": "Functional Programming Tools",
-      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0003-4757-117X\")), person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = \"aut\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
+      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0003-4757-117X\")), person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = \"aut\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"https://ror.org/03wc8by49\")) )",
       "Description": "A complete and consistent functional programming toolkit for R.",
       "License": "MIT + file LICENSE",
       "URL": "https://purrr.tidyverse.org/, https://github.com/tidyverse/purrr",
       "BugReports": "https://github.com/tidyverse/purrr/issues",
       "Depends": [
-        "R (>= 4.0)"
+        "R (>= 4.1)"
       ],
       "Imports": [
         "cli (>= 3.6.1)",
@@ -9801,11 +9729,13 @@
         "vctrs (>= 0.6.3)"
       ],
       "Suggests": [
+        "carrier (>= 0.2.0)",
         "covr",
         "dplyr (>= 0.7.8)",
         "httr",
         "knitr",
         "lubridate",
+        "mirai (>= 2.4.0)",
         "rmarkdown",
         "testthat (>= 3.0.0)",
         "tibble",
@@ -9823,7 +9753,7 @@
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.2",
       "NeedsCompilation": "yes",
-      "Author": "Hadley Wickham [aut, cre] (<https://orcid.org/0000-0003-4757-117X>), Lionel Henry [aut], Posit Software, PBC [cph, fnd] (03wc8by49)",
+      "Author": "Hadley Wickham [aut, cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Lionel Henry [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
@@ -10673,85 +10603,6 @@
       "NeedsCompilation": "no",
       "Author": "Scott Chamberlain [aut] (0000-0003-1444-9135), Damiano Oldoni [aut] (0000-0003-3445-7562), Vijay Barve [ctb] (0000-0002-4852-2567), Peter Desmet [ctb] (0000-0002-8442-8025), Laurens Geffert [ctb], Dan Mcglinn [ctb] (0000-0003-2359-3526), Karthik Ram [ctb] (0000-0002-0233-1757), rOpenSci [fnd] (019jywm96), John Waller [aut, cre] (0000-0002-7302-5976)",
       "Maintainer": "John Waller <jwaller@gbif.org>",
-      "Repository": "CRAN"
-    },
-    "rgdal": {
-      "Package": "rgdal",
-      "Version": "1.6-7",
-      "Source": "Repository",
-      "Title": "Bindings for the 'Geospatial' Data Abstraction Library",
-      "Date": "2023-05-31",
-      "Depends": [
-        "R (>= 3.5.0)",
-        "methods",
-        "sp (>= 1.1-0)"
-      ],
-      "Imports": [
-        "grDevices",
-        "graphics",
-        "stats",
-        "utils"
-      ],
-      "LinkingTo": [
-        "sp"
-      ],
-      "Suggests": [
-        "knitr",
-        "DBI",
-        "RSQLite",
-        "maptools",
-        "mapview",
-        "rmarkdown",
-        "curl",
-        "rgeos"
-      ],
-      "NeedsCompilation": "yes",
-      "Description": "Provides bindings to the 'Geospatial' Data Abstraction Library ('GDAL') (>= 1.11.4) and access to projection/transformation operations from the 'PROJ' library. Please note that 'rgdal' will be retired during October 2023, plan transition to sf/stars/'terra' functions using 'GDAL' and 'PROJ' at your earliest convenience (see <https://r-spatial.org/r/2023/05/15/evolution4.html> and earlier blogs for guidance). Use is made of classes defined in the 'sp' package. Raster and vector map data can be imported into R, and raster and vector 'sp' objects exported. The 'GDAL' and 'PROJ' libraries are external to the package, and, when installing the package from source, must be correctly installed first; it is important that 'GDAL' < 3 be matched with 'PROJ' < 6. From 'rgdal' 1.5-8, installed with to 'GDAL' >=3, 'PROJ' >=6 and 'sp' >= 1.4, coordinate reference systems use 'WKT2_2019' strings, not 'PROJ' strings. 'Windows' and 'macOS' binaries (including 'GDAL', 'PROJ' and their dependencies) are provided on 'CRAN'.",
-      "Authors@R": "c( person(\"Roger\", \"Bivand\", role = c(\"cre\", \"aut\"), email = \"Roger.Bivand@nhh.no\", comment=c(ORCID=\"0000-0003-2392-6140\")), person(\"Tim\", \"Keitt\", role = \"aut\"), person(\"Barry\", \"Rowlingson\", role = c(\"aut\", \"ctb\")), person(\"Edzer\", \"Pebesma\", role = \"ctb\"), person(\"Michael\", \"Sumner\", role = \"ctb\"), person(\"Robert\", \"Hijmans\", role = \"ctb\"), person(\"Daniel\", \"Baston\", role = \"ctb\"), person(\"Even\", \"Rouault\", role = c(\"cph\", \"ctb\")), person(\"Frank\", \"Warmerdam\", role = c(\"cph\", \"ctb\")), person(\"Jeroen\", \"Ooms\", role = \"ctb\"), person(\"Colin\", \"Rundel\", role = \"ctb\"))",
-      "License": "GPL (>= 2)",
-      "URL": "http://rgdal.r-forge.r-project.org, https://gdal.org, https://proj.org, https://r-forge.r-project.org/projects/rgdal/",
-      "SystemRequirements": "PROJ (>= 4.8.0, https://proj.org/download.html) and GDAL (>= 1.11.4, https://gdal.org/download.html), with versions either (A) PROJ < 6 and GDAL < 3 or (B) PROJ >= 6 and GDAL >= 3. For degraded PROJ 6 or 7 and GDAL < 3, use the configure argument '--with-proj_api=\"proj_api.h\"'.",
-      "VignetteBuilder": "knitr",
-      "Author": "Roger Bivand [cre, aut] (<https://orcid.org/0000-0003-2392-6140>), Tim Keitt [aut], Barry Rowlingson [aut, ctb], Edzer Pebesma [ctb], Michael Sumner [ctb], Robert Hijmans [ctb], Daniel Baston [ctb], Even Rouault [cph, ctb], Frank Warmerdam [cph, ctb], Jeroen Ooms [ctb], Colin Rundel [ctb]",
-      "Maintainer": "Roger Bivand <Roger.Bivand@nhh.no>",
-      "Repository": "CRAN"
-    },
-    "rgeos": {
-      "Package": "rgeos",
-      "Version": "0.6-4",
-      "Source": "Repository",
-      "Title": "Interface to Geometry Engine - Open Source ('GEOS')",
-      "Date": "2023-06-18",
-      "Depends": [
-        "R (>= 3.3.0)",
-        "methods",
-        "sp (>= 1.1-0)"
-      ],
-      "Imports": [
-        "utils",
-        "stats",
-        "graphics"
-      ],
-      "LinkingTo": [
-        "sp"
-      ],
-      "Suggests": [
-        "maptools (>= 0.8-5)",
-        "testthat",
-        "XML",
-        "maps",
-        "rgdal"
-      ],
-      "NeedsCompilation": "yes",
-      "LazyLoad": "yes",
-      "Description": "Interface to Geometry Engine - Open Source ('GEOS') using the C 'API' for topology operations on geometries. Please note that 'rgeos' will be retired during October 2023, plan transition to 'sf' or 'terra' functions using 'GEOS', or the 'geos' package, at your earliest convenience (see <https://r-spatial.org/r/2023/05/15/evolution4.html> and earlier blogs for guidance). The 'GEOS' library is external to the package, and, when installing the package from source, must be correctly installed first. Windows and Mac Intel OS X binaries are provided on 'CRAN'. ('rgeos' >= 0.5-1): Up to and including 'GEOS' 3.7.1, topological operations succeeded with some invalid geometries for which the same operations fail from and including 'GEOS' 3.7.2. The 'checkValidity=' argument defaults and structure have been changed, from default FALSE to integer default '0L' for 'GEOS' < 3.7.2 (no check), '1L' 'GEOS' >= 3.7.2 (check and warn). A value of '2L' is also provided that may be used, assigned globally using 'set_RGEOS_CheckValidity(2L)', or locally using the 'checkValidity=2L' argument, to attempt zero-width buffer repair if invalid geometries are found. The previous default (FALSE, now '0L') is fastest and used for 'GEOS' < 3.7.2, but will not warn users of possible problems before the failure of topological operations that previously succeeded. From 'GEOS' 3.8.0, repair of geometries may also be attempted using 'gMakeValid()', which may, however, return a collection of geometries of different types.",
-      "Authors@R": "c( person(\"Roger\", \"Bivand\", role = c(\"cre\", \"aut\"), email = \"Roger.Bivand@nhh.no\", comment=c(ORCID=\"0000-0003-2392-6140\")), person(\"Colin\", \"Rundel\", role = \"aut\"), person(\"Edzer\", \"Pebesma\", role = \"ctb\"), person(\"Rainer\", \"Stuetz\", role = \"ctb\"), person(\"Karl Ove\", \"Hufthammer\", role = \"ctb\"), person(\"Patrick\", \"Giraudoux\", role = \"ctb\"), person(\"Martin\", \"Davis\", role = c(\"cph\", \"ctb\")), person(\"Sandro\", \"Santilli\", role = c(\"cph\", \"ctb\")))",
-      "License": "GPL (>= 2)",
-      "URL": "https://r-forge.r-project.org/projects/rgeos/ https://libgeos.org http://rgeos.r-forge.r-project.org/index.html",
-      "SystemRequirements": "GEOS (>= 3.2.0).",
-      "RoxygenNote": "6.1.1",
-      "Author": "Roger Bivand [cre, aut] (<https://orcid.org/0000-0003-2392-6140>), Colin Rundel [aut], Edzer Pebesma [ctb], Rainer Stuetz [ctb], Karl Ove Hufthammer [ctb], Patrick Giraudoux [ctb], Martin Davis [cph, ctb], Sandro Santilli [cph, ctb]",
-      "Maintainer": "Roger Bivand <Roger.Bivand@nhh.no>",
       "Repository": "CRAN"
     },
     "riem": {
@@ -11709,7 +11560,7 @@
     },
     "shiny": {
       "Package": "shiny",
-      "Version": "1.11.0",
+      "Version": "1.11.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Web Application Framework for R",

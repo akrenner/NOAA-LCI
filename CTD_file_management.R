@@ -16,7 +16,7 @@
 
 cat (rep ("##\n", 4), "reassertain whether metadata or filename is used for fixing date -- file name should take precedent! \n##\n")
 ## make this independent from ctd_workflow.R
-if (!exists ("hexFileD")){
+if (!exists ("hexFileD")) {
   rm (list = ls())
   hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
 }
@@ -37,17 +37,17 @@ hexCache <- "~/tmp/LCI_noaa/CTD-cache/allCTD/"
 
 
 # unlink ("~/GISdata/LCI/CTD-processing/allCTD/", recursive = TRUE)  ## careful!! -- overkill
-unlink ("~/tmp/LCI_noaa/CTD-cache/", recursive=TRUE) ## carefully blast it all away
+unlink ("~/tmp/LCI_noaa/CTD-cache/", recursive = TRUE) ## carefully blast it all away
 set.seed (8)
 
 
 ## define new destinations
 nD <- paste0 (hexCache, "edited_hex/")
 instL <- c ("4141", "5028", "8138")  # do this from data?
-x <- lapply (1:length (instL), FUN=function (i){unlink (paste0 (nD, instL [i], "/"), recursive=TRUE)})
+x <- lapply (seq_along(instL), FUN = function(i) {unlink (paste0 (nD, instL [i], "/"), recursive = TRUE)})
 # print (x)
-for (i in 1:length (instL)){
- dir.create (paste0 (nD, instL [i]), recursive = TRUE)
+for (i in seq_along(instL)) {
+  dir.create (paste0 (nD, instL [i]), recursive = TRUE)
 }
 rm (x, instL)
 ## mkdir?
@@ -55,11 +55,11 @@ rm (x, instL)
 
 
 
-rL <- function (f, p = NULL){ # recursive listing of files
+rL <- function(f, p = NULL) { # recursive listing of files
   ## NULL because some files are .txt -- gobble all up
   x <- list.files(paste0 (hexFileD, f)
-                  , pattern = p, ignore.case = TRUE, recursive = TRUE
-                  , full.names = TRUE)
+    , pattern = p, ignore.case = TRUE, recursive = TRUE
+    , full.names = TRUE)
   # print (length (x))
   return (x)
 }
@@ -68,14 +68,14 @@ rL <- function (f, p = NULL){ # recursive listing of files
 
 
 ## move about HEX files
-fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") #, p = ".hex")
+fL <- rL("ctd-data_2012-2016/2_Edited\ HEX/") # , p = ".hex")
 fL <- c(fL, rL ("ctd-data_2017-ongoing/2_Edited\ .hex\ files/"))
 fL <- c(fL, rL ("ctd-data-KBL_Interns_and_Partners/Updated\ Text\ Files\ CTD\ 2012-2013", p = ".txt")) ## not ALL duplicates (also air casts??)
-fL <- c(fL, rL ("YSI-2016", p=".hex")) # Steve Kibler
+fL <- c(fL, rL ("YSI-2016", p = ".hex")) # Steve Kibler
 ## add unedited files -- those would be marked as duplicate, coming in 2nd, if concerning the
 ## same cast and still having the same filename.
 fL <- c(fL, rL ("ctd-data_2016/1_Unedited\ HEX"))
-fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/", p=".hex"))
+fL <- c(fL, rL ("ctd-data_2017-ongoing/1_Unedited .hex files/", p = ".hex"))
 ## tmp -- pick out 2023 only:
 # fL <- rL ("ctd-data_2017-ongoing/1_Unedited .hex files/")
 # print (length (fL))
@@ -85,7 +85,7 @@ rm (rL)
 ## bad files out
 bF <- grep ("Troubleshooting", fL)
 bF <- c (bF, grep (".zip$", fL))   ## remove any .zip files. Not sure why picked up.
-if (length (bF) > 0){
+if (length (bF) > 0) {
   cat ("removing ", length (bF), " bad files\n")
   fL <- fL [-bF]
 }
@@ -94,7 +94,7 @@ rm (bF)
 
 ## build file database
 fDB <- data.frame (file = fL
-                   , fN = gsub ("^.*/", "", fL)
+  , fN = gsub ("^.*/", "", fL)
 )
 rm (fL)
 ## check duplicates by name or sha256
@@ -102,7 +102,7 @@ rm (fL)
 # if (0){ ## for whatever reason, this is now causing trouble under windows (but not MacOS)
 ## redundant (see below)
 require ("cli")
-fDB$sha <- sapply (1:nrow (fDB), function (i){
+fDB$sha <- sapply (seq_len(nrow (fDB)), function(i) {
   hash_file_sha256(fDB$file [i])
 })
 dF <- duplicated (fDB$sha)
@@ -112,7 +112,7 @@ fDB <- subset (fDB, !dF)
 rm (dF)
 # }
 ## check that fDB isn't empty now
-if (!nrow (fDB)>0){
+if (!nrow (fDB) > 0) {
   stop ("fDB has zero (0) rows\n")
 }
 
@@ -124,26 +124,26 @@ fDB$hexStart <- character(nrow (fDB))
 fDB$copy <- logical (nrow (fDB))
 fDB$batteryOK <- logical (nrow (fDB))
 fDB$file <- as.character (fDB$file)
-for (i in 1:nrow (fDB)){
-  hF <- file (fDB$file [i], open="r", raw = TRUE)
+for (i in seq_len(nrow (fDB))) {
+  hF <- file (fDB$file [i], open = "r", raw = TRUE)
   hx <- readLines(hF, n = 100)
   close (hF)
   hx <- trimws(hx)
   ## weed out unedited/edited duplicates
-  fHL <- grep ("*END*", hx, value=FALSE)+(1:20)  ## 1:50 eliminates many actual duplicates (edited vs unedited)
+  fHL <- grep ("*END*", hx, value = FALSE) + (1:20)  ## 1:50 eliminates many actual duplicates (edited vs unedited)
   #  2: 126 dup
   # 20: 126 dup
   # 40:  64 dup
-  #100:  64 dup
+  # 100:  64 dup
   fDB$hexStart [i] <- paste (hx [fHL], collapse = " ")
 
   ## low battery or mag switch?
-  if (length (grep (", stop = mag switch$", hx))>0){
+  if (length (grep (", stop = mag switch$", hx)) > 0) {
     fDB$batteryOK [i] <- TRUE
-  }else if (length (grep (", stop = low batt$", hx))>0){
+  } else if (length (grep (", stop = low batt$", hx)) > 0) {
     fDB$batteryOK [i] <- FALSE
-  }else{
-    stop ("No stop line in ", i, " -- ", fDB [i,], "\n")
+  } else {
+    stop ("No stop line in ", i, " -- ", fDB [i, ], "\n")
   }
   grep ("stop = ", hx)
   rm (hx)
@@ -158,11 +158,11 @@ summary (fDB$batteryOK)
 fDB <- subset (fDB, batteryOK)
 
 
-if (latestonly){
+if (latestonly) {
   year <- suppressWarnings({substr (fDB$fN, 1, 4) |> as.numeric()}) ## NAs hopefully all old
-  fDB <- subset (fDB, year >= as.numeric (format (Sys.Date(), "%Y"))-1)
+  fDB <- subset (fDB, year >= as.numeric (format (Sys.Date(), "%Y")) - 1)
   rm (year)
-#  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
+  #  fDB <- fDB [c (nrow (fDB)-100, nrow (fDB)),]  ## experimental!
 }
 
 
@@ -171,7 +171,7 @@ if (latestonly){
 ## move files into new folder structure -- the main action item ##
 ##################################################################
 
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))) {
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
   hx <- readLines(hF, n = 100)
   close (hF)
@@ -179,9 +179,9 @@ for (i in 1:nrow (fDB)){
   hx <- gsub ("^.* ", "", grep ("Conductivity SN", hx, value = TRUE))
   fDB$instN [i] <- hx
   fDB$copy [i] <- file.copy (from = fDB$file [i]
-                              , to = paste0 (nD, fDB$instN [i], "/")
-                              , recursive = FALSE
-             , overwrite = FALSE, copy.date = TRUE)
+    , to = paste0 (nD, fDB$instN [i], "/")
+    , recursive = FALSE
+    , overwrite = FALSE, copy.date = TRUE)
 }
 rm (hF, hx, i)
 cat ("\n\nfactor (fDB$copy\n")
@@ -189,11 +189,11 @@ print (summary (factor (fDB$copy)))
 
 ## rename any .txt files to .hex
 iN <- list.files (nD, pattern = ".txt$", ignore.case = TRUE
-                  , recursive = TRUE, full.names = TRUE)
+  , recursive = TRUE, full.names = TRUE)
 cpCk <- file.copy (from = iN, to = gsub (".txt", ".hex", iN, fixed = TRUE)
-           #, copy.date = TRUE
-           , recursive = FALSE)
-if (any (!cpCk)){print (summary (cpCk))} # all should be TRUE
+  # , copy.date = TRUE
+  , recursive = FALSE)
+if (any (!cpCk)) {print (summary (cpCk))} # all should be TRUE
 rm (cpCk)
 unlink (iN)
 
@@ -230,43 +230,43 @@ rm (iN, fDB)  # fDB is no longer valid, after bad/aircasts removed, build new
 
 
 ## manually fix-up files -- here or on original files?
-fixMeta <- function (patternfind, goodDate){
-  if (0){ ## do nothing -- no longer needed
-  badMeta <- list.files (nD, pattern = patternfind # need to fix files before starting fDB
-                       ,recursive = TRUE, full.names = TRUE)
-  for (i in 1:length (badMeta)){
-    hF <- file (badMeta [i], open = "r", raw = TRUE)
-    hX <- readLines (hF)
-    close (hF)
-#    badDate <- grep ("Date: ", hX)  ## doesn't alway say "Date"
-#    hX [badDate] <- gsub (badDate, goodDate)  ## could skip "badDate, just write new
-    hX [8] <- paste ("** Date:", goodDate)
-    write (hX, file = badMeta [i])
-  }
-  rm (badMeta, hF, hX)
+fixMeta <- function(patternfind, goodDate) {
+  if (0) { ## do nothing -- no longer needed
+    badMeta <- list.files (nD, pattern = patternfind # need to fix files before starting fDB
+      , recursive = TRUE, full.names = TRUE)
+    for (i in seq_along(badMeta)) {
+      hF <- file (badMeta [i], open = "r", raw = TRUE)
+      hX <- readLines (hF)
+      close (hF)
+      #    badDate <- grep ("Date: ", hX)  ## doesn't alway say "Date"
+      #    hX [badDate] <- gsub (badDate, goodDate)  ## could skip "badDate, just write new
+      hX [8] <- paste ("** Date:", goodDate)
+      write (hX, file = badMeta [i])
+    }
+    rm (badMeta, hF, hX)
   }
 }
-fixFN <- function (patternfind, goodpattern){
+fixFN <- function(patternfind, goodpattern) {
   badFN <- list.files (nD, pattern = patternfind # need to fix files before starting fDB
-                       ,recursive = TRUE, full.names = TRUE)
+    , recursive = TRUE, full.names = TRUE)
   goodFN <- gsub (patternfind, goodpattern, badFN)
-  cpCk <- file.copy (from = badFN, to = goodFN#, copy.date = TRUE
-                     , recursive = FALSE)
+  cpCk <- file.copy (from = badFN, to = goodFN # , copy.date = TRUE
+    , recursive = FALSE)
   unlink (badFN)
   #  return (cpCk) # make this silent/invisible?
 }
-fixBoth <- function (patternfind, goodpattern, goodDate){
- fixMeta (patternfind, goodDate)
- fixFN (patternfind, goodpattern)
+fixBoth <- function(patternfind, goodpattern, goodDate) {
+  fixMeta (patternfind, goodDate)
+  fixFN (patternfind, goodpattern)
 }
-delFile <- function (filename){
+delFile <- function(filename) {
   ## patternfind <- gsub ("-", "\\\\-", filename)
   badFN <- list.files (nD, pattern = filename, recursive = TRUE, full.names = TRUE)
   unlink (badFN, force = TRUE)
 }
-inspFile <- function (patternfind, nr = 80){
+inspFile <- function(patternfind, nr = 80) {
   badFN <- list.files (nD, pattern = patternfind, recursive = TRUE, full.names = TRUE)
-  if (length (badFN)>1){print (gsub ("^.*/", "", badFN))}else{
+  if (length (badFN) > 1) {print (gsub ("^.*/", "", badFN))} else {
     print (gsub ("^.*/", "", badFN))
     hF <- file (badFN, open = "r")
     # print (readLines (hF, n = 50))
@@ -301,20 +301,20 @@ fixMeta ("2017_02-07_T9_S", "2017-02-07")
 # delFile ("2012_02-12_AlongBay_NotinFieldNotes_cast033")
 # ## rest of that day-transect have the wrong date/year
 # fixFN (patternfind = "2012_02-12_AlongBay_SKB", "2013_02-12_AlongBay_SKB")
-for (i in 1:13){
+for (i in 1:13) {
   fixFN (paste0 ("2012_02-12_AlongBay_SKB"  # station has leading zero 0
-                 , formatC (i, width = 2, format = "d", flag = "0"))
-         , paste0 ("2013_02-12_AlongBay_SKB"
-                   , formatC (i+1, width = 2, format = "d", flag= "0"))
+    , formatC (i, width = 2, format = "d", flag = "0"))
+  , paste0 ("2013_02-12_AlongBay_SKB"
+    , formatC (i + 1, width = 2, format = "d", flag = "0"))
   )
 }
 fixFN ("2012_02-12_AlongBay_NotinFieldNotes_cast033"
-       , "2013_02-12_AlongBay_SKB01_cast033")
+  , "2013_02-12_AlongBay_SKB01_cast033")
 
 ## 2018_07-29_T3_S16_cast189 -- Notebook and metadata confirms date to be 2018-07-26
-for (i in 2:6){
-  fixFN (paste0 ("2018_07-29_T3_S1", i, "_cast1", 94-i)
-       , paste0 ("2018_07-26_T3_S1", i, "_cast1", 94-i)
+for (i in 2:6) {
+  fixFN (paste0 ("2018_07-29_T3_S1", i, "_cast1", 94 - i)
+    , paste0 ("2018_07-26_T3_S1", i, "_cast1", 94 - i)
   )
 }
 # fixFN ("2018_07-29_T3_S12_cast193", "2018_07-26_T3_S12_cast193")
@@ -345,9 +345,9 @@ delFile ("2012_07-30_T6_S21_cast091.hex")
 
 
 
-for (i in 1:10){## ambiguous file -- fix this!! ask Jim?
-#  fixFN (paste0 ("2018_01-17_T9_S", formatC (i, width = 2, format = "d", flag = "0"))
-#         , paste0 ("2018-01-"))
+for (i in 1:10) { ## ambiguous file -- fix this!! ask Jim?
+  #  fixFN (paste0 ("2018_01-17_T9_S", formatC (i, width = 2, format = "d", flag = "0"))
+  #         , paste0 ("2018-01-"))
 }
 
 ## 2014_02-15_T9_S03 to ..S10
@@ -358,12 +358,12 @@ fixBoth ("2014_02-15_T9_S", "2014_02-14_T9_S", "2014-02-14")
 
 ## date ambigous -- force it one way
 fixBoth ("2012-10-28-and-29-CookInletOcean-Tran7"
-         , "2012-10-28_T7", "2012-10-28")
+  , "2012-10-28_T7", "2012-10-28")
 fixBoth ("2012-10-28-CookInlet-Tran6-cast\\d*-", "2012-10-28_T6-", "2012-10-28")
 fixMeta ("2012_10-28_T7_", "2012-10-28")
 
 
-#if (0){
+# if (0){
 ## 2013_06-19-T9, metadata: 2013-06-06. Notebook: no survey on 2013-06-06
 # 2013_06-06_T9_S01_cast161 also has bad metadata -> fix both
 # surveys on both dates -- metadata stuck from previous?
@@ -393,7 +393,7 @@ fixMeta ("2015_01-16_T9_", "2015_01-16")
 fixMeta ("2015_02-12", "2015_02-12")
 
 fixMeta ("2016_02-16_T7", "2016-02-16")
-#}
+# }
 
 ## confirmed bad metadata by checking field notes (file name and field notes agree)
 fixMeta ("2017_04-18", "2017-04-18") # meta was 2017-12-14
@@ -411,7 +411,7 @@ rm (inspFile)
 ## gather metadata-dates and filename dates
 ## setup file-database
 fL <- list.files (nD, pattern = ".hex$", ignore.case = TRUE, recursive = TRUE
-                  , full.names = TRUE)
+  , full.names = TRUE)
 fDB <- data.frame (file = fL); rm (fL)
 fDB$shortFN <- gsub ("^.*/", "", fDB$file)
 fDB$metDate <- as.POSIXct(rep (NA, nrow (fDB)))
@@ -423,11 +423,11 @@ x <- gsub ("_+", "-", x)          ## fix up messes
 x <- gsub ("-+", "-", x)
 # x <- gsub ("-$", "", x)
 fDB$fnDate <- as.Date(x)
-if (any (is.na (fDB$fnDate))){
+if (any (is.na (fDB$fnDate))) {
   print (subset (fDB$shortFN, is.na (fDB$fnDate)))
   cat ("\n\n -- full path of files with bad dates\n")
   print (subset (fDB$file, is.na (fDB$fnDate)))
-  #cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
+  # cat (subset (fDB$shortFN, is.na (fDB$fnDate)))
   stop ("are bad file names")
 }
 rm (x)
@@ -436,32 +436,32 @@ rm (x)
 ## gather metadata dates
 ## use these to check against filename dates
 
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))) {
   hF <- file (fDB$file [i], open = "r", raw = TRUE)
   hX <- readLines(hF, n = 90)
   close (hF)
-  #eL <- grep (" S>$", trimws (hX))
-  #hD <- hX [eL - 1]
+  # eL <- grep (" S>$", trimws (hX))
+  # hD <- hX [eL - 1]
   # hD <- hX [69]  ## try system clock instead, as per Jim's suggestion
   hX <- trimws (hX)
   hD <- hX [grep ("mag switch$", hX)]
-  if (length (hD) < 1){hD <- hX [grep ("low batt$", hX)]}
+  if (length (hD) < 1) {hD <- hX [grep ("low batt$", hX)]}
   hD <- trimws (substr (hD, 11, 23))
   x <- try (as.POSIXct (hD, format = "%d %b %Y"), silent = TRUE)
-  if (0){  # old stuff -- manually entered header data -- a mess
+  if (0) {  # old stuff -- manually entered header data -- a mess
     hD <- hX [8] # grep ("** Date:", hX, fixed = TRUE, value = TRUE) # always #8?
     hD <- gsub ("^.*: ", "", hD) # for a myriad of different forms
     hD <- gsub ("**", "", hD, fixed = TRUE)
-    #hD <- gsub ("^.* ", "", hD) # can't delete white space: "28 Oct 2012"
+    # hD <- gsub ("^.* ", "", hD) # can't delete white space: "28 Oct 2012"
     hD <- gsub ("_", "-", hD)
     x <- try (as.POSIXct (hD), silent = TRUE)
 
-    xT <- function (y){((class (y)[[1]] == "try-error") || is.na (y))} # test date format for creativity
+    xT <- function(y) {((class (y)[[1]] == "try-error") || is.na (y))} # test date format for creativity
 
-    if (xT (x)){  # date in metadata is inconsistent
+    if (xT (x)) {  # date in metadata is inconsistent
       x <- try (as.POSIXct (hD, format = "%d %b %Y"))
     }
-    if (xT (x)){
+    if (xT (x)) {
       x <- try (as.POSIXct (gsub ("\\*\\* ", "", hX [7]), format = "%Y_%M-%d"))
     }
     rm (xT)
@@ -493,10 +493,10 @@ summary (fDB$metDate)
 
 lBad <- length (fDB$shortFN [is.na (fDB$metDate)])
 
-if (lBad > 0){
+if (lBad > 0) {
   warning ("Still got files with bad metadata dates.
            Inspect these manually and fix in code above.")
-  for (i in 1:length (lBad)){
+  for (i in seq_along(lBad)) {
     fixMeta (fDB$shortFN [i], fDB$fnDate)
   }
   # fDB$metDate <- ifelse (is.na (fDB$metDate), fDB$fnDate, fDB$metDate) # messes up POSIXct -- BUG!?
@@ -528,21 +528,21 @@ fDB$metDate [which.max (abs (fDB$tErr))]
 fDB$metDate [which (abs (fDB$tErr) > 1)]
 
 
-if (any (abs (fDB$tErr) > 1)){
-  x <- subset (fDB [abs (fDB$tErr) >1 , 2:ncol (fDB)])
+if (any (abs (fDB$tErr) > 1)) {
+  x <- subset (fDB [abs (fDB$tErr) > 1, 2:ncol (fDB)])
   #  stop ("fix date discrepancies between metadata and file names")
   warning ("fix date discrepancies between metadata and file names") # -- do do it later in CTD_cnv-Import.R
   cat ("\n\n#######\nDubious dates -- may need to fix file names? Or correct header ##\n\n")
-  print (x[order (abs (x$tErr), decreasing = TRUE)[1:30],1:5]); rm (x)
+  print (x[order (abs (x$tErr), decreasing = TRUE)[1:30], 1:5]); rm (x)
   ## 2021-05-01 seems right -- was this a make-up cruise?! was metadata fixed?
   ## 2017-12-14 to 2018-01-17: File names are correct! Dates are off after changing from DLT to winter.
   ## edit metadata???
 
-#  for (i in 1:nrow (fDB))
-#    if (fDB$tErr[i] > 1){
-#      fixMeta (fDB$shortFN [i], fDB$fnDate)
-#    }
-#  fDB$metDate <- if_else (fDB$tErr > 1, fDB$fnDate, fDB$metDate) # avoids POSIXct trouble of ifelse
+  #  for (i in 1:nrow (fDB))
+  #    if (fDB$tErr[i] > 1){
+  #      fixMeta (fDB$shortFN [i], fDB$fnDate)
+  #    }
+  #  fDB$metDate <- if_else (fDB$tErr > 1, fDB$fnDate, fDB$metDate) # avoids POSIXct trouble of ifelse
   ## FIX Filename!!
 }
 ## fix metDate above to make this unneccessary,
@@ -559,9 +559,9 @@ if (any (abs (fDB$tErr) > 1)){
 ## manipulate shortF, short filename to implement corrections
 ## (ultimately, skip all the in-file corrections above)
 # add instrument-serial to filename for troubleshooting later (temp?)
-fDB$shortFNx <- sapply (1:nrow (fDB), function (i){
+fDB$shortFNx <- sapply (seq_len(nrow (fDB)), function(i) {
   gsub (".hex$", paste0 ("_", fDB$instN [i], ".hex"), fDB$shortFN [i])
-  })
+})
 
 
 
@@ -579,37 +579,37 @@ cDir <- "~/GISdata/LCI/CTD-processing/Workspace/conFiles/"
 cFDB <- data.frame (file = list.files (cDir, full.names = FALSE))
 cFDB$date <- gsub (".(xmlcon|CON)", "", cFDB$file)
 cFDB$dir <- paste0 (hexCache, "hex2process/"
-                    , cFDB$date, "/")
+  , cFDB$date, "/")
 cFDB$inst <- substr (x = cFDB$file, start = 11, stop = 14)
 
-for (i in 1:nrow (cFDB)){ # copy config files to their folders
+for (i in seq_len(nrow (cFDB))) { # copy config files to their folders
   dir.create (cFDB$dir [i], showWarnings = FALSE, recursive = TRUE)
-  file.copy (from = paste0 (cDir, cFDB$file [i]), to = cFDB$dir [i]) #, copy.date = TRUE)
+  file.copy (from = paste0 (cDir, cFDB$file [i]), to = cFDB$dir [i]) # , copy.date = TRUE)
 }
 cFDB$date <- gsub (paste0 ("^SBE19plus_(",
-                           paste (levels (factor (fDB$instN)), collapse="|"),
-                                          ")_")
-                   , "", cFDB$date)
+  paste (levels (factor (fDB$instN)), collapse = "|"),
+  ")_")
+, "", cFDB$date)
 cFDB$date <- as.POSIXct (paste0 ("1-", gsub ("_", "-", cFDB$date)) # for xmlcon inconsistency
-                         , format = "%d-%b-%Y")
+  , format = "%d-%b-%Y")
 cFDB$inst <- substr (cFDB$file, start = 11, 14)
-cFDB <- cFDB [order (cFDB$date),]
+cFDB <- cFDB [order (cFDB$date), ]
 rm (i, cDir)
 
-if (0){ ## read calibration date
-for (i in 1:nrow (cFDB)){
-  hX <- file (paste (cFDB$dir [i], cFDB$file [i], sep = "/"))
-  hD <- readLines(hX)
-  close (hX)
-  hD <- grep ("CalibrationDate", hD, value = TRUE)
-  hD <- trimws (gsub ("CalibrationDate", "", hD, fixed = TRUE))
-  hD <- gsub ("(<>|</>)", "", hD)
-  hD <- ifelse (nchar (hD) < 11
-                , paste0 (substr (hD, 1, 7), "20", substr (hD, 8, 11))
-                , hD)
-  hD <- toupper(hD)
-  cDate <- as.POSIXct (hD, format = "%d-$b-%Y")
-}
+if (0) { ## read calibration date
+  for (i in seq_len(nrow (cFDB))) {
+    hX <- file (paste (cFDB$dir [i], cFDB$file [i], sep = "/"))
+    hD <- readLines(hX)
+    close (hX)
+    hD <- grep ("CalibrationDate", hD, value = TRUE)
+    hD <- trimws (gsub ("CalibrationDate", "", hD, fixed = TRUE))
+    hD <- gsub ("(<>|</>)", "", hD)
+    hD <- ifelse (nchar (hD) < 11
+      , paste0 (substr (hD, 1, 7), "20", substr (hD, 8, 11))
+      , hD)
+    hD <- toupper(hD)
+    cDate <- as.POSIXct (hD, format = "%d-$b-%Y")
+  }
 }
 
 
@@ -626,12 +626,12 @@ for (i in 1:nrow (cFDB)){
 ## assign appropriate con file to each HEX file
 fDB$procDir <- character (nrow (fDB))
 fDB$calDist <- numeric (nrow (fDB)) # days since calibration
-for (i in 1:nrow (fDB)){
+for (i in seq_len(nrow (fDB))) {
   ## assume file name date to be more reliable than metadata throughout!
-#  dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
+  #  dT <- as.numeric (difftime(fDB$metDate [i], cFDB$date, units = "days"))
   dT <- as.numeric (difftime(fDB$fnDate [i], cFDB$date, units = "days"))
   dT <- ifelse (cFDB$inst == fDB$instN [i], dT, dT + 1e9) # penalize wrong inst
-  dT <- ifelse (dT < 0, dT*-1+365*20, dT)  # penalize records in the future (SEABIRD fails) -- 20 records
+  dT <- ifelse (dT < 0, dT * -1 + 365 * 20, dT)  # penalize records in the future (SEABIRD fails) -- 20 records
   fDB$calDist [i] <- min (dT)
   fDB$procDir [i] <- cFDB$dir [which.min (dT)]
 }
@@ -643,7 +643,7 @@ fDBx <- fDB
 
 ## copy files to new/final directory
 cpCk <- with (fDBx, file.copy (from = file, to = paste0 (procDir, shortFNx)))  ## could manipulate shortFN!
-if (any (!cpCk)){
+if (any (!cpCk)) {
   print (summary (cpCk))
   stop ("copy of hex files failed")
 }
@@ -653,9 +653,9 @@ rm (nD)
 
 
 ## delete conf file, if it has not yet been used to prevent processing to hang
-for (i in seq_along(cFDB$dir)){
-  if (length (list.files(cFDB$dir [i], pattern = ".hex$")) < 1){  ## XXX test that this works!! XX
-    unlink (cFDB$dir [i], recursive=TRUE)
+for (i in seq_along(cFDB$dir)) {
+  if (length (list.files(cFDB$dir [i], pattern = ".hex$")) < 1) {  ## XXX test that this works!! XX
+    unlink (cFDB$dir [i], recursive = TRUE)
     cat ("Removed empty folder: ", cFDB$dir [i], "\n")
   }
 }
@@ -664,24 +664,24 @@ for (i in seq_along(cFDB$dir)){
 
 
 ## make small dataset for testing
-if (smallTest){
+if (smallTest) {
   x <- lapply (levels (as.factor (gsub ("/hex2process/", "/hex2test/", fDB$procDir)))
-               , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
+    , FUN = dir.create, recursive = TRUE, showWarnings = FALSE); rm (x)
   xmlC <- list.files (paste0 (hexCache, "hex2process"), ".xmlcon"
-                      , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+    , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
   ## remove 8138 and 2021 callibration until they've been used!
   # xmlC <- grep ("SBE19plus", xmlC, value = TRUE)
   file.copy (paste0 (hexCache, "hex2process/", xmlC)
-             , paste0 (hexCache, "hex2test/", xmlC))
+    , paste0 (hexCache, "hex2test/", xmlC))
   rm (xmlC)
 
   fDB2 <- list.files (paste0 (hexCache, "hex2process/"), ".HEX"
-                      , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
+    , recursive = TRUE, ignore.case = TRUE, include.dirs = TRUE)
   # fDB2 <- subset (fDB2)
   set.seed (8)
   fDB2 <- sample (fDB2, 30) ## better to force distribution, but good for now -- happens to work
   file.copy (paste0 (hexCache, "hex2process/", fDB2)
-             , paste0 (hexCache, "hex2test/", fDB2))
+    , paste0 (hexCache, "hex2test/", fDB2))
 }
 
 cat ("\n# END CTD_file_management.R #\n")

@@ -1068,7 +1068,7 @@ rm (mar_bathy)
 ## temporarily disable all bird code -- need to migrate to sf
 if (0){
 require ("sp")
-ch <- chull(coordinates (NPPSD2))
+ch <- chull(coordinates (NPPSD2))                                     ## XXX broken -- migrate to sf
 chCoor <- coordinates (NPPSD2)[c(ch, ch[1]), ]  # closed polygon
 sp_poly <- SpatialPolygons(list(Polygons(list(Polygon(chCoor)), ID=1))
                          , proj4string = slot (NPPSD2, "proj4string"))
@@ -1111,13 +1111,14 @@ if (0){ ## not working?
 ## match stnP and birds at different levels of buffer
 # for (i in length (stnB)){
 
-require ("rgeos")
+# require ("rgeos")
+require ("gdistance")
 require ("parallel")
 bDist <- function (stnL){
     ## stnL is SpatialPointsDataFrame
     ## buffDist <- unlist (mclapply (1:nrow (stnL), FUN = function (i){
     buffDist <- sapply (1:nrow (stnL), FUN = function (i){
-        sDis <- gDistance (stnL [i,], stnL, byid = TRUE)
+        sDis <- gdistance (stnL [i,], stnL, byid = TRUE)
         bufD <- min (subset (sDis, sDis > 0)) / 2
         return (bufD)
     }
@@ -1131,8 +1132,8 @@ stnT <- subset (stnP, grepl ("[1-9]|AlongBay", stn$Line)) # excl one-off station
 stnT <- subset (stnP, stnP$Plankton) ## better subset here from stnT? XX
 
 ## XXX sf replacement for gBuffer!
-lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
-## lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
+# lBuff <- gBuffer (stnT, width = bDist (stnT), byid = TRUE)
+lBuff <- st_buffer (stnT, dist=bDist(stnT))  ## sf version, substituting retiring rgeos--not working like this
 rm (stnT)
 
 findBirds <- function (x){

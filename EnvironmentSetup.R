@@ -3,12 +3,12 @@
 ## merge this with dataSetup.R ?
 
 ## setup working environment
-dir.create("~/GISdata/LCI/", recursive=TRUE, showWarnings=FALSE)
-dir.create("~/GISdata/data/coastline", recursive=TRUE, showWarnings=FALSE)
+dir.create("~/GISdata/LCI/", recursive = TRUE, showWarnings = FALSE)
+dir.create("~/GISdata/data/coastline", recursive = TRUE, showWarnings = FALSE)
 tO <- getOption ("timeout")
 
 
-options (timeout=max (1200, getOption("timeout")))
+options (timeout = max (1200, getOption("timeout")))
 
 
 ## fetch bathymetry, shoreline, weather, swmp, CTD hex/aggregated files
@@ -38,9 +38,9 @@ options (timeout=max (1200, getOption("timeout")))
 
 ## GSHHG shoreline
 outF <- "~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
-if (!file.exists (outF)){
-  download.file (url="https://www.ngdc.noaa.gov/mgg/shorelines/data/gshhg/latest/gshhg-shp-2.3.7.zip"
-                 , destfile=outF, method="wget") ## 149 MB
+if (!file.exists (outF)) {
+  download.file (url = "https://www.ngdc.noaa.gov/mgg/shorelines/data/gshhg/latest/gshhg-shp-2.3.7.zip"
+    , destfile = outF, method = "wget") ## 149 MB
 }
 rm (outF)
 
@@ -51,5 +51,5 @@ rm (outF)
 ## seabirds
 
 
-options (timeout=tO)
+options (timeout = tO)
 # EOF

@@ -67,5 +67,5 @@ frms <- list.files("C:/Users/Martin.Renner/Desktop/drifter-animation/")
 
 
 
-animate (p, nframes = length (frms), fps=10)
+animate (p, nframes = length (frms), fps = 10)
 anim_save ("~/tmp/LCI_noaa/media/drifter.gif", p)

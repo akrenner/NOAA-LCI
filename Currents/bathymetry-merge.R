@@ -9,7 +9,7 @@
 
 
 ## QGIS: no scripting -- this is too complex
-rm (list=ls())
+rm (list = ls())
 # renv::load("renv/activate.R")
 
 
@@ -23,12 +23,12 @@ interAct <- FALSE
 area <- "ResearchAreaXL"
 bbox <- c (-156, -143.5, 55, 61.5) ## rRes 200 is too much for Dell
 
-if (1){
-## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
-area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
-bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
+if (1) {
+  ## KBL research area -- running a large grid like this at 100 or 50 m needs > 16 GB RAM
+  area <- "ResearchArea"  ## MacBook with 32 GB RAM can handle up to 100 m, but not 50
+  bbox <- c(-155.3, -143.9, 55.6, 60.72) # as specified
 }
-if (0){
+if (0) {
   ## reduced research area
   area <- "GWA-area"
   bbox <- c(-154.3, -150.7, 58.6, 61) ## restricted to stay within memory limits
@@ -39,21 +39,21 @@ if (0){
 ## set gRes depending on available memory
 require ("memuse")
 ramL <- memuse::Sys.meminfo()$totalram |> as.numeric ()
-if (area == "GWA-area"){
+if (area == "GWA-area") {
   gRes <- 200
-}else{
+} else {
   gRes <- 400
 }
-if (ramL  > 60e9){
-#  gRes <- gRes / 8  ## too much for ResearchArea
-  if (area=="GWA-area"){
+if (ramL  > 60e9) {
+  #  gRes <- gRes / 8  ## too much for ResearchArea
+  if (area == "GWA-area") {
     # GWA-area, gRes =25 ok with 64 GB RAM
     gRes <- 25
-  }else{
-    gRes <- 5*round (gRes/5 / 6.5, digits=0)  ## 7 too much for ResearchArea
+  } else {
+    gRes <- 5 * round (gRes / 5 / 6.5, digits = 0)  ## 7 too much for ResearchArea
     gRes <- 60 # 50 is too big?
   }
-}else if (ramL > 17e9){
+} else if (ramL > 17e9) {
   gRes <- gRes / 4
 }
 rm (ramL)
@@ -81,17 +81,17 @@ gcF <- "~/GISdata/LCI/bathymetry/GMRTv4_2topo/GMRTv4_2_20240423topo.tif"
 
 
 ## ensure needed files are present
-  # curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
-  #                     , destfile=gcF)
+# curl::curl_download(url="https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer/exportImage?bbox=-160.00000,55.00000,-140.00000,63.00000&bboxSR=4326&size=4800,1920&imageSR=4326&format=tiff&pixelType=F32&interpolation=+RSP_NearestNeighbor&compression=LZ77&renderingRule={%22rasterFunction%22:%22none%22}&mosaicRule={%22where%22:%22Name=%27ETOPO_2022_v1_15s_surface_elev%27%22}&f=image"
+#                     , destfile=gcF)
 mF <- !file.exists (demF, ciF, gaF, gcF)
-if (any (mF)){ # any files missing?
-  sites <- c(DEM="https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:707/html"
-             , Zimmermann="http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CI)"
-             , Zimmermann="http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CGOA)"
-             , gmrt="https://www.gmrt.org/"
+if (any (mF)) { # any files missing?
+  sites <- c(DEM = "https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:707/html"
+    , Zimmermann = "http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CI)"
+    , Zimmermann = "http://web.archive.org/web/20180821131853/http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/ (CGOA)"
+    , gmrt = "https://www.gmrt.org/"
   )
   stop (paste0 ("Missing files. Get the necessary bathymetry file(s) from: \n"
-  , sites [which (mF)])
+    , sites [which (mF)])
   , "\nand place it in ", c(demF, ciF, gaF, gcF)[mF], " respectively.")
 }
 rm (mF)
@@ -111,10 +111,10 @@ require ("magrittr")
 
 require ("starsExtra")
 ## use manually defined bounding box (study region)
-nG <- data.frame (lon=c(bbox[1], bbox[2]), lat=c(bbox[3], bbox[4])) %>%  ## gebco is -157 -143 55 62
-  st_as_sf (coords=c("lon", "lat"), crs=4326) %>%
-  st_transform(crs=epsg) %>%     # st_crs (ci)) %>%
-  starsExtra::make_grid(res=gRes)
+nG <- data.frame (lon = c(bbox[1], bbox[2]), lat = c(bbox[3], bbox[4])) %>%  ## gebco is -157 -143 55 62
+  st_as_sf (coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(crs = epsg) %>%     # st_crs (ci)) %>%
+  starsExtra::make_grid(res = gRes)
 ## transform grids to new grid and fill in the blanks hierachicaly
 
 
@@ -122,31 +122,31 @@ nG <- data.frame (lon=c(bbox[1], bbox[2]), lat=c(bbox[3], bbox[4])) %>%  ## gebc
 ## -----------------------------------------------------------------------------
 ## read in grids
 
-dm <- stars::read_stars(demF, package="stars") %>%
-stars::st_warp(nG)
+dm <- stars::read_stars(demF, package = "stars") %>%
+  stars::st_warp(nG)
 rm (demF, nG)
 
 ## eventually, consider adding USGS DEM here at some stage. But it's BIG.
 
 ## fix bad NA values -- this takes care of those odd edges in Zimmermann files!
-ci <- read_stars (ciF, package="stars")  ## NA_value = ?
+ci <- read_stars (ciF, package = "stars")  ## NA_value = ?
 
-if (interAct){
+if (interAct) {
   plot (ci)
   ci
 }
 ci [[1]][ci[[1]] < 0] <- NA ## refine? XXX
 ci2 <- stars::st_warp(ci, dm)
 rm (ci)
-dm [[1]] <- ifelse (is.na (dm[[1]]), ci2[[1]]*-1, dm[[1]])  ## zero-out weird data-blocks in Zimmermann files
+dm [[1]] <- ifelse (is.na (dm[[1]]), ci2[[1]] * -1, dm[[1]])  ## zero-out weird data-blocks in Zimmermann files
 rm (ci2)
 
-ga <- read_stars(gaF, package="stars")
+ga <- read_stars(gaF, package = "stars")
 ga [[1]][ga[[1]] < 0.01] <- NA
-ga2 <- stars::st_warp(ga, dm, method="cubic", use_gdal=TRUE, no_data_value=9999) # or bilinear -- deal with NA!
+ga2 <- stars::st_warp(ga, dm, method = "cubic", use_gdal = TRUE, no_data_value = 9999) # or bilinear -- deal with NA!
 rm (ga)
 ## use raster::cover, terra::cover equivalent to merge the rasters
-dm [[1]] <- ifelse (is.na (dm [[1]]), ga2 [[1]]*-1, dm [[1]])
+dm [[1]] <- ifelse (is.na (dm [[1]]), ga2 [[1]] * -1, dm [[1]])
 rm (ga2)
 ## check-point
 save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
@@ -154,8 +154,8 @@ save.image ("~/tmp/LCI_noaa/cache/bathymetry2.RData")
 
 ## add terrestrial DEM. Using stars::st_mosaic
 
-gc2 <- read_stars (gcF, package="stars") %>%
-   stars::st_warp(dm, method="cubic", use_gdal=TRUE, no_data_value=9999)
+gc2 <- read_stars (gcF, package = "stars") %>%
+  stars::st_warp(dm, method = "cubic", use_gdal = TRUE, no_data_value = 9999)
 #  stars::st_warp(dm)
 dm [[1]] <- ifelse (is.na (dm [[1]]), gc2 [[1]], dm [[1]])
 rm (gc2, gcF)
@@ -163,7 +163,7 @@ rm (gc2, gcF)
 
 ## save results
 write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_", area, "_"
-                        , gRes, "m_EPSG", epsg, ".tiff"))
+  , gRes, "m_EPSG", epsg, ".tiff"))
 ## add metadata, e.g.: gdal_edit.py -mo TIFFTAG_ARTIST="It was me" in.tif
 ## or gdal_translate in.tif out.tif -mo TIFFTAG_ARTIST="It was me" -mo TIFFTAG_IMAGEDESCRIPTION="This data my layer"
 ## ...: passed to gdal_write
@@ -171,4 +171,3 @@ write_stars (dm, paste0 ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry
 ## there's a function: gdal_metadata -- only for reading
 
 ## EOF
-

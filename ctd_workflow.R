@@ -9,13 +9,13 @@
 # rm (list = ls())
 print (Sys.time())
 # CTD processing
-if (length (grep ("martin", tolower (getwd()))) > 0){
-  if (.Platform$OS.type != "windows"){
+if (length (grep ("martin", tolower (getwd()))) > 0) {
+  if (.Platform$OS.type != "windows") {
     setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-  }else{
+  } else {
     setwd ("~/myDocs/amyfiles/NOAA-LCI/")
   }
-}else{
+} else {
   # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
@@ -54,4 +54,4 @@ cat ("## Finished CTD_notesQAQC.R\n\n")
 
 cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 
-#EOF
+# EOF

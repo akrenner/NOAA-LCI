@@ -18,9 +18,9 @@
 rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
 # rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 
-if (length (grep ("darwin", version$os)) >0 ){
+if (length (grep ("darwin", version$os)) > 0) {
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-}else{
+} else {
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
 
@@ -30,7 +30,7 @@ if (length (grep ("darwin", version$os)) >0 ){
 
 
 ### data prep
- ("oce")
+("oce")
 ## define sections
 physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
@@ -54,12 +54,12 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 ## bahymetry -- already here from dataSetup.R in load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData"), but apparently not
 load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
-if (!exists ("bathyZ")){  # should already come from dataSetup.R
+if (!exists ("bathyZ")) {  # should already come from dataSetup.R
   mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
   names (mar_bathy) <- "topo"
   names (mar_bathy) <- "topo"
   bathyZ <- st_as_stars(depth = ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
-                        , dimensions = attr(mar_bathy, "dimensions"))
+    , dimensions = attr(mar_bathy, "dimensions"))
   rm (mar_bathy)
 }
 
@@ -83,7 +83,7 @@ poAll$Transect <- factor (poAll$Transect)
 
 
 ## log transformations
-slog <- function (x){
+slog <- function(x) {
   x <- suppressWarnings (log (x))
   x <- ifelse (is.infinite(x), NA, x)
   x
@@ -97,32 +97,32 @@ rm (slog)
 
 
 ## use hi-res bathymetry profiles now -- this is no longer of use -- abandone!
-if (0){
+if (0) {
   ## add bathymetry to CTD metadata
   poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
 
-  if (useSF){
+  if (useSF) {
     ## migrate to sf, stars/terra
     require (c ("sf", "lubridate"))
     pop <- poAll %>%
       st_as_sf (coords = c("longitude_DD", "latitude_DD")) %>%
-      st_set_crs(value="+proj=longlat +datum=WGS84 +units=m")
+      st_set_crs(value = "+proj=longlat +datum=WGS84 +units=m")
 
-    poAll$bathy <- st_extract(bathyZ, at=pop)
+    poAll$bathy <- st_extract(bathyZ, at = pop)
     poAll$Bottom.Depth_survey <- st_extract (bathyP, pop)
     rm (pop)
     # sapply(st_intersects(x,y), function(z) if (length(z)==0) NA_integer_ else z[1])
-  }else{
+  } else {
     require (sp)
     poP <- poAll
-    coordinates (poP) <- ~longitude_DD+latitude_DD
+    coordinates (poP) <- ~ longitude_DD + latitude_DD
     proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
     poAll$bathy <- extract (bathyP, poP)
     poAll$Bottom.Depth_survey <- extract (bathyP, poP)
-    if (exists ("bathyL")){
+    if (exists ("bathyL")) {
       bL <- extract (marmap::as.raster (bathyL), poP)
       poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
-                                            , -1* bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
+        , -1 * bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
       poAll$bathy <- poAll$Bottom.Depth_survey
     }
     poAll$bathy <- poAll$Bottom.Depth_survey
@@ -145,13 +145,13 @@ save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 # }
 
 
-poAll <- poAll [order (poAll$isoTime),]
+poAll <- poAll [order (poAll$isoTime), ]
 surveyW <- factor (poAll$DateISO)
 
 ## use nominal month and year from notebook -- eventually
-for (h in 2:length (levels (surveyW))){
-  if (difftime (levels (surveyW)[h], levels (surveyW)[h-1], units = "days") < 7){
-    surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h-1]
+for (h in 2:length (levels (surveyW))) {
+  if (difftime (levels (surveyW)[h], levels (surveyW)[h - 1], units = "days") < 7) {
+    surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h - 1]
   }
 }
 surveyW <- factor (format (poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
@@ -174,13 +174,13 @@ rm (surveyW, h)
 # poAll$survey <- factor (surveyW); rm (surveyW, h)
 
 ## check --- QAQC
-if (0){
+if (0) {
   cat ("Surveys window QAQC -- testing code\n")
-  for (i in 1:length (levels (poAll$survey))){
+  for (i in seq_along(levels (poAll$survey))) {
     x <- subset (poAll, survey == levels (poAll$survey)[i])
-    if (1){  #length (levels (factor (x$DataISO))) > 1){
-    cat (i, levels (factor (x$DateISO)), "\n")
-  }}
+    if (1) {  # length (levels (factor (x$DataISO))) > 1){
+      cat (i, levels (factor (x$DateISO)), "\n")
+    }}
   rm (x, i)
 }
 
@@ -189,25 +189,25 @@ if (0){
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- expression (temperature~"["*""^o~C*"]"
-            , salinity~"["*PSU*"]"
-            , density~"["*sigma[theta]*"]"  #"sigmaTheta"  ## spell in Greek?
-            , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-            , chlorophyll~"["*mg~m^-3*"]" #, "chlorophyll" #, "logFluorescence"
-            # , "PAR"
-            , log~(PAR)
-            , Oxygen~"["*mu*mol~kg^-1*"]"  # , "O2perc"  ## use bquote ?
-           , buoyancy~frequency~N^2~"["*s^-2*"]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
+oVars <- expression (temperature ~ "[" * ""^o ~ C * "]"
+  , salinity ~ "[" * PSU * "]"
+  , density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
+  , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
+  , chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
+  # , "PAR"
+  , log ~ (PAR)
+  , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
+  , buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
 )
 oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
-             , "salinity"
-             , "sigmaTheta"
-             , "turbidity" # , "logTurbidity"
-             , "fluorescence" #, "chlorophyll" #, "logFluorescence"
-             # , "PAR.Irradiance"
-             , "logPAR"
-             , "Oxygen_umol_kg"  # , "O2perc"
-             , "bvf"
+  , "salinity"
+  , "sigmaTheta"
+  , "turbidity" # , "logTurbidity"
+  , "fluorescence" # , "chlorophyll" #, "logFluorescence"
+  # , "PAR.Irradiance"
+  , "logPAR"
+  , "Oxygen_umol_kg"  # , "O2perc"
+  , "bvf"
 )
 
 ## see https://github.com/jlmelville/vizier
@@ -228,15 +228,15 @@ require ("cmocean")  ## for color ramps
 options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
 ## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
-oCol3 <- list (  ## fix versions?
-   # colorRampPalette(oceColorsTurbo(8), bias=0.5)
+oCol3 <- list ( ## fix versions?
+  # colorRampPalette(oceColorsTurbo(8), bias=0.5)
   oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
-  , colorRampPalette (col=odv, bias=0.3) #, colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
-  , colorRampPalette (cmocean ("dense")(5), bias=0.3)
-  , colorRampPalette (cmocean ("turbid")(5), bias=3) #, cmocean ("matter")  # or turbid
-  , colorRampPalette (cmocean ("algae")(5), bias=3)
-  #, oceColorsTurbo # cmocean ("solar")
-  , function (n){require ("viridis"); turbo (n, begin=0.25, end=0.8)}
+  , colorRampPalette (col = odv, bias = 0.3) # , colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
+  , colorRampPalette (cmocean ("dense")(5), bias = 0.3)
+  , colorRampPalette (cmocean ("turbid")(5), bias = 3) # , cmocean ("matter")  # or turbid
+  , colorRampPalette (cmocean ("algae")(5), bias = 3)
+  # , oceColorsTurbo # cmocean ("solar")
+  , function(n) {require ("viridis"); turbo (n, begin = 0.25, end = 0.8)}
   , cmocean ("oxy")
   , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
   , cmocean ("haline") # why is this here? should it be??
@@ -247,19 +247,19 @@ rm (odv)
 
 
 oRange <- t (sapply (c ("Temperature_ITS90_DegC"
-                        , "Salinity_PSU"
-                        , "Density_sigma.theta.kg.m.3"
-                        , "turbidity" # , "logTurbidity"
-                        , "Fluorescence_mg_m3"
-                        # , "PAR.Irradiance"
-                        , "logPAR"
-                        # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-                        , "Oxygen_umol_kg"
-                        , "bvf"
-                        )
-                     , FUN = function(vn){range (poAll [,which (names (poAll) == vn)], na.rm = TRUE)
-                       # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
-                     }))
+  , "Salinity_PSU"
+  , "Density_sigma.theta.kg.m.3"
+  , "turbidity" # , "logTurbidity"
+  , "Fluorescence_mg_m3"
+  # , "PAR.Irradiance"
+  , "logPAR"
+  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
+  , "Oxygen_umol_kg"
+  , "bvf"
+)
+, FUN = function(vn) {range (poAll [, which (names (poAll) == vn)], na.rm = TRUE)
+  # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
+}))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
 ## manually tune some of these ranges
@@ -273,12 +273,12 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
 ## umol/l = 31.2512* cO2 mg/l
 # oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
 # if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
-oRange [which (row.names(oRange)=="bvf"),] <- quantile (poAll$bvf, probs=c(0.01,0.99), na.rm=TRUE)
+oRange [which (row.names(oRange) == "bvf"), ] <- quantile (poAll$bvf, probs = c(0.01, 0.99), na.rm = TRUE)
 ###########################################################################
 
-if (0){
+if (0) {
   hist (poAll$Temperature_ITS90_DegC)
-  abline (v = oRange [1,])
+  abline (v = oRange [1, ])
 }
 
 
