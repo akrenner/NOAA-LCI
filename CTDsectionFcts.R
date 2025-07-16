@@ -277,6 +277,27 @@ isNightsection <- function (ctdsection){
 
 
 
+
+## extract from bathyZ. then fill-in the missing values from get.depth
+fetchBathy <- function(section, bathymetry) { ## test, move to CTDscetionFcts.R, apply to monthly plots
+  require("sf")
+  require ("stars")
+  if (!all (c("loni", "lati") %in% names (section))) {
+    stop ("section must have loni and lati columns")
+  }
+  if (class (bathymetry) != "stars") {
+    stop ("bathymetry must be a stars object")
+  }
+  station_P <- st_as_sf(section, coords=c("loni", "lati"), crs=4326) |>  # WGS84
+    st_transform(st_crs(bathymetry)) |>  ## transform to bathymetry CRS
+    st_as_sfc()
+
+  st_extract (bathymetry, at=station_P)
+}
+
+
+
+
 ## climatology of ctd casts -- from SEABIRD data-frame
 ## process all variables
 climatologyCTDcast <- function (cast, timeVar){

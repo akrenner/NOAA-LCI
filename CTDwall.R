@@ -110,11 +110,6 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     ## and for bathymetry profile
     ## turn this into a function?
 
-    getBathy <- function (transect){
-      require ("oce")
-      require ("sf")
-
-    }
     stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
 
     lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
@@ -122,30 +117,8 @@ for (ov in oceanvarC){  # ov = OceanVariable (temp, salinity, etc)
     require ("oce")
     dist <- rev (geodDist (longitude1=loni, latitude1=lati, alongPath=TRUE)) # [km] -- why rev??
     sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
+    bottom <- fetchBathy (sect, bathyZ)  # function from CTDsectionFcts.R
 
-
-    ## extract from bathyZ. then fill-in the missing values from get.depth
-    # if (useSF){
-      require ("sf")
-      sect <- st_as_sf(sect, coords=c("loni", "lati"))
-      sf::st_crs(sect) <- 4326  ## WGS84 definition
-      require ("stars")
-      sectP <- sf::st_transform(sect, st_crs (bathyZ))
-      bottom <- stars::st_extract(bathyZ, at=sectP)  # $depth  -- bottom needs to be sf point?
-    # }else{
-    #   require ("sp")
-    #   require ("raster")  ## spTransform loaded from wrong package otherwise, leading to crash!
-    #   coordinates (sect) <- ~loni+lati
-    #   proj4string(sect) <- CRS ("+proj=longlat +ellps=WGS84 +datum=WGS84")
-    #   sectP <- spTransform(sect, CRS (proj4string(bathyZ))) # fails if raster is not loaded first
-    #   bottomZ <- raster::extract (bathyZ, sectP, method="bilinear")*-1
-    # }
-    # require ("marmap")
-    # ## fill-in T6/AlongBay from NOAA raster that's missing in Zimmermann's bathymetry
-    # bottom <- marmap::get.depth (bathyNoaa, x=sect$loni, y=sect$lati, locator=FALSE) ## fails with useSF=TRUE: coord not found. marmap uses sp and raster! -- wait for marmap update!!
-    # bottom$depthHR <- ifelse (is.na (bottomZ), bottom$depth, bottomZ)
-    # names (bottom) <- "depth"
-    rm (sect, sectP)
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
