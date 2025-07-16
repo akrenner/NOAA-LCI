@@ -268,7 +268,7 @@ sL$jday <- factor (sL$jday)
 #  plot (chlfluor~datetimestamp, sL, subset = station == "SeldoviaShallow")
 
 ## climatology per station
-# cliFL <- lapply (1:length (levels (sL$station)), FUN = function (i){
+# cliFL <- lapply (seq_along(levels (sL$station)), FUN = function (i){
 #   x <- subset (sL, station == levels (sL$station)[i])
 #   s <- aggregate (chlfluor~jday+year, x, FUN = mean, na.rm = TRUE)
 #   s <- aggregate (chlfluor~jday, s, FUN = mean, na.rm = TRUE)
@@ -313,14 +313,14 @@ cliFL <- cliT; rm (cliT, cliTL)
 
 
 ## fit logistic curve to each climatology
-cliFit <- lapply (1:length (levels (cliFL$station)), FUN = function(j) {
+cliFit <- lapply (seq_along(levels (cliFL$station)), FUN = function(j) {
   #  s <- cliFL [[j]]
   s <- subset (cliFL, station == levels (cliFL$station)[j])
   s$csum <- cumsum (s$chlfluor)
   fit <- nls (csum ~ logF (L, k, x0, b, jday), data = s, start = svf)
   fit
 })
-tempCliFit <- lapply (1:length (levels (cliFL$station)), FUN = function(j) {
+tempCliFit <- lapply (seq_along(levels (cliFL$station)), FUN = function(j) {
   s <- subset (cliFL, station == levels (cliFL$station)[j])
   fit <- nls (temp ~ logF (L, k, x0, b, jday), data = s, start = svf)
   fit
@@ -331,8 +331,8 @@ tempCliFit <- lapply (1:length (levels (cliFL$station)), FUN = function(j) {
 ## for each station: climatology of spring bloom
 pdf ("~/tmp/LCI_noaa/media/spring/TimeFluorescClimatology-bySite.pdf", height = 6, width = 12)
 par (mfrow = c(1, 2))
-for (j in 1:length (levels (cliFL$station))) {
-  # for (j in 1:length (cliFL)){
+for (j in seq_along(levels (cliFL$station))) {
+  # for (j in seq_along(cliFL)){
   s <- subset (cliFL, station == levels (cliFL$station)[j])
   s$csum <- cumsum (s$chlfluor)  ## no NAs in climatology
   plot (chlfluor ~ jday, s, lwd = 2, type = "l", col = "black"
@@ -377,7 +377,7 @@ dev.off()
 pdf ("~/tmp/LCI_noaa/media/spring/fluorClimatologypanel-site-cum.pdf"
   , width = 6, height = 4)
 par (mfrow = c(2, 2))
-for (j in 1:length (levels (cliFL$station))) {
+for (j in seq_along(levels (cliFL$station))) {
   s <- subset (cliFL, station == levels (cliFL$station)[j])
   s$csum <- cumsum (s$chlfluor)  ## no NAs in climatology
   plot (csum ~ jday, s, lwd = 2, type = "l", ylab = "cumulative chlorophyl"
@@ -391,9 +391,9 @@ rm (svf, svt)
 
 
 ## summary of how many valid measurements per year
-fluorAvail <- sapply (1:length (levels (sL$station)), FUN = function(j) {
+fluorAvail <- sapply (seq_along(levels (sL$station)), FUN = function(j) {
   s <- subset (sL, station == levels (station)[j])  # use homerS for now
-  sapply (1:length (levels (s$year)), function(i) {
+  sapply (seq_along(levels (s$year)), function(i) {
     sum (!is.na (subset (s, year == levels (s$year)[[i]])$chlfluor))
   })
 })
@@ -409,7 +409,7 @@ print (fluorAvail)
 j <- 4
 j <- 2
 
-# for (j in 1:length (levels (sL$station))){
+# for (j in seq_along(levels (sL$station))){
 # cat ("\n\n\n", j, "\n")
 
 ## fix NAs in sL
@@ -449,7 +449,7 @@ rm (lS, Ny, Ns)
 
 
 i <- 8; j <- 3
-yearFits <- lapply (1:length (levels (sL$station)), function(j) {
+yearFits <- lapply (seq_along(levels (sL$station)), function(j) {
   dat <- subset (sL, station == levels (sL$station)[j])
   #   dat$year <- factor (dat$year)  ## reset year levels
   ## aggregate to jday, same as cliFL
@@ -458,7 +458,7 @@ yearFits <- lapply (1:length (levels (sL$station)), function(j) {
 
   svf <- as.list (coefficients(cliFit [[j]]))
 
-  yFit <- lapply (1:length (levels (dat$year)), FUN = function(i) {
+  yFit <- lapply (seq_along(levels (dat$year)), FUN = function(i) {
     s <- subset (dat, year == levels (dat$year)[i])
     if (sum (!is.na (s$chlfluor)) < 5) {  ## cause a try-error to be caught below
       fit <- try (log ("a"), silent = TRUE)
@@ -475,11 +475,11 @@ yearFits <- lapply (1:length (levels (sL$station)), function(j) {
   yFit
 })
 ## also fit yearly temperature data to compare t0s.
-yTempFit <- lapply (1:length (levels (sL$station)), function(j) {
+yTempFit <- lapply (seq_along(levels (sL$station)), function(j) {
   dat <- subset (sL, station == levels (sL$station)[j] & jday < 250)
   svf <- as.list (coefficients(tempCliFit [[j]]))
 
-  yFit <- lapply (1:length (levels (dat$year)), FUN = function(i) {
+  yFit <- lapply (seq_along(levels (dat$year)), FUN = function(i) {
     s <- subset (dat, year == levels (dat$year)[i])
     if (sum (!is.na (s$temp)) < 5) { ## cause a try-error to be caught below
       fit <- try (log ("a"), silent = TRUE)
@@ -494,9 +494,9 @@ yTempFit <- lapply (1:length (levels (sL$station)), function(j) {
 
 
 
-yearCoef <- lapply (1:length (yearFits), function(j) {
+yearCoef <- lapply (seq_along(yearFits), function(j) {
   fits <- yearFits [[j]]
-  coefs <- t (sapply (1:length (fits), function(i) {
+  coefs <- t (sapply (seq_along(fits), function(i) {
     fit <- fits [[i]]
     if (class (fit) == "try-error") {
       cf <- as.numeric (rep (NA, 5))
@@ -534,10 +534,10 @@ yearCoef
 j <- 1; i <- 1
 pdf ("~/tmp/LCI_noaa/media/spring/TimeFluoAnnual.pdf", height = 6, width = 12)
 par (mfrow = c(1, 2))
-for (j in 1:length (levels (sL$station))) {
+for (j in seq_along(levels (sL$station))) {
   dat <- subset (sL, station == levels (sL$station)[j])
   dat$year <- factor (dat$year)
-  for (i in 1:length (levels (dat$year))) {
+  for (i in seq_along(levels (dat$year))) {
     #  cat ("\n\n", i, "\n")
     s <- subset (dat, year == levels (dat$year)[i])  # use homerS for now
     if (sum (!is.na (s$chlfluor)) > 3) {
@@ -587,7 +587,7 @@ rm (fit.val, fits, s, dat)
 ## parameters of temperature-fit
 yearCoef$station <- factor (yearCoef$station)
 pdf ("~/tmp/LCI_noaa/media/spring/timing_StationCor.pdf")
-for (i in 1:length (levels (yearCoef$station))) {
+for (i in seq_along(levels (yearCoef$station))) {
   s <- subset (yearCoef, station == levels (yearCoef$station)[i])[, 2:ncol (yearCoef)]
   cat ("\n\n", levels (yearCoef$station)[i], "\n")
   print (try (cor (s, use = "p"), silent = TRUE))
@@ -665,13 +665,13 @@ if (0) {
   pdf ("~/tmp/LCI_noaa/media/spring/timeFluores-Turb.pdf", width = 7, height = 14)
   mC <- seq (1, 10, by = 2)
   par (mfcol = c(length (mC), 2), mar = c(3, 4, 0.5, 0.5))
-  for (i in 1:length (mC)) {
+  for (i in seq_along(mC)) {
     plot (chlfluor ~ turb, sLo, subset = (month == mC [i]) & (station == "HomerShallow")
       , xlab = "", xlim = c(0, 50), ylim = c(0, 150), ylab = "")
     legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)
     if (i == 1) {legend ("top", bty = "n", legend = "Homer", cex = 2.5)}
   }
-  for (i in 1:length (mC)) {
+  for (i in seq_along(mC)) {
     plot (chlfluor ~ turb, sLo, subset = (month == mC [i]) & (station == "SeldoviaShallow")
       , xlab = "", xlim = c(0, 50), ylim = c(0, 150), ylab = "")
     legend ("topright", bty = "n", legend = month.abb [mC [i]], cex = 2)

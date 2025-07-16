@@ -80,7 +80,7 @@ yL <- function(mx) {  ##  BUG in here?
     c(levels (yr)[i], rep ("", 11))  ## label only first month with year
   }))
   , rep (levels (mt), length (levels (yr))))
-  # lbl <- paste (as.character (sapply (1:length (levels (yr)), FUN = function (i){
+  # lbl <- paste (as.character (sapply (seq_along(levels (yr)), FUN = function (i){
   #   c("", levels (yr)[i], rep ("", 10))}))
   #   , rep (levels (mt), length (levels (yr))))
   lbl

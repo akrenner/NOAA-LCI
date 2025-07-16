@@ -46,14 +46,14 @@ axis (1, at=format (as.Date (paste0 ("2000-", 1:12, "-1")), "%j"), tick=TRUE, la
 axis (1, at=format (as.Date(paste0 ("2000-", seq (1,12,by=2), "-15")), "%j")
       , tick=FALSE, labels=month.abb[seq (1,12, by=2)])
 box()
-for (i in 1:length (levels (zA$Year))){
+for (i in seq_along(levels (zA$Year))){
   Ty <- subset (zA, zA$Year==levels (zA$Year)[i])
   lines (totalDens~jday, Ty, col=i, lwd=2, type="b"
          , lty=c(rep ("solid", 8), rep ("dashed", 2))[i]
   )
 }
 legend ("topleft" # as.numeric (format (as.Date ("2000-08-15"), "%j")), 99
-        , legend=levels(zA$Year), lwd=2, col=1:length (levels (zA$Year))
+        , legend=levels(zA$Year), lwd=2, col=seq_along(levels (zA$Year))
         , lty=c (rep ("solid", 8), rep ("dashed", 2)), bty="n"
 #        , ncol=2
         )
@@ -315,7 +315,7 @@ for (i in TransN){
         #   , cex = 10 * (T9env$zoopSum / max (T9env$zoopSum))
         , main = paste0 ("Transect=", i)
   )
-  for (i in 1:length (levels (T9env$month))){
+  for (i in seq_along(levels (T9env$month))){
     cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
   }
   # legend ("topleft", legend = month.abb, pch = 19, col = mCol)
@@ -342,7 +342,7 @@ T9env$zoopSum <- rowSums (subset (zooC, tPs))
 
 par (mar = c(5,4,2,1) + 0.1)
 plot (T9 [,1:2], col = adjustcolor (mCol, 0.7)[T9env$month], pch = 19)
-for (i in 1:length (levels (T9env$month))){
+for (i in seq_along(levels (T9env$month))){
   cH (T9env$month == levels (T9env$month)[i], mCol [i], pts = T9 [,1:2], hull = TRUE)
 }
 ## text (T9 [,1:2], labels = T9env$transO)
@@ -461,7 +461,7 @@ pdf ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal2.pdf")
 # png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
 plot (nMScores [,1:2], type = "n")
 ## add convex hulls
-for (i in 1:length (levels (nMCol))){
+for (i in seq_along(levels (nMCol))){
     cH (nMCol == levels (nMCol)[i], fCol [i], hull = TRUE)
 }
 points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
@@ -475,10 +475,10 @@ points (nMScores [,1:2], col = fCol [as.numeric (nMCol)]
 text (aggregate (nMScores [,1:2]~nMCol, FUN = mean)[,2:3], levels (nMCol))
 ## pSym <- c(25,1,17)
 ## legend ("bottomleft", legend = levels (factor (zooCenv$warmCat))
-##       , pch = pSym [1:length (levels (zooCenv$warmCat))]
+##       , pch = pSym [seq_along(levels (zooCenv$warmCat))]
 ##       , bty = "n")
 legend ("topleft", legend = levels (nMCol)
-        ##, col = 1:length (levels (nMCol))
+        ##, col = seq_along(levels (nMCol))
         , col = fCol, pch = 19, bty = "n")
 legend ("topright", legend = c("T9", "T4", "others")
         , pch = c(1, 19, 19)
@@ -499,7 +499,7 @@ save.image ("~/tmp/LCI_noaa/cache/zoopCommInSplot.RData")
 
 ## within-season plots
 plotInSeason <- function (pdfN, plotCat = "warmCat"
-                        , colP # = 1:length (levels (which Cat))
+                        , colP # = seq_along(levels (which Cat))
                         , hull = TRUE, legLoc = "topleft"
                           , reScale = FALSE
                           ){
@@ -508,7 +508,7 @@ plotInSeason <- function (pdfN, plotCat = "warmCat"
     for (k in 1){
         PDF (paste0 ("2019/", pdfN, k))
         par (mfrow = c(2,2))
-        for (i in 1:length (levels (zooCenv$season))){
+        for (i in seq_along(levels (zooCenv$season))){
             if (reScale){
                 Require (vegan)
                 cat ("\n##\n", i, levels (zooCenv$season) [i], "\n\n##\n")
@@ -533,12 +533,12 @@ plotInSeason <- function (pdfN, plotCat = "warmCat"
             if (i %in% c(1,3)){axis (2)}
             if (i %in% c(3,4)){axis (1)}
             if (i == 1){
-                legend (legLoc, legend = levels (ze$Cat), col = colP [1:length (levels (ze$Cat))]
+                legend (legLoc, legend = levels (ze$Cat), col = colP [seq_along(levels (ze$Cat))]
                       , pch = 19, bty = "n")
             }
 #            nL <- as.numeric (levels (factor (as.numeric (ze$Cat))))
-#            for (j in 1:length (nL)){
-            for (j in 1:length (levels (ze$Cat))){
+#            for (j in seq_along(nL)){
+            for (j in seq_along(levels (ze$Cat))){
                 cH (fac = ze$Cat == levels (ze$Cat)[j]
                   , colC = colP [j]
                   , pts = subSc, hull = hull)
@@ -622,7 +622,7 @@ plot (nMScores [,2]~zooCenv$jDate, xlab = "julian date", ylab = "nMDS-2"
 legend ("topleft", legend = levels (zooCenv$Year), pch = 19
         , col = levels (zooCenv$Year)
         , bty = "n", ncol = 4)
-# for (i in 1:length (levels (zooCenv$Year))){
+# for (i in seq_along(levels (zooCenv$Year))){
 #   lines (nMScores [,2]~zooCenv$jDate, subset = zooCenv$Year == levels (zooCenv$Year)[i])
 # }
 dev.off()
@@ -631,7 +631,7 @@ dev.off()
 
 ## models of nMDS and above variables
 ## varName <- c("TempAnom", "Sal", "Temp", "SalAnom")
-## for (i in 1:length (varName)){
+## for (i in seq_along(varName)){
 ##     print (summary (lm (as.formula (paste0 ("nMScores [,1]~", varName [i], "+ season")), data = zooCenv@data)))
 ##     print (summary (lm (as.formula (paste0 ("nMScores [,1]~", varName [i], "* month")), data = zooCenv@data)))
 ##     ## print (summary (lm (as.formula (paste0 ("nMScores [,1]~", varName, "* isoDate"))
@@ -723,7 +723,7 @@ if (0){
 PDF ("2019/Zoop_intraseasonal-nMDS-boxplots")
 for (j in 1:3){
     par (mfrow = c(2,2))
-    for (i in 1:length (levels (zooCenv$season))){
+    for (i in seq_along(levels (zooCenv$season))){
         ## vioplot (nMScores [,1]~zooCenv$warmCat
         boxplot (nMScores [,j]~zooCenv$warmCat
                , subset = zooCenv$season == levels (zooCenv$season)[i]
@@ -761,7 +761,7 @@ if (0){            # plot not ready yet
 ## canonical correspondence analysis WITHIN seasons
 PDF ("2019/Zoop_intraseasonal-CCA")
 par (mfrow = c(2,2))
-for (i in 1:length (levels (zooCenv$season))){
+for (i in seq_along(levels (zooCenv$season))){
     ccaZ <- cca (zooC~zooCenv$TempAnom, subset = zooCenv$season == levels (zooCenv$season)[i])
     plot (ccaZ, main = levels (zooCenv$season)[i])
 }
@@ -799,7 +799,7 @@ dev.off()
 # pngFl <- gsub (".pdf$", ".png", pdfFl)
 # pngFl <- gsub ("2019/", "2019-png/", pngFl)
 # Require (parallel)
-# outP <- mclapply (1:length (pdfFl), function (i){
+# outP <- mclapply (seq_along(pdfFl), function (i){
 #     oP <- system (paste ("~/bin/convertHQ", pdfFl [i], pngFl [i])
 #                                 , intern = TRUE, ignore.stdout = TRUE)
 # }, mc.cores = nCPUs)

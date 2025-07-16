@@ -82,10 +82,10 @@ if (0) {
   # file.path(conF, fsep = "\\")
   i <- 3
   j <- 99
-  # for (i in 1:length (conF)){
-  #   for (k in 1:length (tL)){dir.create (tL [k], recursive=TRUE)}
+  # for (i in seq_along(conF)){
+  #   for (k in seq_along(tL)){dir.create (tL [k], recursive=TRUE)}
   #   hexFiles <- list.files(dirname (conF [i]), ".hex$")
-  #   for (j in 1:length (hexFiles)){
+  #   for (j in seq_along(hexFiles)){
   #     l1 <- paste0 ("DatCnv /i", inD [i], "/", hexFiles [j], " /c", conF [i], " /o", tLD[1]
   #                   , " /p", psa [grep ("Dat", psa)], " #m")
   #     write (l1, file = "CTDbatch.txt")
@@ -103,7 +103,7 @@ if (0) {
 ## great if this could run in parallel -- probably not on Windows?
 for (i in seq_along(conF)) {
   # for (i in 8){  # restore 2_edited_hex/2024 from local git and test
-  # sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
+  # sapply (seq_along(tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
   tL <- paste(tLB, i, sep = "/")

@@ -39,7 +39,7 @@ plot (T9 [, 1:2], col = adjustcolor (mCol, 0.7)[T9$month]
   , pch = 19
   , cex = (10 * (T9$zoopSum / T9$volSample) / max (T9$zoopSum / T9$volSample)) + 0.2
 )
-for (i in 1:length (levels (T9$month))) {
+for (i in seq_along(levels (T9$month))) {
   cH (T9$month == levels (T9$month)[i], mCol [i], pts = T9 [, 1:2], hull = TRUE)
 }
 # legend ("topleft", legend = month.abb, pch = 19, col = mCol)

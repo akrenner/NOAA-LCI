@@ -199,7 +199,7 @@ if (coastal) {
     st_make_valid
 
   cbX <- cb
-  for (i in 1:length (coastE)) { # cut out every individual polygon
+  for (i in seq_along(coastE)) { # cut out every individual polygon
     cbX <- st_sym_difference(cbX, coastE [i, ])
   }
 } else {
@@ -220,7 +220,7 @@ if (1) {
   ## interpolate NA values from neighbours
   seax <- sea
   require ("zoo") ## use na.approx -- not ideal, but does the trick for now. ideal: r.neighbors
-  for (i in 1:length (seax)) {
+  for (i in seq_along(seax)) {
     seax [[i]] <- na.approx (seax [[i]])
   }
   # image (na.approx (mtx))

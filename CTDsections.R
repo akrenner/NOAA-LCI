@@ -59,7 +59,7 @@ for (sv in iX) {
 
 
   for (tn in iY) {  ## XXX testing XXX
-    #  for (tn in 1:length (levels (poAll$Transect))){
+    #  for (tn in seq_along(levels (poAll$Transect))){
     ## for testing
     ## sv <- 10; tn <- 1; s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
     # s$Transect <- factor (s$Transect)

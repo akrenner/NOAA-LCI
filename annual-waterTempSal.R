@@ -94,7 +94,7 @@ aPlot (sL, "strat", currentCol = currentCol, ylab = "water column stability", ma
   , ylim = c(0, 4.3) # c(0,5)
   , pastYear = pastYear, ongoingYear = ongoingY
 )
-# for (i in 1:length (hY)){
+# for (i in seq_along(hY)){
 #   sL <- prepDF (dat=sldviaS, varName="strat", maO=maO, currentYear=hY [i], qntl=qntl)
 #   lines (pYMA_strat~jday, sL, col=i)
 # }
@@ -115,7 +115,7 @@ aPlot (hM, "strat", currentCol = currentCol, ylab = "water column stability", ma
   , ylim = c(0, 4.3) # c(0,5))
   , pastYear = pastYear, ongoingYear = ongoingY
 )
-# for (i in 1:length (hY)){
+# for (i in seq_along(hY)){
 #  hM <- prepDF (dat=homerS, varName="strat", maO=maO, currentYear=hY [i], qntl=qntl)
 #  lines (pYMA_strat~jday, hM, col=i)
 # }

@@ -219,7 +219,7 @@ birdAn <- mdlW (names (birdS)[which (names (birdS) == "ALTE"):ncol (birdS)], bir
 ### trouble shooting
 if (0) {
   colIx <- (which (names (zooS) == "Year") + 1):ncol (zooS)
-  for (i in 1:length (colIx)) {
+  for (i in seq_along(colIx)) {
     cat (i, names (zooS)[colIx [i]], "\n")
     x <- mdlW (names (zooS)[colIx [i]], zooS)
   }
@@ -265,7 +265,7 @@ save.image ("~/tmp/LCI_noaa/cache/mcmc3.RData")
 
 climAn <- list (birdAn, zooAn, phyAn, poAn)
 names (climAn) <- c("birds", "zoop", "phyp", "physical")
-for (i in 1:length (climAn)) {
+for (i in seq_along(climAn)) {
   cat ("\n\n####\n", names (climAn)[i], "\n####\n")
   tDF <- climAn [[i]]
   print (tDF[order (tDF$post.mean^2, decreasing = TRUE), ][1:10, 1:5])

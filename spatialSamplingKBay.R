@@ -154,7 +154,7 @@ pntL <- list (current = st_union (zooCenv)
 
 
 pdf ("~/tmp/LCI_noaa/media/KBayZoopSampling.pdf", width = 11, height = 8.5)
-for (i in 1:length (pntL)) {
+for (i in seq_along(pntL)) {
   plot (studyA, main = names (pntL)[i])
   plot (st_union (coast), col = "beige", add = TRUE)
   plot (pntL[[i]], col = i, pch = 19, add = TRUE)

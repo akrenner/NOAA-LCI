@@ -141,7 +141,7 @@ save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 # poAll <- poAll [order (poAll$Transect, poAll$isoTime),]data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC
 # surveyT <- factor (with (poAll, paste (Transect,)))
 #
-# for (i in 1:length (levels (factor (poAll$Transect)))){
+# for (i in seq_along(levels (factor (poAll$Transect)))){
 # }
 
 

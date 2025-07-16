@@ -36,7 +36,7 @@ names (tFront) <- c ("tranS", "mDist", names (poT)[3:ncol (poT)])
 ##, fDist <- numeric (length (tranS)))
 
 
-for (i in 1:length (levels (tranS))){
+for (i in seq_along(levels (tranS))){
     trD <- subset (poT, tranS == levels (tranS)[i])
 
     if (nrow (trD) > 3){
@@ -90,7 +90,7 @@ save.image ("~/tmp/LCI_noaa/cache-t/frontEnd.RData")
 
 
 tranCat <- factor (substr (tFront$tranS, 1, 2))
-for (i in 1:length (levels (tranCat))){
+for (i in seq_along(levels (tranCat))){
     PDF (paste ("fronts/sumHist", levels (tranCat)[i], ".pdf", sep = ""))
    # par (mfrow = c(9,1)) #, mar = c(3,4,0,1))
     sumF <- subset (tFront, tranCat == levels (tranCat)[i])

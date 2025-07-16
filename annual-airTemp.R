@@ -105,7 +105,7 @@ aPlot(tDay, "atemp"
 if (SWMP) {title(main = "Air Temperature at Homer Spit")} else {
   title(main = "Air Temperature at Homer Airport")
  }
-# for (i in 1:length (levels (factor (hmr$year)))){
+# for (i in seq_along(levels (factor (hmr$year)))){
 #   lines (atemp~jday, subset (hmr, year == levels (factor (hmr$year))[i]))
 # }
 # fAxis (c (-15, 15), mT=expression ('air'~'temperature '~'['*degree~'F'*']'))

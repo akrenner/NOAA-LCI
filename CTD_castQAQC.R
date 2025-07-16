@@ -241,7 +241,7 @@ if (0) {                           # use oce -- not flexible enouth
 ##     cT <- physOc [grep ("^9_", physOc$Match_Name),]
 ##     PDF ("TS_example.pdf")
 ##     plot (Temperature_ITS90_DegC~Salinity_PSU, cT, col = season, pch = 19)
-##     legend ("bottomleft", legend = levels (physOc$season), col = 1:length (levels (physOc$season)), pch = 19)
+##     legend ("bottomleft", legend = levels (physOc$season), col = seq_along(levels (physOc$season)), pch = 19)
 ##     dev.off()
 ## # }
 
@@ -271,7 +271,7 @@ if (0) {
     ctdS <- subset (KBay, season == levels (KBay$season)[j])
     ctdS <- subset (ctdS, Match_Name %in% c("9_2", "9_6", "AlongBay_1", "AlongBay_12")) # extre
     ctdS$File.Name <- factor (ctdS$File.Name)
-    #    for (i in 1:length (levels (ctdS$File.Name))){
+    #    for (i in seq_along(levels (ctdS$File.Name))){
     i <- 1
     ctdX <- subset (ctdS, (File.Name == levels (ctdS$File.Name)[i]))
     ctdF <- with (ctdX, as.ctd (salinity = Salinity_PSU

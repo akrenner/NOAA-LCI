@@ -27,7 +27,7 @@ cD <- list (c4141 = c("2012-04-01", "2016-06-01", "2018-10-01")
 pdf ("~/tmp/LCI_noaa/media/fluorescence-callibration-2x.pdf"
   , width = 6, height = 12)
 par (mfrow = c(2, 1))
-for (i in 1:length (levels (physOc$instrument))) {
+for (i in seq_along(levels (physOc$instrument))) {
   fD <- aggregate (Fluorescence_mg_m3 ~ isoTime, physOc, FUN = min
     , subset = instrument == levels (physOc$instrument)[i])
   fD <- subset (fD, Fluorescence_mg_m3 > 0) # better to set NAs?
@@ -161,7 +161,7 @@ pdf ("~/tmp/LCI_noaa/media/t9s6-log-fluorescence-TS_byYear.pdf"
   # , width = 6, height = 4*length (levels (xC$year))
 )
 # par (mfrow = c(1,length (levels (xC$year))))
-for (i in 1:length (levels (xC$year))) {
+for (i in seq_along(levels (xC$year))) {
   yX <- subset (xC, year == levels (xC$year)[i])
   if (length (levels (factor (yX$File.Name))) > 2) {
     layout (matrix (c (1, 2, 3), ncol = 1), heights = c (5, 2, 2))

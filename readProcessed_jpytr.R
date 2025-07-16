@@ -9,7 +9,7 @@ save ("test.RData")
 # load ("test.RDataTmp")
 
 if (0) { # troubleshooting
-  fieldNames <- sapply (1:length (fN), FUN = function(i) {
+  fieldNames <- sapply (seq_along(fN), FUN = function(i) {
     tF <- read.fwf (fN [i], width = 550)
     strtLine <- grep ("^\"Temperature", tF$V1) - 1
     if (length (strtLine) == 0) {
@@ -18,12 +18,12 @@ if (0) { # troubleshooting
     agF <- read.csv (fN [i], na.string = "-9999", skip = strtLine)
     return (names (agF))
   })
-  sapply (1:length (fieldNames), function(i) {length (fieldNames [[i]])})
+  sapply (seq_along(fieldNames), function(i) {length (fieldNames [[i]])})
 
-  sapply (1:length (fieldNames), function(i) {grep ("sigma", fieldNames [[i]], value = TRUE)})
+  sapply (seq_along(fieldNames), function(i) {grep ("sigma", fieldNames [[i]], value = TRUE)})
 }
 
-for (i in 1:length (fN)) {
+for (i in seq_along(fN)) {
   tF <- read.fwf (fN [i], width = 550)
   strtLine <- grep ("^\"Temperature", tF$V1) - 1
   if (length (strtLine) == 0) {

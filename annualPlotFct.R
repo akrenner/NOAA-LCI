@@ -877,7 +877,7 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
   # wDB$datetimestamp <- as.POSIXct (tm, format = "%F %T", tz = "UTC") # move this up?
   # rm (tm)
 
-  # for (i in 1:length (meta)){  ## meta is a tibble...
+  # for (i in seq_along(meta)){  ## meta is a tibble...
   #   mN <- which (names (wDB) == names (meta [i]))
   #   is.na (wDB [,mN])[which (wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
   # }

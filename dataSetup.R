@@ -149,7 +149,7 @@ rm (physOcT)
 ## plan A: calculate slope for each step
 ## plan B: fit smoothing spline and produce derivative
 # cast <- factor (paste0 (physOc$Match_Name, physOc$isoTime))
-# physOc$densityGradient <- sapply (1:length (levels (cast))
+# physOc$densityGradient <- sapply (seq_along(levels (cast))
 #                                   , function (i){
 #                                     cst <- subset (physOc, cast == levels (cast)[i])
 #                                     slp <- (stats::lag (cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
@@ -158,7 +158,7 @@ rm (physOcT)
 #                                     slp
 #                                   }) %>%
 #   unlist
-physOc$bvf <- sapply (1:length (levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
+physOc$bvf <- sapply (seq_along(levels (physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function (i){
                                     require ("oce")
                                     cast <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
@@ -473,7 +473,7 @@ if (printSampleDates){
   length (levels (factor (pT$Match_Name)))
 
   pT$Transect <- factor (pT$Transect)
-  for (i in 1:length (levels (pT$Transect))){
+  for (i in seq_along(levels (pT$Transect))){
     cat ("\n\n", levels (pT$Transect)[i], "\n")
     print (sort (levels (factor (
       subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
@@ -683,7 +683,7 @@ if (printSampleDates){
   cat ("\n\nPhytoplankton sampling dates\n")
   pT <- subset (phyCenv, Year > 2020)
   pT$Transect <- factor (pT$Transect)
-  for (i in 1:length (levels (pT$Transect))){
+  for (i in seq_along(levels (pT$Transect))){
     cat ("\n\n", levels (pT$Transect)[i], "\n")
     print (sort (levels (factor (
       subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
@@ -835,7 +835,7 @@ if (printSampleDates){
   cat ("\n\nZooplankton sampling dates\n")
   pT <- subset (zooCenv, Year > 2016)
   pT$Transect <- factor (pT$Transect)
-  for (i in 1:length (levels (pT$Transect))){
+  for (i in seq_along(levels (pT$Transect))){
     cat ("\n\n", levels (pT$Transect)[i], "\n")
     print (sort (levels (factor (
       subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
@@ -905,7 +905,7 @@ if (printSampleDates){
   cat ("\n\nOA sampling dates\n")
   pT <- subset (oa, Year > 2020)
   pT$Transect <- factor (pT$Transect)
-  for (i in 1:length (levels (pT$Transect))){
+  for (i in seq_along(levels (pT$Transect))){
     cat ("\n\n", levels (pT$Transect)[i], "\n")
     print (sort (levels (factor (
       subset (pT, Transect==levels (pT$Transect)[i])$timeStamp
@@ -1142,7 +1142,7 @@ findBirds <- function (x){
     stnBird <- subset (birdD, !is.na (stnBuf))
     return (stnBird)
 }
-xo <- mclapply (1:length (lBuff), FUN = findBirds
+xo <- mclapply (seq_along(lBuff), FUN = findBirds
               , mc.cores = nCPUs)
 
 ## save.image ("~/tmp/LCI_noaa/cache-t/birdRef.RData")

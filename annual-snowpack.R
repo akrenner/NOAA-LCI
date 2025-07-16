@@ -158,7 +158,7 @@ for (i in seq_along(snowsites)) {  # c("mcneil canyon", "anchor river divide", "
   lines (snow_water_equivalent ~ jday, subset (snowMc, year == maxY), lwd = 2
     , lty = "dashed", col = "black")
   # yL <- levels (factor (snowMc$year))
-  # for (i in 1:length (yL)){
+  # for (i in seq_along(yL)){
   #   lines (snow_water_equivalent~jday, subset (snowMc, year == yL [i]), col = i)
   # }
 

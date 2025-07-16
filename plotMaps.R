@@ -290,8 +290,8 @@ plotKrige <- function(i) {
 
 ## plot kriging results
 # plotKrige (4)
-dummy <- mclapply (1:length (krigL), plotKrige, mc.cores = nCPUs)
-for (i in 1:length (krigL)) {
+dummy <- mclapply (seq_along(krigL), plotKrige, mc.cores = nCPUs)
+for (i in seq_along(krigL)) {
   print (names (krigL)[i])
   plotKrige (i)
 }
@@ -323,7 +323,7 @@ if (0) {
       return (tR)
     }
   }
-  slopeL <- lapply (1:length (krigL), slopeF) # , mc.cores = nCPUs) # raster not working with mclapply
+  slopeL <- lapply (seq_along(krigL), slopeF) # , mc.cores = nCPUs) # raster not working with mclapply
   require (dplyr)
 
 

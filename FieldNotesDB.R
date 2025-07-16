@@ -15,7 +15,7 @@ if (.Platform$OS.type == "unix") {
     AT <- system ("mdb-tables ~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb", intern = TRUE) %>%
       strsplit(" +") %>%
       unlist()
-    for (i in 1:length (AT)) {
+    for (i in seq_along(AT)) {
       system (paste0 ("mdb-export -T '%Y-%m-%d %H:%M' "
         , "~/GISdata/LCI/EVOS_LTM_tables/EVOS_LTM.accdb ", AT [i]
         , " > ", tableDir, AT [i], ".txt"))  ## see whether MS Access can export CSV instead of TXT
@@ -169,7 +169,7 @@ dev.off()
 
 
 sam$Type <- factor (sam$Type)
-for (i in 1:length (levels (sam$Type))) {
+for (i in seq_along(levels (sam$Type))) {
   cat ("\n\n", levels (sam$Type)[i], "\n")
   sT <- subset (sam, Type == levels (sam$Type)[i])
   print (aggregate(StationEvent ~ month + year + Transect, sT, FUN = length))

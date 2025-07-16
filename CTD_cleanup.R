@@ -194,7 +194,7 @@ if (0) {
       , stnSp[[i]], value = TRUE)[1]
   })
 
-  # for (i in 1:length (tnN)){
+  # for (i in seq_along(tnN)){
   #   if (length (tnN [[i]]) != 1){stop (i)}
   # }
   # stnSp [[i]]
@@ -419,7 +419,7 @@ badDens <- function(i) {
   }
   return (bCntr)
 }
-# bCntr <- unlist (mclapply (1:length (levels (physOc$File.Name)), FUN = badDens
+# bCntr <- unlist (mclapply (seq_along(levels (physOc$File.Name)), FUN = badDens
 #                          , mc.cores = nCPUs))
 bCntr <- unlist (lapply (seq_along(levels (physOc$File.Name)), FUN = badDens))
 
@@ -435,7 +435,7 @@ rm (bCntr, badDens)
 
 
 ## dF <- factor (physOc$File.Name)         # Date ?
-## dPc <- unlist (mclapply (1:length (levels (dF)), function (i){
+## dPc <- unlist (mclapply (seq_along(levels (dF)), function (i){
 ##     x <- subset (physOc, dF == levels (dF)[i])
 ##     r <- cor (x$Pressure..Strain.Gauge..db.,x$Depth.saltwater..m.)
 ##     return (r)

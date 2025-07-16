@@ -147,7 +147,7 @@ if (0) {
     # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
     fS <- c ("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
     # nS <- -3:0
-    for (k in 1:length (fS)) {
+    for (k in seq_along(fS)) {
       s$Transect [which (s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
     }
   }

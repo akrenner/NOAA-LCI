@@ -129,7 +129,7 @@ pdf ("~/tmp/LCI_noaa/media/2019-zoop/Zoop_nMDS_seasonalX.pdf")
 # png ("~/tmp/LCI_noaa/media/2019/Zoop_nMDS_seasonal.png")
 plot (nMScores [, 1:2], type = "n")
 ## add convex hulls
-for (i in 1:length (levels (nMCol))) {
+for (i in seq_along(levels (nMCol))) {
   cH (nMCol == levels (nMCol)[i], fCol [i], hull = TRUE)
 }
 points (nMScores [, 1:2], col = fCol [as.numeric (nMCol)]
@@ -145,7 +145,7 @@ points (nMScores [, 1:2], col = fCol [as.numeric (nMCol)]
 text (aggregate (nMScores [, 1:2] ~ nMCol, FUN = mean)[, 2:3], month.abb)
 ## pSym <- c(25,1,17)
 ## legend ("bottomleft", legend = levels (factor (zooCenv$warmCat))
-##       , pch = pSym [1:length (levels (zooCenv$warmCat))]
+##       , pch = pSym [seq_along(levels (zooCenv$warmCat))]
 ##       , bty = "n")
 legend ("topright", legend = c("T9-6", "others")
   , pch = 19 # c(1, 19, 19)
