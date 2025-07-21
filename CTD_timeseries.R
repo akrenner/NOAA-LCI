@@ -47,9 +47,9 @@ require ("tidyverse")
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
   #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
-  c("9_6", "AlongBay_3", "AlongBay_9"))
+  c("9_6", "9_8", "9_2", "AlongBay_3", "AlongBay_10", "4_6", "4_8", "4_3"))
 # pickStn <- seq_along(levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
-pickStn <- 87 # 9-6
+# pickStn <- 87 # 9-6
 
 
 deepThd <- 20   ## deep vs surface layer
