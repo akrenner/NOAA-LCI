@@ -6,6 +6,15 @@
 ## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
 ## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
+
+# add to time series (signature data)
+# freshwater of first 30 m / bottom
+# salinity at T9-6 at 50 m (seasonal influence of ACC?)
+# boyyancy profile over time
+# max buoyancy over time
+# position of max buoyancy over time
+
+
 rm(list = ls())
 sT <- Sys.time()
 
@@ -32,9 +41,8 @@ if (0) {
   # usethis::edit_r_environ()
 
 
-  ## troubleshoot dependencies:
-  badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw"
-  )
+  ## troubleshoot dependencies used in the past:
+  badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   deps <- renv::dependencies()
   for (i in seq_along (badP)) {
     cat ("\n\n##", badP [i], "##\n")

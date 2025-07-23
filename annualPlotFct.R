@@ -33,7 +33,7 @@ meanCol <- "darkgray"
 
 if (0) {
   ## using RColorBrewer:
-  require ("RColorBrewer")
+  require("RColorBrewer")
   bCol <- brewer.pal(12, "Paired")
   rangCol <- bCol [5:6]
   qantCol <- bCol [9]
@@ -47,23 +47,23 @@ if (0) {
 
 plotSetup <- function(longMean, current, ylab = NULL # , xlim=c(5,355)
                       , ...) {
-  par (xaxs = "i")
-  plot (1:365
-    , seq (min (c(longMean, current), na.rm = TRUE)
-      , max (c(longMean, current), na.rm = TRUE), length.out = 365)
+  par(xaxs = "i")
+  plot(1:365
+    , seq(min(c(longMean, current), na.rm = TRUE)
+      , max(c(longMean, current), na.rm = TRUE), length.out = 365)
     , type = "n", axes = FALSE
     , xlim = c(5, 355)
     , xlab = ""
     , ylab = ylab
     , ...
   )
-  axis (2)
+  axis(2)
   # axis (1, at=15+as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1")), "%j"))
   #       , labels=month.abb, tick=FALSE) # center month-labels
   ## label only every second month
-  axis (1, at = as.numeric (format (as.POSIXct (paste0 ("2019-", 1:6 * 2 - 1, "-15")), "%j"))
+  axis(1, at = as.numeric(format(as.POSIXct(paste0("2019-", 1:6 * 2 - 1, "-15")), "%j"))
     , labels = month.abb[1:6 * 2 - 1], tick = FALSE) # center month-labels
-  axis (1, at = c (as.numeric (format (as.POSIXct (paste0 ("2019-", 1:12, "-1"))
+  axis(1, at = c(as.numeric(format(as.POSIXct(paste0("2019-", 1:12, "-1"))
     , "%j")), 365), labels = FALSE) # add 365 to mark end of Dec
 }
 
@@ -75,28 +75,28 @@ aPlot <- function(df, vName, MA = TRUE
   # wrapper for annualPlot
   # assumes df was created using prepDF, resulting in standardized field names
   # -- using MA or raw??
-  if (MA) {
-    longMean <- df [, which (names (df) == paste0 ("MA_", vName))]
-    percL <- df [, which (names (df) == paste0 ("maL1_", vName))]
-    percU <- df [, which (names (df) == paste0 ("maU1_", vName))]
-    pcpo <- df [, which (names (df) == paste0 ("pcYMA_", vName))] # pre-current
-    current <- df [, which (names (df) == paste0 ("pYMA_", vName))]
-    ong <- df [, which (names (df) == paste0 ("ogYMA_", vName))]  # ongoing
-    maxV <- df [, which (names (df) == paste0 ("maxMA_", vName))]
-    minV <- df [, which (names (df) == paste0 ("minMA_", vName))]
-    # allY <- df [,which (names (df) == paste0 ("y_")]
+  if(MA) {
+    longMean <- df [, which(names (df) == paste0("MA_", vName))]
+    percL <- df [, which(names (df) == paste0("maL1_", vName))]
+    percU <- df [, which(names (df) == paste0("maU1_", vName))]
+    pcpo <- df [, which(names (df) == paste0("pcYMA_", vName))] # pre-current
+    current <- df [, which(names (df) == paste0("pYMA_", vName))]
+    ong <- df [, which(names (df) == paste0("ogYMA_", vName))]  # ongoing
+    maxV <- df [, which(names (df) == paste0("maxMA_", vName))]
+    minV <- df [, which(names (df) == paste0("minMA_", vName))]
+    # allY <- df [,which(names (df) == paste0("y_")]
     # allY <- df [,grep ("^y_", names (df))]  ## XXX include paste0 ("^y_\d+4_", vName)
   } else { ## these need updates if ever used again!!
-    longMean <- df [, which (names (df) == vName)]
-    percL <- df [, which (names (df) == paste0 ("perL1_", vName))]
-    percU <- df [, which (names (df) == paste0 ("perU1_", vName))]
-    pcpo <- df [, which (names (df) == paste0 ("pcY_", vName))]
-    current <- df [, which (names (df) == paste0 ("pY_", vName))]
-    ong <- df [, which (names (df) == paste0 ("ogY_", vName))]
-    maxV <- df [, which (names (df) == paste0 ("max_", vName))]
-    minV <- df [, which (names (df) == paste0 ("min_", vName))]
+    longMean <- df [, which(names(df) == vName)]
+    percL <- df [, which(names(df) == paste0("perL1_", vName))]
+    percU <- df [, which(names(df) == paste0("perU1_", vName))]
+    pcpo <- df [, which(names(df) == paste0("pcY_", vName))]
+    current <- df [, which(names(df) == paste0("pY_", vName))]
+    ong <- df [, which(names(df) == paste0("ogY_", vName))]
+    maxV <- df [, which(names(df) == paste0("max_", vName))]
+    minV <- df [, which(names(df) == paste0("min_", vName))]
   }
-  annualPlot (longMean, percL, percU
+  annualPlot(longMean, percL, percU
     , current = cbind (pcpo, current, ong) # , current, cpo
     # , current=cbind (pcpo, current, cpo, pcpo) #, current, cpo
     , df$jday, maxV = maxV, minV = minV
@@ -709,17 +709,17 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
     goes.nc = nc_open("https://www.ncei.noaa.gov/thredds-ocean/dodsC/ndbc/cmanwx/2025/03/NDBC_WPOW1_202503_D8_v00.nc.html")
     goes.nc = nc_open("https://www.ncei.noaa.gov/thredds-ocean/fileServer/ndbc/cmanwx/2025/03/NDBC_WPOW1_202503_D8_v00.nc")
 
-    goes.nc = nc_open ("~/NDBC_WPOW1_202503_D8_v00.nc")
+    goes.nc = nc_open("~/NDBC_WPOW1_202503_D8_v00.nc")
 
     goes.nc
     nc_close(goes.nc)
   }
 
   buoyID <- tolower(buoyID)
-  cacheF <- paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".RData")
+  cacheF <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
 
   if (clearcache) {
-    unlink (paste0 ("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)
+    unlink (paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)
     unlink (cacheF)
     # unlink ("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
     # dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
@@ -728,9 +728,9 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
 
   require ("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
   if (file.exists(cacheF)) {
-    load (cacheF)
-    startY <- max (wDB$datetimestamp) |>
-      format ("%Y") |>
+    wDB <- readRDS(cacheF)
+    startY <- max(wDB$datetimestamp) |>
+      format("%Y") |>
       as.numeric() - 1
   } else {
     startY <- buoydata::buoyDataWorld |>
@@ -747,23 +747,24 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
   full.names = TRUE) |>
     readr::read_csv(id = "file_name", col_names = TRUE, comment = "#", na = "999")
 
-  wB$datetimestamp <- with (wB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
+  wB$datetimestamp <- with(wB, as.POSIXct(paste0(X.YY, "-", MM, "-", DD, " "
     , hh, ":", mm), tz = "UTC"))
 
 
-  if (exists ("wDB")) {
-    wDB <- rbind (wDB, wB)
+  if (exists("wDB")) {
+    wDB <- rbind(wDB, wB)
   } else {
     wDB <- wB
   }
-  rm (wB)
-  save (wDB, file = cacheF)
+  rm(wB)
+  # save (wDB, file = cacheF)
+  saveRDS(wDB, file = cacheF)
 
 
   ## add real-time data -- check in buoydata; already fixed?
   ## using erddap -- haven't figured this out
   if (0) {
-    require ("rerddap") ## another rnoaa alternative?? only for gridded data?
+    require("rerddap") ## another rnoaa alternative?? only for gridded data?
     url <- 'https://coastwatch.pfeg.noaa.gov/erddap/'
     # find all gridded datasets
     griddedDatasets <- rerddap::ed_datasets(url = url, which = "tabledap")
@@ -796,12 +797,12 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
 
     ## MR search
     noaaS <- servers() |>
-      filter(grepl ("NOAA", name)) |>
+      filter(grepl("NOAA", name)) |>
       as.data.frame()
 
-    for (i in seq_len (nrow (noaaS))) {
-      cat ("\n\n", i, noaaS$short_name [i], "\n")
-      print (try (ed_search (query = "buoy", url = noaaS$url [i])))
+    for (i in seq_len(nrow(noaaS))) {
+      cat("\n\n", i, noaaS$short_name [i], "\n")
+      print(try(ed_search(query = "buoy", url = noaaS$url [i])))
     }
 
 
@@ -825,29 +826,27 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
   ## set-up file structure
   cMon <- month.abb [1:(as.numeric (format (tdy, "%m")) - 1)]
   ## copy output of fwf_empty(noaaexamplefile.txt), as   clns <- fwf_empty("~/Desktop/4610812025.txt", skip=2)
-  clns <- list (begin = c(0L, 5L, 8L, 11L, 14L, 17L, 21L, 26L, 32L, 38L, 44L, 49L, 53L,
-    60L, 68L, 72L, 78L, 83L),
-  end = c(4L, 7L, 10L, 13L, 16L, 20L, 25L, 30L, 36L, 42L, 48L, 52L, 59L,
-    65L, 71L, 77L, 82L, NA)
-  , colNames = colnames(wDB)[2:ncol (wDB)]
-  # colNnames=c("YY", "DD", "hh", "mm", "WDIR", "WSPD", "GST", "WVHT", "DPD",
-  #             "APD", "MWD", "PRES", "ATMP", "WTMP", "DEWP", "VIS", "TIDE")
+  clns <- list(begin = c(0L, 5L, 8L, 11L, 14L, 17L, 21L, 26L, 32L, 38L, 44L,
+    49L, 53L, 60L, 68L, 72L, 78L, 83L),
+  end = c(4L, 7L, 10L, 13L, 16L, 20L, 25L, 30L, 36L, 42L, 48L, 52L, 59L, 65L,
+    71L, 77L, 82L, NA)
+  , colNames = colnames(wDB)[2:ncol(wDB)]
   )
-  rtB <- lapply (seq_along(cMon), function(i) {
+  rtB <- lapply(seq_along(cMon), function(i) {
     ## form of https://www.ndbc.noaa.gov/data/adcp/Jan/4610812025.txt.gz
     ## https://www.ndbc.noaa.gov/data/stdmet/Jan/4610812025.txt.gz
-    nD <- suppressWarnings (try (readr::read_fwf(file = paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
-      cMon[i], "/", buoyID, i
-      , format (tdy, "%Y"), ".txt.gz")
+    nD <- suppressWarnings (try(readr::read_fwf(file = paste0(
+      "https://www.ndbc.noaa.gov/data/stdmet/", cMon[i], "/", buoyID, i
+      , format(tdy, "%Y"), ".txt.gz")
     , col_positions = clns, skip = 2 # , na=999.0
     , id = "file_name"), silent = TRUE))
-    if (class (nD)[1] == "try-error") { # try again for last available month
-      nD <- try (readr::read_fwf(file = paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
+    if (class(nD)[1] == "try-error") { # try again for last available month
+      nD <- try(readr::read_fwf(file = paste0 ("https://www.ndbc.noaa.gov/data/stdmet/",
         cMon[i], "/", buoyID, ".txt")
       , col_positions = clns, skip = 2 # , na=999.0
       , id = "file_name"), silent = TRUE)
     }
-    if (class (nD)[1] == "try-error") {nD <- wDB [0, ]}
+    if (class(nD)[1] == "try-error") {nD <- wDB [0, ]}
     nD
   })
   # https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T08%3A00%3A00Z&time%3C%3D2025-06-10T08%3A00%3A00Z
@@ -856,18 +855,16 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
 
   ## add the last 45 days of "real time" data
   ## example:  https://www.ndbc.noaa.gov/data/realtime2/46108.txt
-  nD <- try (readr::read_fwf(file = paste0 ("https://www.ndbc.noaa.gov/data/realtime2/"
-    , topupper (buoyID), ".txt")
+  nD <- try(readr::read_fwf(file = paste0 (
+    "https://www.ndbc.noaa.gov/data/realtime2/", topupper(buoyID), ".txt")
   , col_positions = clns, skip = 2 # , na=999.0
   , id = "file_name"), silent = TRUE)
-  if (class (nD)[1] != "try-error") {
-    rtB <- rbind (rtB, nD)
-  }
+  if (class (nD)[1] != "try-error") {rtB <- rbind(rtB, nD)}
 
-  colnames(rtB) <- colnames (wDB)
-  rtB$datetimestamp <- with (rtB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
+  colnames(rtB) <- colnames(wDB)
+  rtB$datetimestamp <- with(rtB, as.POSIXct(paste0 (X.YY, "-", MM, "-", DD, " "
     , hh, ":", mm), tz = "UTC"))
-  wDB <- rbind (wDB, rtB); rm (rtB)
+  wDB <- rbind(wDB, rtB); rm(rtB)
 
 
   # ## QAQC

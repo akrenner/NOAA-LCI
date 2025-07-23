@@ -18,6 +18,8 @@ require ("tidyverse")
 
 ###########################
 ## bugs/missing features ##
+
+
 # - salinity at 50 m (ACC signature)
 # - freshwater contenst of first 30 m (local runoff, freshwater lens)
 # - sum of fluorescence over time -- see separate work on SWMP
@@ -193,7 +195,8 @@ dailyTS <- function(df, varN) {
 }
 
 
-mkSection <- function(xC) {  ## use CTDfunctions insted?!
+## this is a section over time, CTDsectionFcts.R::mkSection is a space section
+mkSection <- function(xC) {
   require (oce)
   xC <- xC [order (xC$isoTime), ]
   xC$Date <- factor (xC$DateISO)
@@ -763,6 +766,8 @@ save.image ("~/tmp/LCI_noaa/cache-t/ctdT9S6_fw.RData")
 xC <- subset (poSS, Match_Name %in% paste0 ("9_", 1:10))
 fw <- aggregate (SalSurface ~ Date, data = xC, FUN = mean, na.rm = FALSE)
 fw$SalDeep <- aggregate (SalDeep ~ Date, data = xC, FUN = mean, na.rm = FALSE)$SalDeep
+
+TH_sal <- ceiling(max (physOc$Salinity_PSU, na.rm = TRUE))
 fw$freshCont <- 33 - fw$SalSurface
 fw$freshDeep <- 33 - fw$SalDeep
 
