@@ -23,8 +23,8 @@ for (i in seq_along(c(dir_plot, dir_data))) {
 
 ## combine stationsL and depth_layer, then loop over that aggregate
 freshwater_ts <- function(stn, depth, data=physOc) {
-  data$date <- factor (as.Date(data$isoTime)) ## to ensure same length of TSs
-  data$date <- paste (format(data$isoTime, "%Y-%m"), "15", sep = "-") |>
+  data$datetimestamp  <- factor (as.Date(data$isoTime)) ## to ensure same length of TSs
+  data$datetimestamp  <- paste (format(data$isoTime, "%Y-%m"), "15", sep = "-") |>
     as.Date() |>
     as.factor()
   if (depth == "surface"){
@@ -49,9 +49,9 @@ freshwater_ts <- function(stn, depth, data=physOc) {
     po_stn$DateISO <- po_stn$isoTime
   }
   ## define sample and aggregate
-  po_agg <- aggregate(freshwater ~ date, data = po_stn, FUN = mean
+  po_agg <- aggregate(freshwater ~ datetimestamp , data = po_stn, FUN = mean
                       , na.rm = TRUE, drop=FALSE)
-  po_agg$DateISO <- aggregate(isoTime ~ date, data = po_stn, FUN = mean
+  po_agg$DateISO <- aggregate(isoTime ~ datetimestamp , data = po_stn, FUN = mean
                               , drop=FALSE)$isoTime
   po_agg$station <- stn
   po_agg$depth <- depth
@@ -68,27 +68,34 @@ samp_grid <- expand.grid(depth_layer, stationsL) |>
   setNames(c("depth", "station"))
 
 if (0){
-  require ("parallel")
-  cl <- makeCluster(detectCores() - 1)  # leave one core free
-  freshL <- parLapply(seq_len(nrow(samp_grid)), function(i) {
+  require ("parallelly")
+  sqs <- seq_len(nrow(samp_grid))
+  pfct <- function(i) {
     freshwater_ts(samp_grid$station[i], samp_grid$depth[i], data=physOc)
   }
-  , cl
-  )
-  stopCluster(cl)  # stop parallel cluster
+  if (.Platform$OS.type=="windows"){
+    cl <- makeClusterPSOCK(detectCores() - 1)  # leave one core free
+    clusterExport(cl, c("samp_grid", "physOc", "freshwater_ts", "pfct", "sqs"))
+    freshL <- parLapply(sqs, pfct, cl)
+    stopCluster(cl); rm (cl)  # stop parallel cluster
+  }else{
+    freshL <- mclapply(sqs, pfct, mc.cores = detectCores() - 1)
+  }
 }else{
   freshL <- lapply(seq_len(nrow(samp_grid)), function(i) {
     freshwater_ts(samp_grid$station[i], samp_grid$depth[i], data=physOc)
   })
 }
-
+rm (freshwater_ts())
 
 freshM <- data.frame (freshL[[1]][,1]
                       ,do.call(cbind, lapply(seq_along(freshL), function (i) {
                         freshL[[i]]$freshwater
                       }))
 )
-names (freshM) <- c("date", do.call("paste", samp_grid))
+names (freshM) <- c("datetimestamp ", do.call("paste", samp_grid))
+
+
 
 
 save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts.RData")
@@ -128,14 +135,15 @@ freshAll <- freshM [,-grep ("all", names (freshM))] |>
 
 
 cM <- cor(freshAll, use = "pairwise.complete.obs") |>
-#  get_upper_tri() |>
+  #  get_upper_tri() |>
   as.data.frame() |>
-  select(-1) |>       # remove first column
-  slice(-n()) |>      # remove last row
+  # select(-1) |>       # remove first column
+  # slice(-n()) |>      # remove last row
   as.matrix()
 cM <- ifelse(cM == 1, NA, cM) ## remove diagonale
 # melt_cor <- reshape2::melt(cM)
 
+pdf (paste0 (dir_plot, "fresh_correlations.pdf"), width=10, height=10)
 reshape2::melt(cM) |>
   ggplot (aes(x=Var1, y=Var2, fill=value)) +
   geom_tile(aes(fill = value)) +
@@ -145,10 +153,11 @@ reshape2::melt(cM) |>
   # scale_fill_gradient2(low = "blue", mid="green", high = "yellow", na.value = "white",
   #                      midpoint=mean (melt_cor$value, na.rm=TRUE)) +
   theme_minimal() +
-  labs(title=paste("Correlations of Freshwater Content by Station:", dL),
+  labs(title=paste("Correlations of Freshwater Content by Station and depth"),
        x="", y="") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 # scale_fill_viridis_d()
+dev.off()
 
 ## T4: all are highly correlated, but especially deep and all (not much stratification)
 ## AlongBay_10: only here is there a significant decoupling between surface and
@@ -158,24 +167,112 @@ reshape2::melt(cM) |>
 ## Alternatively use 2: AlongBay_10 (9_2 has more data!) surface and 4_8 deep
 
 
+## clean-up
+rm (cM, coast, deepThd, bathyZ, depth_layer, dL, freshAll, freshM
+    , get_upper_tri, i, poSS, stationsL, stn)
+
 freshLng <- do.call(rbind, freshL)
 
 ## plot TS
+pdf (paste0 (dir_plot, "timeseries_spaghetti.pdf"))
 plot (freshwater ~ DateISO, type = "n", data = freshLng
       , xlab = "Date", ylab = "Freshwater content (PSU)"
       , main = "Freshwater content by station and depth layer")
 for (i in seq_len (nrow (samp_grid))){
   lines (freshwater ~ DateISO, data = subset (freshLng,
-                                            station == samp_grid$station[i] & depth == samp_grid$depth[i])
+                                              station == samp_grid$station[i] & depth == samp_grid$depth[i])
          , col=i, lwd=2)
 }
+dev.off()
+
+
+
+save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
+
+
+require ("imputeTS")
+require ("SWMPr")
 
 
 ## filter seasonal signal: mean and sd
+## arima / loess filter. Also see SWMP package and SoB files
+if(0) {
+freshTS <- subset (freshLng, cat %in%
+                     c("T9_all", "AlongBay_10_surface", "4_8_deep"))
+}
+## loess (or see what SWMPr does) -- seasonal mean and SD. -> anomaly
+
+
+## univariate
+## construct time series; and ensure that TS is fully populated
+t9ts <- freshLng |>
+  dplyr::filter(cat == "T9_all") |>
+  # dplyr::filter(!is.na(freshwater)) |>
+  # dplyr::select(c("datetimestamp", "freshwater")) |>
+  dplyr::select(c("DateISO", "freshwater", "datetimestamp", "cat"))
+ts1 <- expand.grid(month=str_pad(1:12, 2, pad="0", side="left"),
+  year=2012:as.numeric(format(max(freshLng$DateISO, na.rm=TRUE), "%Y")))
+tIdx <- match(paste(ts1$year, ts1$month, "15", sep = "-")
+                           , t9ts$datetimestamp)
+# fts <- ts (t9ts [tIdx, c("freshwater", "DateISO")]
+#            , frequency = 12, start = c(2012,1)
+# )
+fts <- ts (t9ts [tIdx, c("freshwater")]
+           , frequency = 12, start = c(2012,1)) |>
+  imputeTS::na_seadec()
+rm (t9ts, ts1, tIdx)
+
+
+if (0){
+## multivariate
+## construct time series; and ensure that TS is fully populated
+t9ts <- freshLng |>
+  #  dplyr::filter(cat == "T9_all") |>
+  dplyr::filter(cat == c("AlongBay_10_surface", "4_8_deep")) |>
+  # dplyr::filter(!is.na(freshwater)) |>
+  # dplyr::select(c("datetimestamp", "freshwater")) |>
+  #  dplyr::select(c("DateISO", "freshwater", "datetimestamp", "cat")) |>
+  dplyr::select(c("freshwater", "datetimestamp", "cat")) |>
+  tidyr::pivot_wider(names_from="cat", values_from="freshwater")
+
+ts1 <- expand.grid(month=str_pad(1:12, 2, pad="0", side="left"),
+                   year=2012:as.numeric(format(max(freshLng$DateISO, na.rm=TRUE), "%Y")))
+tIdx <- match(paste(ts1$year, ts1$month, "15", sep = "-")
+              , t9ts$datetimestamp)
 
 
 
+fts <- ts (t9ts [tIdx, c("freshwater", "DateISO")]
+           , frequency = 12, start = c(2012,1)
+)
+fts <- ts (t9ts [tIdx, c("freshwater")]
+           , frequency = 12, start = c(2012,1)) |>
+  imputeTS::na_seadec()
+rm (t9ts, ts1, tIdx)
+}
 
-## correlation matrix of TSs
 
-## cross-correlation with precipitation
+
+pdf (paste0 (dir_plot, "freshwater_timeseries.pdf"))
+spectrum(fts, method="ar")
+spectrum(fts, method="pgram")
+
+plot (decompose(fts, type="additive"))
+dev.off()
+
+
+# spectrum(fts, method="ar")
+
+
+## make ts object with monthly frequency?
+
+
+decomp(fts, param="freshwater")
+
+## cross-correlation with precipitation and SWMP data
+
+
+## using salinity as a tracer -- cross-correlations of AlongBay_15 with all
+## all stations to see how fast freshwater is spreading
+## map max lag

@@ -28,8 +28,10 @@ if (.Platform$OS.type == "windows") {
 }
 
 
-if (!require ("oce")) {
+# if (!require ("oce")) {
+if (!file.exists(".initialized.rds"))
   source ("InitialSetup.R")
+  saveRDS(Sys.Date(), file=".initialized.rds")
 }
 
 
