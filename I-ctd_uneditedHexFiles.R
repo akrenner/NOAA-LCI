@@ -33,33 +33,65 @@ noteT$Station <- as.character(noteT$Station) # in case all are numeric
 
 require ("tidyr")
 for (i in seq_along(hexF)) {
-  hex <- scan (hexF[i], what = "character", sep = "\n")
+  hex <- scan(hexF[i], what = "character", sep = "\n")
+
+  ## better (more flexible) to do this by sub-folder?
+
+
+  ## subdivide by date
+  fns <- strsplit(hexF, split='/')
+  fn_dates <- sapply(seq_along (fns), function(j) {
+    ld <- length(fns[[j]]) # last element = filename
+    substr(fns[[j]][ld], start = 1, stop = 10)
+  }); rm (fns)
+  head_date <- hex [grep("\\* cast", hex)] |>
+    substr (start = 11, stop = 23) |>
+    trimws() |>
+    as.Date(format = "%d %b %Y")
 
   ## consistency checks:
   ## hex-header and filename report the same cast #
-  headCast <- hex [grep ("\\* cast", hex)] %>%
-    substr (start = 7, stop = 11) %>%
-    trimws() %>%
+  headCast <- hex [grep ("\\* cast", hex)] |>
+    substr (start = 7, stop = 11) |>
+    trimws() |>
     as.numeric()
-  fnCast <- hexF [i] %>%
-    substr (start = nchar (hexF [i]) - 6, stop = nchar (hexF [i]) - 4) %>%
+  fnCast <- hexF [i] |>
+    substr (start = nchar (hexF [i]) - 6, stop = nchar (hexF [i]) - 4) |>
     as.numeric()
+
+
+  # ## loop over dates
+  # for (j in seq_along (levels (factor (fn_dates)))) {
+  #
+  # }
+
+  # cstIdx <- match(paste(headCast, head_date), paste(noteT$Cast.
+  #                                                 , noteT$Date_isotxt))
+  # if (length (cstIdx) > 1) {
+  #   stop (hex [2], "matches two casts in notes")
+  # }
+
+  ## in unedited hex: all files per folder need to have unique cast numbers!
+
   notR <- noteT [which (noteT$Cast. %in% headCast), ]            ## match only returns the first match
-  notR <- notR [which.max((notR$Year + notR$monthNominal / 12)), ] ## find last survey
+  ## find last survey
+  notR <- notR [which.max(as.POSIXct(paste (notR$Date_isotxt, notR$Time))),]
+
+
   notR$Transect <- ifelse (notR$Transect == "AlongBay", "AB", paste0 ("T", notR$Transect))
 
   ## consistency checks
-  ## match by cast number
+  ## match by cast number and date
   ## check by time and date -- stop if off by 5 min or more
   cat (i, "cast:", headCast, "\n")
   if (headCast != fnCast) {stop (hex [2], "filename cast# does not match header\n")} else {
     rm (fnCast)
   }
-  ctdTime <- hex [grep ("^\\* cast", hex)] %>%
-    substr(start = 12, stop = 31) %>%
+  ctdTime <- hex [grep ("^\\* cast", hex)] |>
+    substr(start = 12, stop = 31) |>
     as.POSIXct(format = "%d %b %Y %H:%M:%S")
   deltaT <- difftime (as.POSIXct(paste (notR$Date_isotxt, notR$Time))
-    , ctdTime, units = "min") %>%
+    , ctdTime, units = "min") |>
     abs()
   if (deltaT > 5) {stop ("Notes and cast times differ by > 5 min in ", hexF [i],
     "\nNotes: ", notR$Date_isotxt, " ", notR$Time,
