@@ -48,8 +48,8 @@ require ("tidyverse")
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor (physOc$Match_Name)
 pickStn <- which (levels (physOc$Match_Name) %in%
-  #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
   c("9_6", "9_8", "9_2", "AlongBay_3", "AlongBay_10", "4_6", "4_8", "4_3"))
+#                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- seq_along(levels (physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 # pickStn <- 87 # 9-6
 
@@ -582,7 +582,17 @@ for (k in pickStn) {
       , legend = c("more", "less", "mean"), bty = "n")
     abline (v = min (physOc$year):max (physOc$year), col = "gray", lty = "dashed")
     dev.off()
-
+    ## single panel of fluorescence section for monthly report
+    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-timesection.png"), res = pngR
+         , height = fDim[2] * pngR / 3, width = fDim[1] * pngR)
+    plot.station (xCS, which = "fluorescence"
+                  , zcol = oceColorsChlorophyll(32)
+                  # , zbreaks=zB
+                  , legend.loc = "" # legend.text="temperature anomaly [°C]"
+    )
+    title (main = expression (Chlorophyll ~ a ~ "[" * mg ~ m^-3 * "]"))
+    TSaxis (xCS@metadata$time)
+    dev.off()
 
 
     rm (T96f, clf)
