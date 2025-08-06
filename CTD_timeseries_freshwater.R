@@ -8,7 +8,7 @@ rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData") # frm dataSetup.R
 physOc$freshwater <- ceiling(max(physOc$Salinity_PSU, na.rm=TRUE)) -
   physOc$Salinity_PSU
 
-stationsL <- c("9_8", "9_6", "9_2", "4_2", "4_6", "4_8"
+stationsL <- c("9_8", "9_6", "9_2", "4_2", "4_6", "4_7"
                , "AlongBay_3", "AlongBay_10"
                , "T9", "T4")
 depth_layer <- c("surface", "deep", "all")
@@ -86,7 +86,7 @@ if (0){
     freshwater_ts(samp_grid$station[i], samp_grid$depth[i], data=physOc)
   })
 }
-rm (freshwater_ts())
+rm (freshwater_ts)
 
 freshM <- data.frame (freshL[[1]][,1]
                       ,do.call(cbind, lapply(seq_along(freshL), function (i) {
@@ -107,6 +107,7 @@ require("reshape2")
 require ("dplyr")
 require ("ggplot2")
 
+
 get_upper_tri <- function(cormat) {
   cormat[lower.tri(cormat)] <- NA
   return(cormat)
@@ -124,14 +125,14 @@ freshAll <- freshM[,grep (dL, names(freshM))]
 names (freshAll) <- gsub (dL, "", names (freshAll)) |>
   trimws()
 
+## compare surface and deep
+freshAll <- freshM [,-grep ("all", names (freshM))] |>
+  select(-1)
+
 ## big matrix
 freshAll <- freshM |>
   select(-1)  # remove date row
 dL <- ""
-
-## compare surface and deep
-freshAll <- freshM [,-grep ("all", names (freshM))] |>
-  select(-1)
 
 
 cM <- cor(freshAll, use = "pairwise.complete.obs") |>
@@ -143,7 +144,7 @@ cM <- cor(freshAll, use = "pairwise.complete.obs") |>
 cM <- ifelse(cM == 1, NA, cM) ## remove diagonale
 # melt_cor <- reshape2::melt(cM)
 
-pdf (paste0 (dir_plot, "fresh_correlations.pdf"), width=10, height=10)
+pdf (paste0 (dir_plot, "fresh_correlations.pdf"), width=11, height=11)
 reshape2::melt(cM) |>
   ggplot (aes(x=Var1, y=Var2, fill=value)) +
   geom_tile(aes(fill = value)) +
@@ -211,7 +212,7 @@ t9ts <- freshLng |>
   # dplyr::filter(!is.na(freshwater)) |>
   # dplyr::select(c("datetimestamp", "freshwater")) |>
   dplyr::select(c("DateISO", "freshwater", "datetimestamp", "cat"))
-ts1 <- expand.grid(month=str_pad(1:12, 2, pad="0", side="left"),
+ts1 <- expand.grid(month=stringr::str_pad(1:12, 2, pad="0", side="left"),
   year=2012:as.numeric(format(max(freshLng$DateISO, na.rm=TRUE), "%Y")))
 tIdx <- match(paste(ts1$year, ts1$month, "15", sep = "-")
                            , t9ts$datetimestamp)
@@ -270,9 +271,86 @@ dev.off()
 
 decomp(fts, param="freshwater")
 
+
 ## cross-correlation with precipitation and SWMP data
+## temperature and rainfall from Homer Airport; Seldovia airport(?)
+
+## fetch weather
+## add this to annulPlotFct.R
+if(!require("GSODR")) {
+  renv::install("GSODR", repos="https://ropensci.r-universe.dev")
+}
+require("GSODR")
+## has good wind data, including GUSTS and MAXSPD,
+nb <- nearest_stations(LAT=59.6, LON=-151.5, distance=100)
+
+yrs <- 2012:as.numeric(format(Sys.Date(), "%Y"))
+## daily weather data from Seldovia airport, Homer airport, Homer spit, KBNERR
+weather <- lapply (c("703621-25516", "703410-25507", "997176-99999"
+  , "998167-99999"), function(i) {get_GSOD(years = yrs, station = i)
+  })
+# sldap   <- get_GSOD(years=yrs, station = "703621-25516") ## seldovia airport
+# hmrap   <- get_GSOD(years=yrs, station = "703410-25507") ## homer airport
+# hmrspt  <- get_GSOD(years=yrs, station = "997176-99999") ## Homer spit -- no PRCP
+# hmrspt2 <- get_GSOD(years=yrs, station = "998167-99999") ## KBNERR
+
+# lapply(seq_along(weather), function(i) {
+#   summary(weather[[i]]$PRCP)
+# })
+rm (yrs)
+
+
+
+
+### cross-correlation
+## match times of CTD and weather -- by day
+
+## prelim: probably not enough power to extract anything meaningful from CTD
+## data. All correlations about 0.4-0.5. Try SWMP instead.
+
+
+save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts3.RData")
+# rm (list=ls()); load ("~/tmp/LCI_noaa/cache-t/freshwater_ts3.RData")
+
+
+
+frsh <- subset (freshLng, subset = (station == "T9") & (depth == "all"))
+frsh$datetimestamp <- as.Date(as.character(frsh$datetimestamp))
+
+
+# wther = weather[[1]]; freshStn = frsh; ld = 30; wVar = "PRCP"; k = 31
+
+corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP"){
+  ld <- as.integer(ld)
+  ## moving average/sum of XX days prior to ocean measurement
+  wther$ma <- wther |>
+    dplyr::pull(wVar) |>
+    data.table::frollmean(algo = "fast", align = "right", hasNA = TRUE, n = k,
+      na.rm = TRUE) |>
+    dplyr::lead(n = ld)  ## it's lag or lead?
+  wther$fresh <- freshStn$freshwater[match(wther$YEARMODA,
+    freshStn$datetimestamp)]
+  # wther <- subset(wther, !is.na(fresh))
+  cor(wther$ma, wther$fresh, use = "pairwise.complete.obs")
+}
+
+# corCalc (wther = weather[[1]], freshStn = frsh, lag = 0, wVar = "PRCP")
+
+sapply (1:120, function (ld) {
+  corCalc(weather[[1]], frsh, ld = ld, wVar = "PRCP", k = 31)
+}) |>
+  plot(type="l")
+
+sapply (1:4, function (w){
+  sapply (1:120, function (ld) {
+    corCalc(weather[[w]], frsh, ld = ld, wVar = "TEMP", k = 31)
+  }) |>
+    max()
+})
+
 
 
 ## using salinity as a tracer -- cross-correlations of AlongBay_15 with all
 ## all stations to see how fast freshwater is spreading
 ## map max lag
+
