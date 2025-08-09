@@ -224,11 +224,13 @@ seasonalMA <- function(var, jday, width = maO) {
   }
   dfAng <- data.frame (jds = seq (-365, 2 * 365))
   dfAng$var <- dfA$var [dfA$jds, dfAng$jds]
-  sMA <- zoo::rollapply (dfAng$var, width = width, FUN = mean
-    , fill = c(NA, NA, NA)
-    , align = "center"
-    , na.rm = FALSE # better to set false?? effect?
-  )
+  sMA <- data.table::frollmean(dfAng$var, align = "center", hasNA = TRUE,
+    n = width, na.rm = TRUE, fill = NA)
+  # sMA <- zoo::rollapply (dfAng$var, width = width, FUN = mean
+  #   , fill = c(NA, NA, NA)
+  #   , align = "center"
+  #   , na.rm = FALSE # better to set false?? effect?
+  # )
   stop ("need to change rollapply to roll_meanr")
   sMAy <- subset (sMA, dfAng$jds %in% 1:365)
   sMAy
@@ -267,18 +269,20 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean (x, na.rm = TRUE)}
   dRef$xVar <- dMeans$xVar [match (paste (dRef$year, dRef$jday, sep = "-")
     , paste (dMeans$year, dMeans$jday, sep = "-"))]  ## XXXX things break here!! XXX
   dMeans <- dRef; rm (dRef)
-  dMeans$MA <- zoo::rollapply (dMeans$xVar, width = maO, partial = TRUE
-    , align = "center"
-    # , fill=c(NA,"extend",NA)
-    , FUN = function(x) {
-      if (maO - sum (is.na (x)) > maO / 4) {  ## allow up to 1/2 of window NA
-        out <- sumFct(x)
-      } else {
-        out <- NA
-      }
-      return (out)
-    }
-  )  # tweak THIS one!
+  dMeans$MA <- data.table::frollmean(dMeans$xVar,align = "center", fill = NA,
+    n = maO, na.rm = FALSE, hasNA=TRUE)
+  # dMeans$MA <- zoo::rollapply (dMeans$xVar, width = maO, partial = TRUE
+  #   , align = "center"
+  #   # , fill=c(NA,"extend",NA)
+  #   , FUN = function(x) {
+  #     if (maO - sum (is.na (x)) > maO / 4) {  ## allow up to 1/2 of window NA
+  #       out <- sumFct(x)
+  #     } else {
+  #       out <- NA
+  #     }
+  #     return (out)
+  #   }
+  # )  # tweak THIS one!
   ###########
   # dMeans$xVar <- na.approx(dMeans$xVar) #### XXXXX temporary fix X!!! XXXXXXXXXXXXXXXXXXXXX
   ############
@@ -500,7 +504,32 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
 getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF = FALSE, showsites = FALSE) {
   ## utilize worldmet::importNOAA adding caching function
 
-  require ("worldmet")
+  # ## try other options -- does not appear to be working. Even example(get_GSOD()) fails :(
+  # require ("GSODTools")
+  # require ("GSODR")
+  # nearest_stations(LAT=59.6, LON=-151.5, distance=100)
+
+  # nearest_stations(LAT=52, LON=08.0, distance=50)  ## use STNIDs 103134-99999 and 103150-99999; consider Borgholzhausen: 103180-99999
+  # bi <- get_GSOD(years=2010, station="103150-99999")
+  #
+  # test <- get_GSOD(years=2012:as.numeric(format(Sys.Date(), "%Y")),station = "703621-25516") ## seldovia airport
+  # test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
+  # test <- get_GSOD(years=2024,station = "994720-99999") ## flat island
+
+  if(0) {
+    if(!require("GSODR")) {
+      renv::install("GSODR", repos="https://ropensci.r-universe.dev")
+    }
+    require("GSODR")
+    ## has good wind data, including GUSTS and MAXSPD,
+    test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
+  }
+
+
+
+  require("worldmet")
+  ## these are needed by worldmet
+  require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
 
   ## catch errors
   if (length (station) != 1L) stop ("Can only process one station at a time")
