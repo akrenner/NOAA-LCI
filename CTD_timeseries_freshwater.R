@@ -375,7 +375,7 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
 
   if(parE) {  ## parallelize this sapply call
     require("parallel")
-    cl <- makeClusterPSOCK(detectCores()-1)
+    cl <- makeCluster(detectCores()-1)
     clusterExport(cl, c("wh", "st", "ld_k", "wVar", "corCalc")
       , envir = environment())
     cC <- parSapply (cl, seq_len(nrow(ld_k)), function(i) {
