@@ -154,6 +154,8 @@ if(0) {
   source("Currents/ciofs_maxCurrent.r")
   source("Currents/drifter.R")
   source("Currents/plotDrifter.R")
+
+  source("CTD_timeseries_freshwater.R")
 }
 
 

@@ -67,14 +67,14 @@ freshwater_ts <- function(stn, depth, data=physOc) {
 samp_grid <- expand.grid(depth_layer, stationsL) |>
   setNames(c("depth", "station"))
 
-if (1){
-  require ("parallel")
+if(0) {
+  require("parallel")
   sqs <- seq_len(nrow(samp_grid))
   pfct <- function(i) {
     freshwater_ts(samp_grid$station[i], samp_grid$depth[i], data=physOc)
   }
-  if (.Platform$OS.type=="windows"){
-    cl <- makeClusterPSOCK(detectCores() - 1)  # leave one core free
+  if(.Platform$OS.type == "windows") {
+    cl <- makeCluster(detectCores() - 1, type="PSOCK")  # leave one core free
     clusterExport(cl, c("samp_grid", "physOc", "freshwater_ts", "pfct", "sqs"))
     freshL <- parLapply(sqs, pfct, cl)
     stopCluster(cl); rm (cl)  # stop parallel cluster
@@ -88,7 +88,7 @@ if (1){
 }
 rm (freshwater_ts)
 
-freshM <- data.frame (freshL[[1]][,1]
+freshM <- data.frame(freshL[[1]][,1]
                       ,do.call(cbind, lapply(seq_along(freshL), function (i) {
                         freshL[[i]]$freshwater
                       }))
@@ -399,7 +399,7 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
 
 freshLng$sdcombo <- factor(paste(freshLng$station, freshLng$depth))
 lags <- 0:140
-maWs <- 1:90
+maWs <- 1:120
 clim <- c("TEMP", "PRCP")
 # lags<-0:120
 # maWs<-1:90
@@ -444,8 +444,8 @@ dev.off()
 ## Sitka vs AlongBay_3 deep ##
 ###############################
 
-lags <- 0:270
-maWs <- 1:90
+lags <- 0:360
+maWs <- 1:120
 maxRS <- lapply (seq_along(clim), function(i) {
   optimalkLd(weather[[5]], subset(freshLng, sdcombo == "AlongBay_3 deep"),
              ld=lags, k=maWs, wVar = clim [i], parE=TRUE)
@@ -457,7 +457,8 @@ for(i in seq_along(clim)) {
   filled.contour(x = lags, y = maWs,
     z=matrix(maxRS[[i]]$r, nrow = length(lags), byrow = FALSE),
     xlab = "lag [d]", ylab = "MA window [d]",
-    main = paste ("Sitka Airport", combs$climate[i],
+    main = paste ("Sitka Airport",
+       ifelse (clim[i] == "TEMP", "tempeature", "precipitation"),
        "x freshwater at AlongBay_3 deep")
     , asp = 1)
 }

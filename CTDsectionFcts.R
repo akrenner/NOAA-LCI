@@ -38,6 +38,59 @@ getBathy <- function(transect, stn) {
 }
 
 
+## get hi-res bathymetry polygon for section plotting
+## replace getBathy above? check on usage!
+addBathy <- function(section) {
+  # XXX work in progress! XXX
+  require("oce")
+  ## change InitialSetup.R to use 25 m bathymetry
+  if(!file.exists("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")) {
+    stop("\n50m bathymetry is missing. Install it by running InitialSetup.R\n")
+  }
+  ## section to be a sf object!
+
+  newpoints <- st_line_sample(section, n = 100, type = "regular")
+
+  ## extract depths
+  ## calculate distances
+  stns <- st_coordinates(newpoints)
+
+
+
+  ## interpolate positions along track -- google this XXXX
+## find generic sf function to sample along a line!
+
+  stns <- st_coordinates(section)
+  lati <- seq(min(stns[,2]), max(stns[,2])) # gradient of latitude
+  loni <- approx(stns[,1], stns[,2], lati, rule=2)$y
+
+  dist <- rev(oce::geodDist(longitude = loni, latitude1 = lati, alongPath = TRUE))
+  bottom <- stars::st_extract()
+
+
+  ## section to oce section!
+  if (names (as.data.frame (st_coordinates(bottom)))[1] == "X") {
+    ## bottom is now projected AEA, not geographic coordinates!
+    bG <- bottom %>% st_transform(crs = 4326)
+    bottom$dist <- geodDist (longitude1 = st_coordinates (bG)[, 1]
+                             , latitude1 = st_coordinates (bG)[, 2], alongPath = TRUE) # [km]
+  } else {
+    bottom$dist <- geodDist (longitude1 = st_coordinates (bottom)[, 1]
+                             , latitude1 = st_coordinates (bottom)[, 2], alongPath = TRUE) # [km]
+  }
+
+
+
+  tgray <- rgb (t (col2rgb ("lightgray")), max = 255, alpha = 0.5 * 255) ## transparent
+  with (bottom, polygon(c(min (dist), dist, max(dist))
+                        , c(10000, depth, 10000)
+                        , col = tgray))
+}
+
+
+
+
+
 
 pSec <- function(xsec, N, cont = TRUE, zCol
                  , showBottom = TRUE, custcont = NULL, labcex = 1.0
@@ -274,6 +327,7 @@ isNightsection <- function(ctdsection) {
   sunDeg <- sunAlt / pi * 180
   isTRUE (any (sunDeg < 0))
 }
+
 
 
 

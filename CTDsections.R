@@ -4,7 +4,6 @@
 
 ## to do list:
 ## - bathymetry as in wall
-## - common color scale within survey
 
 base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 
@@ -47,7 +46,7 @@ for (sv in iX) {
     , "turbidity" # , "logTurbidity"
     , "Fluorescence_mg_m3"
     # , "PAR.Irradiance"
-    , "logPAR"
+    , "logPAR"                                        ## XXX -- all NAs
     # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
     , "Oxygen_umol_kg"
     , "bvf"
