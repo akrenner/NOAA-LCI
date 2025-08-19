@@ -7,6 +7,12 @@
 
 base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 
+keepV <- c(1,2,4,5,7)  ## cut out sigma, logPar, bvf
+oVarsF <- oVarsF [keepV]
+oVars <- oVars [keepV]
+oCol3 <- oCol3 [keepV]
+oRange <- oRange [keepV,]
+rm (keepV)
 
 if (!exists ("indivPlots")) {
   rm (list = ls())
@@ -127,8 +133,11 @@ for (sv in iX) {
       #              , ".pdf")
       #      , height = 8.5, width = 11)
       if (!indivPlots) {
-        layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
+        layout (matrix (1:6, 3, byrow = FALSE)) # across, then down
       }
+      # if (!indivPlots) {  ## old version, incl. density and bvf
+      #   layout (matrix (1:9, 3, byrow = FALSE)) # across, then down
+      # }
       # layout (matrix (1:8, 4, byrow = FALSE)) # across, then down
       #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
@@ -161,7 +170,7 @@ for (sv in iX) {
             #     , zcol = oCol2 (ov, 10)  ## doesn't work with zlim
             , zlim = zR
             , zbreaks = NULL # change this for salinity; others?
-            , custcont = 10, labcex = 0.6
+            , custcont = 7, labcex = 0.6
           )
           rm (zR)
         }
@@ -180,21 +189,30 @@ for (sv in iX) {
         if (substr (s$Transect[tn], start = 1, stop = 2) == "A") {mt <- ""} else {mt <- "T"}
         mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
           , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm (mt)
-
-        plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
-          , which = 99
-          , coastline = "coastlineWorldFine"
-          , showStations = TRUE
-          , gird = TRUE
-          , map.xlim = range (poAll$longitude_DD) # +c(-0.5, 0.5)
-          # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
-          ## , map.xlim = c(-154, -151)
-          ## , map.ylim = c(57.5, 60.1)
-          , clatitude = mean (range (poAll$latitude_DD)) # 59.4
-          , clongitude = mean (range (poAll$longitude_DD)) # -152
-          , span = 200
-          # , showSpine = TRUE
-        )
+        if(0) {  ## map for all Transects
+          plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
+                , which = 99
+                , coastline = "coastlineWorldFine"
+                , showStations = TRUE
+                , gird = TRUE
+                , map.xlim = range (poAll$longitude_DD) # +c(-0.5, 0.5)
+                # , map.ylim = range (poAll$latitude_DD)+c(-0.3, 0.3)
+                ## , map.xlim = c(-154, -151)
+                ## , map.ylim = c(57.5, 60.1)
+                , clatitude = mean (range (poAll$latitude_DD)) # 59.4
+                , clongitude = mean (range (poAll$longitude_DD)) # -152
+                , span = 200
+                # , showSpine = TRUE
+          )
+        } else {  ## focus on 2025+ monitoring transects: AB-ext, T9, T4
+          plot(xCo, which = 99, coastline = "best", grid = TRUE,
+             showStations = TRUE, span = 50,
+             # map.xlim = c(-152.2, -151.0), # range(poAll$longitude_DD),
+             map.ylim = c(59.2, 59.75),
+             clatitude =  59.4,    # mean(range(poAll$latitude_DD))
+             clongitude =  -151.8 # mean(range(poAll$longitude_DD))
+               )
+        }
       } else {  ## omit this map -- need the space
         plot (xCo
           , which = 99

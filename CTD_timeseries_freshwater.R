@@ -375,14 +375,22 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
 
   if(parE) {  ## parallelize this sapply call
     require("parallel")
-    cl <- makeCluster(detectCores()-1)
-    clusterExport(cl, c("wh", "st", "ld_k", "wVar", "corCalc")
-      , envir = environment())
-    cC <- parSapply (cl, seq_len(nrow(ld_k)), function(i) {
-      corCalc(wther = wh, freshStn = st, ld = ld_k$ld[i], k = ld_k$k[i]
-              , wVar=wVar, CI=TRUE)
-    })
-    stopCluster(cl)
+    if(.Platform$OS.type=="unix") {
+      cC <- mclapply(seq_len(nrow(ld_k)), FUN = function(i) {
+        corCalc(wther = wh, freshStn = st, ld = ld_k$ld[i], k = ld_k$k[i]
+          , wVar = wVar)
+        }, mc.cores=detectCores()-1)
+      cC <- do.call("cbind", cC)
+    } else {
+      cl <- makeClusterPSOCK(detectCores()-1)
+      clusterExport(cl, c("wh", "st", "ld_k", "wVar", "corCalc")
+        , envir = environment())
+      cC <- parSapply(cl, seq_len(nrow(ld_k)), function(i) {
+        corCalc(wther = wh, freshStn = st, ld = ld_k$ld[i], k = ld_k$k[i]
+          , wVar=wVar, CI=TRUE)
+      })
+      stopCluster(cl)
+    }
   } else {
     cC <- sapply(seq_len(nrow(ld_k)), function(i) {
       corCalc(wther = wh, freshStn = st, ld = ld_k$ld[i], k = ld_k$k[i]
@@ -515,6 +523,13 @@ for(wV in c("TEMP", "PRCP")) {
 
 
 ## plot cross-correlation of T9 and precipitation 0-90 days
+
+## fix color scale
+r_col <- ggplot2::scale_fill_stepsn(colors=c('#b2182b','#ef8a62','#fddbc7',
+           '#f7f7f7','#d1e5f0','#67a9cf','#2166ac'),
+            n.breaks=10, limits=c(-1,1), show.limits=T)
+
+
 pdf (paste0 (dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
 frsh <- subset (freshLng, sdcombo == "AlongBay_10 surface")
 cC <- sapply (1:120, function (ld) {

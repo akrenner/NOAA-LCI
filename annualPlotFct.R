@@ -517,9 +517,9 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
   # test <- get_GSOD(years=2024,station = "994720-99999") ## flat island
 
   if(0) {
-    if(!require("GSODR")) {
-      renv::install("GSODR", repos="https://ropensci.r-universe.dev")
-    }
+    # if(!require("GSODR")) {
+    #   renv::install("GSODR", repos="https://ropensci.r-universe.dev", dependencies="all")
+    # }
     require("GSODR")
     ## has good wind data, including GUSTS and MAXSPD,
     test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
