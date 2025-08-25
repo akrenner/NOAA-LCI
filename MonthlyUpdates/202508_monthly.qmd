@@ -5,6 +5,26 @@
 # setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
 ## can this from from standard NOAA-LCI ?
 
+## bathymetry to plots
+## fix alignment of contour lines
+## sob: fix rainfall units
+
+
+## workflow:
+## connect to VPN (NCCOS-West for SWMP download)
+## runAll.R to process last survey and download latest weather
+## pre-pub update: run AnnualStateOfTheBay.R 
+## run all in this script
+## render this script to html. Copy into gmail and check for errors
+## re-render. Print to PDF
+## publish this quatro
+## copy published website and paste into gmail
+## attach pdf version
+## mail-merge with distribution list
+## delete unsubscribe button
+
+
+
 ## clear the slate
 rm(list = ls())
 # require("packrat")
@@ -191,17 +211,14 @@ editor: visual
 
 ## Summary
 
-Compared to the seasonal average, this August been warm and particularly dry. A warm-water anomaly that started at the beginning of the year, is ongoing throughout the water column and intensified this month. A low salinity anomaly that also started this year, was also ongoing and may now be the longest on record. Chlorophyll concentrations were highest in the outer bay. 
+Seasonal warming is now expanding into mid-water layers. A warm-water anomaly that started at the beginning of the year, is ongoing throughout the water column. A low salinity anomaly that also started this year, was also ongoing and may now be the longest since 2012. Chlorophyll concentrations were highest in the outer bay, but stayed below the seasonal mean. 
 <!-- 2-3 sentences -->
 
 ## Conditions
 
-This month, Karyn, Martin, and Ross conducted the regular survey, which includied T9 across the bay from the Homer Spit and the AlongBay transect on 13 August.  
-<!-- `{r} dateAN` , -->
-Sea state during this survey varied from Beaufort 0 to Beaufort 3.
-
-So far, all samples from last month that were tested for domoic acid, a neuro toxin that can be produced by Pseudo-nitzschia diatoms, have come back below the detection threshold (Sarah Schoen, USGS, in lit.).
-The four weeks leading up to this survey were warm and dry, with only minimal precipitation (within the 10 percentile compared to 2000-2023) at Homer Airport. Throughout much of this month, our partners at the Kachemak Bay National Estuarine Research Reserve detected bloom conditions of Pseudo-nitzschia spp., a chain-forming diatom. At least some species in this genus are capable of producing domoic acid, a neuro-toxin causing amnesic shellfish poisoning. Between 18th and 20th July, several sick and dead black-legged kittiwakes were found by the public and reported to Alaska Maritime National Wildlife Refuge, USFWS. At around the same time, at least one dead minke and one dead humpback whale were reported. While samples have been sent in for testing, it is currently unknown whether the algae bloom and the dead wildlife are related. 
+This month, Karyn, Martin, and Ross conducted the regular survey, which included T9 across the bay from the Homer Spit and the AlongBay transect on 13 August. <!-- `{r} dateAN` , -->
+Sea state during this survey varied from Beaufort 0 to Beaufort 3. Air temperatures at Homer Airport were above the seasonal mean for the four weeks leading up to this survey, whereas rainfall over this period, normally increasing at this time of the year, was minimal, not even in the 10th percentile compared to other years. We did not hear of further reports of sick or dying seabirds or marine mammals. 
+<!-- So far, all the samples from last month that were tested for domoic acid, were below the detection threshold (Sarah Schoen, USGS, in lit.). -->
 
 <!-- ![Recent temperature and precipitation at Homer Airport, compared to their seasonal means.](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
 
@@ -213,26 +230,26 @@ A complete set of up-to-date graphs can be found on the Google Drive: [section p
 
 ### Temperature
 
-Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the outer bay to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) near Bear Cove in the inner bay. In contrast to the previous month, but as seen in previous years, there was a gradual warming of midwater layers down to about 50 m XXX depth. This was likely due to thermal diffusion rather than mixing, since salinity did not show this pattern, but rather a sharply demarkated surface layer of fresher water. Waters near the mouth of the bay were more uniform in both, salinity, and temperature, indicating a mixed water column (@fix-tSections_AB).  
+Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) near Bear Cove to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay, not far from Homer Spit. In contrast to the previous month, there was a gradual warming of midwater layers down to about 40 m depth. This was likely due to thermal diffusion rather than mixing, since salinity did not show this pattern, but rather a sharply demarcated surface layer of fresher water. Waters near the mouth of the bay were more uniform in both salinity, and temperature, indicating a mixed water column (@fig-tSections_AB). Even those mixed waters were warmer than the deep waters in the main channel, indicating that waters entering the bay and inlet had also warmed up, 
 
 ::: {#fig-tSections}
 ![AlongBay Transect](./media/Section_T-AlongBay.png){#fig-tSections_AB}
 
 ![T9 Transect, across-bay, Homer Spit to China Poot Bay](./media/Section_T-9.png){#fig-tSections_T9}
 
-![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4}
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
 
 Longitudinal and cross-sections of main parameters.
 :::
 
-As last month, satellite observations showed an area of cooler surface water from lower Cook Inlet to Kodiak Island, which is indicative of mixing or upwelling in this area (@fig-SST_GOA). 
+As last month, satellite observations showed an area of cooler surface water from lower Cook Inlet to Kodiak Island, which is indicative of mixing or upwelling in this area (@fig-SST_GOA). Compared to last month, sea surface have increased in much of the gulf, as should be expected in August. The pool of cool water in lower Cook Inlet had diminished in size, but its temperature did not increase.  
 
-![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](media-2025-07/alaska.fc_2025-07-27.gif){#fig-SST_GOA}
+![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](media-2025-08/alaska.fc_2025-08-18.gif){#fig-SST_GOA}
 
-![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA}
+<!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
 
-Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August (@fig-TempDeep). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly was 1 to 2 K above the long-term average, approaching the 90th percentile. 
+Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August, but was diminished compared to previous months (@fig-TempDeep). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly about 1 °C above the long-term average, and remained near the 90th percentile. 
 
 <!-- add sob plot on air temperature -->
 
@@ -251,9 +268,9 @@ Since the beginning of the year, water temperatures have been warmer than the se
 
 <!-- also cover density and buoyancy here -->
 
-Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Bear Cove and Seldovia, respectively. As last month, typical summertime patterns were found along the estuary with a pronounced layer of fresher water in the inner bay, setting up strong vertical stratification over the more saline deeper waters (@fig-tSections_AB, @fig-tSections_T9). Since the beginning of the year, salinities at the mid-bay station T9-6 have been lower than the seasonal mean (@fig-SalDeep), particularly in waters below 25 m (@fig-TSprofile_T9). 
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) near Bear Cove to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. As last month, typical summertime patterns were found along the estuary with a pronounced layer of fresher water in the inner bay, setting up strong vertical stratification over the more saline deeper waters (@fig-tSections_AB, @fig-tSections_T9). 
 
-This anomaly was now amongst the strongest and longest-lasting salinity anomalies during the entire span of the time series, dating back to 2012 and is particularly pronounced in the mid and deep waters (@fig-TSprofile_T9). The persistence of fresher and warmer than average conditions throughout 2025 is similar to patterns observed during the 2014-2016 North Pacific marine heat wave, although current temperature anomalies are less intense (@fig-TSprofile_T9). 
+Since the beginning of the year, salinities at the mid-bay station T9-6 have been lower than the seasonal mean (@fig-SalDeep), particularly in waters below 25 m (@fig-TSprofile_T9). This anomaly was now amongst the strongest and longest-lasting salinity anomalies during the entire span of the time series and was particularly pronounced in the mid and deep waters (@fig-TSprofile_T9). The persistence of fresher and warmer than average conditions throughout 2025 was similar to patterns observed during the 2014-2016 North Pacific marine heat wave, although current temperature anomalies were less intense (@fig-TSprofile_T9). 
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
@@ -265,7 +282,6 @@ Areas of high turbidity from glacial outflow were noticed at several stations in
 
 ### Phytoplankton
 
-XXX fix this up! 
 Surface waters were noticeably green to the eye. Chlorophyll concentrations observed with the CTD fluorometer were near the seasonal mean for most stations (e.g. @fig-chlorophyll). Highest concentrations were observed in the inner bay in a thin layer immediately below the pycnocline (@fig-tSections_AB). 
 
 ![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll}
@@ -276,12 +292,12 @@ Surface waters were noticeably green to the eye. Chlorophyll concentrations obse
 
 ### Zooplankton
 
-Even though several stations in the outer bay showed moderate to strong returns on the echo sounder, an oblique tow through the area of strongest returns only yielded few copepods, but not the expected abundance of zooplankton. 
+Even though several stations in the outer bay showed moderate to strong returns on the echo sounder, a five minute oblique tow through the area of strongest echo returns yielded a few copepods and chaetognaths, but not the expected abundance of zooplankton. 
 <!-- Backscatter? Species composition? -->
 
 ### Wildlife
 
-A group of two or three harbor porpoises were noted in the inner bay. In contrast to July, several shearwaters (sooty and short-tailed) were observed in the outer bay. This species is present in the Gulf of Alaska throughout the summer and fall, but for unknown reasons only rarely ventures into Kachemak Bay before mid-summer. 
+A group of two or three harbor porpoises were noted in the inner bay. In contrast to July, several shearwaters (sooty and short-tailed) were observed in the outer bay. These species are present in the Gulf of Alaska throughout the summer and fall, but for unknown reasons only rarely ventures into Kachemak Bay before mid-summer. 
 
 ### Mailing list
 
