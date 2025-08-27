@@ -5,6 +5,11 @@
 ## to do list:
 ## - bathymetry as in wall
 
+if (!exists ("indivPlots")) {
+  rm (list = ls())
+  # indivPlots <- TRUE  # one section plot per page, instead of cluster of panels
+  indivPlots <- FALSE
+}
 base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 
 keepV <- c(1,2,4,5,7)  ## cut out sigma, logPar, bvf
@@ -14,11 +19,6 @@ oCol3 <- oCol3 [keepV]
 oRange <- oRange [keepV,]
 rm (keepV)
 
-if (!exists ("indivPlots")) {
-  rm (list = ls())
-  indivPlots <- TRUE  # one section plot per page, instead of cluster of panels
-  indivPlots <- FALSE
-}
 if (indivPlots) {
   outD <- "~/tmp/LCI_noaa/media/CTDsections/sectionImages_onepage/"
 } else {
@@ -103,14 +103,16 @@ for (sv in iX) {
     phT$transDate <- with (phT, paste0 ("T-", Transect, " ", DateISO))
 
 
-    if (length (levels (factor (phT$Match_Name))) > 2) { ## shouldn't be necessary -- what's up with Transect = NA??
-      xC <- phT
+    if (length (levels (factor (phT$Match_Name))) < 3) {
+      ## do nothing, just skip it
+      # stop(paste(levels(s$Transect)[tn],
+      #   "transect is too short -- should have been caught earlier"))
+    }else { ## shouldn't be necessary -- what's up with Transect = NA??
       ## arrange ctd data into sections
       ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
-
-      xCo <- sectionize (xC)
-
+      xCo <- sectionize (phT)
+      bathy_sec <- get_section_bathy(xCo) ## already used up
 
       # if (nrow (xC) > 1){ ## better than unreliable test above
 
@@ -142,6 +144,7 @@ for (sv in iX) {
       #      layout (matrix (1:8, 2, byrow = TRUE)) # across, then down
 
       for (ov in seq_along(oVarsF)) {
+        ## ov = 1
         if (ov %in% c(4, 5, 6)) { # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
           zR <- oRange [ov, ]
         } else {
@@ -163,6 +166,18 @@ for (sv in iX) {
           plot (1:10, type = "n")
           text (5, 5, labels = "no good data")
         } else {
+
+          # if(tn == 1 & sv == 151 & ov == 1) {
+          #   save(pSec, xCo, oVarsF, ov, oCol3, zR, file = "~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+          # }
+          # ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
+          # # bathy_sec <- get_section_bathy(xCo) ## already used up
+          #
+          # ## testing
+          # max(bathy_sec$dist)
+          # max(xCo[['distance']])# GIS says that this is correct (3.9 km), also matching section plot
+          # ## end of testing
+
           pSec (xCo
             , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
             , zCol = oCol3 [[ov]]
@@ -172,6 +187,7 @@ for (sv in iX) {
             , zbreaks = NULL # change this for salinity; others?
             , custcont = 7, labcex = 0.6
           )
+          addBathy(bathy_sec)
           rm (zR)
         }
         ## mark PAR at night

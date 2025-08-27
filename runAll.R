@@ -41,6 +41,14 @@ if(0) {
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
 
+  ## set up AI helper claudeR
+  # if(!require("claudeR")) {
+  #   # install.packages("devtools")
+  #   devtools::install_github("yrvelez/claudeR")
+  #   require("claudeR")
+  # }
+  # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
+
 
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")

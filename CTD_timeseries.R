@@ -991,7 +991,7 @@ for (iS in seq_along(tL)) {
       # par (mfrow=c(2,1)) ## do not plot thresholds for salinity
       yLabt <- "Temperature [°C]"
     } else {
-      anomCol <- c("yellow", "green"); anomL <- c("saline", "fresh")
+      anomCol <- c("yellow", "green"); anomL <- c("saltier", "fresher")
       yLabt <- "Salinity [PSU]"
     }
   }
@@ -1005,8 +1005,10 @@ for (iS in seq_along(tL)) {
   }
   mLW <- 3
   nLW <- mLW
-  legend ("bottomright", lwd = c (nLW, mLW, 3, 3), col = c ("gray", "black", anomCol)
-    , legend = c("normal", "30 d moving-average", anomL), bty = "o", ncol = 2
+  legend("bottomright", lwd = c (nLW, mLW, 3, 3), col = c ("gray", "black", anomCol)
+    , legend = c(paste0("mean [", min(T96$Year), "-", max(T96$Year), "]")
+      , "31 d moving-average", anomL)
+    , bty = "o", ncol = 2
     , bg = "white", box.col = "white")
   ## add lines, marking the anomaly in blue/red
   for (j in seq_len(nrow(T96f))) {

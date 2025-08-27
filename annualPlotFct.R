@@ -420,70 +420,73 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
   ## need to specify location of zip file from SWMP and cache folder below
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
-  require ("SWMPr")
-  require ("R.utils")
+#  require("SWMPr")
+  require("R.utils")
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   dir.create(cacheFolder, showWarnings = FALSE)
-  cacheStation <- paste0 (cacheFolder, station, ".RData")
+# cacheStation <- paste0(cacheFolder, station, ".RData")
+  cacheStation <- paste0(cacheFolder, station, ".rds")
 
-  zF <- list.files ("~/GISdata/LCI/SWMP", ".zip", full.names = TRUE)
-  if (length (zF) < 1) {stop ("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
-  SMPfile <- zF [which.max (file.info (zF)$ctime)] ## find most recent file
+  zF <- list.files("~/GISdata/LCI/SWMP", ".zip", full.names = TRUE)
+  if(length(zF) < 1) {stop("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
+  SMPfile <- zF [which.max(file.info (zF)$ctime)] ## find most recent file
   rm (zF)
 
   ## delete cacheFolder if zip file is newer
-  if (file.exists(cacheStation)) {
-    if (file.info (cacheStation)$ctime < file.info (SMPfile)$ctime) {
-      unlink (cacheStation)
+  if(file.exists(cacheStation)) {
+    if(file.info (cacheStation)$ctime < file.info (SMPfile)$ctime) {
+      unlink(cacheStation)
     }
   }
 
-  if (file.exists(cacheStation)) {
-    base::load (cacheStation)
+  if(file.exists(cacheStation)) {
+    # base::load (cacheStation)
+    smp <- readRDS(cacheStation)
   } else {
-    smp <- import_local(SMPfile, station)
+    smp <- SWMPr::import_local(SMPfile, station)
     if (QAQC) {
-      smp <- qaqc (smp)  ## scrutinize further? Wise to do here? Keep level 1?
+      smp <- SWMPr::qaqc(smp)  ## scrutinize further? Wise to do here? Keep level 1?
     }
   }
-  if (any (is.na (smp$datetimestamp))) {stop ("NAs in timestamp")}
+  if(any(is.na(smp$datetimestamp))) {stop ("NAs in timestamp")}
   #  ## not sure where the bad line is coming from, but it has to go
   # smp <- smp [!is.na (smp$datetimestamp),]
-  fN <- difftime(Sys.time(), max (smp$datetimestamp), units = "days")
+  fN <- difftime(Sys.time(), max(smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
-  if ((2 < fN) && (fN < 5 * 365.25)) { # skip downloads for less than 2 day and legacy stations
+  if((2 < fN) && (fN < 5 * 365.25)) { # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations
-    smp2 <- try (all_params (station
+    smp2 <- try(SWMPr::all_params(station
       , Max = ceiling (as.numeric(fN) * 4 * 24))
     , silent = FALSE)  # XXX needs registered (static?) IP address. NCCOS VPN ok
-    if (class (smp2)[1] != "try-error") {
-      if (QAQC) {
-        smp2 <- qaqc (smp2)
+    if(class(smp2)[1] != "try-error") {
+      if(QAQC) {
+        smp2 <- qaqc(smp2)
       }
 
-      if (class (smp2)[1] == "swmpr") {
+      if(class(smp2)[1] == "swmpr") {
         ## remove bad lines
-        if (any (is.na (smp2$datetimestamp))) {
+        if(any(is.na(smp2$datetimestamp))) {
           smp2 <- smp2 [!is.na (smp2$datetimestamp), ]
         }
         ## order of field names does not match between hmr2 and hmr
         ## re-assemble and remove duplicates
         smp3 <- smp2 [, sapply (seq_len (ncol (smp)), FUN = function(i) {
-          which (names (smp)[i] == names (smp2))
+          which(names(smp)[i] == names(smp2))
         })]
-        smp <- rbind (smp, smp3)
-        if (any (is.na (smp$datetimestamp))) {stop ("NAs in timestamp")}
+        smp <- rbind(smp, smp3)
+        if(any(is.na(smp$datetimestamp))) {stop("NAs in timestamp")}
 
         rm (smp2, smp3, fN)
       }
-      smp <- smp [which (!duplicated(smp$datetimestamp)), ]
+      smp <- smp [which(!duplicated(smp$datetimestamp)), ]
     }
   }
   ## fixGap() here??
   ## smp <- qaqc (smp, qaqc_keep = "0") ## here??
-  save (smp, file = cacheStation)
-  return (smp)
+  #save(smp, file = cacheStation)
+  saveRDS(smp, file = cacheStation)
+  return(smp)
 }
 
 

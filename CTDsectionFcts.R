@@ -4,10 +4,12 @@
 ## emulate/evolve from ODV
 
 
+## redundant?? check where that's used! XXX
 getBathy <- function(transect, stn) {
   ## get Zimmerman bathymetry for a given transect
   ## "transect" is any one factor in stn$Line
   ## stn is the master list of stations used in Kachemak Bay/lower Cook Inlet
+
   require ("oce")  # for geoDist
   require ("sf")
   require ("dplyr")
@@ -38,56 +40,83 @@ getBathy <- function(transect, stn) {
 }
 
 
+
+
 ## get hi-res bathymetry polygon for section plotting
 ## replace getBathy above? check on usage!
-addBathy <- function(section) {
-  # XXX work in progress! XXX
-  require("oce")
+get_section_bathy <- function(section) {
+  ## for use in Wall and CTDsections.R
+
+  ## section to be an oce section or an sf line feature
+  ## assume section to be sorted correctly!
+
+  ## sample points along line
+  ## extract depths
+  ## calculate distances
+
+
+  require("sf")  ## also using stars and oce
+
   ## change InitialSetup.R to use 25 m bathymetry
   if(!file.exists("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")) {
     stop("\n50m bathymetry is missing. Install it by running InitialSetup.R\n")
   }
-  ## section to be a sf object!
-
-  newpoints <- st_line_sample(section, n = 100, type = "regular")
-
-  ## extract depths
-  ## calculate distances
-  stns <- st_coordinates(newpoints)
+  bathy <- stars::read_stars("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
 
 
-
-  ## interpolate positions along track -- google this XXXX
-## find generic sf function to sample along a line!
-
-  stns <- st_coordinates(section)
-  lati <- seq(min(stns[,2]), max(stns[,2])) # gradient of latitude
-  loni <- approx(stns[,1], stns[,2], lati, rule=2)$y
-
-  dist <- rev(oce::geodDist(longitude = loni, latitude1 = lati, alongPath = TRUE))
-  bottom <- stars::st_extract()
-
-
-  ## section to oce section!
-  if (names (as.data.frame (st_coordinates(bottom)))[1] == "X") {
-    ## bottom is now projected AEA, not geographic coordinates!
-    bG <- bottom %>% st_transform(crs = 4326)
-    bottom$dist <- geodDist (longitude1 = st_coordinates (bG)[, 1]
-                             , latitude1 = st_coordinates (bG)[, 2], alongPath = TRUE) # [km]
-  } else {
-    bottom$dist <- geodDist (longitude1 = st_coordinates (bottom)[, 1]
-                             , latitude1 = st_coordinates (bottom)[, 2], alongPath = TRUE) # [km]
+  if(class(section)[1] == "section") {
+    sectM <- slot(section, "metadata")
+  } else if (class(section)[1] == "sf") {
+ sectM <- section |>
+   st_transform(crs = 4326) |>
+   st_coordinates() |>
+   as.data.frame() |>
+   purrr::set_names(c("longitude", "latitude"))
+   } else {
+    stop("section must be an oce-section or a sf point/line feature")
   }
+  maxD <- max(oce::geodDist(sectM$longitude, sectM$latitude, alongPath = TRUE)) ## this is ok!
+  pnts <- cbind (lon=sectM$longitude, lat=sectM$latitude) |>
+    st_linestring() |>
+    st_line_sample(n = maxD %/% 0.050, type = "regular") |>
+    st_sf() |>
+    st_cast("POINT") |>   ## multipoint gives trouble
+    st_set_crs(value = 4326)
 
+  ## extract distances along the transect line
+  ## do not use oce::geodDist -- not sufficiently accurate! Errors add up!!
+  stns <- pnts |>
+    st_transform(crs = 32607) |> # use UTM for max accuracy
+    st_coordinates() |>
+    as.data.frame()
+  pnts$dist <- c(0, sqrt(diff (stns[,1])^2 + diff(stns[,2])^2)) |>
+    cumsum() / 1000  ## back to km
 
+  ## had difficulties with geodDist
+  if(max(pnts$dist) > 1.1*maxD) {
+    print(max(pnts$dist)); print(maxD)
+    stop("distances are messed up")
+  }
+  rm (sectM, maxD)
 
-  tgray <- rgb (t (col2rgb ("lightgray")), max = 255, alpha = 0.5 * 255) ## transparent
-  with (bottom, polygon(c(min (dist), dist, max(dist))
-                        , c(10000, depth, 10000)
-                        , col = tgray))
+  ## look up depths along transect
+  pnts$depth <- -1 * stars::st_extract(bathy, at = st_transform(pnts,
+    crs = st_crs(bathy))) |>
+    st_drop_geometry() |>
+    dplyr::select(1) |>
+    unlist()
+  p_out <- st_drop_geometry(pnts)
+  p_out <- p_out [order(p_out$dist),]
+  p_out
 }
 
-
+addBathy <- function(bathysection) {
+  # separate this because it is called many times and get_section_bathy is slow
+  tgray <- rgb (t (col2rgb ("lightgray")), max = 255, alpha = 0.5 * 255) ## transparent
+  with (bathysection, polygon(c(min (dist), dist, max(dist))
+                        , c(11000, depth, 11000)
+                        , col = tgray))
+}
 
 
 
@@ -98,11 +127,11 @@ pSec <- function(xsec, N, cont = TRUE, zCol
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
-  require ("oce")
-  if (length (xsec@data$station) < 2) {
-    plot (1:10, type = "n")
+  require("oce")
+  if(length (xsec@data$station) < 2) {
+    plot(1:10, type = "n")
   } else {
-    s <- try (plot (xsec, which = N
+    s <- try(plot(xsec, which = N
       , showBottom = showBottom
       , axes = TRUE
       , stationTicks = TRUE
@@ -113,22 +142,26 @@ pSec <- function(xsec, N, cont = TRUE, zCol
       , ...
     )
     , silent = TRUE)
-    if (class (s) != "try-error") {
-      if (plotContours) {
+    if(class(s) != "try-error") {
+      if(plotContours) {
         # s <- xsec
         nstation <- length(xsec[['station']])
         depth <- xsec [['depth']][seq_along(xsec@data[['station']][[1]]@data$scan)]
         np <- length(depth)
         zvar <- array(NA, dim = c(nstation, np))
 
-        for (ik in 1:nstation) {  ## populate the array
-          if (N == "sigmaTheta") {
+        for(ik in 1:nstation) {  ## populate the array
+          if(N == "sigmaTheta") {
             zvar [ik, ] <- swSigmaTheta(xsec@data$station[[ik]])
           } else {
-            try (zvar [ik, ] <- xsec[['station']][[ik]]@data[[N]]) # , silent=TRUE)
+            try(zvar [ik, ] <- xsec[['station']][[ik]]@data[[N]]) # , silent=TRUE)
           }
         }
-        distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
+        ## fix issue with alignment of contours in some plots
+        # distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
+        distance <- oce::geodDist(xsec@metadata$longitude,
+          xsec@metadata$latitude, alongPath = TRUE)
+
         if (length (distance) < nstation) {
           warning("distance and station N missmatch", immediate. = TRUE)
           lat <- sapply (1:nstation, function(i) {xsec@data$station[[i]]@metadata$latitude})
@@ -213,42 +246,40 @@ pSec0 <- function(xsec, N, cont = TRUE, custcont = NULL, zcol, ...) {
   }
 }
 
-KBsectionSort <- function(xCo) {
+KBsectionSort <- function(xCo, transect) {
   ## sort section -- Kasitsna-Bay-Lab specific
   ## sort in here, rather than separately
   for (i in seq_along(xCo@data$station)) {
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
-  if (xC$Transect [1] %in% c ("AlongBay")) { # extended AlongBay wraps around Pogy Ptp
+  if (substr(transect, 1, 8) == "AlongBay") { # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort (xCo, "latitude", decreasing = FALSE)
-  } else if (xC$Transect [1] %in% c("4")) { ## include 9 here?
+  } else if (transect == "4") { ## include 9 here?
     xCo <- sectionSort (xCo, "latitude", decreasing = TRUE)
-  } else if (xC$Transect [1] %in% c("9")) {
+  } else if (transect == "9") {
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   } else {
     xCo <- sectionSort (xCo, "longitude", decreasing = FALSE)
   }
-
 }
 
 
 sectionize <- function(xC) {  ## keep this separate as this function is specific to Kachemak Bay
-  if (packageVersion("oce") <= "1.7.3") {
-    stop ("Need package:oce version 1.7.4 or later")
+  if(packageVersion("oce") <= "1.7.3") {
+    stop("Need package:oce version 1.7.4 or later")
   }
-  require ("oce")
-  if (nrow (xC) < 2) {stop ("no data to make a section")}
+  require("oce")
+  if(nrow(xC) < 2) {stop("no data to make a section")}
   # stn <- factor (sprintf ("%02s", xC$Station))
-  xC$Match_Name <- factor (xC$Match_Name)
-  stn <- xC$Match_Name
-  xCo <- makeSection (xC, stn)
+  xCo <- makeSection(xC, factor(xC$Match_Name))
   ## sort by lat/lon instead -- or StationID (would need to re-assign)
-  xCo <- KBsectionSort (xCo)
-  xCo <- sectionGrid (xCo
+  xCo <- KBsectionSort(xCo, transect = xC$Transect[1])
+  xCo <- sectionGrid(xCo
     # , p=100  ## some pressures are NA or Inf??--but may be prettiest if it works
     , p = standardDepths(9)
-    , method = "boxcar", trim = TRUE)
+    , method = "boxcar"
+    , trim = TRUE)
   #  xCo <- sectionSmooth(xCo, method="barnes", pregrid=TRUE, trim=TRUE)  ## makes a mess -- not using it right; provide xr and yr
   xCo
 }
@@ -489,7 +520,7 @@ sectionPad <- function(sect, transect, ...) {
   }
   # section <- sectionSort (section, ...)
   ## warnings: make sure sectionSort is called next!
-  sect <- KBsectionSort (sect)
+  sect <- KBsectionSort (sect, transect$line [1])
   return (sect)
 }
 
