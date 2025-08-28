@@ -6,44 +6,61 @@
 ## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
 ## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
+
+# add to time series (signature data)
+# freshwater of first 30 m / bottom
+# salinity at T9-6 at 50 m (seasonal influence of ACC?)
+# boyyancy profile over time
+# max buoyancy over time
+# position of max buoyancy over time
+
+
 rm(list = ls())
 sT <- Sys.time()
 
 # pastYear <- FALSE  # plot currentYear-1 ?
 # ongoingY <- TRUE
 
-if (.Platform$OS.type == "windows") {
-  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+if(.Platform$OS.type == "windows") {
+  setwd("~/myDocs/amyfiles/NOAA-LCI/")
 } else { ## Linux or macOS platform
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
 
 
-if (!require ("oce")) {
-  source ("InitialSetup.R")
+if(!file.exists(".initialized.rds")){
+  source("InitialSetup.R")
+  saveRDS(Sys.Date(), file=".initialized.rds")
 }
 
 
-if (0) {
+if(0) {
   ## to update packages: 0-- trouble on MacOS?
-  require (usethis) ## for github rate limits
+  require(usethis) ## for github rate limits
   usethis::create_github_token()
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
 
+  ## set up AI helper claudeR
+  # if(!require("claudeR")) {
+  #   # install.packages("devtools")
+  #   devtools::install_github("yrvelez/claudeR")
+  #   require("claudeR")
+  # }
+  # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
 
-  ## troubleshoot dependencies:
-  badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw"
-  )
+
+  ## troubleshoot dependencies used in the past:
+  badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   deps <- renv::dependencies()
-  for (i in seq_along (badP)) {
-    cat ("\n\n##", badP [i], "##\n")
-    print (deps [which (deps$Package == badP[i]), 1])
+  for(i in seq_along(badP)) {
+    cat("\n\n##", badP [i], "##\n")
+    print(deps [which(deps$Package == badP[i]), 1])
   }
-  rm (badP, deps)
+  rm(badP, deps)
 
   renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
-  # renv::install ("~/src/oce_1.7-10.tar.gz")
+  # renv::install("~/src/oce_1.7-10.tar.gz")
   renv::clean()
   renv::snapshot()
   renv::status()
@@ -51,49 +68,49 @@ if (0) {
 
 
 
-if (1) {
+if(1) {
   ## run the first script interactively! :
-  # source ("I-ctd_uneditedHexFiles.R")
+  # source("I-ctd_uneditedHexFiles.R")
 
   ## hex conversion and QAQC plots
-  sink (file = "ctdprocessing.log", append = FALSE, split = FALSE)
-  cat ("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
-  source ("FieldNotesDB.R") # first because it doesn't depend on anything else
-  source ("ctd_workflow.R")              ## approx. 1:30 hours
-  source ("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
-  cat ("Finished CTD hex conversion and processing at: ", as.character (Sys.time()), "\n")
+  sink(file = "ctdprocessing.log", append = FALSE, split = FALSE)
+  cat("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
+  source("FieldNotesDB.R") # first because it doesn't depend on anything else
+  source("ctd_workflow.R")              ## approx. 1:30 hours
+  source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
+  cat("Finished CTD hex conversion and processing at: ", as.character(Sys.time()), "\n")
   sink()
 }
 
 
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
-source ("datasetup.R")
+source("datasetup.R")
 ## separate out CTD-specific stuff??
 # ; bathymetry
 # ; coastline
 # ; CTD data
 
 ## set up required work environment and external files/data (bathymetry)
-source ("EnvironmentSetup.R")
+source("EnvironmentSetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
-source ("CTD_DataAvailability.R")
+source("CTD_DataAvailability.R")
 
 
 ## the Wall
-source ("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
-source ("CTDwall-setup.R")
-indivPlots <- FALSE; source ("CTDsections.R", local = TRUE)
-indivPlots <- TRUE; source ("CTDsections.R", local = TRUE); rm (indivPlots)
-source ("CTDwall_normals.R")
-source ("CTDwall.R")
-# source ("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
-# source ("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+source("CTDwall-setup.R")
+indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
+indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
+source("CTDwall_normals.R")
+source("CTDwall.R")
+# source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
+# source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
 
 
 ## 2017 contract
-if (0) { ## 2017 contract
+if(0) { ## 2017 contract
   ## BUGS:
   ## bathymetry is read in as a raster. This creates a non-portable reference to the original file.
   ## Breaking this reference would be desirable, although it would increase file size of all temporary
@@ -102,68 +119,71 @@ if (0) { ## 2017 contract
   ## clear tmp directory first? CAREFUL with this!
   # rm -r ~/tmp/LCI_noaa/
 
-  # source ("metaExtraction.R")
-  source ("anaCTD.R")
-  source ("ecoAn.R")
-  source ("plotMaps.R")
-  source ("commMap.R")
+  # source("metaExtraction.R")
+  source("anaCTD.R")
+  source("ecoAn.R")
+  source("plotMaps.R")
+  source("commMap.R")
 
 }
 
 
 ## 2019 seasonality
-if (0) { # Dec 2019 seasonality
-  source ("zoopCommunity.R")
-  source ("phytopCommunity.R")
+if(0) { # Dec 2019 seasonality
+  source("zoopCommunity.R")
+  source("phytopCommunity.R")
 
   ## missing parts for EVOS 2023 final report
-  source ("Nutrients_seasonality.R")
+  source("Nutrients_seasonality.R")
 
-  source ("physOcean.R")
+  source("physOcean.R")
   q()
-  source ("consensusTree.R")
+  source("consensusTree.R")
 }
 
 
 
 ## only for SoB? -- mv down?
-## source ("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
+## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
 
-sink (file = "StateOfBay-run.log", append = FALSE, split = FALSE)
+sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
 ## State of the Bay Report
-source ("AnnualStateOfTheBay.R")
+source("AnnualStateOfTheBay.R")
 sink()
 
 
 ## how to execute report?
-# source ("MonthlyUpdates/MonthlyTemplate.qmd")
+# source("MonthlyUpdates/MonthlyTemplate.qmd")
 
 
 ## one-offs
-if (0) {
-  source ("Currents/bathymetry-merge.R")
-  source ("Currents/ciofs_maxCurrent.r")
-  source ("Currents/drifter.R")
-  source ("Currents/plotDrifter.R")
+if(0) {
+  source("Currents/bathymetry-merge.R")
+  source("Currents/ciofs_maxCurrent.r")
+  source("Currents/drifter.R")
+  source("Currents/plotDrifter.R")
+
+  source("CTD_timeseries_freshwater.R")
 }
 
 
 
 ## update metadata
-source ("metaDataCompilation.R")
+source("metaDataCompilation.R")
 
 
 ## push to GoogleDrive
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
-if (length (grep ("[M|m]artin", getwd())) > 0) {
-  source ("CTDsyncGDwall.R")
+if(length(grep("[M|m]artin", getwd())) > 0) {
+  source("CTDsyncGDwall.R")
   ## send email that run is completed
-  source ("CTD_finishnotification.R")
+  source("CTD_finishnotification.R")
 }
 
-cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
+cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
 sink()
-cat ("Finished runAll.R at ", as.character (Sys.time()), "\n\n")
+cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
+write(as.character(Sys.time()), file = "finish_runAll.log", append = TRUE)
 
 ## EOF

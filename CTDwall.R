@@ -4,10 +4,10 @@
 
 
 
-rm (list = ls())
+rm(list = ls())
 ## get bathymetry, standard colors, and data ranges
-base::load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-base::load ("~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwall_anomalies.R
+base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+base::load("~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwall_anomalies.R
 
 
 test <- TRUE
@@ -15,15 +15,15 @@ test <- FALSE
 
 
 ## problems:
-## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
-## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
+## - chlorophyll missing(all values NA), e.g. T-3 2012-05-02
+## - contours fail, e.g. temperature, T-4(2), 2019-05-14
 
 ## PAR: flag night; mark 1% light level contour
 ## fix distancescale to full transect
 ## Kris: check on surface PAR and salinity measurements
 
 ## 2021-08-03 -- issues
-# x fix color scale across all graphs (across Transects as well?)
+# x fix color scale across all graphs(across Transects as well?)
 
 ## 9-10 2012-5:  double cast?
 ## T-3 2012-winter: stations mislabled/out of order? 3_4 should be 3_7?
@@ -44,19 +44,19 @@ maxSize <- FALSE
 
 
 ## add AlongBay-short transect as a new virtual transect
-levels (poAll$Transect) <- c (levels (poAll$Transect), "ABext")
+levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
 
 
-if (test) {
+if(test) {
   oceanvarC <- seq_along(oVarsF) #
   oceanvarC <- 8
-  # oceanvarC <- c (4,8)
+  # oceanvarC <- c(4,8)
   oceanvarC <- seq_along(oVarsF)
-  transectC <- seq_along(levels (poAll$Transect))
+  transectC <- seq_along(levels(poAll$Transect))
   transectC <- 6
 } else {
   oceanvarC <- seq_along(oVarsF)
-  transectC <- seq_along(levels (poAll$Transect)) # by transect. 5: T9
+  transectC <- seq_along(levels(poAll$Transect)) # by transect. 5: T9
   # transectC <- c(5,6,7)  ## T9, AB, ABext
 }
 
@@ -67,117 +67,104 @@ if (test) {
 ## enf of user configurations ##
 ################################
 
-if (class (stopatDate)[1] == "character") {stopatDate <- as.POSIXct(stopatDate)}
-source ("CTDsectionFcts.R")
+if(class(stopatDate)[1] == "character") {stopatDate <- as.POSIXct(stopatDate)}
+source("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
 
-if (!exists ("useSF")) {useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
-mnthly <- c ("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
+if(!exists("useSF")) {useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
+mnthly <- c("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
-if (0) { ## tests
-  levels (factor (subset (poAll, year == 2012)$DateISO))
-  xC <- subset (poAll, (Transect == "9") & (DateISO == "2019-09-16"))
-  # xC <- subset (poAll, (Transect == "3")&(DateISO == "2012-03-14"))
-  xCo <- sectionize (xC)
-  plot (xCo)
-  pSec (xCo, 1, zcol = oCol [[1]])
-  pSec (xCo, 1, zcol = turbo (10), custcont = c(10, 11, 11.1))
-  rm (xC, xCo)
+if(0) { ## tests
+  levels(factor(subset(poAll, year == 2012)$DateISO))
+  xC <- subset(poAll,(Transect == "9") &(DateISO == "2019-09-16"))
+  # xC <- subset(poAll,(Transect == "3")&(DateISO == "2012-03-14"))
+  xCo <- sectionize(xC)
+  plot(xCo)
+  pSec(xCo, 1, zcol = oCol [[1]])
+  pSec(xCo, 1, zcol = turbo(10), custcont = c(10, 11, 11.1))
+  rm(xC, xCo)
 }
 
 
 ## plot T9 only
-# transectC <- which (levels (poAll$Transect) == "9")  # 5  # T9
+# transectC <- which(levels(poAll$Transect) == "9")  # 5  # T9
 
 
-for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
-  for (tn in transectC) {  # tn: transect
+for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
+  for(tn in transectC) {  # tn: transect
     ## for testing
     ## ov <- 1; tn <- 6 ## AlongBay
     ## ov <- 1; tn <- 2
 
-    cat ("\n\n", oVarsF [ov], " T-", levels (poAll$Transect)[tn], "\n")
+    cat("\n\n", oVarsF [ov], " T-", levels(poAll$Transect)[tn], "\n")
 
     ## doubly-used stations:  XXX bug here!
-    stn$Line <- flexTransect (levels (poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
+    stn$Line <- flexTransect(levels(poAll$Transect)[tn], stn)  ## function from CTDsectionFcts.R
     lvl <- levels(poAll$Transect)
-    poAll$Transect <- stn$Line [match (poAll$Match_Name, stn$Match_Name)]
-    poAll$Transect <- factor (poAll$Transect, levels = lvl); rm (lvl)
+    poAll$Transect <- stn$Line [match(poAll$Match_Name, stn$Match_Name)]
+    poAll$Transect <- factor(poAll$Transect, levels = lvl); rm(lvl)
 
-
-    ## to use as a reference for partial stations
-    ## and for bathymetry profile
-    ## turn this into a function?
-
-    stnT <- subset (stn, stn$Line == levels (poAll$Transect)[tn])
-
-    lati <- seq (min (stnT$Lat_decDegree), max (stnT$Lat_decDegree), length.out = 1000)
-    loni <- suppressWarnings(approx (stnT$Lat_decDegree, stnT$Lon_decDegree, lati, rule = 2)$y)
-    require ("oce")
-    dist <- rev (geodDist (longitude1 = loni, latitude1 = lati, alongPath = TRUE)) # [km] -- why rev??
-    sect <- data.frame (loni, lati, dist); rm (loni, lati, dist)
-    bottom <- fetchBathy (sect, bathyZ)  # function from CTDsectionFcts.R
-
+    stnT <- subset(stn, stn$Line == levels(poAll$Transect)[tn])
 
     ## select transect, year, classify monthly/seasonal survey
-    physOcY <- subset (poAll, Transect == levels (poAll$Transect)[tn])
-    physOcY$year <- factor  (physOcY$year)
-    physOcY$month <- factor (format (physOcY$DateISO, "%m"))
-    physOcY$season <- seasonize (physOcY$month)
+    physOcY <- subset(poAll, Transect == levels(poAll$Transect)[tn])
+    physOcY$year <- factor (physOcY$year)
+    physOcY$month <- factor(format(physOcY$DateISO, "%m"))
+    physOcY$season <- seasonize(physOcY$month)
 
 
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
-    if (levels (poAll$Transect)[tn] %in% mnthly) {
-      if (maxSize) {
+    if(levels(poAll$Transect)[tn] %in% mnthly) {
+      if(maxSize) {
         pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
-        yearPP <- 11 # years (rows) per page
+        yearPP <- 11 # years(rows) per page
       } else {
         ## monthly
         pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
         ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
         pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
         ## for T9/AlongBay, full-width: adjust pH dynamically with N-years; all on one page of expanding length
-        yearPP <- diff (range (as.numeric (format (physOcY$DateISO, "%Y")))) + 1 + 1 # extra line for color scale and map
-        pW <- 42; pH <- 3.2 * (1 + yearPP)
+        yearPP <- diff(range(as.numeric(format(physOcY$DateISO, "%Y")))) + 1 + 1 # extra line for color scale and map
+        pW <- 42; pH <- 3.2 *(1 + yearPP)
       }
       omcex <- 2   # size of mtext annotations
-      require ("stringr")
-      sampleTimes <- str_pad (1:12, 2, pad = "0")
+      require("stringr")
+      sampleTimes <- str_pad(1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
-      nY <- as.numeric (format (stopatDate, "%Y")) - min (as.integer (levels (poAll$year))) + 1
+      nY <- as.numeric(format(stopatDate, "%Y")) - min(as.integer(levels(poAll$year))) + 1
       nY <- yearPP
-      layoutM <- matrix (1:(12 * nY), nY, byrow = TRUE) # across, then down
+      layoutM <- matrix(1:(12 * nY), nY, byrow = TRUE) # across, then down
       omText <- month.name
-      rm (nY)
+      rm(nY)
     } else {
       ## quarterly
       pH <- 8.5; pW <- 14    # legal size
       yearPP <- 4
       omcex <- 1
-      sampleTimes <- levels (physOcY$season)
+      sampleTimes <- levels(physOcY$season)
       physOcY$smplIntvl <- physOcY$season
-      layoutM <- matrix (1:16, 4, byrow = TRUE)
+      layoutM <- matrix(1:16, 4, byrow = TRUE)
       omText <- sampleTimes
     }
 
 
     ## calculate climatology and anomaly
     ## ------------- climatology -------------
-    fixt <- function(txt) {substr (tolower (as.character (txt)), 1, 3)}
-    if (0) {  ## -- not yet ready
+    fixt <- function(txt) {substr(tolower(as.character(txt)), 1, 3)}
+    if(0) {  ## -- not yet ready
 
-      x <- physOcY [, which (fixt (names (physOcY)) == fixt (oVarsF[ov]))]
-      station <- factor (physOcY$Match_Name)
-      physOcC <- aggregate (x ~ smplIntvl + station + Depth.saltwater..m.
+      x <- physOcY [, which(fixt(names(physOcY)) == fixt(oVarsF[ov]))]
+      station <- factor(physOcY$Match_Name)
+      physOcC <- aggregate(x ~ smplIntvl + station + Depth.saltwater..m.
         , physOcY, FUN = mean, na.rm = TRUE)
-      rm (x, fixt, station)
+      rm(x, fixt, station)
 
-      poClimat <- climatologyCTDcast (physOcY, timeVar = "smplIntvl")
+      poClimat <- climatologyCTDcast(physOcY, timeVar = "smplIntvl")
 
-      poClimat$lon <- stnT$Lon_decDegree [match (physOcC$station, stnT$Match_Name)]
-      poClimat$lat <- stnT$Lat_decDegree [match (physOcC$station, stnT$Match_Name)]
+      poClimat$lon <- stnT$Lon_decDegree [match(physOcC$station, stnT$Match_Name)]
+      poClimat$lat <- stnT$Lat_decDegree [match(physOcC$station, stnT$Match_Name)]
     }
     ### may need to make separate functions!
 
@@ -188,234 +175,207 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
     ## ---- end of climatology and anomaly ---
 
 
-    pdf (paste0 ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-      , " T-", levels (poAll$Transect)[tn]
+    pdf(paste0("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
+      , " T-", levels(poAll$Transect)[tn]
       , ".pdf")
     , height = pH, width = pW)
-    layout (layoutM); rm (layoutM)
-    if (pH > 14) {
-      par (oma = c(3, 5, 12, 2)
+    layout(layoutM); rm(layoutM)
+    if(pH > 14) {
+      par(oma = c(3, 5, 12, 2)
         , mar = c(4, 4, 3, 0.1)
       )
     } else {
-      par (oma = c(3, 5, 8, 2)
+      par(oma = c(3, 5, 8, 2)
         , mar = c(4, 4, 3, 0.1)
       )
     }
-    if (0) { # test){
-      par (oma = c(3, 5, 15, 2)
+    if(0) { # test){
+      par(oma = c(3, 5, 15, 2)
         , mar = c(4, 4, 16, 0.1)
       )
     }
     ## test-option
-    yearC <- seq_along(levels (physOcY$year))  ## or fix subset below
-    for (iY in yearC) {
+    yearC <- seq_along(levels(physOcY$year))  ## or fix subset below
+    for(iY in yearC) {
       ## for testing:
       # iY <- 7 # pick 2018
       # iY <- 2
-      physOc <- subset (physOcY, year == levels (physOcY$year)[iY])
+      physOc <- subset(physOcY, year == levels(physOcY$year)[iY])
 
 
       ## replace transDate from above!
       ## also making surveyW redundant
-      physOc$transDate <- with (physOc, factor (paste0 ("T-", Transect, " ", year, "-", smplIntvl)
-        , levels = paste0 ("T-", Transect [1], " ", year [1], "-"
+      physOc$transDate <- with(physOc, factor(paste0("T-", Transect, " ", year, "-", smplIntvl)
+        , levels = paste0("T-", Transect [1], " ", year [1], "-"
           , sampleTimes)))
 
       ## define and plot sections
       ## turn this into a function to use in section plots as well
-      cat ("   ",  formatC (iY, width = 3), "/", length (levels (physOcY$year))
-        , " Sections/year:", length (levels (physOc$transDate)), "-- ")
+      cat("   ",  formatC(iY, width = 3), "/", length(levels(physOcY$year))
+        , " Sections/year:", length(levels(physOc$transDate)), "-- ")
 
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
-      if (test) {sL <- 1:5} else {sL <-  seq_along(levels (physOc$transDate))}
-      # sL <-  seq_along(levels (physOc$transDate))
-      for (iS in sL) {              # cycle through individual survey
+      if(test) {sL <- 1:5} else {sL <-  seq_along(levels(physOc$transDate))}
+      # sL <-  seq_along(levels(physOc$transDate))
+      for(iS in sL) {              # cycle through individual survey
         # iS <- 2  # for testing
-        cat (iS, " ")
-        xC <- subset (physOc, transDate == levels (physOc$transDate)[iS])
-        if (length (levels (factor (xC$Match_Name))) < 2) {
+        cat(iS, " ")
+        xC <- subset(physOc, transDate == levels(physOc$transDate)[iS])
+        if(length(levels(factor(xC$Match_Name))) < 2) {
           ## if a scheduled survey was not done, plot a blank placeholder in the panel instead
-          ## unless the scheduled survey is in the future from runtime (do nothing then)
-          inFuture <- as.numeric (as.character (physOc$year))[1] >=
-            as.numeric (format (stopatDate, "%Y")) &&
-            iS / length (sL) > as.numeric (format (stopatDate, "%m")) / 12
-          if (!inFuture) {
-            nS <- length (levels (factor (xC$Match_Name)))
-            plot (0:10, type = "n", axes = FALSE, xlab = "", ylab = ""   ## XXX in here or in CTDsectionFcts.R? XXX
-              , main = paste0 (levels (physOc$transDate)[iS], ": ", nS
-                , ifelse (nS > 1, " stations", " station")
+          ## unless the scheduled survey is in the future from runtime(do nothing then)
+          inFuture <- as.numeric(as.character(physOc$year))[1] >=
+            as.numeric(format(stopatDate, "%Y")) &&
+            iS / length(sL) > as.numeric(format(stopatDate, "%m")) / 12
+          if(!inFuture) {
+            nS <- length(levels(factor(xC$Match_Name)))
+            plot(0:10, type = "n", axes = FALSE, xlab = "", ylab = ""   ## XXX in here or in CTDsectionFcts.R? XXX
+              , main = paste0(levels(physOc$transDate)[iS], ": ", nS
+                , ifelse(nS > 1, " stations", " station")
             ))
-            rm (nS)
+            rm(nS)
           }
-          rm (inFuture)
+          rm(inFuture)
         } else {
-          if (0) {  ## combine all casts in survey window (watch RAM!) -- MUCH faster!
+          if(0) {  ## combine all casts in survey window(watch RAM!) -- MUCH faster!
             ## or pick out long survey within X days?
             nSurv <- 1
           } else {
             ## check whether there is more than one survey per survey-interval
 
-            if (test) {save.image ("~/tmp/LCI_noaa/cache-t/wallCache1.RData")}
-            # rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/wallCache1.RData"); source ("CTDsectionFcts.R")
+            if(test) {save.image("~/tmp/LCI_noaa/cache-t/wallCache1.RData")}
+            # rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/wallCache1.RData"); source("CTDsectionFcts.R")
 
             ## allow x-day window to make up a multi-day composite transect
             ## better to apply to allPo?
             ## make this a function for all data? -> move to CTDwall-setup.R / datasetup?
 
-            xC$survey <- factor (xC$survey)
-            nSurv <- length (levels (xC$survey))  ## used again below to mark plots
-            if (nSurv > 1) {
+            xC$survey <- factor(xC$survey)
+            nSurv <- length(levels(xC$survey))  ## used again below to mark plots
+            if(nSurv > 1) {
               ## use the survey with the most stations
-              nS <- sapply (levels (xC$survey), FUN = function(x) {
-                length (levels (factor (subset (xC$Station, xC$survey == x))))
+              nS <- sapply(levels(xC$survey), FUN = function(x) {
+                length(levels(factor(subset(xC$Station, xC$survey == x))))
               })
-              xC <- subset (xC, survey == levels (xC$survey)[which.max (nS)])
-              rm (nS)
+              xC <- subset(xC, survey == levels(xC$survey)[which.max(nS)])
+              rm(nS)
             }
 
-            # remove duplicate stations (shared positions)
+            # remove duplicate stations(shared positions)
             ## any duplicated stations? -- if so, keep the closest in time
-            posF <- factor (xC$longitude_DD * 10e6 - xC$latitude_DD)
-            xC$File.Name <- factor (xC$File.Name)
-            if (length (levels (xC$File.Name)) != length (levels (posF))) {
+            posF <- factor(xC$longitude_DD * 10e6 - xC$latitude_DD)
+            xC$File.Name <- factor(xC$File.Name)
+            if(length(levels(xC$File.Name)) != length(levels(posF))) {
               ## there are duplicate stations
               ## identify duplicate file names; remove time outlier
-              nFN <- sapply (seq_along(levels (posF)), function(iQ) {
-                length (unique (subset (xC, posF == levels (posF)[iQ])$File.Name))
+              nFN <- sapply(seq_along(levels(posF)), function(iQ) {
+                length(unique(subset(xC, posF == levels(posF)[iQ])$File.Name))
               })
-              mT <- mean (xC$isoTime)
+              mT <- mean(xC$isoTime)
 
-              for (iQ in seq_along(levels (posF))) {
-                sec <- subset (xC, posF == levels (posF)[iQ])
-                sec$File.Name <- factor (sec$File.Name)
-                if (nFN [iQ] > 1) {
-                  bF <- sapply (seq_along(levels (sec$File.Name)), function(iQ) {
-                    cx <- subset (sec, File.Name == levels (sec$File.Name)[iQ])
-                    # qal <- nrow (cx)
-                    qal <- 1 / abs (as.numeric (difftime (mT, cx$isoTime [1], "minutes")))
+              for(iQ in seq_along(levels(posF))) {
+                sec <- subset(xC, posF == levels(posF)[iQ])
+                sec$File.Name <- factor(sec$File.Name)
+                if(nFN [iQ] > 1) {
+                  bF <- sapply(seq_along(levels(sec$File.Name)), function(iQ) {
+                    cx <- subset(sec, File.Name == levels(sec$File.Name)[iQ])
+                    # qal <- nrow(cx)
+                    qal <- 1 / abs(as.numeric(difftime(mT, cx$isoTime [1], "minutes")))
                     # cx$File.Name [1]
                     qal
                   })
                   ## pick the best cast
-                  sec <- subset (sec
-                    , File.Name == levels (sec$File.Name)[which.max (bF)])
+                  sec <- subset(sec
+                    , File.Name == levels(sec$File.Name)[which.max(bF)])
                 }
-                if (iQ == 1) {
+                if(iQ == 1) {
                   nSec <- sec
                 } else {
-                  nSec <- rbind (nSec, sec)
+                  nSec <- rbind(nSec, sec)
                 }
               }
               xC <- nSec
-              rm (iQ, nFN, posF, nSec, sec, bF)
+              rm(iQ, nFN, posF, nSec, sec, bF)
             }
           }
 
           ## arrange ctd data into sections
           ## define section -- see oce-class "section"
-          if (test) {save.image ("~/tmp/LCI_noaa/cache-t/wallCache.RData")}
-          ## rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/wallCache.RData"); source ("CTDsectionFcts.R")
+          if(test) {save.image("~/tmp/LCI_noaa/cache-t/wallCache.RData")}
+          ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/wallCache.RData"); source("CTDsectionFcts.R")
 
           ##
           ## construct, pad, and sort section
           ##
-          xCo <- sectionize (xC)
+          xCo <- sectionize(xC)
 
           ## sectionPad to plot incomplete sections
-          xCo <- sectionPad (sect = xCo, transect = data.frame (station = stnT$Match_Name
+          xCo <- sectionPad(sect = xCo, transect = data.frame(station = stnT$Match_Name
             , line = stnT$Line
             , latitude = stnT$Lat_decDegree
             , longitude = stnT$Lon_decDegree
-            , bottom = stnT$Depth_m))
-          ## sectionSort--is now in sectionPad. Still need to do same to bottom
-          if (xC$Transect [1] == "AlongBay") {
-            bottom <- bottom [order (st_coordinates (bottom)[, 1], decreasing = FALSE), ]
-          } else if (xC$Transect [1] %in% c("4", "9")) {
-            bottom <- bottom [order (st_coordinates (bottom)[, 2], decreasing = TRUE), ]   ## XXX bottom wrong for T4!
-          } else {
-            bottom <- bottom [order (st_coordinates (bottom)[, 1]), ]
+          ))
+          if(!exists("bathy_sec")){
+            bathy_sec <- get_section_bathy(xCo)
           }
-          if (names (as.data.frame (st_coordinates(bottom)))[1] == "X") {
-            ## bottom is now projected AEA, not geographic coordinates!
-            bG <- bottom %>% st_transform(crs = 4326)
-            bottom$dist <- geodDist (longitude1 = st_coordinates (bG)[, 1]
-              , latitude1 = st_coordinates (bG)[, 2], alongPath = TRUE) # [km]
-          } else {
-            bottom$dist <- geodDist (longitude1 = st_coordinates (bottom)[, 1]
-              , latitude1 = st_coordinates (bottom)[, 2], alongPath = TRUE) # [km]
-          }
-          ## test, QAQC
-          if (0) {
-            sapply (seq_along(xCo@data$station), function(i) {
-              #  xCo@data$station[[i]]@data$temperature
-              xCo@data$station[[i]]@metadata$stationId
-              # xCo@data$station[[i]]@metadata$waterDepth
-            })
-          }
-          # plot (subset (xC, Match_Name == "9_10")$Temperature_ITS90_DegC)
 
           ##
           ## plot the section/transect
           ##
-          ## if (ov == 2){zB <- c (28, seq (30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
-          if (oVarsF [ov] == "bvf") {cCont <- NULL} else {cCont <- pretty (oRange [ov, ], 20)}
-          pSec (xCo, N = oVarsF [ov]
+          ## if(ov == 2){zB <- c(28, seq(30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
+          if(oVarsF [ov] == "bvf") {cCont <- NULL} else {cCont <- pretty(oRange [ov, ], 20)}
+          pSec(xCo, N = oVarsF [ov]
             , zCol = oCol3 [[ov]]
             , zlim = oRange [ov, ] # fixes colors to global range of that variable
             # , zbreaks=zB # better?, slower interpolation
-            # , custcont = pretty (oRange [ov,], 20)  ## may often fail? -- no contours in range
-            , ylim = c(0, max (physOcY$Depth.saltwater..m., na.rm = TRUE) + 5)  ## need to fix CTDwall-setup.R first
+            # , custcont = pretty(oRange [ov,], 20)  ## may often fail? -- no contours in range
+            , ylim = c(0, max(physOcY$Depth.saltwater..m., na.rm = TRUE) + 5)  ## need to fix CTDwall-setup.R first
             , showBottom = FALSE
             , drawPalette = FALSE
             , custcont = cCont
+            , bathy = bathy_sec
           )
-          tgray <- rgb (t (col2rgb ("lightgray")), max = 255, alpha = 0.5 * 255) ## transparent
-          with (bottom, polygon(c(min (dist), dist, max(dist))
-            , c(10000, depth, 10000)
-            , col = tgray))
-          rm (tgray)
-          if (test) {   ## for QAQC: add station labels to x-axis
-            dist <- unique (xCo[['distance']])
-            stnID <- sapply (seq_along(xCo@data$station), function(m) {
+          if(test) {   ## for QAQC: add station labels to x-axis
+            dist <- unique(xCo[['distance']])
+            stnID <- sapply(seq_along(xCo@data$station), function(m) {
               xCo@data$station[[m]]@metadata$stationId
               #              xCo@data$station[[m]]@metadata$filename
             })
-            try (axis (side = 3, at = dist, labels = stnID, cex = 0.2, las = 2))
-            rm (dist, stnID)
+            try(axis(side = 3, at = dist, labels = stnID, cex = 0.2, las = 2))
+            rm(dist, stnID)
           }
 
-          if (nSurv > 1) {
-            title (main = paste (levels (physOc$transDate)[iS], "* -", nSurv), col.main = "red")
+          if(nSurv > 1) {
+            title(main = paste(levels(physOc$transDate)[iS], "* -", nSurv), col.main = "red")
           } else {
-            # title (main = paste (levels (physOc$transDate)[iS]))
-            title (main = paste0 (levels (physOc$transDate)[iS], "-"
-              , format (mean (xCo@metadata$time, na.rm = TRUE), "%d")))
+            # title(main = paste(levels(physOc$transDate)[iS]))
+            title(main = paste0(levels(physOc$transDate)[iS], "-"
+              , format(mean(xCo@metadata$time, na.rm = TRUE), "%d")))
           }
-          if (iY == 1) { ## big title on top
-            mtext (text = oVars [ov], side = 3, cex = 4, outer = TRUE, line = 3)  ## always?
+          if(iY == 1) { ## big title on top
+            mtext(text = oVars [ov], side = 3, cex = 4, outer = TRUE, line = 3)  ## always?
           }
-          ## addBorder (xCo, TD[ov]-1)
+          ## addBorder(xCo, TD[ov]-1)
 
           # keep longest section for map
-          if (!exists ("xMap")) {xMap <- xCo}
-          if (length (xCo@data$station) > length (xMap@data$station)) {
+          if(!exists("xMap")) {xMap <- xCo}
+          if(length(xCo@data$station) > length(xMap@data$station)) {
             xMap <- xCo
           }
-          rm (xCo, nSurv)
+          rm(xCo, nSurv)
         }
       }
       ## covering yearPP years per page. Write out at end of each year
-      mtext (text = c(levels (physOcY$year)[iY], "") # blank line for map and scale?
+      mtext(text = c(levels(physOcY$year)[iY], "") # blank line for map and scale?
         , side = 2, line = 1.0, outer = TRUE, cex = omcex
-        , at = 1 - ((iY - 1) %% yearPP) / yearPP - 0.5 / yearPP
+        , at = 1 -((iY - 1) %% yearPP) / yearPP - 0.5 / yearPP
       )
-      for (n in seq_along(omText)) {
-        mtext (text = omText [n], side = 3, line = 1.0, outer = TRUE, cex = omcex
-          , at = (n - 1) / length(omText) + 0.5 / length(omText))
+      for(n in seq_along(omText)) {
+        mtext(text = omText [n], side = 3, line = 1.0, outer = TRUE, cex = omcex
+          , at =(n - 1) / length(omText) + 0.5 / length(omText))
       }
-      cat ("\n")
+      cat("\n")
     }
 
     ##############################################################
@@ -425,9 +385,9 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
     ## maps
     xLim <- c(-154, -151)
     yLim <- c(57.5, 60.1)
-    plot (xMap
+    plot(xMap
       , which = 99
-      , coastline = "coastlineWorldFine" ## or a coastline object (from gshhg, removing dependency on ocedata)
+      , coastline = "coastlineWorldFine" ## or a coastline object(from gshhg, removing dependency on ocedata)
       , showStations = TRUE
       , gird = TRUE
       , map.xlim = c(-154, -151)
@@ -437,59 +397,59 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
       , span = 250
     )
     ## add eye for perspective;  save eye to eye.ps with Inkscape
-    if (1) {
-      if (levels (poAll$Transect)[tn] == "3") {
+    if(1) {
+      if(levels(poAll$Transect)[tn] == "3") {
         xU <- -152.5; yU <- 59.4; rU <- 60
-      } else if (levels (poAll$Transect)[tn] == "4") {
+      } else if(levels(poAll$Transect)[tn] == "4") {
         xU <- -152.8; yU <- 59.4; rU <- 0
-      } else if (levels (poAll$Transect)[tn] == "6") {
+      } else if(levels(poAll$Transect)[tn] == "6") {
         xU <- -151.5; yU <- 58.4; rU <- 115
-      } else  if (levels (poAll$Transect)[tn] == "7") {
+      } else  if(levels(poAll$Transect)[tn] == "7") {
         xU <- -152.5; yU <- 58.7; rU <- 85
-      } else if (levels (poAll$Transect)[tn] == "9") {
+      } else if(levels(poAll$Transect)[tn] == "9") {
         xU <- -152.8; yU <- 59.0; rU <- 20
       } else {                         # AlongBay
         xU <- -150.5; yU <- 59.1; rU <- 130
       }
 
-      if (0) {  ## vector based -- not windows compatible and doesn't rotate
-        require ("grImport")  ## requires installation of GS -- go raster after all
+      if(0) {  ## vector based -- not windows compatible and doesn't rotate
+        require("grImport")  ## requires installation of GS -- go raster after all
         grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
         p <- readPicture("pictograms/eye.ps.xml")
-        unlink ("pictograms/eye.ps.xml")
-        grid.picture (p  # no easy way to rotate p by n-degrees?; placed on page, not panel
-          , x = unit (xU, "npc"), y = unit (yU, "npc")
+        unlink("pictograms/eye.ps.xml")
+        grid.picture(p  # no easy way to rotate p by n-degrees?; placed on page, not panel
+          , x = unit(xU, "npc"), y = unit(yU, "npc")
           # , angle=rU
-          , width = unit (0.07, "npc"), height = unit (0.07, "npc")
+          , width = unit(0.07, "npc"), height = unit(0.07, "npc")
         )
         ## read directly from SVG -- not working yet; better in MacOs, no advantage in Windows
-        # if (.Platform$OS.type=="unix"){
-        #   if (!require ("grConvert")){
+        # if(.Platform$OS.type=="unix"){
+        #   if(!require("grConvert")){
         #     devtools::install_github("sjp/grConvert")
-        #     library (grConvert)}
-        #   grConvert::convertPicture ("pictograms/eye.svg", "pictograms/eye2.svg")
+        #     library(grConvert)}
+        #   grConvert::convertPicture("pictograms/eye.svg", "pictograms/eye2.svg")
         # }
-        # require ("grImport2")
-        # p <- grImport2::readPicture ("pictograms/eye2.svg")
+        # require("grImport2")
+        # p <- grImport2::readPicture("pictograms/eye2.svg")
         # g <- grImport2::pictureGrob(p)
         # grid.picture(g)
       }
-      if (.Platform$OS.type == "unix") {
-        system ("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+      if(.Platform$OS.type == "unix") {
+        system("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
       }
-      require ("png")
-      p <- readPNG ("pictograms/eye.png")
-      # require ("OpenImageR")
-      # p <- rotateImage (p, angle=rU, method="nearest")
+      require("png")
+      p <- readPNG("pictograms/eye.png")
+      # require("OpenImageR")
+      # p <- rotateImage(p, angle=rU, method="nearest")
       rasterImage(p
         , xleft = xU       # -152       +3*1*(xU-0.5)
         , xright = xU + 0.3  # -152+0.3  +3*1*(xU-0.5)
         , ybottom = yU     # 59.4     +1*1*(yU-0.5)
         , ytop =   yU + 0.3 # 59.4+0.3 +1*1*(yU-0.5)
         , angle = rU)
-      rm (p, xU, yU, rU)
+      rm(p, xU, yU, rU)
       # ## fine-scale map -- no longer needed?
-      # plot (xMap  # plot.section (which=99) should return xlim and ylim of map, not section
+      # plot(xMap  # plot.section(which=99) should return xlim and ylim of map, not section
       #       , which = 99
       #       , coastline = "coastlineWorldFine"
       #       , showStations = TRUE
@@ -497,7 +457,7 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
       #       # , span=50
       # )
     }
-    rm (xMap)
+    rm(xMap)
 
     ###############################################
     ## draw palette, color scale into next panel ##
@@ -505,42 +465,43 @@ for (ov in oceanvarC) {  # ov = OceanVariable (temp, salinity, etc)
 
     nCol <- 100
     t.ramp <- oCol3[[ov]](nCol)
-    if (pH > 30) {
+    if(pH > 30) {
       yL <- 1.8
-      par (mar = c(5, 1, 5, 1))
-      #       par (mar=c(14, 1,3,1))
+      par(mar = c(5, 1, 5, 1))
+      #       par(mar=c(14, 1,3,1))
     } else {
       yL <- 1.2
-      #      par (mar=c(10, 1,3,1))
+      #      par(mar=c(10, 1,3,1))
     }
-    bp <- barplot (rep (1, nCol), axes = FALSE, space = 0, col = t.ramp
+    bp <- barplot(rep(1, nCol), axes = FALSE, space = 0, col = t.ramp
       , border = NA, ylim = c(-10, yL)  # ylim to make bar narrower, less high
     )
-    title (main = oVars [ov], cex = 3, line = 0.5)
-    lVal <-  pretty (c (oRange [ov, 1], oRange [ov, 2]))
-    axis (1, at = (lVal - oRange [ov, 1]) / (oRange [ov, 2] - oRange[ov, 1]) * nCol
+    title(main = oVars [ov], cex = 3, line = 0.5)
+    lVal <-  pretty(c(oRange [ov, 1], oRange [ov, 2]))
+    axis(1, at =(lVal - oRange [ov, 1]) /(oRange [ov, 2] - oRange[ov, 1]) * nCol
       , labels = lVal, lwd = 0, line = -13)
 
     ## add date and logos for reference
-    text (1, -12, paste ("Kasistna Bay Lab\n", Sys.Date())
+    text(1, -12, paste("Kasistna Bay Lab\n", Sys.Date())
       , adj = 1, cex = 1)
-    mtext (text = paste ("Kasitsna Bay Lab\n", Sys.Date())
+    mtext(text = paste("Kasitsna Bay Lab\n", Sys.Date())
       , side = 1, line = 3, outer = FALSE, cex = 1, adj = 1)
     ## add NCCOS and KBNERR logos
-    require ("jpeg")
-    nccos <- readJPEG ("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
-    rasterImage (nccos, nCol / 20, -8, nCol, -4) # xleft, ybottom, xright ytop
-    rm (bp, lVal, nCol, yL, nccos)
+    require("jpeg")
+    nccos <- readJPEG("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
+    rasterImage(nccos, nCol / 20, -8, nCol, -4) # xleft, ybottom, xright ytop
+    rm(bp, lVal, nCol, yL, nccos)
 
     ### end of wall poster
     dev.off()
-    cat ("\n")
+    rm (bathy_sec)  ## flush bathymetry to fetch new one for next page
+    cat("\n")
   }
 }
 
 
 physOc <- poAll
-rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
+rm(tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, transectC)
 
 
 
@@ -550,15 +511,15 @@ rm (tn, oVars, oVarsF, ov, poAll, pSec, physOcY, yearC, iY, sL, iS, oceanvarC, t
 ## for error checking: map of every transect
 # double-used plots may appear out-of-line in chronology
 ## this should come at the end of CTDwall-setup.R
-if (0) {
-  xC <- xC [order (xC$isoTime), ]
-  xC$survey <- factor (xC$survey)
-  pdf ("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
-  for (i in seq_along(levels (xC$survey)))
-    xCx <- subset (xC, survey == levels (xC$survey)[i])
-  ## cat (xC$File.Name[i], "\n")
+if(0) {
+  xC <- xC [order(xC$isoTime), ]
+  xC$survey <- factor(xC$survey)
+  pdf("~/tmp/LCI_noaa/media/CTDsections/CTDwall/stationmaps.pdf")
+  for(i in seq_along(levels(xC$survey)))
+    xCx <- subset(xC, survey == levels(xC$survey)[i])
+  ## cat(xC$File.Name[i], "\n")
   xCx <- sectionize(xCx)
-  plot (xCx
+  plot(xCx
     , which = 99
     , coastline = "coastlineWorldFine"
     , showStations = TRUE
@@ -572,15 +533,15 @@ if (0) {
   dev.off()
 
   ## map of study area, following https://clarkrichards.org/2019/07/12/making-arctic-maps/
-  require (ocedata) # for the coastlineWorldFine data
+  require(ocedata) # for the coastlineWorldFine data
   data(coastlineWorldFine)
 
   mp <- function() {
-    mapPlot(coastlineWorldFine, # projection=proj4string (bR),
+    mapPlot(coastlineWorldFine, # projection=proj4string(bR),
       longitudelim = c(-154.2, -150.5),
       latitudelim = c(58.5, 60.5), col = 'grey')
   }
 }
 
-cat ("\n# END CTDwall.R #\n")
+cat("\n# END CTDwall.R #\n")
 # EOF

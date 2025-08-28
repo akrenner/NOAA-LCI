@@ -1,7 +1,7 @@
 ## produce temp file for CTDwall to process further
 ## define color ramps
 ## define data ranges
-## clean data (move to earlier??)
+## clean data(move to earlier??)
 
 
 ## issues:
@@ -14,12 +14,12 @@
 
 ## load data
 ## start with file from dataSetup.R -- better to get data directly from CTD processing? need to add only coastline + bathy
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts-sf.RData")  # physOc and stn from dataSetup.R
-rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+# rm(list = ls()); base::load("~/tmp/LCI_noaa/cache/CTDcasts-sf.RData")  # physOc and stn from dataSetup.R
+rm(list = ls()); base::load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
+# rm(list = ls()); base::load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 
-if (length (grep ("darwin", version$os)) > 0) {
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+if(length(grep("darwin", version$os)) > 0) {
+  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 } else {
   setwd("~/myDocs/amyfiles/NOAA-LCI/")
 }
@@ -30,19 +30,18 @@ if (length (grep ("darwin", version$os)) > 0) {
 
 
 ### data prep
-("oce")
 ## define sections
-physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
-physOc$Transect <- factor (physOc$Transect)
-physOc$year <- factor (format (physOc$isoTime, "%Y"))
+physOc$DateISO <- as.Date(format(physOc$isoTime, "%Y-%m-%d"))
+physOc$Transect <- factor(physOc$Transect)
+physOc$year <- factor(format(physOc$isoTime, "%Y"))
 ## combine CTD and station meta-data
-physOc <- subset (physOc, !is.na (physOc$Transect)) ## who's slipping through the cracks??
+physOc <- subset(physOc, !is.na(physOc$Transect)) ## who's slipping through the cracks??
 ## stn should be no longer needed -- see dataSetup.R
-# physOc <- cbind (physOc, stn [match (physOc$Match_Name, stn$Match_Name)
-#                               , which (names (stn) %in% c(# "Line",
+# physOc <- cbind(physOc, stn [match(physOc$Match_Name, stn$Match_Name)
+#                               , which(names(stn) %in% c(# "Line",
 #                                                           "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
-physOc$Match_Name <- as.factor (physOc$Match_Name)
-# print (summary (physOc))
+physOc$Match_Name <- as.factor(physOc$Match_Name)
+# print(summary(physOc))
 
 
 
@@ -52,22 +51,22 @@ physOc$Match_Name <- as.factor (physOc$Match_Name)
 
 
 
-## bahymetry -- already here from dataSetup.R in load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData"), but apparently not
-load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
-if (!exists ("bathyZ")) {  # should already come from dataSetup.R
-  mar_bathy <- stars::read_stars ("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
-  names (mar_bathy) <- "topo"
-  names (mar_bathy) <- "topo"
-  bathyZ <- st_as_stars(depth = ifelse (mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+## bahymetry -- already here from dataSetup.R in load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData"), but apparently not
+load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
+if(!exists("bathyZ")) {  # should already come from dataSetup.R
+  mar_bathy <- stars::read_stars("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+  names(mar_bathy) <- "topo"
+  names(mar_bathy) <- "topo"
+  bathyZ <- st_as_stars(depth = ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
     , dimensions = attr(mar_bathy, "dimensions"))
-  rm (mar_bathy)
+  rm(mar_bathy)
 }
 
 
 
 
 
-require ("ocedata") # coastlineWorldFine
+require("ocedata") # coastlineWorldFine
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
@@ -75,89 +74,89 @@ require ("ocedata") # coastlineWorldFine
 # add flourescence to other variables. To do that, need to make section from oce-ctd object
 
 
-# poAll <- subset (physOc, Station %in% as.character (1:12)) # cut out portgraham and pogi -- or translate -- keep them in!
+# poAll <- subset(physOc, Station %in% as.character(1:12)) # cut out portgraham and pogi -- or translate -- keep them in!
 poAll <- physOc
-rm (physOc)
-poAll$Transect <- factor (poAll$Transect)
+rm(physOc)
+poAll$Transect <- factor(poAll$Transect)
 
 
 
 ## log transformations
 slog <- function(x) {
-  x <- suppressWarnings (log (x))
-  x <- ifelse (is.infinite(x), NA, x)
+  x <- suppressWarnings(log(x))
+  x <- ifelse(is.infinite(x), NA, x)
   x
 }
 
 
-poAll$logPAR <- slog (poAll$PAR.Irradiance)
-# poAll$logFluorescence <- slog (poAll$Fluorescence_mg_m3)
-poAll$logTurbidity <- slog (poAll$turbidity)
-rm (slog)
+poAll$logPAR <- slog(poAll$PAR.Irradiance)
+# poAll$logFluorescence <- slog(poAll$Fluorescence_mg_m3)
+poAll$logTurbidity <- slog(poAll$turbidity)
+rm(slog)
 
 
 ## use hi-res bathymetry profiles now -- this is no longer of use -- abandone!
-if (0) {
+if(0) {
   ## add bathymetry to CTD metadata
-  poAll$Bottom.Depth_main <- stn$Depth_m [match (poAll$Match_Name, stn$Match_Name)]
+  poAll$Bottom.Depth_main <- stn$Depth_m [match(poAll$Match_Name, stn$Match_Name)]
 
-  if (useSF) {
+  if(useSF) {
     ## migrate to sf, stars/terra
-    require (c ("sf", "lubridate"))
+    require(c("sf", "lubridate"))
     pop <- poAll %>%
-      st_as_sf (coords = c("longitude_DD", "latitude_DD")) %>%
+      st_as_sf(coords = c("longitude_DD", "latitude_DD")) %>%
       st_set_crs(value = "+proj=longlat +datum=WGS84 +units=m")
 
     poAll$bathy <- st_extract(bathyZ, at = pop)
-    poAll$Bottom.Depth_survey <- st_extract (bathyP, pop)
-    rm (pop)
-    # sapply(st_intersects(x,y), function(z) if (length(z)==0) NA_integer_ else z[1])
+    poAll$Bottom.Depth_survey <- st_extract(bathyP, pop)
+    rm(pop)
+    # sapply(st_intersects(x,y), function(z) if(length(z)==0) NA_integer_ else z[1])
   } else {
-    require (sp)
+    require(sp)
     poP <- poAll
-    coordinates (poP) <- ~ longitude_DD + latitude_DD
-    proj4string(poP) <- crs ("+proj=longlat +datum=WGS84 +units=m")
-    poAll$bathy <- extract (bathyP, poP)
-    poAll$Bottom.Depth_survey <- extract (bathyP, poP)
-    if (exists ("bathyL")) {
-      bL <- extract (marmap::as.raster (bathyL), poP)
-      poAll$Bottom.Depth_survey <-  ifelse (is.na (poAll$Bottom.Depth_survey)
+    coordinates(poP) <- ~ longitude_DD + latitude_DD
+    proj4string(poP) <- crs("+proj=longlat +datum=WGS84 +units=m")
+    poAll$bathy <- extract(bathyP, poP)
+    poAll$Bottom.Depth_survey <- extract(bathyP, poP)
+    if(exists("bathyL")) {
+      bL <- extract(marmap::as.raster(bathyL), poP)
+      poAll$Bottom.Depth_survey <-  ifelse(is.na(poAll$Bottom.Depth_survey)
         , -1 * bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
       poAll$bathy <- poAll$Bottom.Depth_survey
     }
     poAll$bathy <- poAll$Bottom.Depth_survey
-    rm (poP, bL, bathyP, bathyL, bathy)
+    rm(poP, bL, bathyP, bathyL, bathy)
   }
 }
 
 
-save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
+# save.image("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
+# rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 
 
 
-##################### define surveys (by date-range) ##########################
-# surveyW <- ifelse (duplicated(poAll$DateISO), NA, poAll$DateISO)
-# poAll <- poAll [order (poAll$Transect, poAll$isoTime),]data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC
-# surveyT <- factor (with (poAll, paste (Transect,)))
+##################### define surveys(by date-range) ##########################
+# surveyW <- ifelse(duplicated(poAll$DateISO), NA, poAll$DateISO)
+# poAll <- poAll [order(poAll$Transect, poAll$isoTime),]data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC
+# surveyT <- factor(with(poAll, paste(Transect,)))
 #
-# for (i in 1:length (levels (factor (poAll$Transect)))){
+# for(i in 1:length(levels(factor(poAll$Transect)))){
 # }
 
 
-poAll <- poAll [order (poAll$isoTime), ]
-surveyW <- factor (poAll$DateISO)
+poAll <- poAll [order(poAll$isoTime), ]
+surveyW <- factor(poAll$DateISO)
 
 ## use nominal month and year from notebook -- eventually
-for (h in 2:length (levels (surveyW))) {
-  if (difftime (levels (surveyW)[h], levels (surveyW)[h - 1], units = "days") < 7) {
-    surveyW [which (surveyW == levels (surveyW)[h])] <- levels (surveyW)[h - 1]
+for(h in 2:length(levels(surveyW))) {
+  if(difftime(levels(surveyW)[h], levels(surveyW)[h - 1], units = "days") < 7) {
+    surveyW [which(surveyW == levels(surveyW)[h])] <- levels(surveyW)[h - 1]
   }
 }
-surveyW <- factor (format (poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
+surveyW <- factor(format(poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
 
-poAll$survey <- factor (surveyW)  ## need to reset factor levels after combining days
-rm (surveyW, h)
+poAll$survey <- factor(surveyW)  ## need to reset factor levels after combining days
+rm(surveyW, h)
 
 ## migrate code over from CTDwall.R:
 ## several surveys in one month
@@ -166,22 +165,22 @@ rm (surveyW, h)
 ## if two surveys in one month, asign early survey to previous month if that month is empty
 
 # ## new, slow version -- but reliable?
-# for (h in 2:length (surveyW)){
-#   if (difftime (poAll$isoTime [h], poAll$isoTime [h-1], units = "days") < 7){
+# for(h in 2:length(surveyW)){
+#   if(difftime(poAll$isoTime [h], poAll$isoTime [h-1], units = "days") < 7){
 #     surveyW [h] <- surveyW [h-1]
 #   }
 # }
-# poAll$survey <- factor (surveyW); rm (surveyW, h)
+# poAll$survey <- factor(surveyW); rm(surveyW, h)
 
 ## check --- QAQC
-if (0) {
-  cat ("Surveys window QAQC -- testing code\n")
-  for (i in seq_along(levels (poAll$survey))) {
-    x <- subset (poAll, survey == levels (poAll$survey)[i])
-    if (1) {  # length (levels (factor (x$DataISO))) > 1){
-      cat (i, levels (factor (x$DateISO)), "\n")
+if(0) {
+  cat("Surveys window QAQC -- testing code\n")
+  for(i in seq_along(levels(poAll$survey))) {
+    x <- subset(poAll, survey == levels(poAll$survey)[i])
+    if(1) {  # length(levels(factor(x$DataISO))) > 1){
+      cat(i, levels(factor(x$DateISO)), "\n")
     }}
-  rm (x, i)
+  rm(x, i)
 }
 
 
@@ -189,21 +188,21 @@ if (0) {
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- expression (temperature ~ "[" * ""^o ~ C * "]"
+oVars <- expression(temperature ~ "[" * ""^o ~ C * "]"
   , salinity ~ "[" * PSU * "]"
   , density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
   , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
   , chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
   # , "PAR"
-  , log ~ (PAR)
+  , log ~(PAR)
   , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
-  , buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression (paste0 (N^2, "[", s^-2, "]"))
+  , buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression(paste0(N^2, "[", s^-2, "]"))
 )
-oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
+oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
   , "turbidity" # , "logTurbidity"
-  , "fluorescence" # , "chlorophyll" #, "logFluorescence"
+  ,  "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
   # , "PAR.Irradiance"
   , "logPAR"
   , "Oxygen_umol_kg"  # , "O2perc"
@@ -222,68 +221,66 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
 ########################
 
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
-odv <- rev (c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+odv <- rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
-require ("cmocean")  ## for color ramps
-options ('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+require("cmocean")  ## for color ramps
+options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
 ## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
-oCol3 <- list ( ## fix versions?
+oCol3 <- list( ## fix versions?
   # colorRampPalette(oceColorsTurbo(8), bias=0.5)
-  oceColorsTurbo  # colorRampPalette (cmocean ("thermal")(10)
-  , colorRampPalette (col = odv, bias = 0.3) # , colorRampPalette(cmocean ("haline")(5), bias=0.7)  # cmocean ("haline")
-  , colorRampPalette (cmocean ("dense")(5), bias = 0.3)
-  , colorRampPalette (cmocean ("turbid")(5), bias = 3) # , cmocean ("matter")  # or turbid
-  , colorRampPalette (cmocean ("algae")(5), bias = 3)
-  # , oceColorsTurbo # cmocean ("solar")
-  , function(n) {require ("viridis"); turbo (n, begin = 0.25, end = 0.8)}
-  , cmocean ("oxy")
-  , colorRampPalette (c ("white", rev (cmocean ("haline")(32)))) # for densityGradient
-  , cmocean ("haline") # why is this here? should it be??
+  oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
+  , colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
+  , colorRampPalette(cmocean("dense")(5), bias = 0.3)
+  , colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
+  , colorRampPalette(cmocean("algae")(5), bias = 3)
+  # , oceColorsTurbo # cmocean("solar")
+  , function(n) {require("viridis"); turbo(n, begin = 0.25, end = 0.8)}
+  , cmocean("oxy")
+  , colorRampPalette(c("white", rev(cmocean("haline")(32)))) # for densityGradient
+  , cmocean("haline") # why is this here? should it be??
 )
-rm (odv)
+rm(odv)
 ## oceColorsTemperature and the likes are dated -- don't use them
-## (stick to algorithmic pic of scale limits. Cleanups.)
+##(stick to algorithmic pic of scale limits. Cleanups.)
 
 
-oRange <- t (sapply (c ("Temperature_ITS90_DegC"
+oRange <- t(sapply(c("Temperature_ITS90_DegC"
   , "Salinity_PSU"
   , "Density_sigma.theta.kg.m.3"
   , "turbidity" # , "logTurbidity"
-  , "Fluorescence_mg_m3"
-  # , "PAR.Irradiance"
-  , "logPAR"
-  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-  , "Oxygen_umol_kg"
+  , "Chlorophyll_mg_m3"
+  , "logPAR"  # , "PAR.Irradiance"
+  , "Oxygen_umol_kg"  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
   , "bvf"
 )
-, FUN = function(vn) {range (poAll [, which (names (poAll) == vn)], na.rm = TRUE)
-  # , FUN = function(vn){quantile (poAll [,which (names (poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
+, FUN = function(vn) {range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
+  # , FUN = function(vn){quantile(poAll [,which(names(poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
 }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
 ## manually tune some of these ranges
 # oRange [1,1] <- 1.5 # fix min temperature
-# oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go (observed: 20-32, quantile: 29-32)
+# oRange [2,1] <- 27 # fix min salinity  -- 28 about as high as one could go(observed: 20-32, quantile: 29-32)
 # oRange [6,] <- c(-3,5)      # fix logPAR range
 ## what's better to use here, umol/kg or mg/l?
-# oRange [7,] <- c (-0.1,1.5)  # fix O2 perc range
-# oRange [7,] <- c (2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower (down to 1-2 mg/L)
+# oRange [7,] <- c(-0.1,1.5)  # fix O2 perc range
+# oRange [7,] <- c(2,12)  # fix O2 conc range. Gulf of Mexico: low O2 = 5 and lower(down to 1-2 mg/L)
 # https://repository.oceanbestpractices.org/bitstream/handle/11329/417/56281.pdf?sequence=1&isAllowed=y
 ## umol/l = 31.2512* cO2 mg/l
-# oRange [7,] <- c (2,12) * 31.2512  ## this is messed up!
-# if (length (oVars) != length (oCol)){stop ("fix the code above: one color for each variable")}
-oRange [which (row.names(oRange) == "bvf"), ] <- quantile (poAll$bvf, probs = c(0.01, 0.99), na.rm = TRUE)
+# oRange [7,] <- c(2,12) * 31.2512  ## this is messed up!
+# if(length(oVars) != length(oCol)){stop("fix the code above: one color for each variable")}
+oRange [which(row.names(oRange) == "bvf"), ] <- quantile(poAll$bvf, probs = c(0.01, 0.99), na.rm = TRUE)
 ###########################################################################
 
-if (0) {
-  hist (poAll$Temperature_ITS90_DegC)
-  abline (v = oRange [1, ])
+if(0) {
+  hist(poAll$Temperature_ITS90_DegC)
+  abline(v = oRange [1, ])
 }
 
 
-save.image ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
-# save (oRange, oCol, poAll, file="~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
-# rm (list = ls()); load ("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
-cat ("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
+save.image("~/tmp/LCI_noaa/cache/ctdwallSetup.RData") # use this for CTDwall.R
+# save(oRange, oCol, poAll, file="~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
+# rm(list = ls()); load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")
+cat("\n\n             ### End of CTDwall-setup.R ###\n\n\n")
 # EOF
