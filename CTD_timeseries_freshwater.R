@@ -15,7 +15,7 @@ depth_layer <- c("surface", "deep", "all")
 deepThd <- 20   ## deep vs surface layer -- copied from CTD_timeseries.R
 dir_plot <- "~/tmp/LCI_noaa/media/freshwater/"
 dir_data <- "~/tmp/LCI_noaa/data-products/freshwater/"
-fori in seq_along(c(dir_plot, dir_data))) {
+for(i in seq_along(c(dir_plot, dir_data))) {
   dir.create(c(dir_plot, dir_data)[i], showWarnings = FALSE, recursive = TRUE)
 }
 
@@ -23,27 +23,27 @@ fori in seq_along(c(dir_plot, dir_data))) {
 
 ## combine stationsL and depth_layer, then loop over that aggregate
 freshwater_ts <- function(stn, depth, data=physOc) {
-  data$datetimestamp  <- factoras.Date(data$isoTime)) ## to ensure same length of TSs
-  data$datetimestamp  <- pasteformat(data$isoTime, "%Y-%m"), "15", sep = "-") |>
+  data$datetimestamp  <- factor(as.Date(data$isoTime)) ## to ensure same length of TSs
+  data$datetimestamp  <- paste(format(data$isoTime, "%Y-%m"), "15", sep = "-") |>
     as.Date() |>
     as.factor()
-  ifdepth == "surface"){
-    po_sample <- subsetdata, Depth.saltwater..m. < deepThd)
-  } else ifdepth == "deep") {
-    po_sample <- subsetdata, Depth.saltwater..m. >= deepThd)
-  } else ifdepth == "all") {
-    po_sample <- subsetdata)
+  if(depth == "surface"){
+    po_sample <- subset(data, Depth.saltwater..m. < deepThd)
+  } else if(depth == "deep") {
+    po_sample <- subset(data, Depth.saltwater..m. >= deepThd)
+  } else if(depth == "all") {
+    po_sample <- subset(data)
   } else {
-    stop"Unknown depth layer: ", depth)
+    stop("Unknown depth layer: ", depth)
   }
-  ifstn %in% c("T9", "T4")) {
-    ifstn == "T9") {
+  if(stn %in% c("T9", "T4")) {
+    if(stn == "T9") {
       po_stn <- subset(po_sample, Match_Name %in% paste0("9_", 1:10))
-    } else ifstn == "T4") {
+    } else if(stn == "T4") {
       po_stn <- subset(po_sample, Match_Name %in% paste0("4_", 1:10))
     }
     ## average over entire transect
-    po_stn$DateISO <- repmeanpo_stn$isoTime), nrowpo_stn))
+    po_stn$DateISO <- rep(mean(po_stn$isoTime), nrow(po_stn))
   }else {
     po_stn <- subset(po_sample, Match_Name == stn)
     po_stn$DateISO <- po_stn$isoTime
@@ -55,9 +55,9 @@ freshwater_ts <- function(stn, depth, data=physOc) {
                               , drop=FALSE)$isoTime
   po_agg$station <- stn
   po_agg$depth <- depth
-  po_agg$cat <- paste0stn, "_", depth)
+  po_agg$cat <- paste0(stn, "_", depth)
   po_agg$d_days <- c(0, diff(po_agg$DateISO, units="days"))
-  # pngpaste0(dir_plot, stn, "_", depth, ".png"), width = 800, height = 600)
+  # png(paste0(dir_plot, stn, "_", depth, ".png"), width = 800, height = 600)
   # dev.off()
   po_agg
 }
@@ -77,7 +77,7 @@ if(0) {
     cl <- makeCluster(detectCores() - 1, type="PSOCK")  # leave one core free
     clusterExport(cl, c("samp_grid", "physOc", "freshwater_ts", "pfct", "sqs"))
     freshL <- parLapply(sqs, pfct, cl)
-    stopCluster(cl); rmcl)  # stop parallel cluster
+    stopCluster(cl); rm(cl)  # stop parallel cluster
   }else{
     freshL <- mclapply(sqs, pfct, mc.cores = detectCores() - 1)
   }
@@ -86,26 +86,26 @@ if(0) {
     freshwater_ts(samp_grid$station[i], samp_grid$depth[i], data=physOc)
   })
 }
-rmfreshwater_ts)
+rm(freshwater_ts)
 
 freshM <- data.frame(freshL[[1]][,1]
-                      ,do.call(cbind, lapply(seq_along(freshL), functioni) {
+                      ,do.call(cbind, lapply(seq_along(freshL), function(i) {
                         freshL[[i]]$freshwater
                       }))
 )
-namesfreshM) <- c("datetimestamp ", do.call("paste", samp_grid))
+names(freshM) <- c("datetimestamp ", do.call("paste", samp_grid))
 
 
 
 
 save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts.RData")
-# rmlist=ls()); load"~/tmp/LCI_noaa/cache-t/freshwater_ts.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/freshwater_ts.RData")
 
 
 require("ggplot2")
 require("reshape2")
-require"dplyr")
-require"ggplot2")
+require("dplyr")
+require("ggplot2")
 
 
 get_upper_tri <- function(cormat) {
@@ -121,12 +121,12 @@ dL <- depth_layer [1]  # "surface" or "deep" or "all"
 dL <- "9_6"
 dL <- "T9"
 dL <- "T4"
-freshAll <- freshM[,grepdL, names(freshM))]
-namesfreshAll) <- gsubdL, "", namesfreshAll)) |>
+freshAll <- freshM[,grep(dL, names(freshM))]
+names(freshAll) <- gsub(dL, "", names(freshAll)) |>
   trimws()
 
 ## compare surface and deep
-freshAll <- freshM [,-grep"all", namesfreshM))] |>
+freshAll <- freshM [,-grep("all", names(freshM))] |>
   select(-1)
 
 ## big matrix
@@ -144,15 +144,15 @@ cM <- cor(freshAll, use = "pairwise.complete.obs") |>
 cM <- ifelse(cM == 1, NA, cM) ## remove diagonale
 # melt_cor <- reshape2::melt(cM)
 
-pdfpaste0dir_plot, "fresh_correlations.pdf"), width=11, height=11)
+pdf(paste0(dir_plot, "fresh_correlations.pdf"), width=11, height=11)
 reshape2::melt(cM) |>
-  ggplotaes(x=Var1, y=Var2, fill=value)) +
+  ggplot(aes(x=Var1, y=Var2, fill=value)) +
   geom_tile(aes(fill = value)) +
-  geom_text(aes(label = ifelseis.navalue), ""
+  geom_text(aes(label = ifelse(is.na(value), ""
                                 , sprintf("%.2f", round(value, 2))))) +
   scale_fill_gradient(low="yellow", high="red", na.value = "white") +
   # scale_fill_gradient2(low = "blue", mid="green", high = "yellow", na.value = "white",
-  #                      midpoint=meanmelt_cor$value, na.rm=TRUE)) +
+  #                      midpoint=mean(melt_cor$value, na.rm=TRUE)) +
   theme_minimal() +
   labs(title=paste("Correlations of Freshwater Content by Station and depth"),
        x="", y="") +
@@ -160,12 +160,12 @@ reshape2::melt(cM) |>
 # scale_fill_viridis_d()
 dev.off()
 
-## T4: all are highly correlated, but especially deep and allnot much stratification)
+## T4: all are highly correlated, but especially deep and all(not much stratification)
 ## AlongBay_10: only here is there a significant decoupling between surface and
-##   deep watersr=0.64).
-## AlongBay_10: biggest decoupling with 4_8 deepr=0.50)
-## recommendation: simply look at T9 allor T9_6 all).
-## Alternatively use 2: AlongBay_109_2 has more data!) surface and 4_8 deep
+##   deep waters(r=0.64).
+## AlongBay_10: biggest decoupling with 4_8 deep(r=0.50)
+## recommendation: simply look at T9 all(or T9_6 all).
+## Alternatively use 2: AlongBay_10(9_2 has more data!) surface and 4_8 deep
 
 
 ## clean-up
@@ -175,18 +175,18 @@ rm(cM, coast, deepThd, bathyZ, depth_layer, dL, freshAll, freshM
 freshLng <- do.call(rbind, freshL)
 
 ## plot TS
-pdf(paste0dir_plot, "timeseries_spaghetti.pdf"))
+pdf(paste0(dir_plot, "timeseries_spaghetti.pdf"))
 plot(freshwater ~ DateISO, type = "n", data = freshLng
       , xlab = "Date", ylab = "Freshwater content"
       , main = "Freshwater content by station and depth layer")
-for(i in seq_lennrowsamp_grid))){
+for(i in seq_len(nrow(samp_grid))){
   lines(freshwater ~ DateISO, data = subset(freshLng,
     station == samp_grid$station[i] & depth == samp_grid$depth[i]),
     col=i, lwd=2)
 }
 for(i in seq_along(levels(freshLng$station))) {
   subD <- subset(freshLng, station == levels(freshLng$station)[i])
-  plotfreshwater ~ DateISO, type="n", data = freshLng, xlab = "Date",
+  plot(freshwater ~ DateISO, type="n", data = freshLng, xlab = "Date",
     ylab = "Freshwater content",
     main = paste0("Station ", levels(freshLng$station)[i]))
   par(lwd=3)
@@ -200,20 +200,20 @@ dev.off()
 
 
 save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
-# rmlist=ls()); load"~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
 
 
-require"imputeTS")
-require"SWMPr")
+require("imputeTS")
+require("SWMPr")
 
 
 ## filter seasonal signal: mean and sd
 ## arima / loess filter. Also see SWMP package and SoB files
 if(0) {
-freshTS <- subsetfreshLng, cat %in%
+freshTS <- subset(freshLng, cat %in%
                      c("T9_all", "AlongBay_10_surface", "4_8_deep"))
 }
-## loessor see what SWMPr does) -- seasonal mean and SD. -> anomaly
+## loess(or see what SWMPr does) -- seasonal mean and SD. -> anomaly
 
 
 ## univariate
@@ -227,16 +227,16 @@ ts1 <- expand.grid(month=stringr::str_pad(1:12, 2, pad="0", side="left"),
   year=2012:as.numeric(format(max(freshLng$DateISO, na.rm=TRUE), "%Y")))
 tIdx <- match(paste(ts1$year, ts1$month, "15", sep = "-")
                            , t9ts$datetimestamp)
-# fts <- tst9ts [tIdx, c("freshwater", "DateISO")]
+# fts <- ts(t9ts [tIdx, c("freshwater", "DateISO")]
 #            , frequency = 12, start = c(2012,1)
 # )
-fts <- tst9ts [tIdx, c("freshwater")]
+fts <- ts(t9ts [tIdx, c("freshwater")]
            , frequency = 12, start = c(2012,1)) |>
   imputeTS::na_seadec()
-rmt9ts, ts1, tIdx)
+rm(t9ts, ts1, tIdx)
 
 
-if0){
+if(0){
 ## multivariate
 ## construct time series; and ensure that TS is fully populated
 t9ts <- freshLng |>
@@ -255,21 +255,21 @@ tIdx <- match(paste(ts1$year, ts1$month, "15", sep = "-")
 
 
 
-fts <- tst9ts [tIdx, c("freshwater", "DateISO")]
+fts <- ts(t9ts [tIdx, c("freshwater", "DateISO")]
            , frequency = 12, start = c(2012,1)
 )
-fts <- tst9ts [tIdx, c("freshwater")]
+fts <- ts(t9ts [tIdx, c("freshwater")]
            , frequency = 12, start = c(2012,1)) |>
   imputeTS::na_seadec()
-rmt9ts, ts1, tIdx)
+rm(t9ts, ts1, tIdx)
 }
 
 
 
-pdfpaste0dir_plot, "freshwater_timeseries.pdf"))
+pdf(paste0(dir_plot, "freshwater_timeseries.pdf"))
 spectrum(fts, method="ar")
 spectrum(fts, method="pgram")
-plotdecompose(fts, type="additive"))
+plot(decompose(fts, type="additive"))
 dev.off()
 
 
@@ -298,7 +298,7 @@ nb <- nearest_stations(LAT=57.05, LON=-135.3, distance=50)
 
 yrs <- 2012:as.numeric(format(Sys.Date(), "%Y"))
 ## daily weather data from Seldovia airport, Homer airport, Homer spit, KBNERR, Sitka
-weather <- lapplyc("703621-25516", "703410-25507", "997176-99999"
+weather <- lapply(c("703621-25516", "703410-25507", "997176-99999"
   , "998167-99999", "703710-25333"), function(i) {get_GSOD(years = yrs, station = i)
   })
 
@@ -307,7 +307,7 @@ names(weather) <- c("Seldovia Airport", "Homer Airport", "Homer Spit"
 # lapply(seq_along(weather), function(i) {
 #   summary(weather[[i]]$PRCP)
 # })
-rmyrs)
+rm(yrs)
 
 
 
@@ -324,11 +324,11 @@ rmyrs)
 
 
 save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts3.RData")
-# rmlist=ls()); load"~/tmp/LCI_noaa/cache-t/freshwater_ts3.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/freshwater_ts3.RData")
 
 
 
-frsh <- subsetfreshLng, subset =station == "T9") &depth == "all"))
+frsh <- subset(freshLng, subset =(station == "T9") &(depth == "all"))
 frsh$datetimestamp <- as.Date(as.character(frsh$datetimestamp))
 
 
@@ -348,11 +348,11 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
   # wther <- subset(wther, !is.na(fresh))
   cor(wther$ma, wther$fresh, use = "pairwise.complete.obs")
   ## add bootstrapped 98% CIs to correlation
-  # require"confintr")
+  # require("confintr")
   rci <- confintr::ci_cor(wther$ma, wther$fresh, method = "pearson",
     use = "pairwise.complete.obs", boot_type="basic")
   if(CI) {
-    out <- crci$estimate, rci$interval)
+    out <- c(rci$estimate, rci$interval)
   } else {
     out <- rci$estimate
   }
@@ -360,10 +360,10 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
 }
 
 
-# corCalcwther = weather[[1]], freshStn = frsh, ld = 0, k = 31, wVar = "PRCP")
+# corCalc(wther = weather[[1]], freshStn = frsh, ld = 0, k = 31, wVar = "PRCP")
 
 
-## optimize for: kMA), ldlag), station, depth
+## optimize for: k(MA), ld(lag), station, depth
 ## need to go parallel here!
 
 
@@ -371,7 +371,7 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
 # wh=weather[[1]]; st=subset(freshLng, sdcombo == "AlongBay_10 surface"); wVar="TEMP"; ld=0:120; k=1:70
 optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
   ld_k <- expand.grid(ld, k)
-  namesld_k) <- c("ld", "k")
+  names(ld_k) <- c("ld", "k")
 
   if(parE) {  ## parallelize this sapply call
     require("parallel")
@@ -401,7 +401,7 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
   ld_k$r <- cC[1,]
   ld_k$CIl <- cC[2,]
   ld_k$CIu <- cC[3,]
-  # ld_k [which.maxcC),]
+  # ld_k [which.max(cC),]
   ld_k
 }
 
@@ -420,7 +420,7 @@ combs$climate <- factor(ifelse(combs$clim == "TEMP", "temperature"
 s <- Sys.time()
 maxR <- lapply(seq_len(nrow(combs)), function(i) {
   optimalkLd(weather[[i %% 2 + 1]],
-    subsetfreshLng, sdcombo == "AlongBay_10 surface"),
+    subset(freshLng, sdcombo == "AlongBay_10 surface"),
     ld=lags, k=maWs, wVar = combs$clim[i], parE=TRUE)
 })
 difftime(s, Sys.time())
@@ -439,7 +439,7 @@ for(i in seq_len(nrow(combs))) {
   filled.contour(x = lags, y = maWs,
     z=matrix(maxR[[i]]$r, nrow = length(lags), byrow = FALSE),
     xlab = "lag [d]", ylab = "MA window [d]",
-    main = pastecombs$airport[i], "Airport", levels(combs$climate)[i],
+    main = paste(combs$airport[i], "Airport", levels(combs$climate)[i],
        "x freshwater at AlongBay_10 surface")
     , asp = 1)
 }
@@ -454,7 +454,7 @@ dev.off()
 
 lags <- 0:360
 maWs <- 1:120
-maxRS <- lapplyseq_along(clim), function(i) {
+maxRS <- lapply(seq_along(clim), function(i) {
   optimalkLd(weather[[5]], subset(freshLng, sdcombo == "AlongBay_3 deep"),
              ld=lags, k=maWs, wVar = clim [i], parE=TRUE)
 })
@@ -465,14 +465,14 @@ for(i in seq_along(clim)) {
   filled.contour(x = lags, y = maWs,
     z=matrix(maxRS[[i]]$r, nrow = length(lags), byrow = FALSE),
     xlab = "lag [d]", ylab = "MA window [d]",
-    main = paste"Sitka Airport",
-       ifelseclim[i] == "TEMP", "tempeature", "precipitation"),
+    main = paste("Sitka Airport",
+       ifelse(clim[i] == "TEMP", "tempeature", "precipitation"),
        "x freshwater at AlongBay_3 deep")
     , asp = 1)
 }
 dev.off()
 
-rmlags, maWs, combs)
+rm(lags, maWs, combs)
 
 
 
@@ -480,11 +480,11 @@ rmlags, maWs, combs)
 
 
 for(wV in c("TEMP", "PRCP")) {
-  cat"\n\n", wV, "\n")
-    maxR <- sapply(seq_along(levels(freshLng$sdcombo)), functionw){
-      sapply(seq_len(70), functionk) {
+  cat("\n\n", wV, "\n")
+    maxR <- sapply(seq_along(levels(freshLng$sdcombo)), function(w){
+      sapply(seq_len(70), function(k) {
         ## return multiple values: optimal k, max r, CIs
-      frsh <- subset(freshLng, sdcombo == levelsfreshLng$sdcombo)[w])
+      frsh <- subset(freshLng, sdcombo == levels(freshLng$sdcombo)[w])
       sapply(1:120, function(ld) {
         corCalc(weather[[2]], frsh, ld = ld, wVar = wV, k = k)  ## no PRCP for weather[[3]]!
       }) |>
@@ -498,9 +498,9 @@ for(wV in c("TEMP", "PRCP")) {
 
 freshLng$sdcombo <- factor(paste(freshLng$station, freshLng$depth))
 for(wV in c("TEMP", "PRCP")) {
-  cat"\n\n", wV, "\n")
-  maxR <- sapply(seq_along(levels(freshLng$sdcombo)), functionw){
-    frsh <- subset(freshLng, sdcombo == levelsfreshLng$sdcombo)[w])
+  cat("\n\n", wV, "\n")
+  maxR <- sapply(seq_along(levels(freshLng$sdcombo)), function(w){
+    frsh <- subset(freshLng, sdcombo == levels(freshLng$sdcombo)[w])
     sapply(1:120, function(ld) {
       corCalc(weather[[2]], frsh, ld = ld, wVar = wV, k = 31)  ## no PRCP for weather[[3]]!
     }) |>
@@ -514,7 +514,7 @@ for(wV in c("TEMP", "PRCP")) {
 }
 # AlongBay-10 stands out repeatedly
 # Station 1 is good, 4 less so
-# 2 is not badfor temp, not great for precip!), but 1 is better
+# 2 is not bad(for temp, not great for precip!), but 1 is better
 
 
 ## take Seldovia and
@@ -530,13 +530,13 @@ r_col <- ggplot2::scale_fill_stepsn(colors=c('#b2182b','#ef8a62','#fddbc7',
             n.breaks=10, limits=c(-1,1), show.limits=T)
 
 
-pdfpaste0dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
-frsh <- subsetfreshLng, sdcombo == "AlongBay_10 surface")
-cC <- sapply1:120, functionld) {
+pdf(paste0(dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
+frsh <- subset(freshLng, sdcombo == "AlongBay_10 surface")
+cC <- sapply(1:120, function(ld) {
   corCalc(weather[[1]], frsh, ld = ld, wVar = "PRCP", k = 31)
 })
 plot(cC, type="l", xlab = "lag [days]", ylab = "correlation coefficient"
-  , main = paste0"AlongBay-10 surface freshwater x Seldovia precipitation")
+  , main = paste0("AlongBay-10 surface freshwater x Seldovia precipitation")
   , sub = "Moving average of 31 days")
 abline(h = 0, lty = "dashed")
 abline(v = which.max(cC), lty = "dashed")
@@ -547,13 +547,13 @@ dev.off()
 
 ## plot cross-correlation of T9 and precipitation 0-90 days
 ## Juneau and deep water -- what is the time lag?
-pdfpaste0dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
-frsh <- subsetfreshLng, sdcombo == "AlongBay_10 surface")
-cC <- sapply1:120, functionld) {
+pdf(paste0(dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
+frsh <- subset(freshLng, sdcombo == "AlongBay_10 surface")
+cC <- sapply(1:120, function(ld) {
   corCalc(weather[[1]], frsh, ld = ld, wVar = "PRCP", k = 31)
 })
 plot(cC, type="l", xlab = "lag [days]", ylab = "correlation coefficient"
-     , main = paste0"AlongBay-10 surface freshwater x Seldovia precipitation")
+     , main = paste0("AlongBay-10 surface freshwater x Seldovia precipitation")
      , sub = "Moving average of 31 days")
 abline(h = 0, lty = "dashed")
 abline(v = which.max(cC), lty = "dashed")
