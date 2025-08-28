@@ -74,7 +74,7 @@ if(file.exists(paste0(snowCache, "snow.rds"))) {
 }
 if(0) {
   cat("\n\n# Local available snotel sites:\n")
-  print (x [grep("Kenai", x$county), c(3:6,9,11)])
+  print(x [grep("Kenai", x$county), c(3:6,9,11)])
 }
 
 
