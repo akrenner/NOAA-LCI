@@ -41,6 +41,39 @@ getBathy <- function(transect, stn) {
 
 
 
+geodDistlocal <- function(lon, lat = NULL, alongPath = TRUE) {
+  ## oce::geodDist is not accurate locally when summing distances from many
+  ## points along a line
+  if(!alongPath) {stop("This has not yet been implemented")}
+  if(class(lon)[1] == "sf") {
+    pnts <- lon
+    LL <- st_coordinates(pnts) |>
+      purrr::set_names(c("lon", "lat"))
+    lon <- LL$lon
+    lat <- LL$lat
+  } else {
+    pnts <- data.frame (lon, lat) |>
+      st_as_sf(coords = c("lon", "lat"), crs = "WGS84")
+  }
+
+  ## find UTM zone
+  utm_zone <- floor(mean(lon) / 6 + 30)
+# utm_zone <- floor(mean(pnts$lon + 180)/6) + 1
+  is_north <- mean(lat) >= 0
+  epsg_code <- if(is_north) {
+    32600 + utm_zone
+  } else {
+    32700 + utm_zone
+  }
+
+  stns <- pnts |>
+    st_transform(crs = epsg_code) |>
+    st_coordinates()
+  dist <- c(0, sqrt(diff(stns[,1])^2 + diff(stns[,2])^2)) |>
+    cumsum() / 1000 # back to km
+  dist
+}
+
 
 ## get hi-res bathymetry polygon for section plotting
 ## replace getBathy above? check on usage!
@@ -53,7 +86,6 @@ get_section_bathy <- function(section) {
   ## sample points along line
   ## extract depths
   ## calculate distances
-
 
   require("sf")  ## also using stars and oce
 
@@ -75,22 +107,26 @@ get_section_bathy <- function(section) {
    } else {
     stop("section must be an oce-section or a sf point/line feature")
   }
-  maxD <- max(oce::geodDist(sectM$longitude, sectM$latitude, alongPath = TRUE)) ## this is ok!
-  pnts <- cbind (lon=sectM$longitude, lat=sectM$latitude) |>
+# maxD <- max(oce::geodDist(sectM$longitude, sectM$latitude, alongPath = TRUE))
+  maxD <- max(geodDistlocal(sectM$longitude, sectM$latitude, alongPath = TRUE)) ## this is ok!
+
+    pnts <- cbind (lon=sectM$longitude, lat=sectM$latitude) |>
     st_linestring() |>
     st_line_sample(n = maxD %/% 0.050, type = "regular") |>
     st_sf() |>
     st_cast("POINT") |>   ## multipoint gives trouble
     st_set_crs(value = 4326)
 
-  ## extract distances along the transect line
-  ## do not use oce::geodDist -- not sufficiently accurate! Errors add up!!
-  stns <- pnts |>
-    st_transform(crs = 32607) |> # use UTM for max accuracy
-    st_coordinates() |>
-    as.data.frame()
-  pnts$dist <- c(0, sqrt(diff (stns[,1])^2 + diff(stns[,2])^2)) |>
-    cumsum() / 1000  ## back to km
+  # ## extract distances along the transect line
+  # ## do not use oce::geodDist -- not sufficiently accurate! Errors add up!!
+  # stns <- pnts |>
+  #   st_transform(crs = 32607) |> # use UTM for max accuracy
+  #   st_coordinates() |>
+  #   as.data.frame()
+  # pnts$dist <- c(0, sqrt(diff (stns[,1])^2 + diff(stns[,2])^2)) |>
+  #   cumsum() / 1000  ## back to km
+
+  pnts$dist <- geodDistlocal(st_coordinates(pnts)[,1], st_coordinates(pnts)[,2])
 
   ## had difficulties with geodDist
   if(max(pnts$dist) > 1.1*maxD) {
@@ -112,10 +148,12 @@ get_section_bathy <- function(section) {
 
 addBathy <- function(bathysection) {
   # separate this because it is called many times and get_section_bathy is slow
-  tgray <- rgb (t (col2rgb ("lightgray")), max = 255, alpha = 0.5 * 255) ## transparent
-  with (bathysection, polygon(c(min (dist), dist, max(dist))
-                        , c(11000, depth, 11000)
-                        , col = tgray))
+  tgray <- rgb (t (col2rgb ("darkgray")), max = 255, alpha = 0.5 * 255) ## transparent
+  with (bathysection, polygon(c(min (dist)*0.9, dist, max(dist)*1.1)
+                        , c(max(depth)*1.1, depth, max(depth)*1.1)
+                        , col = tgray
+                        # , col = "black"
+                        ))
 }
 
 
@@ -123,7 +161,7 @@ addBathy <- function(bathysection) {
 
 pSec <- function(xsec, N, cont = TRUE, zCol
                  , showBottom = TRUE, custcont = NULL, labcex = 1.0
-                 , plotContours = TRUE, ...) {
+                 , plotContours = TRUE, bathy = NULL, ...) {
   ## hybrid approach -- still use build-in plot.section (for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -142,6 +180,12 @@ pSec <- function(xsec, N, cont = TRUE, zCol
       , ...
     )
     , silent = TRUE)
+    ## add bathymetry here, then add legend?
+    if(class(bathy)[1] == "data.frame"){
+      addBathy(bathysection)
+    }
+# legend("bottomright", legend = names (xsec)[N], box.col="white") ## re-write legend obscured by bathymetry
+
     if(class(s) != "try-error") {
       if(plotContours) {
         # s <- xsec
@@ -159,14 +203,16 @@ pSec <- function(xsec, N, cont = TRUE, zCol
         }
         ## fix issue with alignment of contours in some plots
         # distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
-        distance <- oce::geodDist(xsec@metadata$longitude,
-          xsec@metadata$latitude, alongPath = TRUE)
+#       distance <- oce::geodDist(xsec@metadata$longitude,xsec@metadata$latitude, alongPath = TRUE)
+        distance <- geodDistlocal(xsec@metadata$longitude,xsec@metadata$latitude)
+
 
         if (length (distance) < nstation) {
           warning("distance and station N missmatch", immediate. = TRUE)
           lat <- sapply (1:nstation, function(i) {xsec@data$station[[i]]@metadata$latitude})
           lon <- sapply (1:nstation, function(i) {xsec@data$station[[i]]@metadata$longitude})
-          distance <- geodDist (longitude1 = lon, latitude1 = lat, alongPath = TRUE)
+          distance <- oce::geodDist (longitude1 = lon, latitude1 = lat, alongPath = TRUE)
+#         distance <- geodDistlocal(longitude1 = lon, latitude1 = lat)
           ## hack to add resilience to duplicated CTD stations; repeat?
           distance <- c (ifelse (diff (distance) < 0.01, distance - 0.01, distance), distance[nstation])  ## hack to make contours work?
           rm (lat, lon)

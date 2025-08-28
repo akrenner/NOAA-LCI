@@ -30,7 +30,6 @@ if (length (grep ("darwin", version$os)) > 0) {
 
 
 ### data prep
-("oce")
 ## define sections
 physOc$DateISO <- as.Date (format (physOc$isoTime, "%Y-%m-%d"))
 physOc$Transect <- factor (physOc$Transect)
@@ -131,7 +130,7 @@ if (0) {
 }
 
 
-save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
+# save.image ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 # rm (list = ls()); load ("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
 
 
@@ -250,11 +249,9 @@ oRange <- t (sapply (c ("Temperature_ITS90_DegC"
   , "Salinity_PSU"
   , "Density_sigma.theta.kg.m.3"
   , "turbidity" # , "logTurbidity"
-  , "Fluorescence_mg_m3"
-  # , "PAR.Irradiance"
-  , "logPAR"
-  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-  , "Oxygen_umol_kg"
+  , "Chlorophyll_mg_m3"
+  , "logPAR"  # , "PAR.Irradiance"
+  , "Oxygen_umol_kg"  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
   , "bvf"
 )
 , FUN = function(vn) {range (poAll [, which (names (poAll) == vn)], na.rm = TRUE)

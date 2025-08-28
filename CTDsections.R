@@ -17,7 +17,7 @@ oVarsF <- oVarsF [keepV]
 oVars <- oVars [keepV]
 oCol3 <- oCol3 [keepV]
 oRange <- oRange [keepV,]
-rm (keepV)
+
 
 if (indivPlots) {
   outD <- "~/tmp/LCI_noaa/media/CTDsections/sectionImages_onepage/"
@@ -39,6 +39,7 @@ if (test) {iX <- 10} else {iX <- rev (seq_along (levels (poAll$survey)))} # rev:
 
 
 for (sv in iX) {
+  # sv <- 151
   cat (sv, " ")
   if (sv %% 10 == 0) {cat (" ", sv, "/", max (iX), "\n", sep = "")}
   s <- subset (poAll, survey == levels (poAll$survey)[sv]) # for testing -- eventually move up for efficiency
@@ -92,13 +93,6 @@ for (sv in iX) {
     }
 
 
-    ## transect from station list for use with plot.section
-    transectTemplate <- with (subset (stn, Line == levels (s$Transect)[tn]),
-      data.frame (station = Match_Name
-        , longitude = Lon_decDegree
-        , latitude = Lat_decDegree))
-
-
     phT <- subset (s, Transect == levels (s$Transect)[tn])
     phT$transDate <- with (phT, paste0 ("T-", Transect, " ", DateISO))
 
@@ -145,21 +139,11 @@ for (sv in iX) {
 
       for (ov in seq_along(oVarsF)) {
         ## ov = 1
-        if (ov %in% c(4, 5, 6)) { # fix scale for O2, fluorescence, logPAR ## add buoyancy (8)?
+        if (ov %in% c(3,5)) { # fix scale for chlorophyll, O2, ## logPAR ## add buoyancy (8)?
+                              # turbidity as well??
           zR <- oRange [ov, ]
         } else {
           zR <- oRangeS [ov, ]
-          #           cDF <- with (xC, data.frame (Temperature_ITS90_DegC, Salinity_PSU
-          #                                        , Density_sigma.theta.kg.m.3
-          #                                        , turbidity
-          #                                        , Fluorescence_mg_m3, logPAR
-          #                                        , Oxygen_umol_kg
-          #                                        # , Oxygen_sat.perc.
-          #                                         , bvf
-          #           ))
-          #           cDF <- sapply (1:ncol (cDF), function (i){ifelse (!is.finite (cDF[,i]), NA, cDF[,i])})
-          #           # zR <- range (cDF [,ov], na.rm = TRUE); rm (cDF)
-          # #         zR <- quantile (cDF [,ov], probs = c(0.05, 0.95), na.rm = TRUE); rm (cDF)
         }
         # ov = 3 (turbidity), sv =7 fails. (order of x, y:  all values NA or stuck)
         if (all (is.na (zR)) | any (is.infinite(zR))) {
@@ -167,11 +151,11 @@ for (sv in iX) {
           text (5, 5, labels = "no good data")
         } else {
 
-          # if(tn == 1 & sv == 151 & ov == 1) {
-          #   save(pSec, xCo, oVarsF, ov, oCol3, zR, file = "~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
-          # }
-          # ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
-          # # bathy_sec <- get_section_bathy(xCo) ## already used up
+          if(tn == 1 & sv == 151 & ov == 1) {
+            save(pSec, xCo, oVarsF, ov, oCol3, zR, file = "~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+          }
+          ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
+          # bathy_sec <- get_section_bathy(xCo) ## already used up
           #
           # ## testing
           # max(bathy_sec$dist)
@@ -188,6 +172,7 @@ for (sv in iX) {
             , custcont = 7, labcex = 0.6
           )
           addBathy(bathy_sec)
+          # legend("bottomright")
           rm (zR)
         }
         ## mark PAR at night
@@ -196,15 +181,23 @@ for (sv in iX) {
         #       box (lwd = 4, col = "navy")
         #   }
         if (indivPlots) {
-          if (substr (s$Transect[tn], start = 1, stop = 2) == "A") {mt <- ""} else {mt <- "T"}
-          mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
-            , side = 3, outer = TRUE, line = -0.9); rm (mt)
+          if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
+            mt <- ""
+          } else {
+              mt <- "T"
+          }
+          mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
+            , side = 3, outer = TRUE, line = -0.9); rm(mt)
         }
       } # end of loop covering all variables measured
-      if (!indivPlots) {
-        if (substr (s$Transect[tn], start = 1, stop = 2) == "A") {mt <- ""} else {mt <- "T"}
-        mtext (paste0 (mt, levels (s$Transect)[tn], " ", levels (poAll$survey)[sv])
-          , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm (mt)
+      if(!indivPlots) {
+        if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
+          mt <- ""
+        } else {
+            mt <- "T"
+        }
+        mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
+          , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm(mt)
         if(0) {  ## map for all Transects
           plot (xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
                 , which = 99
@@ -230,12 +223,9 @@ for (sv in iX) {
                )
         }
       } else {  ## omit this map -- need the space
-        plot (xCo
-          , which = 99
+        plot(xCo, which = 99
           , coastline = "coastlineWorldFine"  ## add hi-res topography?
-          , showStations = TRUE
-          , showStart = TRUE
-          , gird = TRUE
+          , showStations = TRUE, showStart = TRUE, gird = TRUE
           # , col = "red"
         )
       }
