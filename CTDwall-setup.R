@@ -202,7 +202,7 @@ oVarsF <- c ("temperature"    # need diffrent name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
   , "turbidity" # , "logTurbidity"
-  , "fluorescence" # , "chlorophyll" #, "logFluorescence"
+  ,  "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
   # , "PAR.Irradiance"
   , "logPAR"
   , "Oxygen_umol_kg"  # , "O2perc"

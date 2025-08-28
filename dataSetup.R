@@ -126,8 +126,8 @@ physOc <- with (physOcT, data.frame (Match_Name=Station
                                      , Transect
                                      , File.Name=factor (File.Name), CTD.serial
                                      , Bottom.Depth
-                                     , Pressure..Strain.Gauge..db.=pressure_db
-                                     , Depth.saltwater..m.=Depth
+                                     , Pressure..Strain.Gauge..db. = pressure_db
+                                     , Depth.saltwater..m.= Depth
                                      , Temperature_ITS90_DegC, Salinity_PSU
                                      , Density_sigma.theta.kg.m.3
                                      , Oxygen_umol_kg=Oxygen_umol.kg
@@ -135,10 +135,10 @@ physOc <- with (physOcT, data.frame (Match_Name=Station
                                      # need SBE O2 concentration umol.kg in here
                                      , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                      , PAR.Irradiance
-                                     , Fluorescence_mg_m3
-                                     , turbidity=Turbidity
-                                     , beamAttenuation=Beam_attenuation
-                                     , beamTransmission=Beam_transmission
+                                     , Chlorophyll_mg_m3 = Fluorescence_mg_m3
+                                     , turbidity = Turbidity
+                                     , beamAttenuation = Beam_attenuation
+                                     , beamTransmission = Beam_transmission
 ))
 rm (physOcT)
 
@@ -181,7 +181,7 @@ stn$Plankton <- stn$Plankton == "Y"
 
 ## Kris:
 ## - persistence of mixing across seasons and tides
-## fluorescence in total water column?
+## Chlorophyll in total water column?
 
 
 ############################################
@@ -420,7 +420,7 @@ sAgg <- function (varN, data = physOc, FUN = sum, ...){
   return (aDF [match (poSS$File.Name, aDF$File.Name),2])
 }
 
-poSS$Fluorescence <- sAgg ("Fluorescence_mg_m3")
+poSS$Chlorophyll <- sAgg ("Chlorophyll_mg_m3")
 poSS$minO2 <- sAgg ("Oxygen_umol_kg", FUN=min)
 poSS$O2perc <- sAgg ("Oxygen_sat.perc.", FUN=mean)
 if ("turbidity" %in% names (physOc)){

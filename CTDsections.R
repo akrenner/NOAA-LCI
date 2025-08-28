@@ -51,13 +51,11 @@ for (sv in iX) {
     , "Salinity_PSU"
     , "Density_sigma.theta.kg.m.3"
     , "turbidity" # , "logTurbidity"
-    , "Fluorescence_mg_m3"
-    # , "PAR.Irradiance"
-    , "logPAR"                                        ## XXX -- all NAs
-    # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-    , "Oxygen_umol_kg"
+    , "Chlorophyll_mg_m3"
+    , "logPAR"     # , "PAR.Irradiance" ## XXX -- all NAs
+    , "Oxygen_umol_kg" # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
     , "bvf"
-  )
+  )[keepV]
   , FUN = function(vn) {range (s [, which (names (s) == vn)], na.rm = TRUE)
   }))
 

@@ -15,7 +15,7 @@ test <- FALSE
 
 
 ## problems:
-## - fluorescence missing (all values NA), e.g. T-3 2012-05-02
+## - chlorophyll missing (all values NA), e.g. T-3 2012-05-02
 ## - contours fail, e.g. temperature, T-4 (2), 2019-05-14
 
 ## PAR: flag night; mark 1% light level contour

@@ -184,7 +184,6 @@ pSec <- function(xsec, N, cont = TRUE, zCol
     if(class(bathy)[1] == "data.frame"){
       addBathy(bathysection)
     }
-# legend("bottomright", legend = names (xsec)[N], box.col="white") ## re-write legend obscured by bathymetry
 
     if(class(s) != "try-error") {
       if(plotContours) {
@@ -351,8 +350,7 @@ makeSection <- function(xC, stn) {
       ocOb@metadata$startTime <- sCTD$isoTime [1]
 
 
-      ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
-      # ocOb <- oceSetData (ocOb, "logFluorescence", sCTD$logFluorescence)
+      ocOb <- oceSetData (ocOb, "Chlorophyll_mg_m3", sCTD$Chlorophyll_mg_m3)
       ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
       ocOb <- oceSetData (ocOb, "logTurbidity", sCTD$logTurbidity)
       ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)

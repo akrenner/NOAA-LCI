@@ -22,7 +22,7 @@ require ("tidyverse")
 
 # - salinity at 50 m (ACC signature)
 # - freshwater contenst of first 30 m (local runoff, freshwater lens)
-# - sum of fluorescence over time -- see separate work on SWMP
+# - sum of Chlorophyll over time -- see separate work on SWMP
 
 
 
@@ -216,11 +216,11 @@ mkSection <- function(xC) {
       ocOb@metadata$startTime <- sCTD$isoTime [1]
       ocOb@metadata$waterDepth <- 103
 
-      ocOb <- oceSetData (ocOb, "fluorescence", sCTD$Fluorescence_mg_m3)
+      ocOb <- oceSetData (ocOb, "chlorophyll", sCTD$Chlorophyll_mg_m3)
       ocOb <- oceSetData (ocOb, "turbidity", sCTD$turbidity)
       ocOb <- oceSetData (ocOb, "O2perc", sCTD$O2perc)
       ocOb <- oceSetData (ocOb, "PAR", sCTD$PAR.Irradiance)
-      ocOb <- oceSetData (ocOb, "lFluorescence", log (sCTD$Fluorescence_mg_m3))
+      ocOb <- oceSetData (ocOb, "lChlorophyll", log (sCTD$Chlorophyll_mg_m3))
       ocOb <- oceSetData (ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
       ocOb <- oceSetData (ocOb, "Spice", sCTD$Spice)
       ocOb <- oceSetData (ocOb, "bvf", sCTD$bvf)
@@ -295,7 +295,7 @@ for (k in pickStn) {
     ctdAgg <- aggregate (Temperature_ITS90_DegC ~ depthR + month, xC, FUN = mean, na.rm = TRUE)
     ctdAgg$Salinity_PSU <- aggregate (Salinity_PSU ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
     ctdAgg$Pressure..Strain.Gauge..db. <- aggregate (Pressure..Strain.Gauge..db. ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
-    ctdAgg$Fluorescence_mg_m3 <- aggregate (Fluorescence_mg_m3 ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Fluorescence_mg_m3
+    ctdAgg$Chlorophyll_mg_m3 <- aggregate (Chlorophyll_mg_m3 ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Chlorophyll_mg_m3
     ctdAgg$bvf <- aggregate (bvf ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$bvf
 
     ## smooth normals
@@ -314,7 +314,7 @@ for (k in pickStn) {
 
     ctdAgg$tloess <- anoF ("Temperature_ITS90_DegC")
     ctdAgg$sloess <- anoF ("Salinity_PSU")
-    ctdAgg$floess <- anoF ("Fluorescence_mg_m3")
+    ctdAgg$floess <- anoF ("Chlorophyll_mg_m3")
     ctdAgg$bvfloess <- anoF ("bvf")
 
     ## model normals instead
@@ -520,8 +520,8 @@ for (k in pickStn) {
     dev.off()
 
 
-    ## fluorescence
-    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-climatology.png"), res = pngR
+    ## Chlorophyll
+    png (paste0 (mediaD, "/3-", stnK, "-chlorophyll-climatology.png"), res = pngR
       , height = fDim[2] * pngR, width = fDim[1] * pngR)
     par (las = 1, mfrow = c(3, 1))
     clPlot (cT9, which = "sFluo", zcol = oceColorsChlorophyll (4))
@@ -529,7 +529,7 @@ for (k in pickStn) {
     anAx(pretty (range (as.numeric (levels (ctdAgg$depthR))))) ## XXX pretty (max-depth)
 
     ## add time series and anomaly
-    plot.station (xCS, which = "fluorescence"
+    plot.station (xCS, which = "chlorophyll"
       , zcol = oceColorsChlorophyll(32)
       # , zbreaks=zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
@@ -538,15 +538,15 @@ for (k in pickStn) {
     TSaxis (xCS@metadata$time)
 
     ## total chlorophyll time series plot
-    clf <- aggregate (Fluorescence_mg_m3 ~ Date, xC, FUN = mean, na.rm = TRUE)  # sum of concentration makes no sense, needs to be mean
-    names (clf) <- c ("Date", "Fluorescence")
+    clf <- aggregate (Chlorophyll_mg_m3 ~ Date, xC, FUN = mean, na.rm = TRUE)  # sum of concentration makes no sense, needs to be mean
+    names (clf) <- c ("Date", "Chlorophyll")
     clf$Date <- as.Date (clf$Date)
 
-    clfnorm <- longM (clf$Fluorescence, clf$Date)
+    clfnorm <- longM (clf$Chlorophyll, clf$Date)
     T96f <- data.frame (timeStamp = seq (min (xC$isoTime), max (xC$isoTime), by = 3600 * 24)) ## standardize timeStamp vs isoTime
     T96f$Date <- as.Date(T96f$timeStamp)
     T96f$jday <- as.numeric (format (T96f$timeStamp, "%j")) - 1
-    T96f$chl <- clf$Fluorescence [match (T96f$Date, clf$Date)]
+    T96f$chl <- clf$Chlorophyll [match (T96f$Date, clf$Date)]
     T96f$chlN <- na.approx (T96f$chl, x = T96f$timeStamp, na.rm = FALSE)
     T96f$chl_norm <- clfnorm$MA [match (T96f$jday, clfnorm$jday)]
     rm (clfnorm)
@@ -571,8 +571,8 @@ for (k in pickStn) {
     dev.off()
 
 
-    ## single panel of fluorescence for monthly report -- model this after temp anomaly
-    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-anomaly.png"), res = pngR
+    ## single panel of chlorophyll for monthly report -- model this after temp anomaly
+    png (paste0 (mediaD, "/3-", stnK, "-chlorophyll-anomaly.png"), res = pngR
       , height = fDim[2] * pngR / 3, width = fDim[1] * pngR)
     plot (chlN ~ Date, T96f, pch = 19
       , col = ifelse (T96f$chlN > T96f$chl_norm, "darkgreen", "lightgreen")
@@ -582,10 +582,10 @@ for (k in pickStn) {
       , legend = c("more", "less", "mean"), bty = "n")
     abline (v = min (physOc$year):max (physOc$year), col = "gray", lty = "dashed")
     dev.off()
-    ## single panel of fluorescence section for monthly report
-    png (paste0 (mediaD, "/3-", stnK, "-fluorescence-timesection.png"), res = pngR
+    ## single panel of chlorophyll section for monthly report
+    png (paste0 (mediaD, "/3-", stnK, "-chlorophyll-timesection.png"), res = pngR
          , height = fDim[2] * pngR / 3, width = fDim[1] * pngR)
-    plot.station (xCS, which = "fluorescence"
+    plot.station (xCS, which = "chlorophyll"
                   , zcol = oceColorsChlorophyll(32)
                   # , zbreaks=zB
                   , legend.loc = "" # legend.text="temperature anomaly [°C]"
@@ -737,7 +737,7 @@ for (k in pickStn) {
     title (main = "salinity [PSU]")
 
 
-    plot.station (xCS, which = "fluorescence"
+    plot.station (xCS, which = "chlorophyll"
       , zcol = ODV_colours
       #              , zbreaks=zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
@@ -1190,28 +1190,26 @@ save.image ("~/tmp/LCI_noaa/cache-t/ctdTimechl.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache-t/ctdTimechl.RData")
 
 t96 <- subset (physOc, Match_Name == "9_6")
-# t96$Fluorescence_mg_m3 <- log (t96$Fluorescence_mg_m3)
-# plot all fluorescence on log scale?!
 
-chlA <- aggregate (Fluorescence_mg_m3 ~ DateISO, data = t96, FUN = mean, na.rm = TRUE
+chlA <- aggregate (Chlorophyll_mg_m3 ~ DateISO, data = t96, FUN = mean, na.rm = TRUE
   , subset = Depth.saltwater..m. <= surface)
-chlAd <- aggregate (Fluorescence_mg_m3 ~ DateISO, data = t96, FUN = mean, na.rm = TRUE
+chlAd <- aggregate (Chlorophyll_mg_m3 ~ DateISO, data = t96, FUN = mean, na.rm = TRUE
   , subset = (Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
-chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$DateISO, chlAd$DateISO)]
+chlA$deep <- chlAd$Chlorophyll_mg_m3 [match (chlA$DateISO, chlAd$DateISO)]
 
 
 png (paste0 (mediaD, "/x-chlorophy_TS.png"), res = pngR
   , height = fDim [2] * pngR / 2, width = fDim [1] * pngR * 1.5)
 
 par (xlog = TRUE, ylog = TRUE)
-plot (Fluorescence_mg_m3 ~ deep, chlA, col = "green", pch = 19, log = "xy")
-summary (lm (Fluorescence_mg_m3 ~ deep, chlA))
-cor (chlA$Fluorescence_mg_m3, chlA$deep, method = "spearman", use = "pairwise.complete.obs")
-cor (chlA$Fluorescence_mg_m3, chlA$deep, method = "pearson", use = "pairwise.complete.obs")^2
+plot (Chlorophyll_mg_m3 ~ deep, chlA, col = "green", pch = 19, log = "xy")
+summary (lm (Chlorophyll_mg_m3 ~ deep, chlA))
+cor (chlA$Chlorophyll_mg_m3, chlA$deep, method = "spearman", use = "pairwise.complete.obs")
+cor (chlA$Chlorophyll_mg_m3, chlA$deep, method = "pearson", use = "pairwise.complete.obs")^2
 
 chlA$DateISO <- as.POSIXct(chlA$DateISO)
 par (ylog = "TRUE")
-plot (Fluorescence_mg_m3 ~ DateISO, data = chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
+plot (Chlorophyll_mg_m3 ~ DateISO, data = chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
   , main = "Chlorophyll at T9-6")
 lines (chlA$DateISO, chlA$deep, col = "darkgreen", lwd = 2)
 legend ("topright", lwd = 2, col = c("lightgreen", "darkgreen")
@@ -1231,16 +1229,16 @@ geoC <- subset (physOc, substr (physOc$DateISO, 1, 7) == "2023-05")
 geoC <- subset (physOc, (physOc$Transect == "AlongBay") & (format (physOc$isoTime, "%m") == "05"))
 
 
-chlA <- aggregate (Fluorescence_mg_m3 ~ Match_Name, data = geoC, FUN = mean, na.rm = TRUE
+chlA <- aggregate (Chlorophyll_mg_m3 ~ Match_Name, data = geoC, FUN = mean, na.rm = TRUE
   , subset = Depth.saltwater..m. <= surface)
-chlAd <- aggregate (Fluorescence_mg_m3 ~ Match_Name, data = geoC, FUN = mean, na.rm = TRUE
+chlAd <- aggregate (Chlorophyll_mg_m3 ~ Match_Name, data = geoC, FUN = mean, na.rm = TRUE
   , subset = (Depth.saltwater..m. >= deep [1]) & (Depth.saltwater..m. <= deep [2]))
-chlA$deep <- chlAd$Fluorescence_mg_m3 [match (chlA$Match_Name, chlAd$Match_Name)]
+chlA$deep <- chlAd$Chlorophyll_mg_m3 [match (chlA$Match_Name, chlAd$Match_Name)]
 chlA$lat <- geoC$latitude_DD [match (chlA$Match_Name, geoC$Match_Name)]
 chlA <- chlA [order (chlA$lat), ]
 
 par (ylog = TRUE)
-plot (Fluorescence_mg_m3 ~ lat, chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
+plot (Chlorophyll_mg_m3 ~ lat, chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
   , main = "Chlorophyll in May 2023 on AlongBay transect")
 lines (chlA$lat, chlA$deep, col = "darkgreen", lwd = 2)
 legend ("topright", lwd = 2, col = c("lightgreen", "darkgreen")
