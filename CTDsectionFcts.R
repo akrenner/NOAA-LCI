@@ -159,9 +159,8 @@ addBathy <- function(bathysection) {
 
 
 
-pSec <- function(xsec, N, cont = TRUE, zCol
-                 , showBottom = TRUE, custcont = NULL, labcex = 1.0
-                 , plotContours = TRUE, bathy = NULL, ...) {
+pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
+  labcex = 1.0, plotContours = TRUE, bathy = NULL, label = NULL, ...) {
   ## hybrid approach -- still use build-in plot.section(for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -182,11 +181,14 @@ pSec <- function(xsec, N, cont = TRUE, zCol
     , silent = TRUE)
     ## add bathymetry here, then add legend?
     if(class(bathy)[1] == "data.frame"){
-      addBathy(bathysection)
+      addBathy(bathy)
     }
-  ## re-write legend obscured by bathymetry
-  # legend("bottomright", legend = names(xsec)[N], bg="white")
-
+  # re-write legend obscured by bathymetry -- no effect somehow :(
+  # if(class(label) != "NULL") {
+  #   legend("bottomright", legend = label, bg="white", bty = "o") ## plotted off-screen? bg has no effect -- bug?
+  # } else {
+  #   legend("bottomright", legend = label, bg="white", bty = "o")
+  # }
     if(class(s) != "try-error") {
       if(plotContours) {
         # s <- xsec
@@ -204,8 +206,8 @@ pSec <- function(xsec, N, cont = TRUE, zCol
         }
         ## fix issue with alignment of contours in some plots
         # distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
-#       distance <- oce::geodDist(xsec@metadata$longitude,xsec@metadata$latitude, alongPath = TRUE)
-        distance <- geodDistlocal(xsec@metadata$longitude,xsec@metadata$latitude)
+        distance <- oce::geodDist(xsec@metadata$longitude,xsec@metadata$latitude, alongPath = TRUE) ## for same reason as below
+#       distance <- geodDistlocal(xsec@metadata$longitude,xsec@metadata$latitude)
 
 
         if(length(distance) < nstation) {
@@ -213,7 +215,7 @@ pSec <- function(xsec, N, cont = TRUE, zCol
           lat <- sapply(1:nstation, function(i) {xsec@data$station[[i]]@metadata$latitude})
           lon <- sapply(1:nstation, function(i) {xsec@data$station[[i]]@metadata$longitude})
           distance <- oce::geodDist(longitude1 = lon, latitude1 = lat, alongPath = TRUE)
-#         distance <- geodDistlocal(longitude1 = lon, latitude1 = lat)
+#         distance <- geodDistlocal(longitude1 = lon, latitude1 = lat)  ## keep oce::geoDist because that's what oce uses. Fix in oce instead!
           ## hack to add resilience to duplicated CTD stations; repeat?
           distance <- c(ifelse(diff(distance) < 0.01, distance - 0.01, distance), distance[nstation])  ## hack to make contours work?
           rm(lat, lon)

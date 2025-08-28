@@ -165,12 +165,10 @@ for(sv in iX) {
             , zCol = oCol3 [[ov]]
             #    , zCol = oColF(ov)
             #     , zcol = oCol2(ov, 10)  ## doesn't work with zlim
-            , zlim = zR
-            , zbreaks = NULL # change this for salinity; others?
+            , zlim = zR, zbreaks = NULL # change this for salinity; others?
             , custcont = 7, labcex = 0.6
+            , bathy = bathy_sec, label = oVars [ov]
           )
-          addBathy(bathy_sec)
-          # legend("bottomright")
           rm(zR)
         }
         ## mark PAR at night
