@@ -756,10 +756,10 @@
     },
     "Matrix": {
       "Package": "Matrix",
-      "Version": "1.7-3",
+      "Version": "1.7-4",
       "Source": "Repository",
       "VersionNote": "do also bump src/version.h, inst/include/Matrix/version.h",
-      "Date": "2025-03-05",
+      "Date": "2025-08-27",
       "Priority": "recommended",
       "Title": "Sparse and Dense Matrix Classes and Methods",
       "Description": "A rich hierarchy of sparse and dense matrix classes, including general, symmetric, triangular, and diagonal matrices with numeric, logical, or pattern entries.  Efficient methods for operating on such matrices, often wrapping the 'BLAS', 'LAPACK', and 'SuiteSparse' libraries.",
@@ -795,7 +795,7 @@
       "BuildResaveData": "no",
       "Encoding": "UTF-8",
       "NeedsCompilation": "yes",
-      "Author": "Douglas Bates [aut] (<https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut, cre] (<https://orcid.org/0000-0002-8685-9910>), Mikael Jagan [aut] (<https://orcid.org/0000-0002-3542-2938>), Timothy A. Davis [ctb] (<https://orcid.org/0000-0001-7614-6899>, SuiteSparse libraries, collaborators listed in dir(system.file(\"doc\", \"SuiteSparse\", package=\"Matrix\"), pattern=\"License\", full.names=TRUE, recursive=TRUE)), George Karypis [ctb] (<https://orcid.org/0000-0003-2753-1437>, METIS library, Copyright: Regents of the University of Minnesota), Jason Riedy [ctb] (<https://orcid.org/0000-0002-4345-4200>, GNU Octave's condest() and onenormest(), Copyright: Regents of the University of California), Jens Oehlschlägel [ctb] (initial nearPD()), R Core Team [ctb] (02zz1nj61, base R's matrix implementation)",
+      "Author": "Douglas Bates [aut] (ORCID: <https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut, cre] (ORCID: <https://orcid.org/0000-0002-8685-9910>), Mikael Jagan [aut] (ORCID: <https://orcid.org/0000-0002-3542-2938>), Timothy A. Davis [ctb] (ORCID: <https://orcid.org/0000-0001-7614-6899>, SuiteSparse libraries, collaborators listed in dir(system.file(\"doc\", \"SuiteSparse\", package=\"Matrix\"), pattern=\"License\", full.names=TRUE, recursive=TRUE)), George Karypis [ctb] (ORCID: <https://orcid.org/0000-0003-2753-1437>, METIS library, Copyright: Regents of the University of Minnesota), Jason Riedy [ctb] (ORCID: <https://orcid.org/0000-0002-4345-4200>, GNU Octave's condest() and onenormest(), Copyright: Regents of the University of California), Jens Oehlschlägel [ctb] (initial nearPD()), R Core Team [ctb] (ROR: <https://ror.org/02zz1nj61>, base R's matrix implementation)",
       "Maintainer": "Martin Maechler <mmaechler+Matrix@gmail.com>",
       "Repository": "CRAN"
     },
@@ -2167,15 +2167,15 @@
     },
     "boot": {
       "Package": "boot",
-      "Version": "1.3-31",
+      "Version": "1.3-32",
       "Source": "Repository",
       "Priority": "recommended",
-      "Date": "2024-08-28",
-      "Authors@R": "c(person(\"Angelo\", \"Canty\", role = \"aut\", email = \"cantya@mcmaster.ca\",  comment = \"author of original code for S\"), person(\"Brian\", \"Ripley\", role = c(\"aut\", \"trl\"), email = \"ripley@stats.ox.ac.uk\", comment = \"conversion to R, maintainer 1999--2022, author of parallel support\"), person(\"Alessandra R.\", \"Brazzale\", role = c(\"ctb\", \"cre\"), email = \"brazzale@stat.unipd.it\", comment = \"minor bug fixes\"))",
+      "Date": "2025-08-29",
+      "Authors@R": "c(person(\"Angelo\", \"Canty\", role = \"aut\", email = \"cantya@mcmaster.ca\",  comment = \"author of original code for S\"), person(\"Brian\", \"Ripley\", role = c(\"aut\", \"trl\"), email = \"Brian.Ripley@R-project.org\", comment = \"conversion to R, maintainer 1999--2022, author of parallel support\"), person(\"Alessandra R.\", \"Brazzale\", role = c(\"ctb\", \"cre\"), email = \"brazzale@stat.unipd.it\", comment = \"minor bug fixes\"))",
       "Maintainer": "Alessandra R. Brazzale <brazzale@stat.unipd.it>",
       "Note": "Maintainers are not available to give advice on using a package they did not author.",
       "Description": "Functions and datasets for bootstrapping from the book \"Bootstrap Methods and Their Application\" by A. C. Davison and  D. V. Hinkley (1997, CUP), originally written by Angelo Canty for S.",
-      "Title": "Bootstrap Functions (Originally by Angelo Canty for S)",
+      "Title": "Bootstrap Functions",
       "Depends": [
         "R (>= 3.0.0)",
         "graphics",
@@ -4105,12 +4105,12 @@
     },
     "emmeans": {
       "Package": "emmeans",
-      "Version": "1.11.2",
+      "Version": "1.11.2-8",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Estimated Marginal Means, aka Least-Squares Means",
-      "Date": "2025-07-11",
-      "Authors@R": "c(person(\"Russell V.\", \"Lenth\", role = c(\"aut\", \"cre\", \"cph\"),  email = \"russell-lenth@uiowa.edu\"), person(\"Balazs\", \"Banfai\", role = \"ctb\"), person(\"Ben\", \"Bolker\", role = \"ctb\"), person(\"Paul\", \"Buerkner\", role = \"ctb\"), person(\"Iago\", \"Giné-Vázquez\", role = \"ctb\"), person(\"Maxime\", \"Herve\", role = \"ctb\"), person(\"Maarten\", \"Jung\", role = \"ctb\"), person(\"Jonathon\", \"Love\", role = \"ctb\"), person(\"Fernando\", \"Miguez\", role = \"ctb\"), person(\"Julia\", \"Piaskowski\", role = \"ctb\"), person(\"Hannes\", \"Riebl\", role = \"ctb\"), person(\"Henrik\", \"Singmann\", role = \"ctb\"))",
+      "Date": "2025-08-12",
+      "Authors@R": "c(person(\"Russell V.\", \"Lenth\", role = c(\"aut\", \"cre\", \"cph\"),  email = \"russell-lenth@uiowa.edu\"), person(\"Balazs\", \"Banfai\", role = \"ctb\"), person(\"Ben\", \"Bolker\", role = \"ctb\"), person(\"Paul\", \"Buerkner\", role = \"ctb\"), person(\"Iago\", \"Giné-Vázquez\", role = \"ctb\"), person(\"Maxime\", \"Hervé\", role = \"ctb\"), person(\"Maarten\", \"Jung\", role = \"ctb\"), person(\"Jonathon\", \"Love\", role = \"ctb\"), person(\"Fernando\", \"Miguez\", role = \"ctb\"), person(\"Julia\", \"Piaskowski\", role = \"ctb\"), person(\"Hannes\", \"Riebl\", role = \"ctb\"), person(\"Henrik\", \"Singmann\", role = \"ctb\"))",
       "Depends": [
         "R (>= 4.1.0)"
       ],
@@ -4179,7 +4179,7 @@
       "RoxygenNote": "7.3.2",
       "VignetteBuilder": "knitr",
       "NeedsCompilation": "no",
-      "Author": "Russell V. Lenth [aut, cre, cph], Balazs Banfai [ctb], Ben Bolker [ctb], Paul Buerkner [ctb], Iago Giné-Vázquez [ctb], Maxime Herve [ctb], Maarten Jung [ctb], Jonathon Love [ctb], Fernando Miguez [ctb], Julia Piaskowski [ctb], Hannes Riebl [ctb], Henrik Singmann [ctb]",
+      "Author": "Russell V. Lenth [aut, cre, cph], Balazs Banfai [ctb], Ben Bolker [ctb], Paul Buerkner [ctb], Iago Giné-Vázquez [ctb], Maxime Hervé [ctb], Maarten Jung [ctb], Jonathon Love [ctb], Fernando Miguez [ctb], Julia Piaskowski [ctb], Hannes Riebl [ctb], Henrik Singmann [ctb]",
       "Maintainer": "Russell V. Lenth <russell-lenth@uiowa.edu>",
       "Repository": "CRAN"
     },
@@ -4941,9 +4941,9 @@
     },
     "geoR": {
       "Package": "geoR",
-      "Version": "1.9-5",
+      "Version": "1.9-6",
       "Source": "Repository",
-      "Date": "2025-04-25",
+      "Date": "2025-08-29",
       "Title": "Analysis of Geostatistical Data",
       "LazyLoad": "yes",
       "LazyData": "yes",
@@ -7526,7 +7526,7 @@
     },
     "leafem": {
       "Package": "leafem",
-      "Version": "0.2.4",
+      "Version": "0.2.5",
       "Source": "Repository",
       "Title": "'leaflet' Extensions for 'mapview'",
       "Authors@R": "c(person(given = \"Tim\", family = \"Appelhans\", role = c(\"cre\", \"aut\"), email = \"tim.appelhans@gmail.com\"), person(given = \"Christoph\", family = \"Reudenbach\", role = \"ctb\", email = \"reudenbach@geo.uni-marburg.de\"), person(given = \"Kenton\", family = \"Russell\", role = \"ctb\"), person(given = \"Jochen\", family = \"Darley\", role = \"ctb\", email = \"Debugger@jedimasters.de\"), person(given = \"Daniel\", family = \"Montague\", role = c(\"ctb\", \"cph\"),  comment = \"Leaflet.EasyButton plugin\"), person(given = \"Lorenzo\", family = \"Busetto\", role = c(\"ctb\"),  email = \"lbusett@gmail.com\"), person(given = \"Luigi\", family = \"Ranghetti\", role = c(\"ctb\")), person(given = \"Miles\", family = \"McBain\", role = c(\"ctb\")), person(given = \"Sebastian\", family = \"Gatscha\", role = \"ctb\", email = \"sebastian_gatscha@gmx.at\"), person(given = \"Björn\", family = \"Harrtell\", role = c(\"ctb\", \"cph\"), comment = \"FlatGeobuf plugin\"), person(given = \"Daniel\", family = \"Dufour\", role = c(\"ctb\", \"cph\"), comment = \"georaster-layer-for-leaflet\"), person(given = \"Yeedle\", family = \"Neuwirth\", role = \"ctb\"), person(given = \"Derek\", family = \"Friend\", role = \"ctb\", email = \"dafriend.r@gmail.com\"), person(given = \"Kevin\",   family = \"Cazelles\",  role = \"ctb\", email = \"kevin.cazelles@gmail.com\",  comment = c(ORCID = \"0000-0001-6619-9874\")))",
@@ -8242,14 +8242,14 @@
     },
     "mapview": {
       "Package": "mapview",
-      "Version": "2.11.2",
+      "Version": "2.11.3",
       "Source": "Repository",
       "Title": "Interactive Viewing of Spatial Data in R",
       "Authors@R": "c(person(given = \"Tim\", family = \"Appelhans\", role = c(\"cre\", \"aut\"), email = \"tim.appelhans@gmail.com\"), person(given = \"Florian\", family = \"Detsch\", role = \"aut\", email = \"fdetsch@web.de\"), person(given = \"Christoph\", family = \"Reudenbach\", role = \"aut\", email = \"reudenbach@geo.uni-marburg.de\"), person(given = \"Stefan\", family = \"Woellauer\", role = \"aut\", email = \"stephan.woellauer@geo.uni-marburg.de\"), person(given = \"Spaska\", family = \"Forteva\", role = \"ctb\", email = \"spaska.forteva@geo.uni-marburg.de\"), person(given = \"Thomas\", family = \"Nauss\", role = \"ctb\", email = \"nauss@staff.uni-marburg.de\"), person(given = \"Edzer\", family = \"Pebesma\", role = \"ctb\"), person(given = \"Kenton\", family = \"Russell\", role = \"ctb\"), person(given = \"Michael\", family = \"Sumner\", role = \"ctb\"), person(given = \"Jochen\", family = \"Darley\", role = \"ctb\", email = \"Debugger@jedimasters.de\"), person(given = \"Pierre\", family = \"Roudier\", role = \"ctb\"), person(given = \"Patrick\", family = \"Schratz\", role = \"ctb\"), person(given = \"Environmental Informatics Marburg\", role = \"ctb\"), person(given = \"Lorenzo\", family = \"Busetto\", role = \"ctb\"))",
       "Maintainer": "Tim Appelhans <tim.appelhans@gmail.com>",
       "Description": "Quickly and conveniently create interactive visualisations of spatial data with or without background maps. Attributes of displayed features are fully queryable via pop-up windows. Additional functionality includes methods to visualise true- and false-color raster images and bounding boxes.",
       "License": "GPL (>= 3) | file LICENSE",
-      "URL": "https://github.com/r-spatial/mapview",
+      "URL": "https://github.com/r-spatial/mapview, https://r-spatial.github.io/mapview/",
       "BugReports": "https://github.com/r-spatial/mapview/issues",
       "Depends": [
         "methods",
@@ -8272,7 +8272,6 @@
         "sp"
       ],
       "Suggests": [
-        "covr",
         "knitr",
         "later",
         "leaflet.extras2",
@@ -8292,7 +8291,7 @@
       "ByteCompile": "yes",
       "Encoding": "UTF-8",
       "LazyData": "TRUE",
-      "RoxygenNote": "7.2.3",
+      "RoxygenNote": "7.3.2",
       "SystemRequirements": "GNU make",
       "NeedsCompilation": "no",
       "Author": "Tim Appelhans [cre, aut], Florian Detsch [aut], Christoph Reudenbach [aut], Stefan Woellauer [aut], Spaska Forteva [ctb], Thomas Nauss [ctb], Edzer Pebesma [ctb], Kenton Russell [ctb], Michael Sumner [ctb], Jochen Darley [ctb], Pierre Roudier [ctb], Patrick Schratz [ctb], Environmental Informatics Marburg [ctb], Lorenzo Busetto [ctb]",
@@ -9184,13 +9183,13 @@
     },
     "oce": {
       "Package": "oce",
-      "Version": "1.7-10",
+      "Version": "1.8-3",
       "Source": "Repository",
       "Title": "Analysis of Oceanographic Data",
       "Authors@R": "c( person(given=\"Dan\", family=\"Kelley\", email=\"Dan.Kelley@Dal.Ca\", role=c(\"aut\", \"cre\"), comment=c(ORCID=\"https://orcid.org/0000-0001-7808-5911\")), person(given=\"Clark\", family=\"Richards\", email=\"clark.richards@gmail.com\", role=c(\"aut\"), comment=c(ORCID=\"https://orcid.org/0000-0002-7833-206X\")), person(given=\"Chantelle\", family=\"Layton\", email=\"chantelle.layton@dal.ca\", role=c(\"ctb\"), comment=c(ORCID=\"https://orcid.org/0000-0002-3199-5763\", \"curl() coauthor\")), person(given=\"British Geological Survey\", role=c(\"ctb\",\"cph\"), comment=\"magnetic-field subroutine\"))",
       "Maintainer": "Dan Kelley <Dan.Kelley@Dal.Ca>",
       "Depends": [
-        "R (>= 2.15)",
+        "R (>= 4.1.0)",
         "gsw",
         "methods",
         "utils"
@@ -9202,16 +9201,13 @@
         "interp",
         "knitr",
         "lubridate",
-        "marmap",
         "ncdf4",
         "ocedata",
-        "raster (>= 1.4.3)",
-        "rgeos",
         "rmarkdown",
         "RSQLite",
         "R.utils",
         "sf",
-        "sp",
+        "terra",
         "testthat (>= 3.0.0)",
         "tiff",
         "XML"
@@ -9222,7 +9218,7 @@
       "Encoding": "UTF-8",
       "URL": "https://dankelley.github.io/oce/",
       "LazyData": "false",
-      "RoxygenNote": "7.2.1",
+      "RoxygenNote": "7.3.2",
       "BuildVignettes": "true",
       "VignetteBuilder": "knitr",
       "NeedsCompilation": "yes",
@@ -9360,24 +9356,22 @@
     },
     "openair": {
       "Package": "openair",
-      "Version": "2.18-2",
+      "Version": "2.19.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Tools for the Analysis of Air Pollution Data",
-      "Date": "2024-03-11",
-      "Authors@R": "c( person(\"David\", \"Carslaw\", , \"david.carslaw@york.ac.uk\", role = c(\"aut\", \"cre\")), person(\"Jack\", \"Davison\", , \"jack.davison@ricardo.com\", role = \"aut\"), person(\"Karl\", \"Ropkins\", , \"K.Ropkins@its.leeds.ac.uk\", role = \"aut\") )",
-      "Maintainer": "David Carslaw <david.carslaw@york.ac.uk>",
+      "Authors@R": "c( person(\"David\", \"Carslaw\", , \"david.carslaw@york.ac.uk\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0003-0991-950X\")), person(\"Jack\", \"Davison\", , \"jack.davison@ricardo.com\", role = \"aut\", comment = c(ORCID = \"0000-0003-2653-6615\")), person(\"Karl\", \"Ropkins\", , \"K.Ropkins@its.leeds.ac.uk\", role = \"aut\", comment = c(ORCID = \"0000-0002-0294-6997\")) )",
       "Description": "Tools to analyse, interpret and understand air pollution data. Data are typically regular time series and air quality measurement, meteorological data and dispersion model output can be analysed. The package is described in Carslaw and Ropkins (2012, <doi:10.1016/j.envsoft.2011.09.008>) and subsequent papers.",
-      "License": "GPL (>= 2)",
-      "URL": "https://davidcarslaw.github.io/openair/, https://github.com/davidcarslaw/openair",
-      "BugReports": "https://github.com/davidcarslaw/openair/issues",
+      "License": "MIT + file LICENSE",
+      "URL": "https://openair-project.github.io/openair/, https://github.com/openair-project/openair",
+      "BugReports": "https://github.com/openair-project/openair/issues",
       "Depends": [
         "R (>= 3.2.0)"
       ],
       "Imports": [
         "cli",
         "cluster",
-        "dplyr (>= 1.0)",
+        "dplyr (>= 1.1)",
         "graphics",
         "grDevices",
         "grid",
@@ -9400,22 +9394,28 @@
       ],
       "Suggests": [
         "KernSmooth",
+        "knitr",
         "mapdata",
         "maps",
         "quantreg",
-        "spelling"
+        "rmarkdown",
+        "spelling",
+        "testthat (>= 3.0.0)"
       ],
       "LinkingTo": [
         "Rcpp"
       ],
       "ByteCompile": "true",
+      "Config/Needs/website": "openair-project/openairpkgdown",
+      "Config/testthat/edition": "3",
       "Encoding": "UTF-8",
       "Language": "en-GB",
       "LazyData": "yes",
       "LazyLoad": "yes",
-      "RoxygenNote": "7.3.1",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "yes",
-      "Author": "David Carslaw [aut, cre], Jack Davison [aut], Karl Ropkins [aut]",
+      "Author": "David Carslaw [aut, cre] (ORCID: <https://orcid.org/0000-0003-0991-950X>), Jack Davison [aut] (ORCID: <https://orcid.org/0000-0003-2653-6615>), Karl Ropkins [aut] (ORCID: <https://orcid.org/0000-0002-0294-6997>)",
+      "Maintainer": "David Carslaw <david.carslaw@york.ac.uk>",
       "Repository": "CRAN"
     },
     "openssl": {
@@ -11515,7 +11515,7 @@
     },
     "rsconnect": {
       "Package": "rsconnect",
-      "Version": "1.5.0",
+      "Version": "1.5.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Deploy Docs, Apps, and APIs to 'Posit Connect', 'shinyapps.io', and 'RPubs'",
@@ -11677,16 +11677,16 @@
     },
     "rvest": {
       "Package": "rvest",
-      "Version": "1.0.4",
+      "Version": "1.0.5",
       "Source": "Repository",
       "Title": "Easily Harvest (Scrape) Web Pages",
-      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
       "Description": "Wrappers around the 'xml2' and 'httr' packages to make it easy to download, then manipulate, HTML and XML.",
       "License": "MIT + file LICENSE",
       "URL": "https://rvest.tidyverse.org/, https://github.com/tidyverse/rvest",
       "BugReports": "https://github.com/tidyverse/rvest/issues",
       "Depends": [
-        "R (>= 3.6)"
+        "R (>= 4.1)"
       ],
       "Imports": [
         "cli",
@@ -11697,12 +11697,13 @@
         "rlang (>= 1.1.0)",
         "selectr",
         "tibble",
-        "xml2 (>= 1.3)"
+        "xml2 (>= 1.4.0)"
       ],
       "Suggests": [
         "chromote",
         "covr",
         "knitr",
+        "purrr",
         "R6",
         "readr",
         "repurrrsive",
@@ -11710,6 +11711,7 @@
         "spelling",
         "stringi (>= 0.3.1)",
         "testthat (>= 3.0.2)",
+        "tidyr",
         "webfakes"
       ],
       "VignetteBuilder": "knitr",
@@ -11718,9 +11720,9 @@
       "Config/testthat/parallel": "true",
       "Encoding": "UTF-8",
       "Language": "en-US",
-      "RoxygenNote": "7.3.1",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Hadley Wickham [aut, cre], Posit Software, PBC [cph, fnd]",
+      "Author": "Hadley Wickham [aut, cre], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
@@ -14090,16 +14092,16 @@
     },
     "usethis": {
       "Package": "usethis",
-      "Version": "3.1.0",
+      "Version": "3.2.0",
       "Source": "Repository",
       "Title": "Automate Package and Project Setup",
-      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0003-4757-117X\")), person(\"Jennifer\", \"Bryan\", , \"jenny@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-6983-2759\")), person(\"Malcolm\", \"Barrett\", , \"malcolmbarrett@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0003-0299-5825\")), person(\"Andy\", \"Teucher\", , \"andy.teucher@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0002-7840-692X\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0003-4757-117X\")), person(\"Jennifer\", \"Bryan\", , \"jenny@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-6983-2759\")), person(\"Malcolm\", \"Barrett\", , \"malcolmbarrett@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0003-0299-5825\")), person(\"Andy\", \"Teucher\", , \"andy.teucher@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0002-7840-692X\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
       "Description": "Automate package and project setup tasks that are otherwise performed manually. This includes setting up unit testing, test coverage, continuous integration, Git, 'GitHub', licenses, 'Rcpp', 'RStudio' projects, and more.",
       "License": "MIT + file LICENSE",
       "URL": "https://usethis.r-lib.org, https://github.com/r-lib/usethis",
       "BugReports": "https://github.com/r-lib/usethis/issues",
       "Depends": [
-        "R (>= 3.6)"
+        "R (>= 4.1)"
       ],
       "Imports": [
         "cli (>= 3.0.1)",
@@ -14130,21 +14132,22 @@
         "knitr",
         "magick",
         "pkgload (>= 1.3.2.1)",
+        "quarto",
         "rmarkdown",
         "roxygen2 (>= 7.1.2)",
         "spelling (>= 1.2)",
-        "styler (>= 1.2.0)",
         "testthat (>= 3.1.8)"
       ],
       "Config/Needs/website": "r-lib/asciicast, tidyverse/tidytemplate, xml2",
       "Config/testthat/edition": "3",
       "Config/testthat/parallel": "TRUE",
       "Config/testthat/start-first": "github-actions, release",
+      "Config/usethis/last-upkeep": "2025-04-22",
       "Encoding": "UTF-8",
       "Language": "en-US",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.2.9000",
       "NeedsCompilation": "no",
-      "Author": "Hadley Wickham [aut] (<https://orcid.org/0000-0003-4757-117X>), Jennifer Bryan [aut, cre] (<https://orcid.org/0000-0002-6983-2759>), Malcolm Barrett [aut] (<https://orcid.org/0000-0003-0299-5825>), Andy Teucher [aut] (<https://orcid.org/0000-0002-7840-692X>), Posit Software, PBC [cph, fnd]",
+      "Author": "Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Jennifer Bryan [aut, cre] (ORCID: <https://orcid.org/0000-0002-6983-2759>), Malcolm Barrett [aut] (ORCID: <https://orcid.org/0000-0003-0299-5825>), Andy Teucher [aut] (ORCID: <https://orcid.org/0000-0002-7840-692X>), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Jennifer Bryan <jenny@posit.co>",
       "Repository": "CRAN"
     },

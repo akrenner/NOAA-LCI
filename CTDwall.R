@@ -109,7 +109,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
 
     ## select transect, year, classify monthly/seasonal survey
     physOcY <- subset(poAll, Transect == levels(poAll$Transect)[tn])
-    physOcY$year <- factor (physOcY$year)
+    physOcY$year <- factor(physOcY$year)
     physOcY$month <- factor(format(physOcY$DateISO, "%m"))
     physOcY$season <- seasonize(physOcY$month)
 
@@ -130,8 +130,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
         pW <- 42; pH <- 3.2 *(1 + yearPP)
       }
       omcex <- 2   # size of mtext annotations
-      require("stringr")
-      sampleTimes <- str_pad(1:12, 2, pad = "0")
+      sampleTimes <- stringr::str_pad(1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
       nY <- as.numeric(format(stopatDate, "%Y")) - min(as.integer(levels(poAll$year))) + 1
       nY <- yearPP
@@ -330,7 +329,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
             , zlim = oRange [ov, ] # fixes colors to global range of that variable
             # , zbreaks=zB # better?, slower interpolation
             # , custcont = pretty(oRange [ov,], 20)  ## may often fail? -- no contours in range
-            , ylim = c(0, max(physOcY$Depth.saltwater..m., na.rm = TRUE) + 5)  ## need to fix CTDwall-setup.R first
+            , ylim = c(max(physOcY$Depth.saltwater..m., na.rm = TRUE) + 5, 0)  ## need to fix CTDwall-setup.R first
             , showBottom = FALSE
             , drawPalette = FALSE
             , custcont = cCont
@@ -413,11 +412,10 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
       }
 
       if(0) {  ## vector based -- not windows compatible and doesn't rotate
-        require("grImport")  ## requires installation of GS -- go raster after all
         grImport::PostScriptTrace("pictograms/eye.ps", "pictograms/eye.ps.xml")
-        p <- readPicture("pictograms/eye.ps.xml")
+        p <- grImport::readPicture("pictograms/eye.ps.xml")
         unlink("pictograms/eye.ps.xml")
-        grid.picture(p  # no easy way to rotate p by n-degrees?; placed on page, not panel
+        grImport::grid.picture(p  # no easy way to rotate p by n-degrees?; placed on page, not panel
           , x = unit(xU, "npc"), y = unit(yU, "npc")
           # , angle=rU
           , width = unit(0.07, "npc"), height = unit(0.07, "npc")
@@ -437,8 +435,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
       if(.Platform$OS.type == "unix") {
         system("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
       }
-      require("png")
-      p <- readPNG("pictograms/eye.png")
+      p <- png::readPNG("pictograms/eye.png")
       # require("OpenImageR")
       # p <- rotateImage(p, angle=rU, method="nearest")
       rasterImage(p
@@ -487,14 +484,13 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     mtext(text = paste("Kasitsna Bay Lab\n", Sys.Date())
       , side = 1, line = 3, outer = FALSE, cex = 1, adj = 1)
     ## add NCCOS and KBNERR logos
-    require("jpeg")
-    nccos <- readJPEG("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
+    nccos <- jpeg::readJPEG("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
     rasterImage(nccos, nCol / 20, -8, nCol, -4) # xleft, ybottom, xright ytop
     rm(bp, lVal, nCol, yL, nccos)
 
     ### end of wall poster
     dev.off()
-    rm (bathy_sec)  ## flush bathymetry to fetch new one for next page
+    rm(bathy_sec)  ## flush bathymetry to fetch new one for next page
     cat("\n")
   }
 }

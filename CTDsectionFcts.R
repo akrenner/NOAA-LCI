@@ -177,8 +177,7 @@ pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
       , ztype = "image"
       , zcol = zCol
       , ...
-    )
-    , silent = TRUE)
+    ))
     ## add bathymetry here, then add legend?
     if(class(bathy)[1] == "data.frame"){
       addBathy(bathy)
@@ -556,7 +555,7 @@ sectionPad <- function(sect, transect, ...) {
     if(!transect$station [i]  %in% stationIDs) {  ## current results are horrid. Not why=?
       # if(!as.character(transect$station [i])  %in% levels(sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
       #       cat("No station", transect$stationId [i], "\n")
-      ## add a dummy-station (sectionAddCtd and sectionAddStation are synonymous)
+      ## add a dummy-station(sectionAddCtd and sectionAddStation are synonymous)
       sect <- sectionAddCtd(sect, cloneCTD(sect@data$station [[1]]
         , latitude = transect$latitude [i]
         , longitude = transect$longitude [i]
