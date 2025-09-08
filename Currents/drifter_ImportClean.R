@@ -1328,7 +1328,7 @@ rm (startTime)
 save.image ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata")  ## for exchange
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/drifter/drifterSetup.Rdata"); require ("stars"); require ("RColorBrewer"); require ("dplyr")
 
-write.csv (x = drift %>%
+write.csv(x = drift %>%
   as.data.frame() %>%
   # filter (trimBoat==FALSE) %>%
   #             select (CommId, DeviceName, DeviceDateTime, Latitude, Longitude, IDn)
@@ -1336,8 +1336,20 @@ write.csv (x = drift %>%
     # U-Vel, V-Vel
     drogue_depth, DeviceName, FileName, Deployment = deployV2
   )
-, file = gzfile ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
+, file = gzfile("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz")
 , row.names = FALSE)
+
+## export in Global Drifter Program (GDP) data format
+write.csv(with(drift, data.frame(platform_code=deployV2,
+    platform_type = ifelse(drogue_depth == 15, "SVP-15 m drogue",
+      paste0("drogue depth [m]: ", drogue_depth)),
+    time=format(as.POSIXct(paste0(Year, "-", Month, "-", Day, " ", Hour, ":",
+      Minute), tz="UTC"), "%Y-%m-%dT%H:%M:%SZ"),
+    latitude=Lat, longitude=Long, sst=NA, sst_qc=NA, slp=NA,
+    lon360=Long + ifelse(Long<0, 360, 0))),
+  file=gzfile("~/tmp/LCI_noaa/data-products/drifter_cleaned_gdp.csv.gz"),
+  row.names = FALSE)
+
 ## -------------------------------------------------------------------------------------
 
 

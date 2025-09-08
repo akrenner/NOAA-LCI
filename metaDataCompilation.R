@@ -14,16 +14,16 @@
 
 
 
-rm (list = ls())
-require ("geometa")
-# require ("geoflow")  ## see https://r-consortium.org/posts/exploring-geometa-an-r-package-for-managing-geographic-metadata/
-require ("sf")
+rm(list = ls())
+require("geometa")
+# require("geoflow")  ## see https://r-consortium.org/posts/exploring-geometa-an-r-package-for-managing-geographic-metadata/
+require("sf")
 LLprj <- 4326
 
 
 
 ## data sets to cover
-## CTD  (output of aggregated files)
+## CTD (output of aggregated files)
 ## zooplankton
 ## phytoplankton
 ## chlorophyll
@@ -37,21 +37,30 @@ LLprj <- 4326
 ## define field names
 ## set file name for XML file
 
-dsetL <- c ("ctd", "zoop", "phytop" # , "chlorop", nutrients
+dsetL <- c("ctd", "zoop", "phytop" # , "chlorop", nutrients
   , "drifter")
 
-for (dset in dsetL) {
+for(dset in dsetL) {
 
   ## data-set specific steps
-  if (dset == "ctd") {
+  if(dset == "ctd") {
     ### CTD
 
     ctdL <- list.files("~/tmp/LCI_noaa/data-products/CTD/", ".csv", full.names = TRUE)
-    data <- lapply (seq_along (ctdL), function(i) {read.csv(ctdL[i], skip = 1)})
-    data <- do.call (rbind, data) |>
-      st_as_sf (coords = c("Longitude_DD", "Latitude_DD"), crs = LLprj, remove = FALSE)
-    bbox <- st_bbox(data)
-    tbox <- range (as.POSIXct(paste (data$Date, data$Time)))
+    data <- lapply(seq_along(ctdL), function(i) {read.csv(ctdL[i], skip = 1)})
+    data <- do.call(rbind, data) |>
+      sf::st_as_sf(coords = c("Longitude_DD", "Latitude_DD"), crs = "WGS84", remove = FALSE)
+    bbox <- sf::st_bbox(data)
+    tbox <- range(as.POSIXct(paste(data$Date, data$Time)))
+
+    ## for manually filling out word document
+    print(bbox)
+    print(tbox)
+    print(names(data))
+    print(summary(data))
+
+
+
     abstract <- "CTD casts were undertaken along predefined transects in lower
                   Cook Inlet (Transects 3, 6, 7) and  Kachemak Bay and
                   (AlongBay, 4, 9). In the years 2013 to 2017, Kachemak Bay was
@@ -71,13 +80,13 @@ for (dset in dsetL) {
     fN <- "~/tmp/LCI_noaa/data-products/CTD/CookInletKachemakBay_CTD.xml"
     fN <- "~/tmp/LCI_noaa/data-products/CTD.xml"
 
-  } else if (dset == "zoop") {  ## zoop
+  } else if(dset == "zoop") {  ## zoop
     ### zooplankton
 
     data <- read.csv("~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.csv", skip = 1) |>
-      st_as_sf (coords = c("Longitude_DD", "Latitude_DD"), crs = LLprj, remove = FALSE)
+      st_as_sf(coords = c("Longitude_DD", "Latitude_DD"), crs = LLprj, remove = FALSE)
     bbox <- st_bbox(data)
-    tbox <- range (as.POSIXct(paste (data$Date, data$Time)))
+    tbox <- range(as.POSIXct(paste(data$Date, data$Time)))
 
     abstract <- "These data are part of the Gulf Watch Alaska (GWA), Environmental
     Drivers component, which is the long-term ecosystem monitoring program of the
@@ -104,15 +113,15 @@ Prince William Sound Science Center located in Cordova, Alaska."
     # keywords: zooplankton, copepods,
     fN <- "~/tmp/LCI_noaa/data-products/zooplankton_KachemakBay.xml"
 
-  } else if (dset == "phytop") {
+  } else if(dset == "phytop") {
     ### phytoplankton
 
-    data <- read.csv ("~/tmp/LCI_noaa/data-products/phytoplankton.csv", skip = 1) |>
-      subset (!is.na (Longitude_DD)) |>
-      subset (!is.na (Latitude_DD)) |>
-      st_as_sf (coords = c("Longitude_DD", "Latitude_DD"), crs = LLprj, remove = FALSE)
-    bbox <- st_bbox(data)
-    tbox <- range (as.POSIXct(paste (data$Date, data$Time)))
+    data <- read.csv("~/tmp/LCI_noaa/data-products/phytoplankton.csv", skip = 1) |>
+      subset(!is.na(Longitude_DD)) |>
+      subset(!is.na(Latitude_DD)) |>
+      sf::st_as_sf(coords = c("Longitude_DD", "Latitude_DD"), crs = LLprj, remove = FALSE)
+    bbox <- sf::st_bbox(data)
+    tbox <- range(as.POSIXct(paste(data$Date, data$Time)))
 
     abstract <- "These data are part of the Gulf Watch Alaska (GWA), Environmental
     Drivers component, which is the long-term ecosystem monitoring program of
@@ -129,19 +138,25 @@ surveys. Phytoplankton samples were collected during as part of a long-term
 
     fN <- "~/tmp/LCI_noaa/data-products/phytoplankton.xml"
 
-  } else if (dset == "chlorop") {
+  } else if(dset == "chlorop") {
     ### chlorophyll
 
     abstract <- ""
 
-  } else if (dset == "drifter") {
+  } else if(dset == "drifter") {
     ### drifter
 
-    data <- read.csv ("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz") |>
-      st_as_sf (coords = c("Long", "Lat"), crs = LLprj, remove = FALSE)
-    bbox <- st_bbox (data)
-    tbox <- range (as.POSIXct(with (data, paste0 (Year, "-", Month, "-", Day,
+    data <- read.csv("~/tmp/LCI_noaa/data-products/drifter_cleaned.csv.gz") |>
+      sf::st_as_sf(coords = c("Long", "Lat"), crs = "WGS84", remove = FALSE)
+    bbox <- sf::st_bbox(data)
+    tbox <- range(as.POSIXct(with(data, paste0(Year, "-", Month, "-", Day,
       " ", Hour, ":", Minute))))
+    summary(data)
+    dim(data)
+
+    ## percentages of drogue depths
+    summary(as.factor(data$drogue_depth)) / nrow(data)
+
 
     abstract <- "This dataset comprises drifters released within Cook Inlet,
     droughed at depth between surface and 15 m. Data has been manually cleaned
@@ -151,6 +166,7 @@ surveys. Phytoplankton samples were collected during as part of a long-term
     Some of these records have been uploaded by Scott Pegau to the ResearchWorkspace,
     the rest were downloaded directly from the http://pacificgyre.com/"
     fN <- "~/tmp/LCI_noaa/data-products/drifter_cleaned.xml"
+
   }
 
 
@@ -165,7 +181,7 @@ surveys. Phytoplankton samples were collected during as part of a long-term
   md$setParentIdentifier("my-parent-metadata-identifier")
   # md$setCharacterSet("utf8") # deprecated; utf8 already the default
   md$setLanguage("eng")
-  # md$addLanguage ("eng") ## xxx error
+  # md$addLanguage("eng") ## xxx error
   # md$setDateStamp(ISOdate(2015, 1, 1, 1))
   md$setDateStamp(Sys.time())
   md$setMetadataStandardName("ISO 19115:2003/19139")   ## XXXX verify!
@@ -210,9 +226,9 @@ surveys. Phytoplankton samples were collected during as part of a long-term
   rp$setContactInfo(contact)
   md$addContact(rp)
 
-  if (0) {
+  if(0) {
     # add 3 contacts
-    for (i in 1:3) {
+    for(i in 1:3) {
       rp <- ISOResponsibleParty$new()
       rp$setIndividualName(paste0("someone", i))
       rp$setOrganisationName("somewhere")
@@ -306,7 +322,7 @@ surveys. Phytoplankton samples were collected during as part of a long-term
 
   # citation
   ct <- ISOCitation$new()   ## XXX
-  ct$setTitle("Conductivity Temperature Depth (CTD) data from Cook Inlet and Kachemak Bay")
+  ct$setTitle("Conductivity Temperature Depth(CTD) data from Cook Inlet and Kachemak Bay")
   d <- ISODate$new()
   # d$setDate(ISOdate(2015, 1, 1, 1))
   d$setDate(Sys.time())
@@ -391,8 +407,8 @@ surveys. Phytoplankton samples were collected during as part of a long-term
 
   # add keywords
   kwds <- ISOKeywords$new()
-  for (j in seq_along(keywords)) {
-    kwds$addKeyword (keywords [j])
+  for(j in seq_along(keywords)) {
+    kwds$addKeyword(keywords [j])
   }
   # kwds$addKeyword("keyword1")
   # kwds$addKeyword("keyword2")
@@ -414,7 +430,7 @@ surveys. Phytoplankton samples were collected during as part of a long-term
   # Distribution
   distrib <- ISODistribution$new()
   dto <- ISODigitalTransferOptions$new()
-  for (i in 1:3) {
+  for(i in 1:3) {
     or <- ISOOnlineResource$new()
     or$setLinkage(paste0("http://somelink", i))
     or$setName(paste0("name", i))
@@ -490,9 +506,9 @@ surveys. Phytoplankton samples were collected during as part of a long-term
   # XML representation of the ISOMetadata
   xml <- md$encode()
 
-  # require ("xml2") -- not working
-  # xml2::write_xml (xml, file=fN)
-  require ("XML")  ## why not: numerous dependencies, needs to be compiled
-  XML::saveXML (xml, file = fN)
-  rm (xml, fN, md, dq, dc)
+  # require("xml2") -- not working
+  # xml2::write_xml(xml, file=fN)
+  require("XML")  ## why not: numerous dependencies, needs to be compiled
+  XML::saveXML(xml, file = fN)
+  rm(xml, fN, md, dq, dc)
 }
