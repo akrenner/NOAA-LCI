@@ -1,0 +1,283 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ?
+
+## clear the slate
+rm (list = ls())
+unlink ("MonthlyUpdates/media/", recursive = TRUE)
+
+
+## fetch data from notebook export and CTD processing
+load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+physOc$isoDate <- as.Date (physOc$isoTime)
+## find survey, not just last date
+physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) ==
+  max (as.numeric (format (physOc$isoTime, "%Y"))))
+physL <- subset (physL, as.numeric (format (physL$isoTime, "%m")) ==
+  max (as.numeric (format (physL$isoTime, "%m"))))
+rm (physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- max (physL$isoDate) ## check -- odd! UTC? [1]
+
+sY = as.numeric (format (sDate, "%Y"))
+sM = month.name [as.numeric (format (sDate, "%m"))]
+sSlot = paste (sM, sY)
+
+crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
+crewT = paste0 (c (paste0 (crew [1:(length (crew) - 1)], collapse = ", "),
+  paste0 (crew [length (crew)])), collapse = ", and ")
+
+
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm = TRUE),
+  max (Temperature_ITS90_DegC, na.rm = TRUE),
+  min (Salinity_PSU, na.rm = TRUE),
+  max (Salinity_PSU, na.rm = TRUE)),
+stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+  Match_Name [which.max (Temperature_ITS90_DegC)],
+  Match_Name [which.min (Salinity_PSU)],
+  Match_Name [which.max (Salinity_PSU)]),
+depth = c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.min (Salinity_PSU)],
+  Depth.saltwater..m. [which.max (Salinity_PSU)])
+))
+tsal$stn <- gsub ("_", "-", tsal$stn)
+tsal$temSalR <- round (tsal$temSal, 1)
+tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
+
+
+## to-do:
+## tweak title layout : remove "author" and "affiliation"
+## add date?
+## add background graphics, NCCOS logo
+
+
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+## find files
+## construct mark-down code (all sections of the day, monthly / quarterly)
+dest <- "media/CTDsections/sectionImages/"
+dest <- "./media/"
+
+dir.create(dest, showWarnings = FALSE, recursive = TRUE)
+src <- "~/tmp/LCI_noaa/media/"
+
+# pick transects from last survey; flexible as to monthly/quarterly
+fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern = "*.png")
+flC <- grep (substr(sort (fl, decreasing = TRUE)[1], 1, 7), fl, value = TRUE)  # pick last date
+
+# lastDate <- "2025-01-14"
+# lastDate <- substr(sort (fl, decreasing=TRUE)[1], 1,10)
+lastDateT <- format (sDate, "%m/%d/%Y")  ## US style: 04/16/2025
+lastDateT <- format (sDate, "%d %B %Y")  ## 16 April 2025
+
+
+for (i in seq_along(flC)) {
+  cS <- file.copy (from = paste0 (src, "CTDsections/sectionImages/", flC [i]),
+    # to=paste0 (dest, gsub (paste0 (sDate, " "), "SectionI_", flC [i]))
+    to = paste0 (dest, "SectionI_", substr (flC [i], 12, nchar (flC [i])))
+    , overwrite = TRUE)
+}
+iStrng <- sort (list.files (dest, patter = "SectionI_", full.names = TRUE), decreasing = TRUE)
+
+#   cS <- file.copy(from=paste0 (src, "CTDsections/sectionImages/", flS),
+#             to=paste0 (dest), overwrite=TRUE
+#             )
+#   fl <- list.files (dest, pattern="*.png")
+#   Tran <- substr (fl, 12, nchar (fl))
+#   Tran <- gsub (".png", "", Tran, fixed=TRUE)
+#
+#   ## generating strings for all transects -- not yet working
+# #  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
+#   iStrng <- paste0 (dest, fl)
+# #  iStrng <- paste0 ("MonthlyUpdates/", dest, fl)
+# transectSection1 <- iStrng [1]
+# transectSection2 <- iStrng [2]
+#
+# try ({
+#   transectSection3 <- iStrng [3]
+#   transectSection4 <- iStrng [4]
+# })
+
+
+
+## Chlorophyll
+# dest="media/CTDsections/time-sections/"
+# dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+flS <- list.files (paste0 ("~/tmp/LCI_noaa/CTDsections/time-sections", dest), pattern = "*.png")
+cS <- file.copy (from = paste0 ("~/tmp/LCI_noaa/", dest, flS)
+  , to = dest, overwrite = TRUE)
+TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
+TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
+TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
+TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
+
+
+## NOAA weather -- replace from rNOAA
+
+## signature data-set graphs
+# check that updates were successful!
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-fluorescence-anomaly.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png", to = dest, overwrite = TRUE)
+## State-of-the-bay
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=dest, overwrite=TRUE)
+#     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=dest, overwrite=TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png", to = dest, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png", to = dest, overwrite = TRUE)
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=dest, overwrite=TRUE)
+
+
+# email to:
+#   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>,
+# Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>
+
+
+rm (fl, flS, dest, cS)
+```
+
+---
+title: "Monthly Kachemak Bay report, `{r} sSlot`"
+author: 
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to NOAA/NCCOS Kasitsna Bay Lab
+  - name: "Kris Holderied"
+    affiliation:
+       - name: NOAA/NCCOS Kasitsna Bay Lab
+
+format: html  # or html, pdf or word, email
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to pdf
+---
+
+
+
+## Conditions
+
+<!-- On `{r} sDate`, `{r} crewT`  -->
+
+This report summarizes data collected on monthly Kachemak Bay/lower Cook Inlet oceanographic surveys in February, March, and April 2025, with a focus on April conditions. A complete set up up-to-date graphs can be found on the google drive: 
+[section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and 
+[time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link).
+<!-- CTD wall:      https://drive.google.com/drive/folders/1VN-g95QcZHpvIeMaH-HEvDzIX0f-cSe6?usp=drive_link -->
+
+<!-- `{r} lastDateT`,  -->
+<!-- (@fig-Temp_Airport).  -->
+The April survey, conducted by Hans, Kris, Martin, and Paul was split over two days: Transects 4 and 9 on 15 April, and the AlongBay transect on 22 April.  
+It has been a mild winter with only limited snow coverage in and around Homer (e.g. the [Homer Epic](https://www.homercyclingclub.org/homer-epic), which ran on 8 March, had no skiing event due to poor snow conditions; Beluga Lake was icefree). The days around the April survey were spring-like with air temperatures between 0 °C and 5 °C and the occasional light rain shower. 
+
+<!-- ::: {#fig-elements layout-ncol="1"} -->
+<!-- ![](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
+<!-- Recent temperature compared to their long-term means at Homer Airport. -->
+<!-- ::: -->
+
+
+ <!-- Consider link to annual/sa-precip-AP.png -->
+
+## Physical oceanography
+
+<!-- Current conditions, long-term anomalies: -->
+
+
+### Temperature
+
+<!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
+
+Recorded water temperatures during the April survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the outer bay
+to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Spit. 
+The months of February and March were characterized by a typical winter regime for Kachemak Bay: colder surface than deep waters, but overall small differences in water temperature at at individual stations, the main differences being a warmer outer bay, separated from the colder inner bay waters by a front near the Homer Spit. Remnants of this pattern were still apparent in April, however, as a consequence of rain and break-up conditions, the top-most water layers have begun to warm up by a couple tenths of a degree (@fig-tSections_AB). T9 transect showed rather complex patterns this April: the warmer deep water from the outer bay on the southern side, cold inner-bay water near the northern shore, all of which overlayed by a thin, up to 1 K warmer surface layer (@fig-tSections_T9).
+
+
+### Salinity
+
+Salinity values in April ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), 
+at the north and south end of the outer bay, respectively. This is consistent with saltier (and warmer) deep water from the Gulf of Alaska flowing into the bay near the southern shore and fresher water, fed by rain, river, and meltwaters, exiting along the northern shore (@fig-tSections_T4). Similarly to the temperature data, a freshening of the surface layer in the inner bay
+is apparent, indicating the formation of the fresh-water-driven pycnocline, characteristic 
+of the summer months. 
+
+
+### Turbidity
+
+We did not encounter any high-turbidity surface water, indicative of glacial run-off during the April survey. Overall, inner bay bottom waters were more turbid than outer bay waters, as usual. Turbidity levels in the outer bay were the lowest we have observed all year. These were relatively warm, saline waters, consistent with an intrusion of Gulf of Alaska shelf water. 
+
+
+## Biological conditions
+
+### Phytoplankton
+
+While still low in the outer bay, compared to February and March, chlorophyll concentrations were levated in the upper water layers of the inner bay (just below the pycnocline, as indicated by the corresponding bvf values)  -- a sign of spring. Oxygen levels were correspondingly raised in these areas as well (@fig-tSections_AB).  
+
+<!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
+
+
+
+::: {#fig-elements layout-ncol="1"}
+![AlongBay Transect](./media/SectionI_T-AlongBay.png){#fig-tSections_AB}
+
+![T9 Transect, across-bay, Homer Spit to China Poot Bay](./media/SectionI_T-9.png){#fig-tSections_T9}
+
+![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/SectionI_T-4.png){#fig-tSections_T4}
+
+Longitudinal and cross-sections of main parameters.
+:::
+
+
+
+### Zooplankton
+
+
+A deep scattering layer was detected at depth between 25 (but mostly > 50) m and 150 m and sampled with opportunistic vertical tows at AlongBay 5, 7, and 8. Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also a large mycid, chaetognaths, eggs, barnacle larvae, amongst other taxa. 
+
+<!-- Backscatter? Species composition? -->
+
+<!-- ### Wildlife -->
+
+
+
+## Present conditions compared to long-term trends
+
+After three years of water temperatures closely hugging the long-term mean, deeper water temperatures were warmer than the seasonal mean starting in February. Current temperatures were up to 1 K above the long-term seasonal mean (@fig-TempDeep). This positive temperature anomaly has been accompanied by a low salinity anomaly (@fig-SalDeep), which is consistent with high amounts of rain in the region. Both, the temperature, and salinity anomalies are found throughout the water column, although they are slightly more pronounced at depth (@fig-TSprofile_T9). 
+
+<!-- Reflecting the warm air -->
+<!-- temperatures, we now see a small positive temperature anomaly (@fig-TempSurf).  -->
+The SWMP station at Homer Harbor, recording oceanographic data continuously, has shown a 
+positive temperature anomaly since early December 2024, which intensified to a level that
+from January to until late March 2025, values were above the 90th percentile. However, since early April, the SWMP data
+has seen a slow return towards the long-term mean (@fig-SWMP-homerdeep-temp). 
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+
+![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
+
+
+
+![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
+
+![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
+
+
+![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
+
+<!-- Add map with station numbers -- schematic -->

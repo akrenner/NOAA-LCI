@@ -6,16 +6,17 @@
 
 ## allow deletion of files?
 
-rm (list=ls())
+rm (list = ls())
 
 
 
 
-if (.Platform$OS.type == "unix"){
+if (.Platform$OS.type == "unix") {
   rcloneDir <- ""
   hm <- "~/"
   docs <- paste0 (hm, "Documents/")
-}else{
+  excludeF = ".DS_Store"
+} else {
   rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.65.0-windows-amd64/"
   hm <- "C:/Users/Martin.Renner/Documents/"
   docs <- paste0 (hm, "myDocs/")
@@ -36,27 +37,39 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/ remote:NOAA-
 
 
 ## office docs -- specific to Martin Renner's computer!
-if (grep ("artin", getwd())){ # portability
+## from laptop to GoogleDrive
+if (1) {
+  if (grep ("artin", getwd())) { # portability
     system (paste0 (rcloneDir, "rclone sync ", docs, "amyfiles/NOAA/currentDocs/ remote:NOAA-laptop/amyfiles/currentDocs/ -P"))
+  }
 }
+
+
 
 ## sync documents back and forth -- manually!
 # if (.Platform$OS.type=="unix"){
-if (0){
-#  system ("rclone sync remote:tmp/LCI_noaa/cache/ ~/tmp/LCI_noaa/cache/ -P")
-#  system ("rclone sync remote:LCIcache/CTD-cache/ ~/tmp/LCI_noaa/CTD-cache/ -P")
+if (0) {
+  #  system ("rclone sync remote:tmp/LCI_noaa/cache/ ~/tmp/LCI_noaa/cache/ -P")
+  #  system ("rclone sync remote:LCIcache/CTD-cache/ ~/tmp/LCI_noaa/CTD-cache/ -P")
   system ("rclone sync remote:NOAA-laptop/amyfiles/currentDocs/ ~/Documents/amyfiles/NOAA/currentDocs/ -P")
-  system ("rclone sync", GD, "data-products/ ~/tmp/LCI_noaa/data-products/ -P")
+  system (paste0 ("rclone sync ", GD, "data-products/ ~/tmp/LCI_noaa/data-products/ -P"))
   system ("rclone sync remote:NOAA-laptop/cache/ ~/tmp/LCI_noaa/cache/ -P")
+  system (paste0 ("rclone sync ", GD, "plots/CTDsections/ ~/tmp/LCI_noaa/media/CTDsections/ -P"))
+  #  system (paste0 ("rclone sync ", GD, "plots/CTDcasts/ ~/tmp/LCI_noaa/media/CTDcasts/ -P"))
+  system (paste0 ("rclone sync ", GD, "plots/StateOfBay/ ~/tmp/LCI_noaa/media/StateOfBay/ -P"))
 }
 
 
 
 ## sync from GoogleDrive back to local -- careful!!
-if (1){
+if (1) {
   ## any more recent files on GoogleDrive?
   system (paste0 (rcloneDir, "rclone check remote:NOAA-laptop/amyfiles/currentDocs/ ", docs, "amyfiles/NOAA/currentDocs/"))
-  if (0){
+  if (0) {
     system (paste0 (rcloneDir, "rclone sync remote:NOAA-laptop/amyfiles/currentDocs/ ", docs, "amyfiles/NOAA/currentDocs/"))
   }
 }
+
+
+## one-off: upload drifterVideo
+# system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/media/drifter/drifterVideo/ ", GD, "plots/drifterVideo/ -P"))

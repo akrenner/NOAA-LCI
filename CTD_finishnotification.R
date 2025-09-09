@@ -5,7 +5,7 @@
 ## and https://github.com/r-lib/gmailr
 
 
-if (Sys.getenv ("USERNAME") %in% c("Martin.Renner", "martin")){
+if (Sys.getenv ("USERNAME") %in% c("Martin.Renner", "martin")) {
   require ("gmailr")
   ## send mail that CTD processing has finished.
 }

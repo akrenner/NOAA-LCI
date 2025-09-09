@@ -8,16 +8,16 @@
 
 q()  ## run this manually, not automatically!
 
-rm (list=ls())
+rm (list = ls())
 
 
 
 
-if (.Platform$OS.type == "unix"){
+if (.Platform$OS.type == "unix") {
   rcloneDir <- ""
   hm <- "~/"
   docs <- paste0 (hm, "Documents/")
-}else{
+} else {
   rcloneDir <- "C:/Users/Martin.Renner/Applications/rclone-v1.59.0-windows-amd64/"
   hm <- "C:/Users/Martin.Renner/Documents/"
   docs <- paste0 (hm, "myDocs/")
@@ -26,7 +26,7 @@ if (.Platform$OS.type == "unix"){
 ## sync current directory to Google Drive
 system (paste0 ("rclone dedupe remote:NOAA-laptop/amyfiles/NOAA-LCI/ -P"))
 system (paste0 ("rclone sync --exclude .git/ --exclude renv/ --exclude .Rproj.user/ --exclude=.DS_Store ", docs, "amyfiles/NOAA/NOAA-LCI/ remote:NOAA-laptop/amyfiles/NOAA-LCI/"
-                , " -P"))
+  , " -P"))
 
 
 

@@ -1,0 +1,265 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ?
+
+## clear the slate
+rm (list = ls())
+# require (packrat)
+# require (rsconnect)
+
+unlink ("MonthlyUpdates/media/", recursive = TRUE)
+
+
+## fetch data from notebook export and CTD processing
+load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+physOc$isoDate <- as.Date (physOc$isoTime)
+## find survey, not just last date
+physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) ==
+  max (as.numeric (format (physOc$isoTime, "%Y"))))
+physL <- subset (physL, as.numeric (format (physL$isoTime, "%m")) ==
+  max (as.numeric (format (physL$isoTime, "%m"))))
+rm (physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- max (physL$isoDate)
+dateAN <- format (sDate, "%d %b %Y")
+
+
+sY = as.numeric (format (sDate, "%Y"))
+sM = month.name [as.numeric (format (sDate, "%m"))]
+sSlot = paste (sM, sY)
+
+crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
+crewT = paste0 (c (paste0 (crew [1:(length (crew) - 1)], collapse = ", "),
+  paste0 (crew [length (crew)])), collapse = ", and ")
+
+
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm = TRUE),
+  max (Temperature_ITS90_DegC, na.rm = TRUE),
+  min (Salinity_PSU, na.rm = TRUE),
+  max (Salinity_PSU, na.rm = TRUE)),
+stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+  Match_Name [which.max (Temperature_ITS90_DegC)],
+  Match_Name [which.min (Salinity_PSU)],
+  Match_Name [which.max (Salinity_PSU)]),
+depth = c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.min (Salinity_PSU)],
+  Depth.saltwater..m. [which.max (Salinity_PSU)])
+))
+tsal$stn <- gsub ("_", "-", tsal$stn)
+tsal$temSalR <- round (tsal$temSal, 1) |>
+  format (nsmall = 1)
+tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
+
+
+## to-do:
+## tweak title layout : remove "author" and "affiliation"
+## add date?
+## add background graphics, NCCOS logo
+
+
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+## find files
+## construct mark-down code (all sections of the day, monthly / quarterly)
+dest <- "media/CTDsections/sectionImages/"
+dest <- "media/"
+destR <- paste (getwd(), dest, sep = "/")
+
+
+dir.create(destR, showWarnings = FALSE, recursive = TRUE)
+src <- "~/tmp/LCI_noaa/media/"
+
+# pick transects from last survey; flexible as to monthly/quarterly
+fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern = "*.png")
+flC <- grep (substr(sort (fl, decreasing = TRUE)[1], 1, 7), fl, value = TRUE)  # pick last date
+
+# lastDate <- "2025-01-14"
+# lastDate <- substr(sort (fl, decreasing=TRUE)[1], 1,10)
+lastDateT <- format (sDate, "%m/%d/%Y")  ## US style: 04/16/2025
+lastDateT <- format (sDate, "%d %B %Y")  ## 16 April 2025
+
+
+for (i in seq_along(flC)) {
+  cS <- file.copy (from = paste0 (src, "CTDsections/sectionImages/", flC [i]),
+    to = paste0 (destR, "/Section_", substr (flC [i], 9, nchar (flC [i])))
+    , overwrite = TRUE)
+}
+
+
+## Chlorophyll
+# dest="media/CTDsections/time-sections/"
+# dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+flS <- list.files (paste0 ("~/tmp/LCI_noaa/CTDsections/time-sections", dest), pattern = "*.png")
+cS <- file.copy (from = paste0 ("~/tmp/LCI_noaa/", dest, flS)
+  , to = destR, overwrite = TRUE)
+TStempSurface <- paste0 (destR, "5-TempSurfaceTS.png")
+TSsalinitySurface <- paste0 (destR, "5-SalSurfaceTS.png")
+TSchlorophyll <- paste0 (destR, "3-9_6-fluorescence-climatology.png")
+TS_tsprofile <- paste0 (destR, "2-9_6-TSprofile.png")
+
+
+## NOAA weather -- replace from rNOAA
+
+## signature data-set graphs
+# check that updates were successful!
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-fluorescence-anomaly.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png"
+  , to = destR, overwrite = TRUE)
+## State-of-the-bay
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=destR, overwrite=TRUE)
+#     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=destR, overwrite=TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy (from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png"
+  , to = destR, overwrite = TRUE)
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Fluorescence.png", to=destR, overwrite=TRUE)
+
+
+# email to:
+#   Dominic Hondolero <dominic.hondolero@noaa.gov>, Karyn DeCino <karyn.decino@noaa.gov>, Kris Holderied <kris.holderied@noaa.gov>, Paul Cziko <paul.cziko@noaa.gov>, Reid Brewer <reid.brewer@noaa.gov>, Ross Whippo <ross.whippo@noaa.gov>,
+# Katherine Schake <kschake@alaska.edu>, Kim Schuster <kkschuster@alaska.edu>, Lauren Sutton <lsutton7@alaska.edu>,
+# Arthur Kettle <arthur_kettle@fws.gov>
+
+
+rm (fl, flS, dest, destR, cS)
+```
+
+---
+title: "Monthly Kachemak Bay report, `{r} sSlot`"
+author:
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to NOAA/NCCOS Kasitsna Bay Lab
+  - name: "Kris Holderied"
+    affiliation:
+       - name: NOAA/NCCOS Kasitsna Bay Lab
+format: html  # or html, pdf or docx, email
+editor: visual
+
+# title-block-style: none
+# in terminal: quarto render --to pdf
+---
+
+## Summary
+Surface waters in the inner bay are noticeably freshening and 
+warming up, compared to what was seen in April (maximum: `{r} tsal$temSalR[2]` °C). At all depths, waters continue to be warmer and less saline than the seasonal mean, matching the criteria of a moderate marine heat wave. Chlorophyll concentrations
+quintupled since April and are now amongst the highest in the last four years. 
+
+<!-- 2-3 sentences -->
+
+## Conditions
+
+On `{r} dateAN`, Hans, Kris, and Martin conducted our monthly survey. It has been a fairly dry and sunny May so far, with only minor precipitation. Conditions during the survey were calm ( < beaufort 3). 
+<!-- `{r} crewT` --> 
+A complete set of up-to-date graphs can be found on the Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link). 
+<!-- ![Recent temperature and precipitation at Homer Airport, compared to their seasonal means.](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
+
+## Physical oceanography
+
+### Temperature
+
+Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth) in the inner bay to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Spit. Surface waters in the inner bay were over three K warmer than deep waters, whereas only little vertical differences in temperature or salinity were at the head of the bay, indicating a water column that is still vertically mixed (@fig-tSections_AB). 
+Only minor temperature differences were apparent between the north and south end of the mid-bay Transect 9  (@fig-tSections_T9), showing a gradual warming from deep to shallow waters, with fastest changes near the surface. In contrast to last month (and much of the winter), the waters in the far end of the outer bay, influenced by the Gulf of Alaska, were no longer noticably warmer than the main water body of Kachemak Bay, showing that we are in the spring transition between a relatively warmer ocean/cooler bay to a cooler ocean/warmer bay. Interestingly, satellite based measurements show that coastal waters of the Gulf of Alaska are already similarly warm as Kachemak Bay, whereas much of Cook Inlet and the adjacent continental shelf remain about 1 K cooler (@fig-SST_GOA).
+
+
+::: {#fig-tSections}
+![AlongBay Transect](./media/Section_T-AlongBay.png){#fig-tSections_AB}
+
+![T9 Transect, across-bay, Homer Spit to China Poot Bay](./media/Section_T-9.png){#fig-tSections_T9}
+
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
+
+Longitudinal and cross-sections of main parameters.
+:::
+
+
+![Sea surface temperature in the Gulf of Alaska, based on satelite remote sensing](media-2025-05/alaska.fc_2025-05-19.gif){#fig-SST_GOA}
+
+<!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
+
+After three years of water temperatures closely hugging the long-term mean, deep 
+water temperatures were warmer than the seasonal mean since February. The May 
+temperatures were about 0.5 K above the seasonal mean (@fig-TempDeep). 
+At the SWMP station in Homer Harbor, temperatures rose well above the seasonal mean already earlier, starting in December 2024 (@fig-SWMP-homerdeep-temp). Temperatures at the SWMP station were nearing the long-term mean again, however, in the bay, the whole water column was warmer than normal (@fig-TSprofile_T9). 
+
+![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
+
+![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
+
+
+![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
+
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+<!-- Add map with station numbers -- schematic -->
+
+
+### Salinity
+
+Salinity values in May ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth), near Gull Island and Seldovia, respectively. From the inner to the eastern half of the outer bay, a distinct lens of fresher (and now warmer) water was apparent (@fig-tSections_AB), reflecting increased freshwater runoff from precipitation and snow melt. This freshened surface layer was about twice as thick on the northern end of Transect 9, compared to the southern end (@fig-tSections_T9), which is consistent with freshwater originating from around the inner Kachemak Bay watershed, including Fox and smaller rivers. 
+
+The warm temperature anomaly was accompanied by a low salinity 
+anomaly in Kachemak Bay waters (@fig-SalDeep). Just as for temperature, the salinity anomaly was found throughout the water column, although it was slightly more pronounced at depth (@fig-TSprofile_T9).
+
+![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
+
+
+### Turbidity
+
+We did not encounter any high-turbidity surface water, indicative of glacial run-off. 
+As expected, inner bay waters were more turbid than outer bay waters. Increased
+turbidity near the surface in the inner bay may be due to a combination of sediments from terrestrial run-off and high concentrations of phytoplankton (@fig-tSections).
+
+
+## Biological conditions
+
+### Phytoplankton
+
+Phytoplankton were blooming! High concentrations of chlorophyll were observed with the
+CTD fluorometer between the surface and 30 m throughout the bay, with particularly high concentrations in the inner bay at around 25 m depth (@fig-tSections_AB). Concentrations at T9-6 were amongst highest at this station in the last four years.  
+
+![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (average from surface to 85 m depth)](./media/3-9_6-fluorescence-anomaly.png){#fig-chlorophyll}
+In our surface samples, Kim Schuster and Jasmine Maurer (KBNERR) found bloom-levels of *Chaetoceros debilis* and *Pseudo-nitzschia* spp. in the inner bay at AlongBay-06 and AlongBay-10, respectively. 
+
+
+### Zooplankton
+
+A weak deep scattering layer, mostly below 40 m was observed at many stations. We sampled this layer with an oblique at T9-6 (towed from 75 m to the surface). Lisa Spittler, from USFWS Alaska Maritime National Wildlife Refuge, kindly looked at the samples and identified species. The vast majority of individuals were calanoid copepods of different species and sizes. There were also three large euphausiids, several chaetognaths, barnacle nauplii, and zoea larvae (@fig-zoop).
+
+![Zooplankton sample from T9-6, showing e.g. the head of a *Euphausia pacifica*, copepods, and barnacle nauplii](./media-2025-05/IMG_4271s2.JPG){#fig-zoop}
+
+<!-- Backscatter? Species composition? -->
+
+### Wildlife
+
+Marine mammals of note included a harbor porpoise and a harbor seal in the inner bay near Homer Spit. A yellow-billed loon was in the outer bay near Seldovia, and a dark morph parasitic jaeger in the inner bay. Small groups of migratory red-necked phalaropes were present near convergences throughout the bay.
+
+
+### Mailing list
+Please email Martin at martin.renner@noaa.gov if you would like to be added to or removed from this mailing list. 

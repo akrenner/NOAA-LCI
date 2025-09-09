@@ -27,8 +27,13 @@
 ## clean-up: if doing binning by depth in R, here or in CTD_cnv-Import.R?
 
 
+## need to ensure that Seabird software is present
+## better: migrate to new python version:
+## https://github.com/Sea-BirdScientific/seabirdscientific
+## also consider: https://github.com/castelao/seabird (??)
 
-rm (list=ls())
+
+rm (list = ls())
 cWD <- getwd()
 setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
 sTime <- Sys.time()
@@ -41,11 +46,11 @@ print (sTime)
 #################################
 
 #################################
-conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2process", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
+conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2process", pattern = "con$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 # conF <- list.files("~/tmp/LCI_noaa/CTD-cache/allCTD/hex2test", pattern="con$", recursive=TRUE, full.names=TRUE, ignore.case=TRUE)
 
 ## path to psa files
-psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive=TRUE, full.names=TRUE)
+psaL <- list.files ("~/GISdata/LCI/CTD-processing/Workspace/SEABIRD-psafiles/", ".psa$", recursive = TRUE, full.names = TRUE)
 
 ## where to put results
 outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
@@ -53,17 +58,17 @@ outF <- "~/tmp/LCI_noaa/CTD-cache/CNV/"
 
 
 ## manually delete pre-existing outF?
-unlink (outF, recursive=TRUE) ## careful!
+unlink (outF, recursive = TRUE) ## careful!
 
 ## create directories and temp directories
 require (tools)
-dir.create(outF, recursive=TRUE)
+dir.create(outF, recursive = TRUE)
 ## create several temp dir that can be used from outside:
 # tLB <- paste0 ("~/tmp/ctd/cnv", 1:6)
 tLB <- paste0 ("~/tmp/LCI_noaa/CTD-cache/"
-               , c("1-converted", "2-filtered", "3-aligned", "4-looped"
-                   , "5-binned", "4r-looped", "5r-binned"))
-unlink (tLB, recursive=TRUE, force=TRUE)
+  , c("1-converted", "2-filtered", "3-aligned", "4-looped"
+    , "5-binned", "4r-looped", "5r-binned"))
+unlink (tLB, recursive = TRUE, force = TRUE)
 # names (tLB) <- paste0 ("t", 1:5)                      ## still needed?
 # tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 inD <- dirname (conF)
@@ -72,7 +77,7 @@ outF <- paste0 (dirname (outF), "/CNV") # windows idiosyncrasy to get full path
 
 
 # ## trouble shooting -- one file at a time
-if (0){
+if (0) {
   # conF <- gsub ("//", "\\", conF, fixed=TRUE)
   # file.path(conF, fsep = "\\")
   i <- 3
@@ -96,36 +101,37 @@ if (0){
 
 ## create and call batch files
 ## great if this could run in parallel -- probably not on Windows?
-for (i in 1:length (conF)){
-  ## for (i in 2){ # XXX
-  #sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
+for (i in seq_along(conF)) {
+  # for (i in 8){  # restore 2_edited_hex/2024 from local git and test
+  # sapply (1:length (tL), FUN=function (j){dir.create (tL [j], recursive=TRUE)})
   ## extend path name to include i? could then skip unlink (tL) at end of this loop
 
-  tL <- paste (tLB, i, sep = "/")
-  tLD <- paste (dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
+  tL <- paste(tLB, i, sep = "/")
+  tLD <- paste(dirname (tL), basename(tL), sep = "/") ## move this into loop to allow keeping intermediates?
 
-  for (j in 1:length (tL)){dir.create (tL [j], recursive=TRUE)}
+  for (j in seq_along(tL)) {dir.create(tL [j], recursive = TRUE)}
 
   ##
   ## need to add code here for new CTD !!
   ## does it report turbidity or attenuation??
   ##
-  if (length (grep ("\\.CON$", conF [i])) > 0){    # earliest con file excludes turbidity
-    psa <- psaL [grep ("SBEDataProcessing-Win32", psaL)]
-  }else if (length (grep ("4141", conF [i])) > 0){ # use separate psa to preserve attenuation/turbidity
-    psa <- psaL [grep ("4141", psaL)]
-  }else{
-    psa <- psaL [grep ("5028", psaL)]
+  if (length (grep ("\\.CON$", conF [i])) > 0) {    # earliest con file excludes turbidity
+    psa <- psaL [grep("SBEDataProcessing-Win32", psaL)]
+  } else {
+    ctdS <- gsub (paste0(dirname(conF [i]), "/SBE19plus_"), "", conF [i]) |>  ## isolate serial #
+      substr(1, 4)
+    psa <- psaL [grep(ctdS, psaL)]
+    rm (ctdS)
   }
 
   l1 <- paste0 ("DatCnv /i",  inD [i], "/*.hex /c", conF[i], " /o", tLD[1], " /p", psa [grep ("DatCnv", psa)], " #m")
-  l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o",tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
+  l2 <- paste0 ("Filter /i",   tLD[1], "/*.cnv ",              "/o", tLD[2], " /p", psa [grep ("Filter", psa)], " #m")
   #  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",outF, " /p", psa [grep ("Align", psa)] , " #m")
   ## the lines below would do the loop-edit, and binning by depth in SBEDataProcessing as well. This results about 10 files to
   ## fail (no data). Instead, do the loopedit within OCE (see CTD_cnv-Import.R). Bin-averaging by depth will run in CTD_cleanup.R
 
-  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o",tLD[3], " /p", psa [grep ("Align", psa)] , " #m")
-  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o",tLD[4], " /p", psa [grep ("Loop", psa)], " #m")
+  l3 <- paste0 ("AlignCTD /i", tLD[2], "/*.cnv ",              "/o", tLD[3], " /p", psa [grep ("Align", psa)], " #m")
+  l5 <- paste0 ("LoopEdit /i", tLD [3], "/*.cnv ",             "/o", tLD[4], " /p", psa [grep ("Loop", psa)], " #m")
   l7 <- paste0 ("BinAvg /i", tLD [4], "/*.cnv ",               "/o", outF,  " /p", psa [grep ("BinAvg", psa)], " #m")
   # l4 <- paste0 ("CellTM    /i", t3, "/*.cnv /c", conF [i], "/o", outF, " /p", psa [4], " #m")
   #  paste0 ("Derive /i", inD [i], "/*.cnv /c", conf [i], " /p", psa [6], " #m")
@@ -134,23 +140,62 @@ for (i in 1:length (conF)){
   # bT <- paste (l1, l2, sep = "\n")
   # bT <- paste (l1, sep = "\n")
 
-  if (.Platform$OS.type=="windows"){
+  ## call batch processing using old SBEbatch.exe
+  if (.Platform$OS.type == "windows") {
     write (bT, file = "~/CTDbatch.txt")
     # write (paste (l1, l2, sep = "\n"))## XXX TEST
 
     # efforts to suppress console output failed: invisible(), capture.output()...
-    x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait=TRUE, intern=TRUE)
+    x <- system (paste0 ("SBEbatch.exe ", getwd (), "/CTDbatch.txt"), wait = TRUE, intern = TRUE)
     ## cleanup
     # unlink (tL, recursive=TRUE, force=TRUE)  ## need this or next batch will get files from wrong CTD
     unlink ("~/CTDbatch.txt")
-  }else{
-    ## ensure that wine64 is installed
+  } else {
+    ## ensure that wine64 is installed -- or move to modern python version from GitHub
     write (bT, file = "~/Documents/CTDbatch.txt") ## is symlinked to .wine/dosdevices/c:/users/crossover/My\\ Documents
     x <- system (paste0 ("wine64 ~/.wine/dosdevices/c:/Program\\ Files \\(x86\\)/Sea-Bird/SBEDataProcessing-Win32/SBEBatch.exe"))
     unlink ("~/Documents/CTDbatch.txt")
   }
-}
+  if (0) {
+    ## new phython programs by Sea-Bird
+    require ("reticulate")
+    # os <- import ('os')
+    # use_condaenv ("base")
+    reticulate::install_python()  ## use only once?
+    if (virtualenv_exists("fathom")) {
+      use_virtualenv("fathom")
+    } else {
+      ## automatically install seabirdscientific using pip into virtual environment
+      virtualenv_create("fathom")
+      virtualenv_install("fathom", "seabirdscientific")
+    }
+    ## set up fathom processing
+    import (sbs)
+    import ("sbs.process.conversion", as = "conv")
+    import ("sbs.process.processing", as = "proc")
+    # import ("multiprocessing", "Pool")
 
+    # import sbs
+    # from sbs.process import contour
+    # import sbs.process.conversion as conv
+    # import sbs.process.processing as proc
+
+    ## parallel processing, see https://www.sitepoint.com/python-multiprocessing-parallel-programming/
+    py <- paste0 ("import sbs
+                  import sbs.process.conversion as conv
+                  import sbs.process.processing as proc
+
+                  from multiprocessing import Pool
+                  import time
+                  import
+
+                  ")
+    write (py, file = "script.py")
+    py_run_file ("script.py")
+    unlink ("script.py")
+
+  }
+}
 
 ## replicate loop-edit here in R.
 ## run BinAvg again in SEABIRD and/or in R.
@@ -158,25 +203,25 @@ for (i in 1:length (conF)){
 ## slow -- any way to parallelize this?
 ## 2023-05-19: 2nd call to read.ctd fails at i==929 (oce version 1.7-10)
 
-if (0){
+if (0) {
   ## fails in oce 1.7-3 due to changes in oce?
   ## simply stick to all SBE for now
   ## eventually replace SBE completely with python
   fNf <- list.files(tLB [3], ".cnv"
-                    , full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
+    , full.names = TRUE, ignore.case = TRUE, recursive = TRUE)
 
   ## for troubleshooting
   save.image ("~/tmp/LCI_noaa/cache/CTD_hexconversion.RData")
   # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/CTD_hexconversion.RData")
   require ("oce")
-  for (i in seq_along(fNf)){
+  for (i in seq_along(fNf)) {
     ## read all text and change digit-digit to digit -digit
     ## i <- 929 # has issue
     ## e.g. CTD-cache\2-filtered\2\2021_11-14_ab_s09_cast005_4141.cnv fails otherwise
     # read.table()
 
-    ctdF <- try (read.ctd(fNf [i]), silent=TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
-    if (class (ctdF) == "try-error"){
+    ctdF <- try (read.ctd(fNf [i]), silent = TRUE)  ## address NA warning. Problematic: i == 1058, 2017, and more
+    if (class (ctdF) == "try-error") {
       cat ("\n##\ntrouble reading ", i, fNf [i], "--trying to fix\n##\n\n")
       cT <- readLines(fNf [i])
       ## gsub: capture text and use it again -- line 283 of i==1058
@@ -185,22 +230,22 @@ if (0){
       ctx <- cT [dS:length (cT)]
       ctx2 <- gsub ("([0-9]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improve search term: only numbers, spaces, and signs in this line
       #   ctx2 <- gsub ("^([0-9 .-]+.[0-9]+)-([0-9]+.[0-9]+)", "\\1 -\\2", ctx)  ## improved search: only numbers, spaces, and signs in this line
-      cTf <- c (cT [1:(dS-1)], ctx2)
+      cTf <- c (cT [1:(dS - 1)], ctx2)
       ctdF <- read.ctd (textConnection (cTf))
-      rm (cT,ctx, ctx2, cTf, dS)
+      rm (cT, ctx, ctx2, cTf, dS)
     }
     cTrim <- try (ctdTrim (ctdF, method = "sbe"  ## this is the seabird method; some fail.
-                           # , parameters=list (minSoak=1, maxSoak=20)
+      # , parameters=list (minSoak=1, maxSoak=20)
     )  ## min/maxSoak=dbar (approx m)
-    , silent=TRUE)
-    if (class (cTrim) == "try-error"){
+    , silent = TRUE)
+    if (class (cTrim) == "try-error") {
       ctdF <- ctdTrim (ctdF, method = "downcast") # specify soak time/depth
       # could/should specify min soak times, soak depth -- min soak time=40s
       #    41, 2012_05-02_T3_S01_cast026.cnv fails at ctdTrim "sbe"
-    }else{
+    } else {
       ctdF <- cTrim
     }
-    write.ctd (ctdF, file=gsub ("3-aligned", "4r-looped", fNf [i]))
+    write.ctd (ctdF, file = gsub ("3-aligned", "4r-looped", fNf [i]))
     ## tried, but largely failed so far with
     ## vprr bin_cast / bin_calculate
     ## and/or oce::ctdDecimate
@@ -209,10 +254,10 @@ if (0){
   }
   ## move CNV final folder, as appropriate
   file.rename(gsub ("3-aligned", "4-looped", dirname(fNf [1]))
-              , gsub ("3-aligned", "4SBE-looped", dirname(fNf [1]))
-              )
+    , gsub ("3-aligned", "4SBE-looped", dirname(fNf [1]))
+  )
   file.rename(gsub ("3-aligned", "4r-looped", dirname(fNf [1]))
-              , gsub ("3-aligned", "4-looped", dirname(fNf [1]))
+    , gsub ("3-aligned", "4-looped", dirname(fNf [1]))
   )
 }
 rm (bT, i, j, tLD)

@@ -1,0 +1,215 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ?
+
+## clear the slate
+rm (list = ls())
+unlink ("MonthlyUpdates/media/", recursive = TRUE)
+
+
+## fetch data from notebook export and CTD processing
+load ("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+physOc$isoDate <- as.Date (physOc$isoTime)
+physL <- subset (physOc, isoDate == max (isoDate))
+## find survey, not just last date
+physL <- subset (physOc, as.numeric (format (physOc$isoTime, "%Y")) ==
+  max (as.numeric (format (physOc$isoTime, "%Y"))))
+physL <- subset (physL, as.numeric (format (physL$isoTime, "%m")) ==
+  max (as.numeric (format (physL$isoTime, "%m"))))
+rm (physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- physL$isoDate [1]
+
+sY = as.numeric (format (sDate, "%Y"))
+sM = month.name [as.numeric (format (sDate, "%m"))]
+sSlot = paste (sM, sY)
+
+crew = c("Hans", "Dom", "Martin") |> sort()  ## pull from notes
+crewT = paste0 (c (paste0 (crew [1:(length (crew) - 1)], collapse = ", "),
+  paste0 (crew [length (crew)])), collapse = ", and ")
+
+
+tsal <- with (physL, data.frame (temSal = c(min (Temperature_ITS90_DegC, na.rm = TRUE),
+  max (Temperature_ITS90_DegC, na.rm = TRUE),
+  min (Salinity_PSU, na.rm = TRUE),
+  max (Salinity_PSU, na.rm = TRUE)),
+stn = c(Match_Name [which.min (Temperature_ITS90_DegC)],
+  Match_Name [which.max (Temperature_ITS90_DegC)],
+  Match_Name [which.min (Salinity_PSU)],
+  Match_Name [which.max (Salinity_PSU)]),
+depth = c(Depth.saltwater..m. [which.min (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.min (Salinity_PSU)],
+  Depth.saltwater..m. [which.max (Salinity_PSU)])
+))
+tsal$stn <- gsub ("_", "-", tsal$stn)
+tsal$temSalR <- round (tsal$temSal, 1)
+tsal$depthT <- ifelse (tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
+
+
+## to-do:
+## tweak title layout : remove "author" and "affiliation"
+## add date?
+## add background graphics, NCCOS logo
+
+
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+## find files
+## construct mark-down code (all sections of the day, monthly / quarterly)
+dest = "media/CTDsections/sectionImages/"
+dir.create(dest, showWarnings = FALSE, recursive = TRUE)
+
+fl <- list.files(paste0 ("~/tmp/LCI_noaa/", dest), pattern = "*.png")
+# pick only transects from last survey; flexible as to monthly/quarterly
+flS <- grep (substr(sort (fl, decreasing = TRUE)[1], 1, 10), fl, value = TRUE)
+cS <- file.copy(from = paste0 ("~/tmp/LCI_noaa/", dest, flS),
+  to = dest, overwrite = TRUE
+)
+fl <- list.files (dest, pattern = "*.png")
+Tran <- substr (fl, 12, nchar (fl))
+Tran <- gsub (".png", "", Tran, fixed = TRUE)
+
+## generating strings for all transects -- not yet working
+#  iStrng <- paste0 ("![", Tran, "](", dest, fl, ")")
+iStrng <- paste0 (dest, fl)
+#  iStrng <- paste0 ("MonthlyUpdates/", dest, fl)
+transectSection1 <- iStrng [1]
+transectSection2 <- iStrng [2]
+
+try ({
+  transectSection3 <- iStrng [3]
+  transectSection4 <- iStrng [4]
+})
+
+
+
+## Chlorophyll
+dest = "media/CTDsections/time-sections/"
+dir.create(dest, showWarnings = FALSE, recursive = TRUE)
+flS <- list.files (paste0 ("~/tmp/LCI_noaa/", dest), pattern = "*.png")
+cS <- file.copy (from = paste0 ("~/tmp/LCI_noaa/", dest, flS)
+  , to = dest, overwrite = TRUE)
+TStempSurface <- paste0 (dest, "5-TempSurfaceTS.png")
+TSsalinitySurface <- paste0 (dest, "5-SalSurfaceTS.png")
+TSchlorophyll <- paste0 (dest, "3-9_6-fluorescence-climatology.png")
+TS_tsprofile <- paste0 (dest, "2-9_6-TSprofile.png")
+
+## NOAA weather -- replace from rNOAA
+
+rm (fl, flS, dest, cS)
+```
+
+---
+title: "Monthly Kachemak Bay report, `{r} sSlot`"
+author: 
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to Kasitsna Bay Lab, NCCOS, NOAA
+        address: 81 Sterling Highway
+        city: Homer
+        state: Alaska
+        postal-code: 99603
+
+format: email  # or html, pdf or word
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to pdf
+---
+
+
+email to:
+
+
+## Conditions
+
+<!-- On `{r} sDate`, `{r} crewT`  -->
+
+On 21 November 2024, Dom, Mike, and Paul went out to conduct our monthly oceanographic survey. This month  already had its first cold snap, Beluga Lake was frozen. A major storm at the Barren Islands, coinciding with one of the biggest high tides of the year, caused major coastal erosion along the Homer Spit four days prior to this survey. 
+
+ <!-- Consider link to annual/sa-precip-AP.png -->
+
+## Physical oceanography
+
+<!-- Current conditions, long-term anomalies: -->
+
+
+
+### Temperature
+
+<!-- add info on long-term normals for max and min recorded values? mean +/- SD?  -->
+
+Recorded water temperatures ranged from a minimum of `{r} tsal$temSalR[1]` $^\circ$C at station `{r} tsal$stn[1]` and depth of `{r} tsal$depth[1]` m to a maximum of `{r} tsal$temSalR[2]` $^\circ$C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth). Temperatures in the AlongBay transect showed some interesting patterns. The shallow waters of the eastern end of the inner bay were already fully mixed, showing virtually no difference between surface and deep water salinity, temperature, or density. A pocket of warmer water persisted in the deep waters of the western inner bay. By contrast, the temperatures in the outer bay were fairly uniform in depth and along the transect line. 
+
+More details of this pattern were revealed by the T9 transect, which covered the area of cold surface and warm bottom water seen in the deep parts of the inner bay. T9 showed that the shallower areas on both sides of the bay were mostly mixed, however, a a distinct surface front existed between the warmer south and the colder northern half of T9, jumping by as much as a full 1 $^\circ$C between two stations (100 m apart), capturing almost the entire temperature range in the entire bay! At depth, the same front was more diffuse and farther north, the depth profile of it forming a S-shaped pattern. 
+
+### Salinity
+
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth). Safe for a tiny surface layer, there were no longer remaining signs of the summer fresh-water lens in the inner bay. Presumably, the cold air temperatures have cut-off most fresh-water influx by now, allowing the water column to mix more freely. We still see a weak horizontal gradient between saltier waters in the outer and fresher waters in the inner bay. No sharp fronts are apparet, however. Density patterns largely matched what can be seen in the salinity profile, showing a diffuse gradient from deep outer bay to shallow inner bay waters. 
+
+
+### Turbidity
+
+Mirroring the pattern of salinity, there is a diffuse gradient of turbidity from more turbid in the inner bay to clear in the outer bay. Tracing inner-bay waters, just like salinity and turbidity, we also find a tongue of more turbid water layered over clearer deep waters in the middle of the AlongBay transect. 
+
+An odd pattern of oxygen concentration was found along T9: Concentrations were high at the surface, low at 10 m, and higher again below 15 m. Close inspection of the AlongBay transect showed the same pattern, albeit not that clearly, due to the different scaling of the color gradations. 
+
+## Biological conditions
+
+### Phytoplankton
+
+Chlorophyll concentrations were generally low with little patterns discernable. Levels were slightly higher in the outer bay between 0 and 50 m depth, but overall concentrations were insignificant. 
+
+<!-- ![Chlorophyll concentration](./%60%7Br%7D%20TSchlorophyll%60) -->
+
+<!-- ### Zooplankton -->
+
+<!-- Backscatter? Species composition? -->
+
+<!-- ### Wildlife -->
+
+
+
+## Long-term trends at T9-6
+
+Temperature and salinity at T9-6 remain close to the long-term mean (2012-present), both in shallow and in deep water layers (Figure 2). 
+
+## Figures
+
+::: {#fig-elements layout-ncol="1"}
+![AlongBay Transect](./media/CTDsections/sectionImages/2024-11-21 T-AlongBay.png)
+
+![T9 Transect, across-bay, Homer Spit to Neptune Bay](./media/CTDsections/sectionImages/2024-11-21 T-9.png)
+
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/CTDsections/sectionImages/2024-09-26 T-4.png) -->
+
+Longitudinal and cross-sections of main parameters.
+:::
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+
+::: {#fig-elements layout-ncol="1"}
+![](./media/CTDsections/time-sections/2024-11_2-9_6-TSprofile.png)
+
+Long-term temperature and salinity profiles of T9-6 and their respective anomalies.
+:::
+
+<!-- Add map with station numbers -- schematic -->

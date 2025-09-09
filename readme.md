@@ -13,4 +13,4 @@ run them locally, it may be necessary to the set working directory or
 adjust the folder structure, to reflect location of these scritps. 
 
 A complete documentation of the workflow, from sampling to analysis, can be 
-found in the file "SamplingManual.Rmd". 
+found in the file "Manual.md". 

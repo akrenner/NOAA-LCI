@@ -9,6 +9,9 @@ keywords: NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrient
 ---
 
 
+## THIS DOCUMENT HAS BEEN SUPERSCEDED BY THE GOOGLE-DOC AT /SHARED DRIVE/KASISTNA BAY LAB/01-Administration/SOPs-Original_Files/CTD-Recurring_Oceanographic_Survey-manual-Martin
+
+
 [//]: compile this markdown document to html by issuing something like:   pandoc -s Manual.md -o manual.rtf
 
 
@@ -17,7 +20,7 @@ keywords: NOAA, NCCOS, Kasitsna Bay Lab, Kachemak Bay, Cook Inlet, CTD, nutrient
 NOAA's Kasitsna Bay Lab, in collaboration with the Kachemak Bay Estuarine Research Reserve, has been 
 conducting oceanographhic and ecological long-term monitoring in Kachemak Bay since 2012. This document 
 is based on previous versions compiled by Kim Schuster and James Schloemer. Please direct question to 
-Martin Renner martin.renner@noaa.gov or Kris Holderied  kris.holderied@noaa.gov.
+Martin Renner martin.renner@noaa.gov.
 
 "Printed on `r format(Sys.time(), '%d %B, %Y')`"
 
@@ -32,10 +35,10 @@ Prior to sampling, the CTD status must be checked to ensure that there is suffic
 MMDDYY=090123
 HHMMSS=090000
 ```
-To change the date, the time command has to be issued as well. 
+To change the date, the time command has to be issued as well, and visa-versa. We use LOCAL TIME, so it is important to adjust times to daylight-savings-time/standard time. 
 - vbatt: battery must be greater than 12 V. If lower, change batteries.
 - vlith: replace lithium battery if vlith is < 7 (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).
-- casts: CTD stores up to 299 casts. If approaching 200 casts, download all data and clear CTD memory by clicking 'Init Log' button. DO NOT click this button until all data has been downloaded and confirmed to be adequate!!! 
+- casts: CTD stores up to 299 casts. It is advisable to clear the CTD memory after each survey once it has been confirmed that all data has been successfully downloaded. To clear CTD memory, click the 'Init Log' botton. At the very latest, memory should be cleared when approaching 200 casts in memory. 
 - mode: MUST be 'profile'. 
 Screenshot of Seaterm v1.59 ![Alt](manual/SeaTerm.PNG "Seaterm")
 Document CTD time, date, and voltages in the FileMaker database (layout: CTDstatusLog). 
@@ -45,7 +48,7 @@ Charge iPad the night before (USB-C charger in blue bag). Also check that there'
 
 FileMaker database: sync to iPad. Write-down last ctd-cast number. Sync-ing procedure: email latest version of FileMaker database to kasitsnabay@icloud.com. Then open Mail.app on iPad, download database, and open directly in FileMaker (replacing old copy). -- last updated on 2023-08-30, MR.
 
-### staging gear Have the following items handy to bring to the boat:
+### Staging gear Have the following items handy to bring to the boat:
 - note book
 - pencils
 - CTD
@@ -72,7 +75,7 @@ FileMaker database: sync to iPad. Write-down last ctd-cast number. Sync-ing proc
 
 ## Monthly and quarterly sampling
 
-Monthly samplinng covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count at each station. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton (see below). Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water samples: XXX
+Monthly sampling covers transects AlongBay and T9. CTD casts at each station. Time permitting, also do an eBird point count at each station. At stations AB-3, AB-6(=T9-6), and AB-10 also sample nutrients, chlorophyll, and phytoplankton (see below). Quarterly sampling extends AlongBay transect to T7-22 and also covers T6-3, AB-POGR, and AB-POPT and adds Transect 4. Additional water sample at T6-3
 
 ### CTD
 Verbalize turning on the CTD at the beginning of each cast. Lower the instrument to about 3m, raise it up to the surface (leaving the water intake port well submerged) and let it soak for at least 1 minute (use stop-watch). The lower it to about 5 m above the sounded depth (avoid touching the bottom). On retrieving the instrument, verbalize switching it off.
@@ -81,7 +84,7 @@ Verbalize turning on the CTD at the beginning of each cast. Lower the instrument
 Niskin bottle water samples as well as bucket surface water samples are taken at pre-determined stations. XXX details?
 
 ### Phytoplankton
-Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the ouside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical. Label bottle with date, Transect and station, and amount of water filtered (usually 40 l).
+Pour 10 l, 20 l, or 40 l (depending on season) of seawater through the 20 μm, 20 cm diameter plankton net. Wash the outside of net down with ambient sea water Collect samples in white plastic bottles. Preserve with 8 drops of Lugal's solution, of practical. Label bottle with date, Transect and station, and amount of water filtered (usually 40 l).
 
 ### Notes
 Take notes on paper, as before -- at a minimum, date, time, transect, and station numbers; as back-up. 
@@ -194,10 +197,11 @@ There are two ways to go about downloading hex files from the CTD: interactively
 
 The following instructions work under Windows 11. Install the following software: 
 <!--- [##]: Install required software. Estimated time: --->
-- R, version 4.0.0 or later https://cran.r-project.org/bin/windows/base/release.html
+- R, version 4.0.0 or later https://cran.r-project.org/bin/windows/base/release.html, now also available directly from 'Software Center', if you have a NOAA laptop.
 - git https://git-scm.com/download/win
-Both of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use a IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
-In addition, a number of add-on R packages, data-files, and folder-structure are required. These will be automatically set-up with the instructions given below. Due to the required downloads, the initial run may take considerably longer than subsequent runs. 
+- Python, https://www.python.org/downloads/
+All of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use an IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
+In addition, a number of add-on R packages, data-files, Python libraries, and folder-structure are required. These will be automatically set-up with the instructions given below. Due to the required downloads, the initial run may take considerably longer than subsequent runs (package downloads could take hours). 
 
 Open R and paste the following lines of code into the R console to pull CTD data, configuration files, and put them in the appropriate places. Location of the data is hard-coded, so the scripts can find them. 
 ````
@@ -212,11 +216,20 @@ setwd ("~/GISdata/")
 system ("git clone https://github.com/akrenner/LCI.git")
 renv::restore()
 ````
-Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.  
+Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.
+
+To process CTD, install SEABIRD's python program with pip. Open a git shell and enter: 
+````
+# on unix
+python3 -m pip install seabirdscientific
+# on windows
+py -m pip install seabirdscientific
+````
 
 Finally, some public datasets are needed, not all of which can be downloaded automatically. To produce the figures for the State of Kachemak Bay Report (scripts starting with 'annual_...R'), first download the SWMP data from CDMO: https://cdmo.baruch.sc.edu/get/landing.cfm (Advanced Query System -> Launch -> Choose Zip Files. Select "Kachemak Bay, AK" (leave all stations selected.). Click "Submit locations and proceed to next step". Select from "2001" and To: <current year> and click "Get Files". Once you have the zip file, place it in `~/GISdata/LCI/SWMP/` on your harddrive. This process should be repeated about once a year (you can simply add to the zip files in the SWMP folder). 
 
-### macOS or gnu/linux
+### seabird processing and cross-platform compatibility
+The established workflow relies on Windows-only SBE software from SEABIRD. However, their latest version is now written in Python and should run under MacOS, gnu/linux, and other unix-like OSs. However, this workflow still needs to be implemented and tested. For now, we're using the windows-only SEABIRD software. 
 
 All R code for this project is cross-platform compatible. While it is possible to run all of this on a macOS or gnu/linux platform as well (and ultimately on the WorkSpace), there are still major hurdles. The main stumbling block is processing hex-files using seabird, Inc. software, which is only available as a windows executable. It is possible to run this software on macOS or gnu/linux platforms, either within a virtual environment, like VirtualDesktop, or using wine. 
 <!---
@@ -228,8 +241,6 @@ If not present already, install homebrew: https://brew.sh/ Install wine, using h
 [//]: # show this code, but do not execute -- how?
 Configure wine setup in your user account: provide access to the relevant folders.
 To create a new pure 32-bit prefix, you can run: \$ WINEARCH=win32 WINEPREFIX=\~/.wine32 winecfg
-
-Copy seabird executables.
 --->
 
 ## Acknowledgments: 
