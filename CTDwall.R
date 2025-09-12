@@ -7,7 +7,7 @@
 rm(list = ls())
 ## get bathymetry, standard colors, and data ranges
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-base::load("~/tmp/LCI_noaa/cache/ctdwallAnomalies.RData")   # from CTDwall_anomalies.R
+poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")   # from CTDwall_normals.R
 
 
 test <- TRUE
@@ -151,31 +151,6 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
       layoutM <- matrix(1:16, 4, byrow = TRUE)
       omText <- sampleTimes
     }
-
-
-    ## calculate climatology and anomaly
-    ## ------------- climatology -------------
-    fixt <- function(txt) {substr(tolower(as.character(txt)), 1, 3)}
-    if(0) {  ## -- not yet ready
-
-      x <- physOcY [, which(fixt(names(physOcY)) == fixt(oVarsF[ov]))]
-      station <- factor(physOcY$Match_Name)
-      physOcC <- aggregate(x ~ smplIntvl + station + Depth.saltwater..m.
-        , physOcY, FUN = mean, na.rm = TRUE)
-      rm(x, fixt, station)
-
-      poClimat <- climatologyCTDcast(physOcY, timeVar = "smplIntvl")
-
-      poClimat$lon <- stnT$Lon_decDegree [match(physOcC$station, stnT$Match_Name)]
-      poClimat$lat <- stnT$Lat_decDegree [match(physOcC$station, stnT$Match_Name)]
-    }
-    ### may need to make separate functions!
-
-
-    ## --------------- anomaly ---------------
-
-
-    ## ---- end of climatology and anomaly ---
 
 
     pdf(paste0("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
