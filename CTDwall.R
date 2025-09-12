@@ -7,7 +7,7 @@
 rm(list = ls())
 ## get bathymetry, standard colors, and data ranges
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")   # from CTDwall_normals.R
+# poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")   # from CTDwall_normals.R
 
 
 test <- TRUE
@@ -309,10 +309,8 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
             # , zbreaks=zB # better?, slower interpolation
             # , custcont = pretty(oRange [ov,], 20)  ## may often fail? -- no contours in range
             , ylim = c(max(physOcY$Depth.saltwater..m., na.rm = TRUE) + 5, 0)  ## need to fix CTDwall-setup.R first
-            , showBottom = FALSE
-            , drawPalette = FALSE
-            , custcont = cCont
-            , bathy = bathy_sec
+            , drawPalette = FALSE, custcont = cCont, bathy = bathy_sec
+            , legend.text = oVars [ov]
           )
           if(test) {   ## for QAQC: add station labels to x-axis
             dist <- unique(xCo[['distance']])

@@ -6,7 +6,6 @@
 
 
 ## priorities to fix
-## fix parameters other than temp, salinity and density
 ## improve monthly mean algorithm (circular seasonal mean)
 ## elsewhere: in CTD_cleanup / QAQC (merge those!): calc turbidity from loess function of beamTransmission~beamAttenuation
 ## review all XXX
@@ -35,16 +34,17 @@ Seasonal <- function(month) {           # now using breaks from zoop analysis --
 #   XXX could do this better, using circular annual means, as elsewhere
 
 # min for a stable mean:
-nMin <- 3
+nMin <- 2
+current_year <- format(Sys.Date(), "%Y")
 
 
 ## output: as poAll, but with month as factor
 poAll$month <- as.numeric(format(poAll$isoTime, "%m"))
 poAll <- dplyr::select(poAll, - Nitrogen.saturation..mg.l.)
 # poAll$logPAR <- log(poAll$PAR.Irradiance)      ## XXX QAQC -- can PAR ever be negative?
-oVars  <- oVars [-which(oVarsF == "logPAR")]       ## should have to -- fix in CTDsectionFcts.R!
+oVars  <- oVars [-which(oVarsF == "logPAR")]       ## shouldn't have to -- fix in CTDsectionFcts.R!
 oVarsF <- oVarsF[-which(oVarsF == "logPAR")]
-
+oCol3$logPAR <- NULL
 
 ## XXXX move forward to CTD_cleanup.R!!!       ================================= XXX
 poAll$Match_Name <- as.character(poAll$Match_Name)
@@ -58,9 +58,12 @@ oM <- as.matrix(poAll [, which(names(poAll) == "Temperature_ITS90_DegC")
 
 ctdAgg <- function(df = poAll, FUN=mean, ...) {
   aggregate(oM ~ Match_Name + month + Depth.saltwater..m., data = df,
+    # subset = format(isoTime, "%Y") != current_year,       ## exclude current year -- a good idea? XXX
     FUN = FUN, ...) |>
     dplyr::arrange(Match_Name, month, Depth.saltwater..m.)
 }
+
+
 
 poNorm <- ctdAgg(df = poAll, FUN = mean, na.rm = TRUE)
 poN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) })
@@ -92,6 +95,11 @@ if(0) {
   # plot (beamAttenuation~beamTransmission, poNorm) , log="y")
 }
 poNorm$turbidityIdx <- predict(turbM, newdata=poNorm$beamAttenuation)
+
+## export this model to all CTD data -- move forward into ctd processing?? -- don't include in published files XXX
+poAll$turbidity <- ifelse(is.na(poAll$beamAttenuation),
+  predict(turbM, newdata=poAll$beamAttenuation),
+  poAll$beamAttenuation)
 rm(turbM)
 
 
@@ -131,6 +139,7 @@ saveRDS(poAllan, file="~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 
 
 
+
 #####################################
 ## plot normals of T9 and AlongBay ##
 #####################################
@@ -148,61 +157,61 @@ dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 ## could do this for T9 and AlongBay. Not enough data for the other transects
 ## make it a poster?
 
-
 ## 12 months plot in a circle/rectangle, map in the middle
-## cause of problems, complaint about order of x and y: showBottom=TRUE
-
-
-
 posterP <- TRUE
 # posterP <- FALSE
 
-# for(h in seq_along(levels(poNorm$Transect))) {
-#  j <- levels(poNorm$Transect)[h]
-for (j in c("AlongBay", "9")){
+levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
+oVarsDFname <- colnames(oM)[c(1, 2, 3, 8, 7, 4, 11)] ## dirty hack
+# print(cbind(oVarsF, oVarsDFname, colors=names(oCol3)[seq_along(oVarsF)]))
+
+
+
+# for(h in seq_along(levels(poAll$Transect))) {
+#  j <- levels(poAll$Transect)[h]
+for (j in c("AlongBay", "9", "ABext")){
   # j = "AlongBay"
   # j = "9"
+  # j = "ABext"
   ## build section
 
   stn$Line <- flexTransect(j, stn)
-  poNorm$Transect <- factor(stn$Line [match(poNorm$Match_Name, stn$Match_Name)])  ## needed?
+  poNorm$Transect <- factor(stn$Line [match(poNorm$Match_Name, stn$Match_Name)])  ## needed!
   phT <- subset (poNorm, Transect == j)  ## Field name "Transect" is required!
   ## calc ranges
   zR <- sapply(nC, function(i) {range(phT[i], na.rm = TRUE)})
   colnames(zR) <- colnames(oM)
 
 
-
-
-  oVarsDFname <- colnames(oM)[c(1, 2, 3, 8, 7, 4, 11)] ## dirty hack
-
   # for(ov in seq_along(colnames(oM))){
   for (ov in seq_along(oVarsF)) {
     # ov=2
 
-
-#    phT <- subset (phT, !is.na(phT[,which(names(phT)==colnames(oM)[ov])])) XXX needed?
-
-
     # bathy_sec <- sectionize(phT) |>
-    #   KBsectionSort(transect = j) |>
     #   get_section_bathy()
 
+    ## start graphics device
     if(posterP) {
-      pdf(paste0(normDir, "annualCycle_", j, oVarsF[ov], ".pdf"),
-          height = 11, width = 8.5)
+      # pdf(paste0(normDir, "T_", j, "_", oVarsF[ov], ".pdf"),
+      #     height = 11, width = 8.5)
+      png(paste0(normDir, "T_", j, "_", oVarsF[ov], ".png"),
+          height = 11*300, width = 8.5*300, res=300)
       ## make a ring layout for the annual cycle
-      layout(matrix(c(1:3, 12, 13, 4, 11, 13, 5, 10, 13, 6, 9:7), ncol = 3, byrow = TRUE))
+#       layout(matrix(c(1:3, 12, 13, 4, 11, 13, 5, 10, 13, 6, 9:7), ncol = 3, byrow = TRUE))
+      layout(matrix(rev(c(12, 1:2, 11, 14, 3, 10, 13, 4, 9, 15, 5, 8:6)), ncol = 3, byrow = TRUE))  ## winter on top
       # layout.show(n=13)
     } else {
       png(paste0(normDir, j, colnames(oM)[ov], "%02d.png")) ## for testing
     }
     for(k in seq_len(12)) {
-      # k = 4
-      xCo <- subset (phT, month == k)
-      if(length (levels(factor(xCo$Match_Name))) > 2) { # stop(paste(ov, j))}
-        xCo <- subset (phT, month == k) |>
-          sectionize()  ## includes KBsectionSort
+      # k = 8
+      xCo <- subset (phT, month == k &
+                       !is.na(phT[,which(names(phT) == oVarsDFname[ov])])  ## weed out NAs
+      )
+      if(length (levels(factor(xCo$Match_Name))) > 2) {
+        xCo <- sectionize(xCo)
+        # keep long one for map
+        if (k == 7) {xCoM <- xCo} else if(!exists("xCom")) {xCom <- xCo}
 
         #         dplyr::filter(!is.na(colnames(oM)[ov])) |>  ## THAT's NEEDED, BUT NOT WORKING AS-IS!! -- now under ov=2
         #|>
@@ -212,30 +221,59 @@ for (j in c("AlongBay", "9")){
 
         bathy_sec <- get_section_bathy(xCo)
 
-        dP <- ifelse(k == 3, TRUE, FALSE)
         pSec(xCo
              , N=oVarsF[ov]
              # , colnames(oM)[ov]
              , ylim = c(max(phT$Depth.saltwater..m.)+5, 0)
-             , drawPalette = dP
-             , zCol = oCol3[[ov]]
-             , zlim = zR[,which(colnames(oM) == oVarsDFname[ov])], zbreaks = NULL    ## getting range correct was the hold-up
-             , bathy = bathy_sec, label = oVars [ov]
+             , drawPalette = FALSE, zCol = oCol3[[ov]]
+             , zlim = zR[,which(colnames(oM) == oVarsDFname[ov])]
+             , zbreaks = NULL    ## getting range correct was the hold-up
+             , bathy = bathy_sec, legend.text = oVars [ov]
+             , custcont=5, labcex = 0.8
         )
-        # plot(xCo, which=oVarsF[ov], showBottom = FALSE, ztype = "image"
-        #      , zcol = oCol3[[ov]], zlim = zR)
       } else {
         plot(1:10, type="n")
-       }
-       mtext(month.name[k], 3, line = 0)
+        warning(paste(ov, j, oVarsF[ov]))
+      }
+      mtext(month.name[k], 3, line = 0.5)
     }
     if(posterP) {
-      ## map, NCCOS logo
-      oce::plot(xCo, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
+
+      ## map
+      oce::plot(xCoM, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
+# XX      mtext(paste0("Transect: ", j), line = -2)
+      rm(xCoM)
+
+      ## NCCOS-KBL logo
+      if(!exists("KBL")){
+        KBL <- png::readPNG("pictograms/KBL-Informal-NCCOS_tag_below_22hr.png")
+        im_h <- nrow(KBL); im_w <- ncol(KBL)
+        }
+      plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
+        , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n", bty = "n")
+      rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
+
+      ## color scale bar
+      nCol <- 100
+      t.ramp <- oCol3[[ov]](nCol)
+      yL <- 1.5
+      #      par(mar=c(10, 1,3,1))
+
+      bp <- barplot(rep(1, nCol), axes = FALSE, space = 0, col = t.ramp
+                    , border = NA, ylim = c(-10, yL)  # ylim to make bar narrower, less high
+      )
+      title(main = oVars [ov], cex = 3, line = 0.5)
+      lVal <-  pretty(c(oRange [ov, 1], oRange [ov, 2]))
+      axis(1, at = (lVal - oRange [ov, 1]) / (oRange [ov, 2] - oRange[ov, 1]) * nCol
+           , labels = lVal, lwd = 0, line = -10.3, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
+      ## main title:
+      mtext(paste0("Transect: ", j), side = 1, line = -3, cex = 1.5)
+
     }
-    dev.off()
+    dev.off(); cat("Transect:", j, oVarsF [ov], "\n")
   }
 }
+rm(KBL, im_h, im_w)
 
 
 

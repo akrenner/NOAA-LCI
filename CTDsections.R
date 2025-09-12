@@ -49,13 +49,13 @@ for(sv in iX) {
 
   ## standardize some measures across all casts off one survey -- from CTDwall-setup.R
   oRangeS <- t(sapply(c("Temperature_ITS90_DegC"
-    , "Salinity_PSU"
-    , "Density_sigma.theta.kg.m.3"
-    , "turbidity" # , "logTurbidity"
-    , "Chlorophyll_mg_m3"
-    , "logPAR"     # , "PAR.Irradiance" ## XXX -- all NAs
-    , "Oxygen_umol_kg" # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-    , "bvf"
+                        , "Salinity_PSU"
+                        , "Density_sigma.theta.kg.m.3"
+                        , "turbidity" # , "logTurbidity"
+                        , "Chlorophyll_mg_m3"
+                        , "logPAR"     # , "PAR.Irradiance" ## XXX -- all NAs
+                        , "Oxygen_umol_kg" # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
+                        , "bvf"
   )[keepV]
   , FUN = function(vn) {range(s [, which(names(s) == vn)], na.rm = TRUE)
   }))
@@ -113,11 +113,11 @@ for(sv in iX) {
 
       if(indivPlots) {
         fN <- paste0(outD, levels(poAll$survey)[sv]
-          , " T-", levels(s$Transect)[tn], "_%02d.png")
+                     , " T-", levels(s$Transect)[tn], "_%02d.png")
         png(fN, height = 8.5 * 200, width = 11 * 200, res = 300)
       } else {
         fN <- paste0(outD, levels(poAll$survey)[sv]
-          , " T-", levels(s$Transect)[tn], ".png")
+                     , " T-", levels(s$Transect)[tn], ".png")
         png(fN, height = 8.5 * 200, width = 11 * 200, res = 300)
       }
       rm(fN)
@@ -139,7 +139,7 @@ for(sv in iX) {
       for(ov in seq_along(oVarsF)) {
         ## ov = 1
         if(ov %in% c(3,5)) { # fix scale for chlorophyll, O2, ## logPAR ## add buoyancy(8)?
-                              # turbidity as well??
+          # turbidity as well??
           zR <- oRange [ov, ]
         } else {
           zR <- oRangeS [ov, ]
@@ -162,13 +162,13 @@ for(sv in iX) {
           # ## end of testing
 
           pSec(xCo
-            , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
-            , zCol = oCol3 [[ov]]
-            #    , zCol = oColF(ov)
-            #     , zcol = oCol2(ov, 10)  ## doesn't work with zlim
-            , zlim = zR, zbreaks = NULL # change this for salinity; others?
-            , custcont = 7, labcex = 0.6
-            , bathy = bathy_sec, label = oVars [ov]
+               , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
+               , zCol = oCol3 [[ov]]
+               #    , zCol = oColF(ov)
+               #     , zcol = oCol2(ov, 10)  ## doesn't work with zlim
+               , zlim = zR, zbreaks = NULL # change this for salinity; others?
+               , custcont = 7, labcex = 0.6
+               , bathy = bathy_sec, legend.text = oVars [ov]
           )
           rm(zR)
         }
@@ -181,49 +181,49 @@ for(sv in iX) {
           if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
             mt <- ""
           } else {
-              mt <- "T"
+            mt <- "T"
           }
           mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
-            , side = 3, outer = TRUE, line = -0.9); rm(mt)
+                , side = 3, outer = TRUE, line = -0.9); rm(mt)
         }
       } # end of loop covering all variables measured
       if(!indivPlots) {
         if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
           mt <- ""
         } else {
-            mt <- "T"
+          mt <- "T"
         }
         mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
-          , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm(mt)
+              , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm(mt)
         if(0) {  ## map for all Transects
           plot(xCo  ## large LCI map -- trouble to keep range constant -- start from scratch??
-                , which = 99
-                , coastline = "coastlineWorldFine"
-                , showStations = TRUE
-                , gird = TRUE
-                , map.xlim = range(poAll$longitude_DD) # +c(-0.5, 0.5)
-                # , map.ylim = range(poAll$latitude_DD)+c(-0.3, 0.3)
-                ## , map.xlim = c(-154, -151)
-                ## , map.ylim = c(57.5, 60.1)
-                , clatitude = mean(range(poAll$latitude_DD)) # 59.4
-                , clongitude = mean(range(poAll$longitude_DD)) # -152
-                , span = 200
-                # , showSpine = TRUE
+               , which = 99
+               , coastline = "coastlineWorldFine"
+               , showStations = TRUE
+               , gird = TRUE
+               , map.xlim = range(poAll$longitude_DD) # +c(-0.5, 0.5)
+               # , map.ylim = range(poAll$latitude_DD)+c(-0.3, 0.3)
+               ## , map.xlim = c(-154, -151)
+               ## , map.ylim = c(57.5, 60.1)
+               , clatitude = mean(range(poAll$latitude_DD)) # 59.4
+               , clongitude = mean(range(poAll$longitude_DD)) # -152
+               , span = 200
+               # , showSpine = TRUE
           )
         } else {  ## focus on 2025+ monitoring transects: AB-ext, T9, T4
           plot(xCo, which = 99, coastline = "best", grid = TRUE,
-             showStations = TRUE, span = 50,
-             # map.xlim = c(-152.2, -151.0), # range(poAll$longitude_DD),
-             map.ylim = c(59.2, 59.75),
-             clatitude =  59.4,    # mean(range(poAll$latitude_DD))
-             clongitude =  -151.8 # mean(range(poAll$longitude_DD))
-               )
+               showStations = TRUE, span = 50,
+               # map.xlim = c(-152.2, -151.0), # range(poAll$longitude_DD),
+               map.ylim = c(59.2, 59.75),
+               clatitude =  59.4,    # mean(range(poAll$latitude_DD))
+               clongitude =  -151.8 # mean(range(poAll$longitude_DD))
+          )
         }
       } else {  ## omit this map -- need the space
         plot(xCo, which = 99
-          , coastline = "coastlineWorldFine"  ## add hi-res topography?
-          , showStations = TRUE, showStart = TRUE, gird = TRUE
-          # , col = "red"
+             , coastline = "coastlineWorldFine"  ## add hi-res topography?
+             , showStations = TRUE, showStart = TRUE, gird = TRUE
+             # , col = "red"
         )
         if (0){  ## omit this map -- need the space
           plot (xCo
@@ -237,22 +237,25 @@ for(sv in iX) {
         }
         dev.off()
       }
+      graphics.off()
     }
+    # dev.off()
   }
 }
+#graphics.off()
 
 rm(iY, iX, s, sv, tn, outD)
 
 
 
 
-require("parallel")
+# require("parallel")
 if(.Platform$OS.type == "unix") {
   ncores = 12
 } else {
   ncores <- 1
 }
-# mclapply(X=iX, poAll=poAll, mc.cores=ncores, FUN=function(sv,...){
+# parallel::mclapply(X=iX, poAll=poAll, mc.cores=ncores, FUN=function(sv,...){
 # })
 
 

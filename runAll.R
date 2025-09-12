@@ -115,14 +115,30 @@ source("CTD_DataAvailability.R")
 
 
 ## the Wall
-source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+
+
+## move CTDwall-setup.R forward, use some output in CTD_timeseries.R ?
+## use CTDwall_normals.R in CTD_timeseries.R ?
+
 source("CTDwall-setup.R")
+source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
 source("CTDwall_normals.R")
 source("CTDwall.R")
 # source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
 # source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+
+## only for SoB? -- mv down?
+## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
+
+
+
+sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
+## State of the Bay Report
+source("AnnualStateOfTheBay.R")
+sink()
+
 
 
 ## 2017 contract
@@ -161,20 +177,6 @@ if(0) { # Dec 2019 seasonality
   source("consensusTree.R")
 }
 sink()
-
-
-
-## only for SoB? -- mv down?
-## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
-
-sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
-## State of the Bay Report
-source("AnnualStateOfTheBay.R")
-sink()
-
-
-## how to execute report?
-# source("MonthlyUpdates/MonthlyTemplate.qmd")
 
 
 ## one-offs

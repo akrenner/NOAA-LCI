@@ -8,6 +8,8 @@
 ## load data
 ## start with file from dataSetup.R
 rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
+# load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  ## ??
+
 require("oce")
 require("RColorBrewer")
 require("tidyverse")

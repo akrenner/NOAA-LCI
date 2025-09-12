@@ -159,8 +159,8 @@ addBathy <- function(bathysection) {
 
 
 
-pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
-  labcex = 1.0, plotContours = TRUE, bathy = NULL, label = NULL, ...) {
+pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
+  labcex = 1.0, plotContours = TRUE, bathy = NULL, legend.text = NULL, ...) {
   ## hybrid approach -- still use build-in plot.section(for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -169,13 +169,14 @@ pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
     plot(1:10, type = "n")
   } else {
     s <- try(plot(xsec, which = N
-      , showBottom = showBottom
+      , showBottom = FALSE
       , axes = TRUE
       , stationTicks = TRUE
       , showStations = TRUE
       , xtype = "track"
       , ztype = "image"
       , zcol = zCol
+      , legend.text = legend.text
       , ...
     ))
     ## add bathymetry here, then add legend?
@@ -183,10 +184,8 @@ pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
       addBathy(bathy)
     }
   # re-write legend obscured by bathymetry -- no effect somehow :(
-  # if(class(label) != "NULL") {
-  #   legend("bottomright", legend = label, bg="white", bty = "o") ## plotted off-screen? bg has no effect -- bug?
-  # } else {
-  #   legend("bottomright", legend = label, bg="white", bty = "o")
+  # if(class(legend.text) != "NULL") {
+  #   legend("bottomright", legend = legend.text, bg="white", bty = "o") ## plotted off-screen? bg has no effect -- bug?
   # }
     if(class(s) != "try-error") {
       if(plotContours) {
@@ -297,16 +296,18 @@ pSec0 <- function(xsec, N, cont = TRUE, custcont = NULL, zcol, ...) {
 KBsectionSort <- function(xCo, transect) {
   ## sort section -- Kasitsna-Bay-Lab specific
   ## sort in here, rather than separately
+  require("oce")
   for(i in seq_along(xCo@data$station)) {
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
-  if(substr(transect, 1, 8) == "AlongBay") { # extended AlongBay wraps around Pogy Ptp
+  if(substr(transect, 1, 1) == "A") {   # longBay") { # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort(xCo, "latitude", decreasing = FALSE)
   } else if(transect == "4") { ## include 9 here?
     xCo <- sectionSort(xCo, "latitude", decreasing = TRUE)
   } else if(transect == "9") {
-    xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
+#   xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
+    xCo <- sectionSort(xCo, "latitude",  decreasing = TRUE)  ## same effect, but safer if using actual positions?
   } else {
     xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
   }
@@ -577,12 +578,17 @@ sectionPad <- function(sect, transect, ...) {
 flexTransect <- function(transect, stn) {
   if(transect == "ABext") {
     swMN <- c("4_3", "9_6", "6_2", "7_21", "7_22", paste("AlongBay", 1:13, sep = "_"))
+    swMN <- c("4_3", "9_6", "6_2", "7_22", paste("AlongBay", 1:13, sep = "_"))
   } else if(transect == "4") {
     swMN <- "4_3"
   } else if(transect == "9") {
     swMN <- "9_6"
   } else if(transect == "AlongBay") {
     swMN <- c(paste("AlongBay", 1:13, sep = "_"), "4_3", "9_6")
+  } else if(transect == "6") {
+    swMN <- "6_2"
+  } else if(transect == "7") {
+    swMN <- c("7_21", "7_22")
   } else {
     swMN <- stn$Match_Name [match(transect, stn$Line)][1]  ## think this over XXX !!!
   }
