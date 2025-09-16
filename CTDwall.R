@@ -38,22 +38,19 @@ test <- FALSE
 stopatDate <- "2022-07-31"
 stopatDate <- Sys.Date()
 
-maxSize <- FALSE
-# maxSize <- TRUE
-
-
-maxSize <- FALSE
-# maxSize <- TRUE
-
 
 
 ## add AlongBay-short transect as a new virtual transect
 levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
-
+## add anomalies
+oVarsF <- c(oVarsF, paste0("an_",c("Temperature_ITS90_DegC", "Salinity_PSU",
+  "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity", "bvf")))
+sapply(seq_along(oVarsF), function(i) {data.frame(var=oVarsF[i], plot=oVarsF[i]
+  %in% names(poAll))}) |> t()
 
 if(test) {
   oceanvarC <- seq_along(oVarsF) #
-  oceanvarC <- 8
+  oceanvarC <- 9
   # oceanvarC <- c(4,8)
   oceanvarC <- seq_along(oVarsF)
   transectC <- seq_along(levels(poAll$Transect))
@@ -121,18 +118,14 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     ## set-up page size for large poster-PDF
     ### monthly or quarterly samples -- by transect. 9, 4, AlongBay = monthly
     if(levels(poAll$Transect)[tn] %in% mnthly) {
-      if(maxSize) {
-        pH <- 42; pW <- 84     # FWS paper is 42 inches wide -- BIG version
-        yearPP <- 11 # years(rows) per page
-      } else {
-        ## monthly
-        pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
-        ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
-        pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
-        ## for T9/AlongBay, full-width: adjust pH dynamically with N-years; all on one page of expanding length
-        yearPP <- diff(range(as.numeric(format(physOcY$DateISO, "%Y")))) + 1 + 1 # extra line for color scale and map
-        pW <- 42; pH <- 3.2 *(1 + yearPP)
-      }
+      ## monthly
+      pH <- 21.25; pW <- 42  # 42 inch = common plotter size. FWS has 44 inch HP DesignJet Z5600
+      ## pH <- 44; pW <- 88     # FWS plotter, but paper is 42 inch
+      pH <- 32; pW <- 42  ## full-width version -- Small version of T9/AlongBay
+      ## for T9/AlongBay, full-width: adjust pH dynamically with N-years; all on one page of expanding length
+      yearPP <- diff(range(as.numeric(format(physOcY$DateISO, "%Y")))) + 1 + 1 # extra line for color scale and map
+      pW <- 42; pH <- 3.2 *(1 + yearPP)
+
       omcex <- 2   # size of mtext annotations
       sampleTimes <- stringr::str_pad(1:12, 2, pad = "0")
       physOcY$smplIntvl <- physOcY$month
@@ -152,25 +145,16 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
       omText <- sampleTimes
     }
 
-
     pdf(paste0("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", oVarsF [ov]
-      , " T-", levels(poAll$Transect)[tn]
-      , ".pdf")
-    , height = pH, width = pW)
+      , " T-", levels(poAll$Transect)[tn], ".pdf"), height = pH, width = pW)
     layout(layoutM); rm(layoutM)
     if(pH > 14) {
-      par(oma = c(3, 5, 12, 2)
-        , mar = c(4, 4, 3, 0.1)
-      )
+      par(oma = c(3, 5, 12, 2), mar = c(4, 4, 3, 0.1))
     } else {
-      par(oma = c(3, 5, 8, 2)
-        , mar = c(4, 4, 3, 0.1)
-      )
+      par(oma = c(3, 5, 8, 2), mar = c(4, 4, 3, 0.1))
     }
     if(0) { # test){
-      par(oma = c(3, 5, 15, 2)
-        , mar = c(4, 4, 16, 0.1)
-      )
+      par(oma = c(3, 5, 15, 2), mar = c(4, 4, 16, 0.1))
     }
     ## test-option
     yearC <- seq_along(levels(physOcY$year))  ## or fix subset below
@@ -183,14 +167,14 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
 
       ## replace transDate from above!
       ## also making surveyW redundant
-      physOc$transDate <- with(physOc, factor(paste0("T-", Transect, " ", year, "-", smplIntvl)
-        , levels = paste0("T-", Transect [1], " ", year [1], "-"
-          , sampleTimes)))
+      physOc$transDate <- with(physOc, factor(paste0("T-", Transect, " ", year,
+        "-", smplIntvl), levels = paste0("T-", Transect [1], " ", year [1],
+        "-", sampleTimes)))
 
       ## define and plot sections
       ## turn this into a function to use in section plots as well
-      cat("   ",  formatC(iY, width = 3), "/", length(levels(physOcY$year))
-        , " Sections/year:", length(levels(physOc$transDate)), "-- ")
+      cat("   ",  formatC(iY, width = 3), "/", length(levels(physOcY$year)),
+        " Sections/year:", length(levels(physOc$transDate)), "-- ")
 
 
       ## already defined surveys in CTDwall-setup.R -- use physOc$survey
@@ -437,6 +421,8 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     ## draw palette, color scale into next panel ##
     ###############################################
 
+    ## needs better scaling for infrequent/quarterly surveys
+
     nCol <- 100
     t.ramp <- oCol3[[ov]](nCol)
     if(pH > 30) {
@@ -453,7 +439,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     title(main = oVars [ov], cex = 3, line = 0.5)
     lVal <-  pretty(c(oRange [ov, 1], oRange [ov, 2]))
     axis(1, at =(lVal - oRange [ov, 1]) /(oRange [ov, 2] - oRange[ov, 1]) * nCol
-      , labels = lVal, lwd = 0, line = -13)
+      , labels = lVal, lwd = 0, line = -12.2, lwd.ticks = 1, tick = TRUE)
 
     ## add date and logos for reference
     text(1, -12, paste("Kasistna Bay Lab\n", Sys.Date())
@@ -461,9 +447,18 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     mtext(text = paste("Kasitsna Bay Lab\n", Sys.Date())
       , side = 1, line = 3, outer = FALSE, cex = 1, adj = 1)
     ## add NCCOS and KBNERR logos
-    nccos <- jpeg::readJPEG("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
-    rasterImage(nccos, nCol / 20, -8, nCol, -4) # xleft, ybottom, xright ytop
-    rm(bp, lVal, nCol, yL, nccos)
+
+    KBL <- png::readPNG("pictograms/KBL-Informal-NCCOS_tag_below_22hr.png")
+    # im_h <- nrow(KBL); im_w <- ncol(KBL)
+    #
+    # plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
+    #      , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n"
+    #      , bty = "n", add = TRUE)
+    # rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
+    #
+    # nccos <- jpeg::readJPEG("~/My Pictures/Logos/nccos_logofile.jpg", native = TRUE)
+    rasterImage(KBL, nCol / 20, -8, nCol, -2.5) # xleft, ybottom, xright ytop
+#    rm(bp, lVal, nCol, yL, nccos)
 
     ### end of wall poster
     dev.off()

@@ -50,7 +50,7 @@ cat ("## Finished CNV import of CTD files\n\n")
 source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
 cat ("## Finished CTD_cleanup.R at ", as.character (Sys.time()), "\n\n")
 # source ("CTD_notesQAQC.R")       ## unfinished; need to retune. Merge into CTD_cleanup.R??
-cat ("## Finished CTD_notesQAQC.R\n\n")
+# cat ("## Finished CTD_notesQAQC.R\n\n")
 
 cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
 

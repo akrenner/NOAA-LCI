@@ -108,17 +108,16 @@ if(.Platform$OS.type != "unix"){
 ## this is done by scripts called in ctd_workflow.R
 
 # base::load(paste0(dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-# require("tidyverse")
-require("dplyr")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
                       # forcing physOct$Station to "character" would be convenient
                       #(trouble when some CSV files have only numeric, others also characters)
                       # only pick-up GulfWatch casts here(?)
-physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv$", full.name=TRUE) %>%
-  lapply(read.csv, skip=1, header=TRUE) %>%
-  bind_rows
+physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
+  lapply(read.csv, skip=1, header=TRUE) |>
+  dplyr::bind_rows()
 rm(aD)
+
 physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , isoTime=as.POSIXct(paste(Date, Time))
                                      , latitude_DD=Latitude_DD
@@ -132,15 +131,34 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , Density_sigma.theta.kg.m.3
                                      , Oxygen_umol_kg=Oxygen_umol.kg
                                      , Oxygen_sat.perc.=Oxygen.Saturation_perc
-                                     # need SBE O2 concentration umol.kg in here
                                      , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                      , PAR.Irradiance
                                      , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                     , turbidity = Turbidity
-                                     , beamAttenuation = Beam_attenuation
-                                     , beamTransmission = Beam_transmission
+                                     ##, turbidity = Turbidity
+                                     , Beam_attenuation
+                                     , Beam_transmission
 ))
-rm(physOcT)
+
+
+## merge Beam_attenuation and Beam_transmission into Turbidity (units of attenuation)
+## calculate monthly means, then regress transmission and attenuation
+month <- factor(format(physOc$isoTime, "$m"))
+poNorm <- aggregate(cbind(Beam_attenuation, Beam_transmission) ~ Match_Name +
+  month + Depth.saltwater..m., data=physOc, FUN = mean, na.rm = TRUE)
+turbM <- loess(Beam_transmission~Beam_attenuation, poNorm, span=0.5)
+if(0) {
+  plot (Beam_transmission~Beam_attenuation, poNorm)
+  ndat <- data.frame(Beam_attenuation = seq(min(poNorm$Beam_attenuation,
+   na.rm = TRUE), max(poNorm$Beam_attenuation, na.rm = TRUE), length.out = 100))
+  lines (ndat$Beam_attenuation, predict(turbM, newdata=ndat), col="blue", lwd=2)
+  rm(ndat)
+}
+## apply model to all CTD data
+physOc$turbidity <- ifelse(is.na(physOc$Beam_attenuation),
+  predict(turbM, newdata=physOc$Beam_attenuation), physOc$Beam_attenuation)
+physOc <- physOc |>
+  dplyr::select(-Beam_attenuation, -Beam_transmission)
+rm(turbM, physOcT, month, poNorm)
 
 
 
@@ -156,8 +174,8 @@ rm(physOcT)
 #                                      (stats::lag(cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
 #                                     #slp <- data.frame(gradient=slp)
 #                                     slp
-#                                   }) %>%
-#   unlist
+#                                   }) |>
+#   unlist())
 physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function(i){
                                     require("oce")
@@ -168,8 +186,8 @@ physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly ident
                                                        # , df="simple"
                                                        )
                                     bvf
-                                  }) %>%
-  unlist
+                                  }) |>
+  unlist()
 physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
@@ -283,8 +301,7 @@ rm(tRange)
 ## tidal phase
 tPhase <- function(tstmp, lat, lon){  ## REVIEW THIS! XXX
   ## return radians degree of tidal phase during cast
-  require("suncalc")
-  poSS$sunAlt <- with(poSS, getSunlightPosition(data = data.frame(date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
+  poSS$sunAlt <- with(poSS, suncalc::getSunlightPosition(data = data.frame(date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
   ## require(oce)
   ## poSS$sunAlt <- with(poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
@@ -293,8 +310,7 @@ rm(tPhase)
 
 
 daylight <- function(dt){
-  require("suncalc")
-  sunAlt <- getSunlightPosition(date = dt
+  sunAlt <- suncalc::getSunlightPosition(date = dt
                                  , lat = 59.643, lon = -151.526)$altitude # in radians
   sunDeg <- sunAlt / pi * 180
   dayNight <- ifelse(sunDeg > -6, "day", "night")  # civil twighlight
@@ -394,7 +410,7 @@ poSS$FreshWaterContDeep <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=f
 }))
 poSS$FreshWaterContDeep2 <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
   require("readr")
-  fW <- subset(physOc, File.Name==fn) %>%
+  fW <- subset(physOc, File.Name==fn) |>
     subset(Depth.saltwater..m. > 40)
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
@@ -648,11 +664,9 @@ phyp <- cbind(stn [match(phyp$Match_Name
 names(phyp)[1:2] <- c("lon", "lat")
 
 ## add: month, year, SampleID
-# require("tidyverse")
-require(magrittr) # for pipe!
-trnsct <- strsplit(phyp$Match_Name, "_", fixed = TRUE) %>%
-  unlist() %>%
-      matrix(ncol =2 , byrow = TRUE)
+trnsct <- strsplit(phyp$Match_Name, "_", fixed = TRUE) |>
+  unlist() |>
+  matrix(ncol =2 , byrow = TRUE)
 
 phyp <- cbind(SampleID = paste(phyp$Match_Name
                                  , format(phyp$timeStamp, format = "%Y-%m-%d", usetz = FALSE))
@@ -1004,12 +1018,11 @@ require("zip")
 tD <- tempdir()
 zip::unzip("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
-require("sf")
-require("dplyr")
 
-coast <- read_sf(dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
-  dplyr::filter(st_is_valid(.)) %>%  # there's a bad polygon
-  st_crop(c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
+require(magrittr) # for pipe!
+coast <- sf::read_sf(dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
+  dplyr::filter(sf::st_is_valid(.)) |>  # there's a bad polygon
+  sf::st_crop(c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
 unlink(tD, TRUE); rm(tD)
 
 save.image("~/tmp/LCI_noaa/cache-t/mapPlot.RData")
@@ -1054,11 +1067,10 @@ if(0){ # migrate this to elsewhere -- compare stns to CTD locations -- somewhere
 
 ## bathymetry from AOOS, Zimmerman/KBL
 
-require("stars")
 ## use custom bathymetry layer, merged from Kachemak Bay DEM, Zimmermann files, and GMRT
 mar_bathy <- stars::read_stars("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
 names(mar_bathy) <- "topo"
-bathyZ <- st_as_stars(depth=ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+bathyZ <- stars::st_as_stars(depth=ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
                       , dimensions = attr(mar_bathy, "dimensions"))
 rm(mar_bathy)
 #  bathCont <- stars::st_contour(bathyZ, contour_lines=TRUE, breaks=c(0, 50, 100, 200, 500)*-1) ## seems to plot only one level

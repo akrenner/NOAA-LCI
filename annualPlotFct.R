@@ -215,10 +215,9 @@ saggregate <- function(x, data, FUN, ..., refDF) { ## account for missing factor
   nA
 }
 
-seasonalMA <- function(var, jday, width = maO) {
+seasonalMA <- function(var, jday, width = maO) {  ## still not used -- abandone?
   ## work in progress -- not yet functioning
   df <- cbind(var = rep(var, 3), jds = c(jday - 365, jday, jday + 365))
-  suppressPackageStartupMessages(require("zoo"))
   if(length(var) > 365) {
     df <- aggregate(var ~ jds + year, df, mean, na.rm = FALSE) # ## NAs are lost -- gap-fill?
   }
@@ -259,7 +258,7 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean(x, na.rm = TRUE)}
   dat <- as.data.frame(dat) # error when using tibble/table
   dat$xVar <- dat [, which(names(dat) == varName)]
 
-  suppressPackageStartupMessages(require("zoo"))
+  # suppressPackageStartupMessages(require("zoo"))
   dat <- dat [order(dat$datetimestamp), ] # just to be sure
 
   ## necessary to use dMeans to pad missiing values as NA!
@@ -461,7 +460,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
     , silent = FALSE)  # XXX needs registered(static?) IP address. NCCOS VPN ok
     if(class(smp2)[1] != "try-error") {
       if(QAQC) {
-        smp2 <- qaqc(smp2)
+        smp2 <- SWMPr::qaqc(smp2)
       }
 
       if(class(smp2)[1] == "swmpr") {
@@ -483,7 +482,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
     }
   }
   ## fixGap() here??
-  ## smp <- qaqc(smp, qaqc_keep = "0") ## here??
+  ## smp <- SWMPr::qaqc(smp, qaqc_keep = "0") ## here??
   #save(smp, file = cacheStation)
   saveRDS(smp, file = cacheStation)
   return(smp)

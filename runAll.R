@@ -102,13 +102,7 @@ if(1) {
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
-## separate out CTD-specific stuff??
-# ; bathymetry
-# ; coastline
-# ; CTD data
 
-## set up required work environment and external files/data (bathymetry)
-source("EnvironmentSetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
 source("CTD_DataAvailability.R")
@@ -121,10 +115,10 @@ source("CTD_DataAvailability.R")
 ## use CTDwall_normals.R in CTD_timeseries.R ?
 
 source("CTDwall-setup.R")
+source("CTDwall_normals.R")
 source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-source("CTDwall_normals.R")
 source("CTDwall.R")
 # source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
 # source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's

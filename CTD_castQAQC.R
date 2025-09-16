@@ -224,7 +224,7 @@ cat ("\n\n")
 
 
 
-if (0) {                           # use oce -- not flexible enouth
+if (0) {                           # use oce -- not flexible enough
   require ("oce")
   ctd <- with (cT, as.ctd (salinity = Salinity_PSU
     , temperature = Temperature_ITS90_DegC

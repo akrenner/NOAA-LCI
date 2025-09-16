@@ -267,6 +267,15 @@ physOc$Match_Name <- gsub ("_spogi|_sptgm", "_POGI", physOc$Match_Name)
 physOc$Match_Name <- gsub ("tutkabay_intensive", "subbay_tutkabayIntensive", physOc$Match_Name)
 physOc$Match_Name <- gsub ("sadiecove_intensive", "subbay_sadiecoveIntensive", physOc$Match_Name)
 
+
+## ensure that every station has a unique Match_Name, even those used in two
+## transects (9_6, 4_3, AlongBay_3, AlongBay_6)
+physOc$Match_Name <- ifelse (physOc$Match_Name == "4_3", "AlongBay_3", physOc$Match_Name)
+physOc$Match_Name <- ifelse (physOc$Match_Name == "AlongBay_6", "9_6", physOc$Match_Name)
+
+
+
+
 if (0) {
   # summary (stn)
   # y1 <- showBad (physOc)
@@ -324,8 +333,10 @@ if (0) {
 }
 
 ## fix up station and transect names from Match_Name
+
 trst <- strsplit(physOc$Match_Name, "_", fixed = TRUE)
-trst <- do.call ("rbind", trst)
+# x <- sapply(seq_along(trst), function(i){length(trst[[i]])})
+trst <- do.call ("rbind", trst)    ## XXX  this is throwing a warning -- act upon it?
 physOc$Transect <- trst [, 1]
 physOc$Station <- trst [, 2]
 rm (trst)
@@ -371,7 +382,7 @@ rm (noPos)
 
 
 ## bad densities (some are not sigma theta, up to 1024)
-require ("oce")
+# require ("oce")
 # physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
 #                                                           , Pressure..Strain.Gauge..db.
 #                                                           , eos = "unesco"))-1000
@@ -470,6 +481,8 @@ rm (gC)
 
 
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
+## does this mean that callibration is off? Anything that can be done about this?
+
 is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
 is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
 is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
@@ -478,7 +491,7 @@ if (1) {  ## moved from CTDwall-setup.R
   ## QAQC/Error correction of values -- do this before or after data export??  XXX
 
   ## attenuation vs turbidy -- mix them here?!?
-  physOc$turbidity <- ifelse (is.na (physOc$turbidity), physOc$beamAttenuation, physOc$turbidity) ## is this wise or correct ? XXX
+  # physOc$turbidity <- ifelse (is.na (physOc$turbidity), physOc$beamAttenuation, physOc$turbidity) ## is this wise or correct ? XXX
 
 
   ## remove implausible values
@@ -687,10 +700,13 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
+  unlink(paste0(tF, ".gz"))
   write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
     , file = tF, append = FALSE, ncolumns = 1)
   suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE, sep = ","
     , na = "", row.names = FALSE, col.names = TRUE))
+  ## gzip compression
+  R.utils::gzip(tF)
   # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
   rm (tF)
   ctdB

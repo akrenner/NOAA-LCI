@@ -146,16 +146,6 @@ get_section_bathy <- function(section) {
   p_out
 }
 
-addBathy <- function(bathysection) {
-  # separate this because it is called many times and get_section_bathy is slow
-  tgray <- rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) ## transparent
-  with(bathysection, polygon(c(min(dist)*0.9, dist, max(dist)*1.1)
-                        , c(max(depth)*1.1, depth, max(depth)*1.1)
-                        , col = tgray
-                        # , col = "black"
-                        ))
-}
-
 
 
 
@@ -181,7 +171,10 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
     ))
     ## add bathymetry here, then add legend?
     if(class(bathy)[1] == "data.frame"){
-      addBathy(bathy)
+      # tgray <- rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent
+      with(bathy, polygon(c(min(dist)*0.9, dist, max(dist)*1.1)
+        , c(max(depth)*1.1, depth, max(depth)*1.1), col = "darkgray"
+      ))
     }
   # re-write legend obscured by bathymetry -- no effect somehow :(
   # if(class(legend.text) != "NULL") {
@@ -248,6 +241,7 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
       }
     }
   }
+  box()
 }
 
 
@@ -365,6 +359,19 @@ makeSection <- function(xC, stn) {
       # ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
       # ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
       ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
+
+      ## anomalies -- scaled or plain??
+      anPf <- "anS_"
+      # anPf <- "an_"
+      anV <- c("Temperature_ITS90_DegC", "Salinity_PSU","Oxygen_umol_kg",
+        "Chlorophyll_mg_m3", "turbidity", "bvf")
+      if(paste0("an_", "Temperature_ITS90_DegC") %in% names(sCTD)) {
+        for(i in seq_along(anV)) {
+          ocOb <- oceSetData(ocOb, anV[i], sCTD[,which(names(sCTD ==
+            paste0(anPf, anV[i])))])
+        }
+      }
+
       ocOb
     }))
 
@@ -390,8 +397,8 @@ seasonize <- function(mon, breaks = c(0, 2, 4, 8, 10, 13)) {
 
 
 is.night <- function(ctd) {
-  require("suncalc")
-  sunAlt <- getSunlightPosition(date = as.POSIXct(ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
+#  require("suncalc")
+  sunAlt <- suncalc::getSunlightPosition(date = as.POSIXct(ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
     , lat = ctd@data$latitude [1]
     , lon = ctd@data$longitude [1])$altitude # in radians
   sunDeg <- sunAlt / pi * 180
@@ -401,7 +408,7 @@ isNightsection <- function(ctdsection) {
   ## check whether sun is below horizon at any one station
   sM <- ctdsection@metadata
   sunAlt <- sapply(seq_along(sM$time), FUN = function(i) {
-    getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
+    suncalc::getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
   })
   sunDeg <- sunAlt / pi * 180
   isTRUE(any(sunDeg < 0))

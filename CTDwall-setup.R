@@ -48,7 +48,7 @@ physOc$Match_Name <- as.factor(physOc$Match_Name)
 
 ## get coastline and bathymetry
 ## bathymetry and coastline  --  they should come from dataSetup.R
-require("ocedata") # coastlineWorldFine
+# require("ocedata") # coastlineWorldFine  # -- still needed?
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
@@ -140,21 +140,21 @@ if(0) {
 oVars <- expression(Temperature ~ "[" * ""^o ~ C * "]"
   , Salinity ~ "[" * PSU * "]"
   , Density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
-  , "Turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-  , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
+  , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
   # , "PAR"
   , log ~(PAR)
-  , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
+  , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
+  , Turbidity ~"[" * m^-1 * "]" # "Turbidity" # it's really turbidity/attenuation # , "logTurbidity"
   , Buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression(paste0(N^2, "[", s^-2, "]"))
 )
 oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
-  , "turbidity" # , "logTurbidity"
-  ,  "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
+  , "Oxygen_umol_kg"  # , "O2perc"
   # , "PAR.Irradiance"
   , "logPAR"
-  , "Oxygen_umol_kg"  # , "O2perc"
+  ,  "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
+  , "turbidity" # , "logTurbidity"
   , "bvf"
 )
 
@@ -181,11 +181,11 @@ oCol3 <- list( ## fix versions?
   temperature = oce::oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
   , salinity = colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
   , density = colorRampPalette(cmocean("dense")(5), bias = 0.3)
-  , turbidity = colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
+  , oxygen = cmocean("oxy")
+  , logPAR = oce::oceColorsTurbo ## viridis::turbo(n, begin = 0.25, end = 0.8)
   , chlorophyll = colorRampPalette(cmocean("algae")(5), bias = 3)
   # , oceColorsTurbo # cmocean("solar")
-  , logPAR = function(n) {require("viridis"); turbo(n, begin = 0.25, end = 0.8)}
-  , oxygen = cmocean("oxy")
+  , turbidity = colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
   , bvf = colorRampPalette(c("white", rev(cmocean("haline")(32)))) # for densityGradient
   , spice = cmocean("haline") # why is this here? should it be??
 )
@@ -197,10 +197,10 @@ rm(odv)
 oRange <- t(sapply(c("Temperature_ITS90_DegC"
   , "Salinity_PSU"
   , "Density_sigma.theta.kg.m.3"
-  , "turbidity" # , "logTurbidity"
-  , "Chlorophyll_mg_m3"
-  , "logPAR"  # , "PAR.Irradiance"
   , "Oxygen_umol_kg"  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
+  , "logPAR"  # , "PAR.Irradiance"
+  , "Chlorophyll_mg_m3"
+  , "turbidity" # , "logTurbidity"
   , "bvf"
 )
 , FUN = function(vn) {range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
