@@ -439,7 +439,7 @@ for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
     title(main = oVars [ov], cex = 3, line = 0.5)
     lVal <-  pretty(c(oRange [ov, 1], oRange [ov, 2]))
     axis(1, at =(lVal - oRange [ov, 1]) /(oRange [ov, 2] - oRange[ov, 1]) * nCol
-      , labels = lVal, lwd = 0, line = -12.2, lwd.ticks = 1, tick = TRUE)
+      , labels = lVal, lwd = 0, line = -12.4, lwd.ticks = 1, tick = TRUE)
 
     ## add date and logos for reference
     text(1, -12, paste("Kasistna Bay Lab\n", Sys.Date())

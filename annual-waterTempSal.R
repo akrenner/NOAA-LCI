@@ -165,7 +165,7 @@ dev.off()
 rm (waterL, hM, i)
 
 ## for troubleshooting annualPlotFct.R::prepDF
-save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
+# save.image("~/tmp/LCI_noaa/cache/annualXtmp.RData")
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
@@ -294,7 +294,7 @@ if (quarterly) {
 }
 instSite <- c ("sldviaS", "sldvia", "homerS", "homer")
 #
-save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
+# save.image ("~/tmp/LCI_noaa/cache/annualWater.RData")
 # load ("~/tmp/LCI_noaa/cache/annualWater.RData"); j <- 3; source ("annualPlotFct.R")
 # dat=list (sldviaS, sldvia, homerS, homer)[[j]] ; varName="temp"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
@@ -381,6 +381,93 @@ legend ("topright", bty="n", col=lCol, lwd=rep (3,3)
 
 dev.off()
 rm (ssT, lCol)
+
+
+save.image("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
+
+if(1) {
+  ## plot SST anomaly from CTD data
+  ## load from CTDwall-setup.R/anomalies?
+  ## get data, prep data, plot
+
+  ## prep data -- tool something new here to match prepDF -- eventually export this to CTDwall_normals.R
+
+  # rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
+  source("annualPlotFct.R")
+  base::load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
+  require(dplyr)
+
+  tVars <- c("TempBottom", "TempDeep", "TempSurface")
+  currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1
+  cY2 <- currentYear + 1
+  Stn2p <- "9_6"
+  # Stn2p <- "AlongBay_9"
+  currentCol <- c("navyblue", "lightblue") ## brewer
+  currentCol <- c("lightblue", "magenta") ## brewer
+
+  lwd <- 4
+
+  for(i in seq_along(tVars)) {
+    poSSA <- sf::st_drop_geometry(poSS) %>%
+      dplyr::mutate(xvar = .[,which(names(.) == tVars[i])]) |>
+      dplyr::filter(Match_Name == Stn2p) |>
+      dplyr::rename(datetimestamp = timeStamp)
+    pAg <- aggregate(xvar ~ month, FUN = mean, na.rm = TRUE, data =
+      subset (poSSA, Year < cY2))
+    pAg$SD <- aggregate (xvar ~ month, FUN = sd, na.rm = TRUE, data =
+      subset (poSSA, Year < cY2))$xvar  ## move towards 90 %tile
+    pAg$SDup <- with(pAg, xvar + SD)
+    pAg$SDlo <- with(pAg, xvar - SD)
+
+    pAg <- rbind (dplyr::mutate (pAg, month = month - 12), pAg, # for circular plot
+                  dplyr::mutate(pAg, month = month + 12))
+
+    nowY <- subset(poSSA, Year >= cY2-1)
+    nowY$month <- ifelse(nowY$Year < cY2, nowY$month-12, nowY$month)
+    nowYa <- aggregate(xvar ~ month, data = nowY, FUN = mean, na.rm = TRUE)
+    pasY <- subset (poSSA, Year >= cY2-2)
+    pasY$month <- ifelse(pasY$Year < cY2-1, pasY$month-12, pasY$month)
+    pasY$month <- ifelse(pasY$Year > cY2-1, pasY$month+12, pasY$month)
+    pasYa <- aggregate(xvar ~ month, data = pasY, FUN = mean, na.rm = TRUE)
+
+    png(paste0("~/tmp/LCI_noaa/media/StateOfTheBay/update/CTD_", Stn2p, "_",
+      tVars[i],".png"), width=300*6, height=300*6, res=300)
+
+    plot(c(1,12), c(min(pAg$SDlo), max(pAg$SDup)), type = "n", xlab = "months",
+      ylab =  expression(Temperature ~ "[" * ""^o ~ C * "]" ), main =
+      paste0(gsub("Temp", "Temperature: ", tVars[i]), ", ", gsub("_", "-", Stn2p)),
+      axes = FALSE
+      )
+    axis(1, at = 1:12, label = FALSE)
+    axis(1, at = 1:6*2, tick = FALSE, label = month.abb [!1:12 %%2])
+    axis(2)
+    polygon (c(pAg$month, rev(pAg$month)), c(pAg$SDlo, rev(pAg$SDup)), col = "lightgray")
+    lines(xvar ~ month, pAg, lwd = lwd)
+
+    lines(xvar ~ month, data = pasYa, lwd = lwd, col = currentCol[1])
+    lines(xvar ~ month, data = nowYa, lwd = lwd, col = currentCol[2])
+    legend("topleft", lwd=lwd, col = c("black", currentCol[1:2]),
+      legend=c(paste0("mean ", min(poSS$Year), "-", cY2 - 1),
+      cY2-1, cY2), bty = "n")
+
+    # cLegend ("topleft", inset = 0.05
+    #          , mRange = c (min (poSS$Year), currentYear)
+    #          , currentYear = currentYear
+    #          , cYcol = c ("red", currentCol) # "blue"
+    #          , qntl = qntl [1]
+    #          , pastYear = pastYear, ongoingYear = ongoingY
+    #          # , sYears=hY
+    #          # , sLcol=hY - 2013
+    #          # , sLwd=rep (1, length (hY))
+    #          # , sLty=rep (1, length (hY))
+    # )
+    box()
+    dev.off()
+  }
+
+  rm(pasYa, pasY, nowYa, nowY, pAg, poSSA)
+
+}
 
 
 cat ("Finished annual-waterTempSal.R\n")
