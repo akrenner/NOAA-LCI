@@ -415,34 +415,51 @@ for(i in seq_along(tVars)) {
     dplyr::rename(datetimestamp = timeStamp) %>%
     dplyr::mutate(jday = as.numeric(format(.$datetimestamp, "%j")))
 
+  ## plot by day, not month
   if(0){ ## YES, plotting by date would be cleaner and more accurate -- but for now, not worth the trouble
-    poD <- rbind(poSSA |> mutate(jday = jday - 365),
+    poD <- rbind(mutate(poSSA, jday = jday - 365),
                  poSSA,
-                 poSSA |> mutate(jday = jday + 365))
+                 mutate(poSSA, jday = jday + 365))
     poD <- poD [order(poD$jday),]
     maO <- 31
     # maO <- 11
-    ## see https://stackoverflow.com/questions/14927137/moving-standard-deviation-in-r
-    lag_apply <- function(x, n, callback, ...){  # not aligned correctly
-      k = length(x)
-      result = rep(NA, k)
-      for(i in (1 + n %/% 2) : (length(x) - n %/% 2)) {
-        #        for(i in 1 : (k - n + 1)){
-        #          result[i] <- callback(x[i :  (i + n -1)], ...)
-        result[i] <- callback(x[(i - n %/%2) :  (i + n %/% 2)], ...)
-      }
-      return(result)
-    }
-    poD$MA <- lag_apply(poD$xvar, maO, mean, na.rm = TRUE)
-    poD$SD <- lag_apply(poD$xvar, maO, sd, na.rm = TRUE)
+    # ## see https://stackoverflow.com/questions/14927137/moving-standard-deviation-in-r
+    # lag_apply <- function(x, n, callback, ...){  # not aligned correctly
+    #   k = length(x)
+    #   result = rep(NA, k)
+    #   for(i in (1 + n %/% 2) : (length(x) - n %/% 2)) {
+    #     #        for(i in 1 : (k - n + 1)){
+    #     #          result[i] <- callback(x[i :  (i + n -1)], ...)
+    #     result[i] <- callback(x[(i - n %/%2) :  (i + n %/% 2)], ...)
+    #   }
+    #   return(result)
+    # }
 
+    # poD$MA <- lag_apply(poD$xvar, maO, mean, na.rm = TRUE)
+    # poD$SD <- lag_apply(poD$xvar, maO, sd, na.rm = TRUE)
 
-    plot(xvar~jday, poD, xlim = c(1,365), type = "n")
+    poD$MA <- data.table::frollapply(poD$xvar, maO, FUN = mean, align = "center")
+    poD$SD <- data.table::frollapply(poD$xvar, maO, FUN = sd, align = "center")
+    poD$SDup <- poD$MA - poD$SD
+    poD$SDlo <- poD$MA + poD$SD
+    poD <- subset (poD, !is.na(SD))
+
+    plotSetup(poD$xvar, poD$xvar, ylab = "Temperature" )# oVars[1])
+    # title (main = c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
+    fAxis(c (0, 15)) # from annualPlotFct.R
+    # plot(xvar~jday, poD, xlim = c(1,365), type = "n")
+    ## lines
+    # lines (I(MA+SD) ~ jday, poD, lty = "dashed")
+    # lines (I(MA-SD) ~ jday, poD, lty = "dashed")
+    polygon(c(poD$jday, rev(poD$jday)), c(poD$SDlo, rev(poD$SDup)),
+        col = "lightgray", border = FALSE)
+    points(xvar~jday, poD)
+
+    ## moving average
     lines(MA~jday, poD, lwd = 4)
+
     #     lines(lag_apply(poD$xvar, maO*2+1, mean, na.rm = TRUE), col = "green")
 
-    lines (I(MA+SD) ~ jday, poD, lty = "dashed")
-    lines (I(MA-SD) ~ jday, poD, lty = "dashed")
 
     # lM <- loess(xvar~jday, poD, span = 0.08)
     # nD <- data.frame(jday = min(poD$jday):max(poD$jday))
@@ -459,6 +476,7 @@ for(i in seq_along(tVars)) {
 
     lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[1])
     lines(xvar ~ jday, data = nowYa, lwd = lwd, col = currentCol[2])
+    box()
 
   }
 
@@ -470,7 +488,8 @@ for(i in seq_along(tVars)) {
   pAg$SDup <- with(pAg, xvar + SD)
   pAg$SDlo <- with(pAg, xvar - SD)
 
-  pAg <- rbind (dplyr::mutate (pAg, month = month - 12), pAg, # for circular plot
+  pAg <- rbind (dplyr::mutate (pAg, month = month - 12),
+                pAg, # for circular plot
                 dplyr::mutate(pAg, month = month + 12))
 
   nowY <- subset(poSSA, Year >= cY2-1)
