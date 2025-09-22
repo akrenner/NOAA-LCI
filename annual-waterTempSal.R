@@ -31,7 +31,7 @@ mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 if (quarterly) {
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
-  mediaD <- paste0 (mediaD, "update/")
+  mediaD <- gsub ("/$", "_monthly/", mediaD)
   currentCol <- currentCol [c(3, 1, 2)]
 } else {
   pastYear <- TRUE  ## winter/spring publication schedule
@@ -404,139 +404,138 @@ cY2 <- currentYear + 1
 Stn2p <- "9_6"
 Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
 currentCol <- c("navyblue", "lightblue") ## brewer
-currentCol <- c("lightblue", "magenta") ## brewer
+currentCol <- c("blue", "magenta") ## brewer
+
+currentCol <- paletteer::paletteer_d("nord::frost")[c(2,3)]
+currentCol <- paletteer::paletteer_d("rcartocolor::Safe")[c(1,2)]
+
+# currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
+
 
 lwd <- 4
 
 for(i in seq_along(tVars)) {
+  # i = 1
   poSSA <- sf::st_drop_geometry(poSS) %>%
     dplyr::mutate(xvar = .[,which(names(.) == tVars[i])]) |>
     dplyr::filter(Match_Name == Stn2p) |>
     dplyr::rename(datetimestamp = timeStamp) %>%
-    dplyr::mutate(jday = as.numeric(format(.$datetimestamp, "%j")))
+    dplyr::mutate(jday = as.numeric(format(.$datetimestamp, "%j"))) %>%
+    dplyr::mutate(Year = as.numeric(format(.$datetimestamp, "%Y")))
+
 
   ## plot by day, not month
-  if(0){ ## YES, plotting by date would be cleaner and more accurate -- but for now, not worth the trouble
-    poD <- rbind(mutate(poSSA, jday = jday - 365),
-                 poSSA,
-                 mutate(poSSA, jday = jday + 365))
-    poD <- poD [order(poD$jday),]
-    maO <- 31
-    # maO <- 11
-    # ## see https://stackoverflow.com/questions/14927137/moving-standard-deviation-in-r
-    # lag_apply <- function(x, n, callback, ...){  # not aligned correctly
-    #   k = length(x)
-    #   result = rep(NA, k)
-    #   for(i in (1 + n %/% 2) : (length(x) - n %/% 2)) {
-    #     #        for(i in 1 : (k - n + 1)){
-    #     #          result[i] <- callback(x[i :  (i + n -1)], ...)
-    #     result[i] <- callback(x[(i - n %/%2) :  (i + n %/% 2)], ...)
-    #   }
-    #   return(result)
-    # }
+  ## plotting by date would be cleaner and more accurate -- but have to take maO up to 41 for now
+  maO <- 41
 
-    # poD$MA <- lag_apply(poD$xvar, maO, mean, na.rm = TRUE)
-    # poD$SD <- lag_apply(poD$xvar, maO, sd, na.rm = TRUE)
+  #  for (maO in 1 + 1:10*10) {
+  poD <- rbind(mutate(poSSA, jday = jday - 365),
+                     poSSA,
+              mutate(poSSA, jday = jday + 365))
 
-    poD$MA <- data.table::frollapply(poD$xvar, maO, FUN = mean, align = "center")
-    poD$SD <- data.table::frollapply(poD$xvar, maO, FUN = sd, align = "center")
-    poD$SDup <- poD$MA - poD$SD
-    poD$SDlo <- poD$MA + poD$SD
-    poD <- subset (poD, !is.na(SD))
+  ## need this to have an entry for each day for frollapply to act upon
+  poD <- saggregate(poD$xvar, data.frame(jday = poD$jday), FUN = mean,
+                    na.rm = TRUE, refDF = data.frame(jday=-366:740)) |>
+    dplyr::rename(xvar = x)
+  poD$jday <- -366:740
 
-    plotSetup(poD$xvar, poD$xvar, ylab = "Temperature" )# oVars[1])
-    # title (main = c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
-    fAxis(c (0, 15)) # from annualPlotFct.R
-    # plot(xvar~jday, poD, xlim = c(1,365), type = "n")
-    ## lines
-    # lines (I(MA+SD) ~ jday, poD, lty = "dashed")
-    # lines (I(MA-SD) ~ jday, poD, lty = "dashed")
-    polygon(c(poD$jday, rev(poD$jday)), c(poD$SDlo, rev(poD$SDup)),
-        col = "lightgray", border = FALSE)
-    points(xvar~jday, poD)
+  poD$MA <- data.table::frollapply(poD$xvar, maO, FUN = mean, align = "center", na.rm = TRUE)
+  poD$SD <- data.table::frollapply(poD$xvar, maO, FUN = sd, align = "center", na.rm = TRUE)
+  poD$SDup <- poD$MA + poD$SD
+  poD$SDlo <- poD$MA - poD$SD
 
-    ## moving average
-    lines(MA~jday, poD, lwd = 4)
+  poD <- poD [order(poD$jday),]
+  poD <- subset (poD, !is.na(SD))
 
-    #     lines(lag_apply(poD$xvar, maO*2+1, mean, na.rm = TRUE), col = "green")
+  png(paste0(mediaD, "CTD_", Stn2p, "_day", tVars[i], maO, ".png"),
+      width = 300*8, height = 300*6, res = 300)
+  par(mar=c(5.5,5,2,5))
+  #    plotSetup(poD$xvar, poD$xvar, ylab = "Temperature [°C]")
+  plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]")
+  title (main = paste0 (gsub("^Temp", "", tVars[i]),
+    " layer water temperature, Inner Kachemak Bay"), sub = paste0 (
+    "Oceanography Station ", gsub("_", "-", Stn2p),
+    ", near Glacier Spit")
+    ## lookup description!
+    # , stn$description [which (stn$Match_Name == Stn2p)]
+    )
 
+  fAxis(c (0, 15)) # from annualPlotFct.R
+  polygon(c(poD$jday, rev(poD$jday)), c(poD$SDlo, rev(poD$SDup)),
+          col = "lightgray", border = FALSE)
+  points(xvar~jday, poD)
+  lines(MA~jday, poD, lwd = 4)   # moving average
 
-    # lM <- loess(xvar~jday, poD, span = 0.08)
-    # nD <- data.frame(jday = min(poD$jday):max(poD$jday))
-    # lines(nD$jday, predict(lM, newdata = nD), col = "magenta")
-    # lX <- predict(lM, nD, se = TRUE)
-
-    nowY <- subset(poSSA, Year >= cY2-1)
-    nowY$jday <- ifelse(nowY$Year < cY2, nowY$jday-365, nowY$jday)
-    nowYa <- aggregate(xvar ~ jday, data = nowY, FUN = mean, na.rm = TRUE)
-    pasY <- subset (poSSA, Year >= cY2-2)
-    pasY$jday <- ifelse(pasY$Year < cY2-1, pasY$jday-365, pasY$jday)
-    pasY$jday <- ifelse(pasY$Year > cY2-1, pasY$jday+12, pasY$jday)
-    pasYa <- aggregate(xvar ~ jday, data = pasY, FUN = mean, na.rm = TRUE)
-
-    lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[1])
-    lines(xvar ~ jday, data = nowYa, lwd = lwd, col = currentCol[2])
-    box()
-
-  }
-
-
-  pAg <- aggregate(xvar ~ month, FUN = mean, na.rm = TRUE, data =
-                     subset (poSSA, Year < cY2))
-  pAg$SD <- aggregate (xvar ~ month, FUN = sd, na.rm = TRUE, data =
-                         subset (poSSA, Year < cY2))$xvar  ## move towards 90 %tile
-  pAg$SDup <- with(pAg, xvar + SD)
-  pAg$SDlo <- with(pAg, xvar - SD)
-
-  pAg <- rbind (dplyr::mutate (pAg, month = month - 12),
-                pAg, # for circular plot
-                dplyr::mutate(pAg, month = month + 12))
-
+  ## current years
   nowY <- subset(poSSA, Year >= cY2-1)
-  nowY$month <- ifelse(nowY$Year < cY2, nowY$month-12, nowY$month)
-  nowYa <- aggregate(xvar ~ month, data = nowY, FUN = mean, na.rm = TRUE)
+  nowY$jday <- ifelse(nowY$Year < cY2, nowY$jday - 365, nowY$jday) # to link in past year
+  nowYa <- aggregate(xvar ~ jday, data = nowY, FUN = mean, na.rm = TRUE)
+
   pasY <- subset (poSSA, Year >= cY2-2)
-  pasY$month <- ifelse(pasY$Year < cY2-1, pasY$month-12, pasY$month)
-  pasY$month <- ifelse(pasY$Year > cY2-1, pasY$month+12, pasY$month)
-  pasYa <- aggregate(xvar ~ month, data = pasY, FUN = mean, na.rm = TRUE)
+  pasY$jday <- ifelse(pasY$Year < cY2-1, pasY$jday - 365, pasY$jday)
+  pasY$jday <- ifelse(pasY$Year > cY2-1, pasY$jday + 365, pasY$jday)
+  pasYa <- aggregate(xvar ~ jday, data = pasY, FUN = mean, na.rm = TRUE)
 
-  png(paste0("~/tmp/LCI_noaa/media/StateOfTheBay/update/CTD_", Stn2p, "_",
-             tVars[i],".png"), width=300*6, height=300*6, res=300)
-
-  plot(c(1,12), c(min(pAg$SDlo), max(pAg$SDup)), type = "n",
-       ylab =  expression(Temperature ~ "[" * ""^o ~ C * "]" ), xlab = "",
-       main = "Surface layer water temperature, Inner Kachemak Bay",
-       sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p), ", near Glacier Spit"),  ## lookup description!
-       # main = paste0(gsub("Temp", "Temperature: ", tVars[i]), ", ", gsub("_", "-", Stn2p)),
-       axes = FALSE
-  )
-  axis(1, at = 1:12, label = FALSE)
-  axis(1, at = 1:6*2, tick = FALSE, label = month.abb [!1:12 %%2])
-  axis(2)
-  polygon (c(pAg$month, rev(pAg$month)), c(pAg$SDlo, rev(pAg$SDup)),
-           col = "lightgray", border = FALSE)
-  lines(xvar ~ month, pAg, lwd = lwd)  # long-term mean
-  lines(xvar ~ month, data = pasYa, lwd = lwd, col = currentCol[1]) # last year
-  lines(xvar ~ month, data = nowYa, lwd = lwd, col = currentCol[2]) # ongoing year
+  lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[1])
+  lines(xvar ~ jday, data = nowYa, lwd = lwd, col = currentCol[2])
 
   legend("topleft", lwd=c(rep(lwd, 3), 10),
          col = c("black", currentCol[1:2], "lightgray"),
          legend=c(paste0("mean ", min(poSS$Year), "-", cY2 - 1), cY2-1, cY2,
                   "SD around mean"),
          bty = "n")
-  # cLegend ("topleft", inset = 0.05
-  #          , mRange = c (min (poSS$Year), currentYear)
-  #          , currentYear = currentYear
-  #          , cYcol = c ("red", currentCol) # "blue"
-  #          , qntl = qntl [1]
-  #          , pastYear = pastYear, ongoingYear = ongoingY
-  #          # , sYears=hY
-  #          # , sLcol=hY - 2013
-  #          # , sLwd=rep (1, length (hY))
-  #          # , sLty=rep (1, length (hY))
-  # )
   box()
   dev.off()
+  #}
+
+  ## dated monthly plots
+  if(0) {
+    pAg <- aggregate(xvar ~ month, FUN = mean, na.rm = TRUE, data =
+                       subset (poSSA, Year < cY2))
+    pAg$SD <- aggregate (xvar ~ month, FUN = sd, na.rm = TRUE, data =
+                           subset (poSSA, Year < cY2))$xvar  ## move towards 90 %tile
+    pAg$SDup <- with(pAg, xvar + SD)
+    pAg$SDlo <- with(pAg, xvar - SD)
+
+    pAg <- rbind (dplyr::mutate (pAg, month = month - 12),
+                  pAg, # for circular plot
+                  dplyr::mutate(pAg, month = month + 12))
+
+    nowY <- subset(poSSA, Year >= cY2-1)
+    nowY$month <- ifelse(nowY$Year < cY2, nowY$month-12, nowY$month)
+    nowYa <- aggregate(xvar ~ month, data = nowY, FUN = mean, na.rm = TRUE)
+    pasY <- subset (poSSA, Year >= cY2-2)
+    pasY$month <- ifelse(pasY$Year < cY2-1, pasY$month-12, pasY$month)
+    pasY$month <- ifelse(pasY$Year > cY2-1, pasY$month+12, pasY$month)
+    pasYa <- aggregate(xvar ~ month, data = pasY, FUN = mean, na.rm = TRUE)
+
+    png(paste0(mediaD, "CTD_", Stn2p, "_", tVars[i],".png"), width=300*6,
+        height=300*6, res=300)
+
+    plot(c(1,12), c(min(pAg$SDlo), max(pAg$SDup)), type = "n",
+         ylab =  expression(Temperature ~ "[" * ""^o ~ C * "]" ), xlab = "",
+         main = "Surface layer water temperature, Inner Kachemak Bay",
+         sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p), ", near Glacier Spit"),  ## lookup description!
+         # main = paste0(gsub("Temp", "Temperature: ", tVars[i]), ", ", gsub("_", "-", Stn2p)),
+         axes = FALSE
+    )
+    axis(1, at = 1:12, label = FALSE)
+    axis(1, at = 1:6*2, tick = FALSE, label = month.abb [!1:12 %%2])
+    axis(2)
+    polygon (c(pAg$month, rev(pAg$month)), c(pAg$SDlo, rev(pAg$SDup)),
+             col = "lightgray", border = FALSE)
+    lines(xvar ~ month, pAg, lwd = lwd)  # long-term mean
+    lines(xvar ~ month, data = pasYa, lwd = lwd, col = currentCol[1]) # last year
+    lines(xvar ~ month, data = nowYa, lwd = lwd, col = currentCol[2]) # ongoing year
+
+    legend("topleft", lwd=c(rep(lwd, 3), 10),
+           col = c("black", currentCol[1:2], "lightgray"),
+           legend=c(paste0("mean ", min(poSS$Year), "-", cY2 - 1), cY2-1, cY2,
+                    "SD around mean"),
+           bty = "n")
+    box()
+    dev.off()
+  }
 }
 
 rm(pasYa, pasY, nowYa, nowY, pAg, poSSA)

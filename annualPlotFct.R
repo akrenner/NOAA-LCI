@@ -47,7 +47,7 @@ if(0) {
 
 plotSetup <- function(longMean, current, ylab = NULL # , xlim=c(5,355)
                       , ...) {
-  par(xaxs = "i")
+#  par(xaxs = "i")
   plot(1:365
     , seq(min(c(longMean, current), na.rm = TRUE)
       , max(c(longMean, current), na.rm = TRUE), length.out = 365)
