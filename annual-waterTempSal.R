@@ -535,10 +535,11 @@ for(i in seq_along(tVars)) {
            bty = "n")
     box()
     dev.off()
+    rm(pAg)
   }
 }
 
-rm(pasYa, pasY, nowYa, nowY, pAg, poSSA)
+rm(pasYa, pasY, nowYa, nowY, poSSA)
 
 
 
