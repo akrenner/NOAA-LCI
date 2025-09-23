@@ -41,6 +41,7 @@ Seasonal <- function(month) {           # now using breaks from zoop analysis --
   cut(month, breaks = c(-13, 0, 2, 4, 8, 10, 25)
     , labels = c("fall", "winter", "spring", "summer", "fall", "winter"))
 }
+dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 
 
 
@@ -68,6 +69,8 @@ oRange <- oRange[-which(oVarsF == "logPAR"),]
 oVars  <- oVars [-which(oVarsF == "logPAR")]       ## shouldn't have to -- fix in CTDsectionFcts.R!
 oVarsF <- oVarsF[-which(oVarsF == "logPAR")]
 oCol3$logPAR <- NULL
+oCol3$spice <- NULL
+
 
 ## XXXX move forward to CTD_cleanup.R!!!       ================================= XXX
 poAll$Match_Name <- as.character(poAll$Match_Name)
@@ -87,40 +90,27 @@ ctdAgg <- function(df = poAll, FUN=mean, ...) {
 
 
 poNorm <- ctdAgg(df = poAll, FUN = mean, na.rm = TRUE)
-
-
-if(plotSD) {  # plot SD, not mean
-  poNorm <- ctdAgg(df = poAll, FUN = sd, na.rm = TRUE)  ## to quickly visualize SD patterns XXX
-  # oCol3 <- lapply(seq_len(length(oCol3)), function(x) {oce::oceColorsViridis} ) # viridis::plasma
-  oCol3 <- lapply(seq_len(length(oCol3)), function(x) {viridis::plasma} )
-
-  oRange <- sapply(colnames(oM), function(nm) {range(poNorm[,which(names(poNorm) ==
-    nm)], na.rm = TRUE)}) |> t()
-
-}
-
 poN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) })
 nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
 poNorm [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poNorm [,i])} )
 # ## add stn data and Pressure for oce
 
-poNorm$latitude_DD <- stn$Lat_decDegree[match(poNorm$Match_Name, stn$Match_Name)]
-poNorm$longitude_DD <- stn$Lon_decDegree[match(poNorm$Match_Name, stn$Match_Name)]
-poNorm$Pressure..Strain.Gauge..db. <- predict(lm(Pressure..Strain.Gauge..db. ~
-   Depth.saltwater..m., poAll), newdata = list(Depth.saltwater..m. =
-   poNorm$Depth.saltwater..m.))
-poNorm$File.Name <- "climatology"
-poNorm$isoTime <- as.POSIXct(paste0("2000-", poNorm$month, "-15 12:00"))
-poNorm$Bottom.Depth_main <- stn$Depth_m [match(poNorm$Match_Name, stn$Match_Name)]
 
 
+if(plotSD) {  # plot SD, not mean
+  ## temp -- wrap this into general plots below
+  poNorm <- ctdAgg(df = poAll, FUN = sd, na.rm = TRUE)  ## to quickly visualize SD patterns XXX
+  # oCol3 <- lapply(seq_len(length(oCol3)), function(x) {oce::oceColorsViridis} ) # viridis::plasma
+  oCol3 <- lapply(seq_along(oCol3), function(x) {viridis::plasma} )
+  oRange <- sapply(colnames(oM), function(nm) {range(poNorm[,
+    which(names(poNorm) == nm)], na.rm = TRUE)}) |> t()
+}
 
 
 poSD <- ctdAgg(df = poAll, sd, na.rm = TRUE)
 poSD [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSD [,i])} )
-## or cbind SDs to poNorm??
-
-
+names(poSD) <- paste0("SD_", names(poSD))
+poNorm <- cbind (poNorm, poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)])
 
 if(0) { ## quarterly means -- not really enough data for these?
   season <- Seasonal(poAll$month)
@@ -131,7 +121,8 @@ if(0) { ## quarterly means -- not really enough data for these?
 }
 
 
-## calculate anomalies
+
+## calculate anomalies and save for further plotting
 poAno <- sapply(seq_len(ncol(oM)), function(i) {
   pC <- which(names(poAll) == colnames(oM)[i])
   poAll [,pC] - poNorm [match(paste(poAll$Match_Name, poAll$month),
@@ -162,24 +153,27 @@ saveRDS(poAllan, file="~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 #####################################
 
 
-## section plots of normals
-save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
-# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData"); graphics.off()
-
-
-source("CTDsectionFcts.R")
-dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
+## use poNorm as list of CTD casts
+poNorm <- data.frame(
+  latitude_DD = stn$Lat_decDegree[match(poNorm$Match_Name, stn$Match_Name)],
+  longitude_DD = stn$Lon_decDegree[match(poNorm$Match_Name, stn$Match_Name)],
+  Pressure..Strain.Gauge..db. = predict(lm(Pressure..Strain.Gauge..db. ~
+    Depth.saltwater..m., poAll), newdata = list(Depth.saltwater..m. =
+    poNorm$Depth.saltwater..m.)),
+  File.Name = "climatology",
+  isoTime = as.POSIXct(paste0("2000-", poNorm$month, "-15 12:00")),
+  Bottom.Depth_main = stn$Depth_m [match(poNorm$Match_Name, stn$Match_Name)],
+  # to get Transect in the right position, used below
+  Transect = factor(stn$Line [match(poNorm$Match_Name, stn$Match_Name)]),
+  poNorm
+)
+nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
 
 
 ## could do this for T9 and AlongBay. Not enough data for the other transects
 ## make it a poster?
 
-## 12 months plot in a circle/rectangle, map in the middle
-posterP <- TRUE
-# posterP <- FALSE
-
 levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
-# oVarsDFname <- colnames(oM)[c(1:7)] ## dirty hack
 oVarsDFname <- colnames(oM)
 # print(cbind(oVarsF, oVarsDFname, colors=names(oCol3)[seq_along(oVarsF)]))
 oVarsTitle <- oVarsF |>
@@ -190,9 +184,41 @@ oVarsTitle <- oVarsF |>
   stringr::str_to_title()
 
 
+
+
+
+## section plots of normals
+save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData"); graphics.off()
+
+## adapt to cbind of poNorm and poSD
+oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname))
+oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname))
+oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle))
+oVars <- rep(oVars,2)
+oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::rocket}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::viridis}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {oce::oceColorsViridis}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::mako}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {RColorBrewer::XXXblues}))  # or yellow-green-blue?
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}))
+
+
+## 12 months plot in a circle/rectangle, map in the middle
+posterP <- TRUE
+# posterP <- FALSE
+
+source("CTDsectionFcts.R")
+
+
+
+
+
+
 # for(h in seq_along(levels(poAll$Transect))) {
 #  j <- levels(poAll$Transect)[h]
-for (j in c("AlongBay", "9", "ABext")){
+for (j in c("AlongBay", "9", "ABext")) {
   # j = "AlongBay"
   # j = "9"
   # j = "ABext"
@@ -205,12 +231,13 @@ for (j in c("AlongBay", "9", "ABext")){
   # phT <- subset (poSD,   Transect == j)
   ## calc ranges
   zR <- sapply(nC, function(i) {range(phT[i], na.rm = TRUE)})
-  colnames(zR) <- colnames(oM)
+  colnames(zR) <- colnames(phT)[nC]
 
 
-  # for(ov in seq_along(colnames(oM))){
-  for (ov in seq_along(oVarsF)) {
-    # ov=2
+ for (ov in seq_along(oVarsF)) {
+ # for(ov in 8:length(oVarsF)) {
+      # ov=2
+     # ov=8
 
     # bathy_sec <- sectionize(phT) |>
     #   get_section_bathy()
@@ -228,7 +255,7 @@ for (j in c("AlongBay", "9", "ABext")){
     } else {
       png(paste0(normDir, j, colnames(oM)[ov], "%02d.png")) ## for testing
     }
-    for(k in seq_len(12)) {
+    for(k in seq_along(month.abb)) {
       # k = 8
       xCo <- subset (phT, month == k &
                        !is.na(phT[,which(names(phT) == oVarsDFname[ov])])  ## weed out NAs
@@ -252,10 +279,11 @@ for (j in c("AlongBay", "9", "ABext")){
              , ylim = c(max(phT$Depth.saltwater..m.)+5, 0)
              , drawPalette = FALSE
              , zCol = oCol3[[ov]]
-             , zlim = zR[,which(colnames(oM) == oVarsDFname[ov])]
+             , zlim = zR[,which(colnames(zR) == oVarsDFname[ov])]
              , zbreaks = NULL    ## getting range correct was the hold-up
              , bathy = bathy_sec, legend.text = "" #oVars [ov]
-             , custcont=5, labcex = 0.8
+             , custcont=5
+             , labcex = 0.8
          )
       } else {
         plot(1:10, type="n")
@@ -289,8 +317,8 @@ for (j in c("AlongBay", "9", "ABext")){
                     , border = NA, ylim = c(-10, yL)  # ylim to make bar narrower, less high
       )
       title(main = oVars [ov], cex = 3, line = 0.5)
-      lVal <-  pretty(c(oRange [ov, 1], oRange [ov, 2]))
-      axis(1, at = (lVal - oRange [ov, 1]) / (oRange [ov, 2] - oRange[ov, 1]) * nCol
+      lVal <-  pretty(c(zR [1, ov], zR [2, ov]))
+      axis(1, at = (lVal - zR [1, ov]) / (zR [2, ov] - zR [1, ov]) * nCol
            , labels = lVal, lwd = 0, line = -10.3, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
       ## main title:
       mtext(paste0(oVarsTitle [ov], "\nTransect: ", j), side = 1, line = -2, cex = 1.5)

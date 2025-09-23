@@ -347,30 +347,37 @@ makeSection <- function(xC, stn) {
       ocOb@metadata$filename <- sCTD$File.Name [1]
       ocOb@metadata$startTime <- sCTD$isoTime [1]
 
-
-      ocOb <- oceSetData(ocOb, "Chlorophyll_mg_m3", sCTD$Chlorophyll_mg_m3)
-      ocOb <- oceSetData(ocOb, "turbidity", sCTD$turbidity)
-      ocOb <- oceSetData(ocOb, "logTurbidity", sCTD$logTurbidity)
-      ocOb <- oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
-      ocOb <- oceSetData(ocOb, "logPAR", sCTD$logPAR)
-      ocOb <- oceSetData(ocOb, "O2perc", sCTD$O2perc)
-      #                        ocOb <- oceSetData(ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
-      ocOb <- oceSetData(ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
-      # ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
-      # ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
-      ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
-
-      ## anomalies -- scaled or plain??
-      anPf <- "anS_"
-      # anPf <- "an_"
-      anV <- c("Temperature_ITS90_DegC", "Salinity_PSU","Oxygen_umol_kg",
-        "Chlorophyll_mg_m3", "turbidity", "bvf")
-      if(paste0("an_", "Temperature_ITS90_DegC") %in% names(sCTD)) {
-        for(i in seq_along(anV)) {
-          ocOb <- oceSetData(ocOb, anV[i], sCTD[,which(names(sCTD ==
-            paste0(anPf, anV[i])))])
-        }
+      ovCol <- (max(which(names(sCTD) %in% c("Temperature_ITS90_DegC",
+        "Salinity_PSU", "Density_sigma.theta.kg.m.3")))+1):ncol(sCTD)
+      # ovCol <- which(names(sCTD) == "Chlorophyll_mg_m3"):ncol(sCTD)
+      ovCol <- which(names(sCTD) == "Oxygen_umol_kg"):ncol(sCTD)
+      for (i in ovCol) {
+        ocOb <- oceSetData(ocOb, names(sCTD)[i], sCTD[,i])
       }
+
+      # ocOb <- oceSetData(ocOb, "Chlorophyll_mg_m3", sCTD$Chlorophyll_mg_m3)
+      # ocOb <- oceSetData(ocOb, "turbidity", sCTD$turbidity)
+      # ocOb <- oceSetData(ocOb, "logTurbidity", sCTD$logTurbidity)
+      # ocOb <- oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
+      # ocOb <- oceSetData(ocOb, "logPAR", sCTD$logPAR)
+      # ocOb <- oceSetData(ocOb, "O2perc", sCTD$O2perc)
+      # #                        ocOb <- oceSetData(ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
+      # ocOb <- oceSetData(ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
+      # # ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+      # # ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
+      # ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
+      #
+      # ## anomalies -- scaled or plain??
+      # anPf <- "anS_"
+      # # anPf <- "an_"
+      # anV <- c("Temperature_ITS90_DegC", "Salinity_PSU","Oxygen_umol_kg",
+      #   "Chlorophyll_mg_m3", "turbidity", "bvf")
+      # if(paste0("an_", "Temperature_ITS90_DegC") %in% names(sCTD)) {
+      #   for(i in seq_along(anV)) {
+      #     ocOb <- oceSetData(ocOb, anV[i], sCTD[,which(names(sCTD ==
+      #       paste0(anPf, anV[i])))])
+      #   }
+      # }
 
       ocOb
     }))

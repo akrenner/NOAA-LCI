@@ -187,7 +187,7 @@ oCol3 <- list( ## fix versions?
   # , oceColorsTurbo # cmocean("solar")
   , turbidity = colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
   , bvf = colorRampPalette(c("white", rev(cmocean("haline")(32)))) # for densityGradient
-  , spice = cmocean("haline") # why is this here? should it be??
+  # , spice = cmocean("haline") # why is this here? should it be??
 )
 rm(odv)
 ## oceColorsTemperature and the likes are dated -- don't use them
