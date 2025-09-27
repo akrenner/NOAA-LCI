@@ -12,12 +12,21 @@ if(!exists("indivPlots")) {
   indivPlots <- FALSE
 }
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
+# poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+
 
 keepV <- c(1,2,4,5,7)  ## cut out sigma, logPar, bvf
 oVarsF <- oVarsF [keepV]
 oVars <- oVars [keepV]
 oCol3 <- oCol3 [keepV]
 oRange <- oRange [keepV,]
+
+
+## add anomalies and scaled anomalies
+
+
+
+
 
 
 if(indivPlots) {
@@ -72,6 +81,9 @@ for(sv in iX) {
     ## doubly-used stations:
     # 4-3 = AlongBay-3
     # 9-6 = AlongBay-6
+
+    # use flexTransect instead?! XXX
+
     if(levels(s$Transect)[tn] == "AlongBay") {
       s$Transect [(s$Transect == "4") &(s$Station == "3")] <- "AlongBay"
       s$Transect [(s$Transect == "9") &(s$Station == "6")] <- "AlongBay"

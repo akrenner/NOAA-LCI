@@ -7,7 +7,7 @@
 rm(list = ls())
 ## get bathymetry, standard colors, and data ranges
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-# poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")   # from CTDwall_normals.R
+poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")   # from CTDwall_normals.R
 
 
 test <- TRUE
@@ -43,10 +43,20 @@ stopatDate <- Sys.Date()
 ## add AlongBay-short transect as a new virtual transect
 levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
 ## add anomalies
-oVarsF <- c(oVarsF, paste0("an_",c("Temperature_ITS90_DegC", "Salinity_PSU",
-  "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity", "bvf")))
-sapply(seq_along(oVarsF), function(i) {data.frame(var=oVarsF[i], plot=oVarsF[i]
-  %in% names(poAll))}) |> t()
+oVarsAnom <- c("Temperature_ITS90_DegC", "Salinity_PSU", "Oxygen_umol_kg",
+  "Chlorophyll_mg_m3", "turbidity", "bvf")
+
+oVarsF <- c(oVarsF, paste0("an_", oVarsAnom), paste0("anS_", oVarsAnom))
+
+oRange <- rbind(oRange,
+  t(sapply(c(paste0 ("an_", oVarsAnom), paste0("anS_", oVarsAnom)), FUN =
+  function(vn) {range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)}))
+)
+
+
+
+
+
 
 if(test) {
   oceanvarC <- seq_along(oVarsF) #

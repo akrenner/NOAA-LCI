@@ -241,7 +241,6 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
       }
     }
   }
-  box()
 }
 
 

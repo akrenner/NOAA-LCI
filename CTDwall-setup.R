@@ -4,12 +4,6 @@
 ## clean data(move to earlier??)
 
 
-## issues:
-## - fix O2perc scale across plots
-## - fix all scales across plots??
-## - add contours
-## attenuation vs turbidity
-
 
 
 ## load data
@@ -31,16 +25,21 @@ if(length(grep("darwin", version$os)) > 0) {
 
 ### data prep
 ## define sections
-physOc$DateISO <- as.Date(format(physOc$isoTime, "%Y-%m-%d"))
-physOc$Transect <- factor(physOc$Transect)
-physOc$year <- factor(format(physOc$isoTime, "%Y"))
+physOc <- data.frame(
+  DateISO = as.Date(format(physOc$isoTime, "%Y-%m-%d")),
+  year = factor(format(physOc$isoTime, "%Y")),
+  month = factor(format(physOc$isoTime, "%m")),
+  physOc
+)
+
+physOc$Transect <- factor(physOc$Transect)  ## reset factor -- safe, in headers
 ## combine CTD and station meta-data
 physOc <- subset(physOc, !is.na(physOc$Transect)) ## who's slipping through the cracks??
 ## stn should be no longer needed -- see dataSetup.R
 # physOc <- cbind(physOc, stn [match(physOc$Match_Name, stn$Match_Name)
 #                               , which(names(stn) %in% c(# "Line",
-#                                                           "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
-physOc$Match_Name <- as.factor(physOc$Match_Name)
+#                                                          "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
+physOc$Match_Name <- as.factor(physOc$Match_Name)  # reset factor
 # print(summary(physOc))
 
 
@@ -104,7 +103,7 @@ for(h in 2:length(levels(surveyW))) {
 }
 surveyW <- factor(format(poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
 
-poAll$survey <- factor(surveyW)  ## need to reset factor levels after combining days
+poAll <- data.frame(survey = surveyW, poAll) # keep tail end for CTD data. Need to reset factor levels after combining days
 rm(surveyW, h)
 
 ## migrate code over from CTDwall.R:

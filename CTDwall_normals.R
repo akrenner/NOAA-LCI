@@ -25,7 +25,7 @@
 rm(list = ls())
 graphics.off()
 load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
-normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDwall-normals/"
+normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
 
 
 ## fetch parameter from source? --- attach them to the end of poNorm!!
@@ -58,7 +58,8 @@ current_year <- format(Sys.Date(), "%Y")
 
 
 ## output: as poAll, but with month as factor
-poAll$month <- as.numeric(format(poAll$isoTime, "%m"))
+poAll$month <- as.numeric(poAll$month)
+
 
 poAll <- dplyr::select(poAll, - Nitrogen.saturation..mg.l.,
     - Oxygen_sat.perc.,
@@ -97,20 +98,14 @@ poNorm [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poNorm [,i])}
 
 
 
-if(plotSD) {  # plot SD, not mean
-  ## temp -- wrap this into general plots below
-  poNorm <- ctdAgg(df = poAll, FUN = sd, na.rm = TRUE)  ## to quickly visualize SD patterns XXX
-  # oCol3 <- lapply(seq_len(length(oCol3)), function(x) {oce::oceColorsViridis} ) # viridis::plasma
-  oCol3 <- lapply(seq_along(oCol3), function(x) {viridis::plasma} )
-  oRange <- sapply(colnames(oM), function(nm) {range(poNorm[,
-    which(names(poNorm) == nm)], na.rm = TRUE)}) |> t()
-}
-
-
 poSD <- ctdAgg(df = poAll, sd, na.rm = TRUE)
 poSD [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSD [,i])} )
 names(poSD) <- paste0("SD_", names(poSD))
-poNorm <- cbind (poNorm, poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)])
+poRA <- ctdAgg(df = poAll, function(x){diff(range(x, na.rm = TRUE))})
+names(poRA) <- paste0("Range_", names(poRA))
+poNorm <- cbind (poNorm,
+  poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)],
+  poRA [,which(names(poNorm) == colnames(oM)[1]):ncol(poRA)])
 
 if(0) { ## quarterly means -- not really enough data for these?
   season <- Seasonal(poAll$month)
@@ -123,26 +118,28 @@ if(0) { ## quarterly means -- not really enough data for these?
 
 
 ## calculate anomalies and save for further plotting
+normMatch <- match(paste(poAll$Match_Name, poAll$month),
+  paste(poNorm$Match_Name, poNorm$month))
+
+
 poAno <- sapply(seq_len(ncol(oM)), function(i) {
   pC <- which(names(poAll) == colnames(oM)[i])
-  poAll [,pC] - poNorm [match(paste(poAll$Match_Name, poAll$month),
-    paste(poNorm$Match_Name, poNorm$month)), nC[i]]
+  poAll [,pC] - poNorm [normMatch, nC[i]]
 }) |>
   as.data.frame()
 names(poAno) <- paste0("an_", colnames(oM))
 
 ## scale anomalies by SD
-poAno_scale <- sapply(seq_len(ncol(poAno)), function(i) {
-  poAno[,i] / poSD [match(paste(poAll$Match_Name, poAll$month),
-    paste(poSD$Match_Name, poSD$month)),nC[i]]
+poASc <- sapply(seq_len(ncol(oM)), function(i) {
+  poAno[,i] / poSD [normMatch, nC[i]]
 }) |>
   as.data.frame()
-names(poAno_scale) <- paste0("anS_", colnames(oM))
+names(poASc) <- paste0("anS_", colnames(oM))
+rm(normMatch)
 
-
-# poAllan <- cbind(poAll, poAno, poAno_scale)
-poAllan <- cbind(poAll, poAno_scale)
+poAllan <- cbind(poAll, poAno, poASc); rm (poAno, poASc)
 saveRDS(poAllan, file="~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+
 
 
 
@@ -196,13 +193,13 @@ oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname))
 oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname))
 oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle))
 oVars <- rep(oVars,2)
-oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))
+# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::rocket}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::viridis}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {oce::oceColorsViridis}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::mako}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {RColorBrewer::XXXblues}))  # or yellow-green-blue?
-# oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}))
+oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}))
 
 
 ## 12 months plot in a circle/rectangle, map in the middle
@@ -246,8 +243,8 @@ for (j in c("AlongBay", "9", "ABext")) {
     if(posterP) {
       # pdf(paste0(normDir, "T_", j, "_", oVarsF[ov], ".pdf"),
       #     height = 11, width = 8.5)
-      png(paste0(normDir, "T_", j, "_", oVarsF[ov], ".png"),
-          height = 11*300, width = 8.5*300, res=300)
+      png(paste0(normDir, "T_", j, "_", sprintf("%02d", ov), "-", oVarsF[ov],
+        ".png"), height = 11*300, width = 8.5*300, res=300)
       ## make a ring layout for the annual cycle
 #       layout(matrix(c(1:3, 12, 13, 4, 11, 13, 5, 10, 13, 6, 9:7), ncol = 3, byrow = TRUE))
       layout(matrix(rev(c(12, 1:2, 11, 14, 3, 10, 13, 4, 9, 15, 5, 8:6)), ncol = 3, byrow = TRUE))  ## winter on top
