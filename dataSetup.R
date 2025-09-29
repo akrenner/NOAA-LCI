@@ -178,7 +178,7 @@ rm(turbM, physOcT, month, poNorm)
 #   unlist())
 physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function(i){
-                                    require("oce")
+                                    # require("oce")
                                     cast <- subset(physOc, File.Name == levels(physOc$File.Name)[i])
                                     bvf <- oce::swN2(pressure=cast$Pressure..Strain.Gauge..db.
                                                        , sigmaTheta=cast$Density_sigma.theta.kg.m.3
@@ -399,17 +399,17 @@ poSS$pclDepth <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn
 }))
 ## freshwater content
 poSS$FreshWaterCont <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
+  # require("readr")
   fW <- subset(physOc,(File.Name==fn) &(Depth.saltwater..m. <= deepThd))  ## surface layer only  use deepThd XXX
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
+  # require("readr")
   fW <- subset(physOc,(File.Name==fn) &(Depth.saltwater..m. > deepThd))
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep2 <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
+  # require("readr")
   fW <- subset(physOc, File.Name==fn) |>
     subset(Depth.saltwater..m. > 40)
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
@@ -542,8 +542,8 @@ save.image("~/tmp/LCI_noaa/cache-t/troublesPO.RData")
 SCo <- stn[match(poSS$Match_Name, stn$Match_Name)
            , names(stn) %in% c("Lon_decDegree", "Lat_decDegree")]
 SCo <- as.matrix(cbind(SCo, cbind(poSS$longitude_DD, poSS$latitude_DD)))
-require("oce") ## reduce number of dependencies
-StDis <- geodDist(SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
+# require("oce") ## reduce number of dependencies
+StDis <- oce::geodDist(SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
 # require("fields")  ## use oce here instead?
 # StDis <- sapply(1:nrow(SCo), FUN = function(i){
 #     rdist.earth(matrix(SCo [i,1:2], nrow = 1), matrix(SCo [i,3:4], nrow = 1), miles = FALSE)
@@ -1014,7 +1014,7 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-require("zip")
+# require("zip")
 tD <- tempdir()
 zip::unzip("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)

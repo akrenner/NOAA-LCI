@@ -50,8 +50,16 @@ oVarsF <- c(oVarsF, paste0("an_", oVarsAnom), paste0("anS_", oVarsAnom))
 
 oRange <- rbind(oRange,
   t(sapply(c(paste0 ("an_", oVarsAnom), paste0("anS_", oVarsAnom)), FUN =
-  function(vn) {range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)}))
+  function(vn) {
+    rg <- range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
+    max(abs(rg)) * c(-1,1)
+  }))
 )
+
+
+oCol3 <- c(oCol3, lapply(seq_len(length(oCol3)*3), function(x) {heat.colors}))  ## XXX need: RColorBrewer::brewer.pal("RdBu")
+# oCol3 <- c(oCol3, lapply(seq_len(length(oCol3)*3), function(x) {RColorBrewer::brewer.pal(name="RdBu")}))  ## XXX need: RColorBrewer::brewer.pal("RdBu")
+# oCol3 <- c(oCol3, lapply(seq_len(length(oCol3)*3), function(x) {colorspace::divergingx_hcl}))  ## XXX need: RColorBrewer::brewer.pal("RdBu")
 
 
 
@@ -101,6 +109,7 @@ if(0) { ## tests
 ## plot T9 only
 # transectC <- which(levels(poAll$Transect) == "9")  # 5  # T9
 
+oceanvarC <- rev(oceanvarC) # XXX for testing
 
 for(ov in oceanvarC) {  # ov = OceanVariable(temp, salinity, etc)
   for(tn in transectC) {  # tn: transect

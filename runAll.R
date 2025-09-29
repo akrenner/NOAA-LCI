@@ -51,7 +51,7 @@ if(!file.exists(".initialized.rds")){
 
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
-  require(usethis) ## for github rate limits
+  # require(usethis) ## for github rate limits
   usethis::create_github_token()
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
@@ -67,6 +67,7 @@ if(0) {
 
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
+  badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     cat("\n\n##", badP [i], "##\n")

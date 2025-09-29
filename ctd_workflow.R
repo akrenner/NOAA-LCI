@@ -27,15 +27,15 @@ cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
 # Require <- pacman::p_load
 
 
-## pre-load widely needed packages. Do this here for new users.
-require ("tools")
-require ("dplyr")
-require ("oce")
-require ("openssl")
-require ("parallel")
-require ("lubridate")
-require ("geosphere")
-require ("zip")
+# ## pre-load widely needed packages. Do this here for new users.
+# require ("tools")
+# require ("dplyr")
+# require ("oce")
+# require ("openssl")
+# require ("parallel")
+# require ("lubridate")
+# require ("geosphere")
+# require ("zip")
 # require ("LakeMetabolizer")
 
 hexFileD <- "~/GISdata/LCI/CTD-processing/WorkspaceTest/"
