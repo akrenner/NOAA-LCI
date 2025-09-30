@@ -461,7 +461,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
     , silent = FALSE)  # XXX needs registered(static?) IP address. NCCOS VPN ok
     if(class(smp2)[1] != "try-error") {
       if(QAQC) {
-        smp2 <- qaqc(smp2)
+        smp2 <- SWMPr::qaqc(smp2)
       }
 
       if(class(smp2)[1] == "swmpr") {
