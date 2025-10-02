@@ -4,3 +4,7 @@
 .Ruserdata
 .DS_Store
 .initialized.rds
+MonthlyUpdates/*_monthly_files
+MonthlyUpdates/*_monthly.html
+MonthlyUpdates/media-*
+MonthlyUpdates/rsconnect
