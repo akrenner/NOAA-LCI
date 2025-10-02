@@ -447,15 +447,17 @@ for(i in seq_along(tVars)) {
   poD <- poD [order(poD$jday),]
   poD <- subset (poD, !is.na(SD))
 
+  tDescpt <- c("bottom - 10 m : bottom", "15 m : bottom - 10 m", "surface : 15 m")
+
   png(paste0(mediaD, "CTD_", Stn2p, "_day", tVars[i], maO, ".png"),
       width = 300*8, height = 300*6, res = 300)
   par(mar=c(5.5,5,2,5))
-  #    plotSetup(poD$xvar, poD$xvar, ylab = "Temperature [°C]")
   plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]")
   title (main = paste0 (gsub("^Temp", "", tVars[i]),
-    " layer water temperature, Inner Kachemak Bay"), sub = paste0 (
-    "Oceanography Station ", gsub("_", "-", Stn2p),
-    ", near Glacier Spit")
+    " layer water temperature, Inner Kachemak Bay"),
+    sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
+    ", near Glacier Spit ("# , gsub("^Temp", "", tVars[i]), ": "
+    , tDescpt [i], "), bottom: ", stn$Depth_m[match(Stn2p, stn$Match_Name)], " m")
     ## lookup description!
     # , stn$description [which (stn$Match_Name == Stn2p)]
     )

@@ -28,12 +28,6 @@ load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
 normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
 
 
-## fetch parameter from source? --- attach them to the end of poNorm!!
-plotSD <- TRUE
-plotSD <- FALSE
-
-
-
 
 ## copied from dataSetup.R(should have a package)
 Seasonal <- function(month) {           # now using breaks from zoop analysis -- sorry for the circularity
