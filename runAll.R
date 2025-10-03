@@ -194,6 +194,7 @@ source("metaDataCompilation.R")
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 if(length(grep("[M|m]artin", getwd())) > 0) {
+  ## sync all data to GoogleDrive -- better with GoogleDriveDesktop now?
   source("CTDsyncGDwall.R")
   ## send email that run is completed
   source("CTD_finishnotification.R")
