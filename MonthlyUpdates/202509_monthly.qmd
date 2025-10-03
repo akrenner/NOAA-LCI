@@ -27,6 +27,7 @@
 ## next time: new structure. First: temp and salinity and stratification. 
 ## then longt-term trends and anomalies
 ## then Biology. 
+## dirty hack for 2025-09 only: run CTD_timeseries.R in advanced branch, then again in main -- to get CTD sob-like graph. 
 
 
 ## clear the slate
@@ -39,6 +40,7 @@ if (!qV) {
   stop("Quarto binary not found. Please install Quarto.")
 }
 unlink("MonthlyUpdates/media/", recursive = TRUE)
+
 
 
 ## fetch data from notebook export and CTD processing
@@ -167,13 +169,15 @@ cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSp
 ## State-of-the-bay
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=destR, overwrite=TRUE)
 #     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=destR, overwrite=TRUE)
-cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png"
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-Temp-Deep-Homer.png"
   , to = destR, overwrite = TRUE)
-cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png"
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-salinity31-d.png"
   , to = destR, overwrite = TRUE)
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-chlorophyll.png", to=destR, overwrite=TRUE)
 cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/CTD_AlongBay_8_dayTempBottom41.png", to = destR, overwrite = TRUE)
 cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
+
 
 
 
@@ -225,15 +229,15 @@ Seasonal warming is now expanding into mid-water layers. A warm-water anomaly th
 
 This month, Hans, Kris, Martin, and Ross conducted the extended survey, which included T9 across the bay from the Homer Spit and the AlongBay transect on 24 and 25 September. <!-- `{r} dateAN` , -->
 Sea state during this survey varied from Beaufort 1 to Beaufort 4. 
-Air temperatures at on the spit were above the seasonal mean, approaching the 90th percentile, for much of this summer, including early September. Temperatures have now dropped not only seasonally, but are also approaching the long-term mean again (@fig-Temp_Airport). Precipitation has been well below the long-term mean since mid-June. While September has been wetter than August, precipitation is still below the long-term mean. On a larger scale, much of the North Pacific, has been in heat wave conditions this month, remeniscent of the 'blob' of 2014-16, but bigger; in fact only a few spots on the globe experience a negative sea surface anomaly conditions at the moment. 
+Air temperatures on the Homer Spit were above the seasonal mean, approaching the 90th percentile, for much of this summer, including early September. Temperatures have now dropped not only seasonally, but are also approaching the long-term mean again. Precipitation has been well below the long-term mean since mid-June. While September has been wetter than August, precipitation is still below the long-term mean. On a larger scale, much of the North Pacific has been in heat wave conditions this month, reminiscent of the 'blob' of 2014-16, but bigger; in fact only a few areas on the globe experience negative sea surface anomaly conditions at the moment. 
 
-Kachemak Bay National Estuarine Research Reserve (KBNERR) detected an *Alexandrium* bloom in early September, a potentially harmful dinoflagelate. Testing of shellfish has since revealed toxin levels up to twice the regulatory limit for human consumption ([AOOS](https://ahab.aoos.org/hab-alerts/)). The last time similar densities of *Alexandrium* were seen in Kachemak Bay was in 2016, during the extreme North Pacific marine heat wave. 
+Kachemak Bay National Estuarine Research Reserve (KBNERR) detected an *Alexandrium* bloom in early September, a potentially harmful dinoflagellate. Testing of shellfish has since revealed toxin levels up to twice the regulatory limit for human consumption ([AOOS](https://ahab.aoos.org/hab-alerts/)). The last time similar densities of *Alexandrium* were seen in Kachemak Bay was in 2016, during the extreme North Pacific marine heat wave. 
 
 <!-- In addition to these extremes, it has also been an extreme summer in terms of wave heights in Kachemak Bay. While wave heights would not have been unusual in winter, for the summer season, they were unprecedented (@fig-waves). At the same time, wind speeds stayed within normal ranges.  -->
 
 <!-- ![Waves at the mouth of Kachemak Bay, as measured by an AOOS operated wave buoy](./media/sa-waves.png){#fig-waves} -->
 
-![Recent temperature and precipitation at Homer Airport, compared to their seasonal means.](./media/sa-airTemp-LE.png){#fig-Temp_Airport}
+<!-- ![Recent temperature and precipitation at Homer Airport, compared to their seasonal means.](./media/sa-airTemp-LE.png){#fig-Temp_Airport} -->
 
 <!-- While within normal limits, it has been a cool and wet June so far. Average air temperature at Homer Airport were still below 10 °C [50  °F]. Conditions during the survey were choppy in the outer bay ( \< beaufort 5, with short steep waves up to 1.2 m, leading us to skip station AlongBay 1), but were predictably calmer in the inner bay. -->
 <!-- `{r} crewT` -->
@@ -245,7 +249,7 @@ A complete set of up-to-date graphs can be found on the Google Drive: [section p
 
 Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the outer bay near Homer Spit, to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in Cook Inlet, off Nanwalek. The falling air temperatures left their mark. Surface water temperatures in the inner bay began to equalize with midwater temperatures, which still carried heat from the summer. Even the coldest waters at the bottom of Kachemak Bay were significantly above the 8.5 °C thought to be necessary for sustaining an *Alexandrium* bloom. 
 
-A temperature (and salinity) front, was found in lower Cook Inlet, between Flat Island and Nanwalek, reaching from the surface all the way to the bottom (@fig-tSections_AB). The same front is visible on a satelite data, showing a tongue of warm water from coastal waters, extending across Kennedy Entrance towards Cape Douglas (@fig-SST_GOA). Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from a cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers. 
+A temperature (and salinity) front, was found in lower Cook Inlet, between Flat Island and Nanwalek, reaching from the surface all the way to the bottom (@fig-tSections_AB). The same front is visible on satellite data, showing a tongue of warm water from coastal waters, extending across Kennedy Entrance towards Cape Douglas (@fig-SST_GOA). Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers, the latter typically reaching their annual peak in September. 
 
 
 ::: {#fig-tSections}
@@ -265,18 +269,20 @@ Longitudinal and cross-sections of main parameters.
 
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
-The warm water anomaly that started here at the beginning of the year, was ongoing, at least in the deepwater (@fig-TempDeep, @fig-TSprofile_T9). Near-surface waters, as may be expected from the cooling air temperatures (@fig-Temp_Airport) were more in line with what is seasonally expected, as indicated by the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp). Compared to previous warm water events here, the current anomaly is less severe but has now been going on for a long time. 
+The warm water anomaly that started here at the beginning of the year, had diminished in surface waters, as indicated by the SWMP station operated by the KBNERR in Homer Harbor (@fig-SWMP-homerdeep-temp). Temperatures there are now back to at the long-term mean. The warm anomaly persists, however, in mid and deep waters (@fig-TSprofile_T9, @fig-TempDeepTS). Deep waters in the inner bay were about 0.8 °C, or 1 standard deviation warmer than normal (@fig-bottomTemp). Compared to previous warm water events here, the current anomaly is less severe but has now been going on for a long time (@fig-TempDeepTS). 
 
-<!-- Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August, but was diminished compared to previous months (@fig-TempDeep). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly about 1 °C above the long-term average, and remained near the 90th percentile.  -->
+<!-- Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August, but was diminished compared to previous months (@fig-TempDeepTS). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly about 1 °C above the long-term average, and remained near the 90th percentile.  -->
 
 <!-- add sob plot on air temperature -->
 
-![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeep}
 
-![Water temperature at the Homer Harbor SWMP station, at approximately 7 m depth.](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
+![Water temperature at the Homer Harbor SWMP station, operated by the KBNERR, at approximately 7 m depth (This is the deeper of two sensors, but is still located in the surface layer).](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
 
-![Deep water temperature at in the inner baay at station AlongBay-8 (deeper than 15 m).](./media/CTD_AlongBay_8_dayTempBottom41.png){#fig-DeepWaterTemp}
 
+![Variability of bottom-water temperature at T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeepTS}
+
+
+![Bottom water temperature at in the inner bay at station AlongBay-8.](./media/CTD_AlongBay_8_dayTempBottom41.png){#fig-bottomTemp}
 
 
 ![Long-term temperature and salinity profiles of T9-6 and their respective anomalies.](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
@@ -293,15 +299,15 @@ The warm water anomaly that started here at the beginning of the year, was ongoi
 
 Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) in the inner bay to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay near Homer Spit. While the surface waters have cooled, compared to last month, a salinity gradient maintains a stable, stratified water column in the inner, and parts of the outer bay (@fig-tSections_T9, @fig-tSections_T4). 
 
-The across-transects T9 and, especially, T4 show a north-sloping gradient of this stratification with the with a thicker layer of fresher water near the northern shore. This is consistent with freshwater exiting Kachemak Bay in a narrow band along the north shore, following the general counter-clockwise currents of Kachemak Bay. 
+The across-transects T9 and, especially, T4 show a gradient of this stratification with a thicker layer of fresher water near the northern shore. This is consistent with freshwater exiting Kachemak Bay in a narrow band along the north shore, following the general counter-clockwise currents of Kachemak Bay. 
 
-Since the beginning of the year, salinities at the mid-bay station T9-6 have been lower than the seasonal mean (@fig-SalDeep), particularly in waters below 25 m (@fig-TSprofile_T9). This anomaly has come to an end, at least for now, as we saw a slight reversal. 
+Since the beginning of the year, salinities at the mid-bay station T9-6 have been lower than the seasonal mean (@fig-SalDeep), particularly in waters below 25 m (@fig-TSprofile_T9). This anomaly has come to an end, at least for now, as we saw a slight reversal (@fig-SalDeep, @fig-TSprofile_T9). 
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
 ### Turbidity
 
-While no areas of high turbidity were encounted during the survey, waters in the outer bay were noticably clear. The turbidity signal differed noticably from the spatial patterns of temperature and salinity. Turbidity was low throughout the outer bay and into Cook Inlet. Highest turbidity values were found near the surface in the inner bay as well as near the bottom of the inner bay (@fig-tSections_AB). 
+While no areas of high turbidity were encountered during the survey, waters in the outer bay were noticeably clear. The turbidity signal differed markedly from the spatial patterns of temperature and salinity. Turbidity was low throughout the outer bay and into Cook Inlet. Highest turbidity values were found near the surface in the inner bay as well as near the bottom of the inner bay (@fig-tSections_AB). 
 
 
 
@@ -309,7 +315,7 @@ While no areas of high turbidity were encounted during the survey, waters in the
 
 ### Phytoplankton
 
-There were two areas of high chlorophyll concentrations: in surface waters of the inner bay, as is common during summer. A second, more unusual area of high activity was at the southwestern end of the extended AlongBay transect, in Cook Inlet off Nanwalek (@fig-tSections_AB), coinsiding with warmer temperatures and lower salinity. Interestingly, a plankton sample from this station contained Pseudo-nitzschia, which was abundant in Kachemak Bay in July, but was not expected this late in the year (Rose Masui, KBERR, pers. com.). Overall highest chlorophyll concentrations were  
+There were two areas of high chlorophyll concentrations: in surface waters of the inner bay, as is common during summer. A second, more unusual area of high activity was at the southwestern end of the extended AlongBay transect, in Cook Inlet off Nanwalek (@fig-tSections_AB), coinciding with warmer temperatures and lower salinity. Interestingly, a plankton sample from this station contained Pseudo-nitzschia, which was abundant in Kachemak Bay in July, but was not expected this late in the year (Rose Masui, KBERR, pers. com.). Overall highest chlorophyll concentrations were  
 
 
 Chlorophyll concentrations observed with the CTD fluorometer were below the seasonal mean for most stations (e.g. @fig-chlorophyll). Highest concentrations: 
@@ -329,7 +335,7 @@ Echo sounder returns were weak to moderate at a few stations. No samples were ta
 
 ### Wildlife
 
-A humpback whale was seen in the outer bay, as were several hundret red-necked phalaropes, the later foraging along convergence lines. Fork-tailed storm-petrels were seen both in the inner and the outer bay. While no sooty shearwaters were observed, several hundret short-tailed shearwater were off Point Pogibshi, with smaller numbers throughout the outer bay. Several horned puffins, rarely seen in Kachemak Bay during summer, were also off Point Pogibshi.
+A humpback whale was seen in the outer bay. About fourty red-necked phalaropes were seen foraging on small items at the surface along convergence lines. This common migratory species is usually already farther south at this time of the year. Fork-tailed storm-petrels were seen both in the inner and the outer bay. About 200 short-tailed shearwater were seen in the tide-rips off Point Pogibshi, with another 150 throughout the outer bay. Five horned and one tufted puffin, the latter only rarely seen in Kachemak Bay during summer, were also off Point Pogibshi. A parasitic jaeger was seen north of Flat Island. 
 
 ### Mailing list
 
