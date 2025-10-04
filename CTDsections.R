@@ -14,13 +14,13 @@ if(!exists("indivPlots")) {
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 # poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 
-
-keepV <- c(1,2,4,5,7)  ## cut out sigma, logPar, bvf
-oVarsF <- oVarsF [keepV]
-oVars <- oVars [keepV]
-oCol3 <- oCol3 [keepV]
-oRange <- oRange [keepV,]
-
+if(!indivPlots){
+  keepV <- c(1,2,4,6,7)  ## cut out sigma, logPar, bvf
+  oVarsF <- oVarsF [keepV]
+  oVars <- oVars [keepV]
+  oCol3 <- oCol3 [keepV]
+  oRange <- oRange [keepV,]
+}
 
 ## add anomalies and scaled anomalies
 
