@@ -171,21 +171,21 @@ oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
 odv <- rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
-require("cmocean")  ## for color ramps
-options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+# require("cmocean")  ## for color ramps
+# options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
 ## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
 oCol3 <- list( ## fix versions?
   # colorRampPalette(oce::oceColorsTurbo(8), bias=0.5)
   temperature = oce::oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
   , salinity = colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
-  , density = colorRampPalette(cmocean("dense")(5), bias = 0.3)
-  , oxygen = cmocean("oxy")
+  , density = colorRampPalette(cmocean::cmocean("dense")(5), bias = 0.3)
+  , oxygen = cmocean::cmocean("oxy")
   , logPAR = oce::oceColorsTurbo ## viridis::turbo(n, begin = 0.25, end = 0.8)
-  , chlorophyll = colorRampPalette(cmocean("algae")(5), bias = 3)
+  , chlorophyll = colorRampPalette(cmocean::cmocean("algae")(5), bias = 3)
   # , oceColorsTurbo # cmocean("solar")
-  , turbidity = colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
-  , bvf = colorRampPalette(c("white", rev(cmocean("haline")(32)))) # for densityGradient
+  , turbidity = colorRampPalette(cmocean::cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
+  , bvf = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32)))) # for densityGradient
   # , spice = cmocean("haline") # why is this here? should it be??
 )
 rm(odv)

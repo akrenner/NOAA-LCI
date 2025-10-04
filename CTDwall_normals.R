@@ -183,9 +183,9 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData"); graphics.off()
 
 ## adapt to cbind of poNorm and poSD
-oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname))
-oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname))
-oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle))
+oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
+oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
+oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle), paste0("Range-", oVarsTitle))
 oVars <- rep(oVars,2)
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::rocket}))
@@ -193,7 +193,9 @@ oVars <- rep(oVars,2)
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {oce::oceColorsViridis}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::mako}))
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {RColorBrewer::XXXblues}))  # or yellow-green-blue?
-oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}))
+oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}), # for SD
+           lapply(seq_along(oCol3), function(x) {heat.colors})         # range
+           )
 
 
 ## 12 months plot in a circle/rectangle, map in the middle
@@ -201,10 +203,24 @@ posterP <- TRUE
 # posterP <- FALSE
 
 source("CTDsectionFcts.R")
+## load KBL logo
+KBL <- png::readPNG("pictograms/KBL-Informal-NCCOS_tag_below_22hr.png")
 
 
 
+if(0) {## parallelize this plotting code for speed? -- maybe too much trouble?
+plotNorm <- function (i, cmbs) {
+  j <- cmbs [i,2]
+  ov <- cmbs [i,1]
+  ## prep transect -- j
+  ### ....
+  cat("Transect:", j, oVarsTitle [ov], "\n")
+}
 
+require("parallel")
+cmbs <- expand.grid(ov = seq_along(oVarsF), j = c("AlongBay", "9", "ABext"))
+x <- lapply(seq_len(nrow(cmbs)), FUN = plotNorm, cmbs=cmbs)
+}
 
 
 # for(h in seq_along(levels(poAll$Transect))) {
@@ -290,10 +306,9 @@ for (j in c("AlongBay", "9", "ABext")) {
       rm(xCoM)
 
       ## NCCOS-KBL logo
-      if(!exists("KBL")){
-        KBL <- png::readPNG("pictograms/KBL-Informal-NCCOS_tag_below_22hr.png")
-        im_h <- nrow(KBL); im_w <- ncol(KBL)
-        }
+      im_h <- nrow(KBL); im_w <- ncol(KBL)
+      # ppar <- par()
+      par(mar=c(1,2,1,2.0))
       plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
         , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n", bty = "n")
       rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
@@ -303,14 +318,14 @@ for (j in c("AlongBay", "9", "ABext")) {
       t.ramp <- oCol3[[ov]](nCol)
       yL <- 1.5
       #      par(mar=c(10, 1,3,1))
-
+      par(mar=c(1,2,4.1,2.0))
       bp <- barplot(rep(1, nCol), axes = FALSE, space = 0, col = t.ramp
                     , border = NA, ylim = c(-10, yL)  # ylim to make bar narrower, less high
       )
       title(main = oVars [ov], cex = 3, line = 0.5)
       lVal <-  pretty(c(zR [1, ov], zR [2, ov]))
       axis(1, at = (lVal - zR [1, ov]) / (zR [2, ov] - zR [1, ov]) * nCol
-           , labels = lVal, lwd = 0, line = -10.3, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
+           , labels = lVal, lwd = 0, line = -10.0, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
       ## main title:
       mtext(paste0(oVarsTitle [ov], "\nTransect: ", j), side = 1, line = -2, cex = 1.5)
 

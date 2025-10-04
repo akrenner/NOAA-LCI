@@ -134,7 +134,7 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                      , PAR.Irradiance
                                      , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                     ##, turbidity = Turbidity
+                                     , turbidity = Turbidity
                                      , Beam_attenuation
                                      , Beam_transmission
 ))
@@ -142,23 +142,30 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
 
 ## merge Beam_attenuation and Beam_transmission into Turbidity (units of attenuation)
 ## calculate monthly means, then regress transmission and attenuation
+## this is no longer a hard measurement -- that's why this is here rather than in
+## CTD prep scripts for published data.
+
+## merge 'turbidity' and beam attenuation given their similar menas (0.77 vs 0.78), and ranges
+## empirically translate beam_transmission, as that is the only viable option
 month <- factor(format(physOc$isoTime, "$m"))
-poNorm <- aggregate(cbind(Beam_attenuation, Beam_transmission) ~ Match_Name +
+turbC <- ifelse(is.na(physOc$turbidity), physOc$Beam_attenuation,
+                physOc$turbidity)
+poNorm <- aggregate(cbind(turbC, Beam_transmission) ~ Match_Name +
   month + Depth.saltwater..m., data=physOc, FUN = mean, na.rm = TRUE)
-turbM <- loess(Beam_transmission~Beam_attenuation, poNorm, span=0.5)
+turbM <- loess(Beam_transmission~turbC, poNorm, span=0.5)
+turb <- predict(turbM, newdata=turbC)
 if(0) {
-  plot (Beam_transmission~Beam_attenuation, poNorm)
-  ndat <- data.frame(Beam_attenuation = seq(min(poNorm$Beam_attenuation,
-   na.rm = TRUE), max(poNorm$Beam_attenuation, na.rm = TRUE), length.out = 100))
-  lines (ndat$Beam_attenuation, predict(turbM, newdata=ndat), col="blue", lwd=2)
+  plot (Beam_transmission~turbC, poNorm)
+  ndat <- data.frame(turbC = seq(min(turbC, na.rm = TRUE), max(turbC,
+    na.rm = TRUE), length.out = 100))
+  lines (ndat$turbC, predict(turbM, newdata=ndat), col="blue", lwd=2)
   rm(ndat)
 }
 ## apply model to all CTD data
-physOc$turbidity <- ifelse(is.na(physOc$Beam_attenuation),
-  predict(turbM, newdata=physOc$Beam_attenuation), physOc$Beam_attenuation)
+physOc$turbidity <- ifelse (is.na(turbC), turb, turbC)
 physOc <- physOc |>
   dplyr::select(-Beam_attenuation, -Beam_transmission)
-rm(turbM, physOcT, month, poNorm)
+rm (turbM, turb, turbC, poNorm)
 
 
 
