@@ -60,10 +60,13 @@ poAll <- dplyr::select(poAll, - Nitrogen.saturation..mg.l.,
     - PAR.Irradiance)
 # poAll$logPAR <- log(poAll$PAR.Irradiance)      ## XXX QAQC -- can PAR ever be negative?
 
+if(0){
 oRange <- oRange[-which(oVarsF == "logPAR"),]
 oVars  <- oVars [-which(oVarsF == "logPAR")]       ## shouldn't have to -- fix in CTDsectionFcts.R!
 oVarsF <- oVarsF[-which(oVarsF == "logPAR")]
+oVarsDFname <- oVarsF[-which(oVarsDFname == "logPAR")]
 oCol3$logPAR <- NULL
+}
 oCol3$spice <- NULL
 
 

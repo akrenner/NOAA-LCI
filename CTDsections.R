@@ -12,19 +12,22 @@ if(!exists("indivPlots")) {
   indivPlots <- FALSE
 }
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
-# poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+# base::load("~/tmp/LCI_noaa/cache/ctd_anomalies.RData")  # from CTD_anomaly-helpers.R
+
 
 if(!indivPlots){
-  keepV <- c(1,2,4,6,7)  ## cut out sigma, logPar, bvf
+  pV <- expand.grid (c("", "an_", "anS"),
+    c("temperature", "salinity", "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity"))
+  keepV <- which (oVarsF %in% paste0(pV[,2], pV[,1]))
+
+  keepV <- which(oVarsF %in% paste0(c("", ""), c("temperature", "salinity", "Oxygen_umol_kg",
+    "Chlorophyll_mg_m3", "turbidity")))
   oVarsF <- oVarsF [keepV]
   oVars <- oVars [keepV]
   oCol3 <- oCol3 [keepV]
   oRange <- oRange [keepV,]
 }
-
-## add anomalies and scaled anomalies
-
-
 
 
 
@@ -163,7 +166,8 @@ for(sv in iX) {
         } else {
 
           if(tn == 1 & sv == 151 & ov == 1) {
-            save(pSec, xCo, oVarsF, ov, oCol3, zR, file = "~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+            # save(pSec, xCo, oVarsF, ov, oCol3, zR, file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+            save.image(file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
           }
           ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
           # bathy_sec <- get_section_bathy(xCo) ## already used up
@@ -174,13 +178,12 @@ for(sv in iX) {
           # ## end of testing
 
           pSec(xCo
-               , N = oVarsF [ov]      # logPAR does not plot for reasons unknown XXX
+               , N = oVarsF [ov]
                , zCol = oCol3 [[ov]]
-               #    , zCol = oColF(ov)
-               #     , zcol = oCol2(ov, 10)  ## doesn't work with zlim
-               , zlim = zR, zbreaks = NULL # change this for salinity; others?
+               , zlim = zR, zbreaks = NULL
                , custcont = 7, labcex = 0.6
                , bathy = bathy_sec, legend.text = oVars [ov]
+               , bathycol = rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent so variable label can be seen
           )
           rm(zR)
         }

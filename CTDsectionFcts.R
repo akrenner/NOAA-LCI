@@ -150,7 +150,8 @@ get_section_bathy <- function(section) {
 
 
 pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
-  labcex = 1.0, plotContours = TRUE, bathy = NULL, legend.text = NULL, ...) {
+  labcex = 1.0, plotContours = TRUE, bathy = NULL, legend.text = NULL,
+  bathycol = "darkgray", ...) {
   ## hybrid approach -- still use build-in plot.section(for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -173,7 +174,7 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
     if(class(bathy)[1] == "data.frame"){
       # tgray <- rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent
       with(bathy, polygon(c(min(dist)*0.9, dist, max(dist)*1.1)
-        , c(max(depth)*1.1, depth, max(depth)*1.1), col = "darkgray"
+        , c(max(depth)*1.1, depth, max(depth)*1.1), col = bathycol
       ))
     }
   # re-write legend obscured by bathymetry -- no effect somehow :(

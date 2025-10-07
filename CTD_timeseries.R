@@ -11,8 +11,6 @@ rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R
 # load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  ## ??
 
 require("oce")
-require("RColorBrewer")
-require("tidyverse")
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -36,6 +34,7 @@ require("tidyverse")
 # x anomalies: smooth vertically and/or seasonally
 # x set water depth for section
 # x center color scale on 0
+# use poAll-anomaly calculated in CTDwall_normals.R
 
 
 ## x salinity: 0-10 m  and 10 to 100 m
@@ -50,7 +49,7 @@ require("tidyverse")
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor(physOc$Match_Name)
 pickStn <- which(levels(physOc$Match_Name) %in%
-  c("9_6", "9_8", "9_2", "AlongBay_3", "AlongBay_10", "4_6", "4_8", "4_3"))
+  c("9_6", "9_8", "9_2", "AlongBay_3", "4_6", "4_3"))  # span is too small for many AlongBay transects
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- seq_along(levels(physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 # pickStn <- 87 # 9-6
@@ -86,8 +85,8 @@ salCol <- oceColorsSalinity(11)
 # tCol <- rev(c("#de5842", "#fcd059", "#ededea"
 #                 , "#bfe1bf", "#a2d7d8"))
 tCol <- oceColorsTurbo(1000)
-tCol <- rev(brewer.pal(11, "Spectral"))
-tColAn <- rev(brewer.pal(length(salCol), "RdBu"))
+tCol <- rev(RColorBrewer::brewer.pal(11, "Spectral"))
+tColAn <- rev(RColorBrewer::brewer.pal(length(salCol), "RdBu"))
 # tCol <- colorRampPalette(tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
 
 
@@ -272,7 +271,7 @@ plot.station <- function(section, axes = TRUE, ...) {
 
 for(k in pickStn) {
   try({
-    #   k <- 87  ## 9-6
+    #   k <- 87  ## 9-6   # k <-
     stnK <- levels(physOc$Match_Name)[k]
     cat(stnK, "\n")
     xC <- subset(physOc, Match_Name == stnK)
@@ -399,7 +398,7 @@ for(k in pickStn) {
     if(length(zB) != length(tColAn) + 1) {stop("Fix zB for temp anomaly")}
     plot.station(xCS, which = "anTem"
       , zcol = tColAn
-      # , zcol = rev(brewer.pal(length(zB)-1, "RdBu"))
+      # , zcol = rev(RColorBrewer::brewer.pal(length(zB)-1, "RdBu"))
       , zbreaks = zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
     )
@@ -613,19 +612,19 @@ for(k in pickStn) {
 
     ## raw time-series profile
     # zB <- seq(0, ceiling(max(xC$bvf, na.rm=TRUE)), by=0.5)
-    require("cmocean")  ## for color ramp cmocean -- just use viridis
-    options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+#    require("cmocean")  ## for color ramp cmocean -- just use viridis
+#    options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
     ## seasonal climatology
     clPlot(cT9, which = "sBvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(32))))
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32))))
     )
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Brunt ~ Väisälä ~ Buoyancy ~ frequency - seasonal ~ climatology ~ "[" * s^-2 * "]"))
 
     ## raw time series of buoyancy
     plot.station(xCS, which = "bvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(32))))
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32))))
       # , zbreaks=zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
       , ylim = c(deepThd, 0)  ## new requirement of new oce version?
@@ -638,7 +637,7 @@ for(k in pickStn) {
       ## anomaly (too noisy?)
       zB <- sF(v = xC$anBvf, qR = 0.90)
       plot.station(xCS, which = "anBvf"
-        , zcol = brewer.pal(11, "RdBu")
+        , zcol = RColorBrewer::brewer.pal(11, "RdBu")
         , zbreaks = zB
         , legend.loc = "" # legend.text="temperature anomaly [°C]"
       )
@@ -685,14 +684,14 @@ for(k in pickStn) {
     par(las = 1, mfrow = c(2, 1))
     ## chlorophyll
     clPlot(cT9, which = "sFluo", zcol = oceColorsChlorophyll(12)
-      , ylim = c(0, 25)) ## add contour
+      , ylim = c(25, 0)) ## add contour
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Chlorophyll ~ concentration ~ "[" * mg ~ m^-3 * "]"))
 
     ## buoyancy-frequency
     clPlot(cT9, which = "sBvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(8))))(12)
-      , ylim = c(0, 25)
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(8))))(12)
+      , ylim = c(25, 0)
     )
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Brunt - Väisälä ~ buoyancy ~ frequency ~ "[" * s^-2 * "]"))
@@ -703,11 +702,11 @@ for(k in pickStn) {
 
 
 
-    ## --------- emulate Figure 4 from GWA report -- in ODV colors, because Kris want's it
+    ## --------- emulate Figure 4 from GWA report -- in ODV colors
     ## three panels, 1 page: Temperature, Salinity, Chlorophyll
 
     ODV_colours <- colorRampPalette(c("#feb483", "#d31f2a", "#ffc000", "#27ab19"
-      , "#0db5e6", "#7139fe", "#d16cfa"))(50) %>%
+      , "#0db5e6", "#7139fe", "#d16cfa"))(50) |>
       rev()
     dir.create("~/tmp/LCI_noaa/media/EVOS/", showWarnings = FALSE, recursive = TRUE)
     png("~/tmp/LCI_noaa/media/EVOS/Figure4-TSC-panel.png", width = 6.5 * 150, height = 8.0 * 150, res = 150)
@@ -1049,7 +1048,7 @@ for(iS in seq_along(tL)) {
     rownames(springM) <- levels(factor(T96f$Year))
     springM <- as.Date(springM) # this would turn matrix into vector if ncol=1
     if(length(thTempL) > 1) {
-      suppressWarnings(colr <- brewer.pal(length(thTempL), "Accent"))
+      suppressWarnings(colr <- RColorBrewer::brewer.pal(length(thTempL), "Accent"))
     } else {colr <- "black"}
 
     ## version 1 -- year on x-axis
@@ -1154,14 +1153,14 @@ if(0) {  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
   gakS <- lapply(seq_along(levels(gak$depthF))
     , function(i) {
       gax <- subset(gak, depthF == levels(gak$depthF)[i])
-      with(gax, as.ctd(salinity, temperature
+      with(gax, oce::as.ctd(salinity, temperature
         , pressure
         , time = DateTime
         , longitude = -149.5
         , latitude = 59.84
         , deploymentType = "moored"))
-    }) %>%
-    as.section   #(waterDepth=250)
+    }) |>
+    oce::as.section()   #(waterDepth=250)
 }
 
 # u <- "http://erddap.aoos.org/erddap/tabledap/org_gulfwatchalaska_gak1"

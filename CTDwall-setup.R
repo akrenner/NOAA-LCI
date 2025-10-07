@@ -156,6 +156,7 @@ oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
   , "turbidity" # , "logTurbidity"
   , "bvf"
 )
+oVarsDFname <- names(poAll)[which(names(poAll) == "Temperature_ITS90_DegC"):ncol(poAll)]
 
 ## see https://github.com/jlmelville/vizier
 # install.packages("remotes")
