@@ -15,6 +15,7 @@
 # position of max buoyancy over time
 
 
+
 rm(list = ls())
 sT <- Sys.time()
 
@@ -117,6 +118,7 @@ source("CTD_DataAvailability.R")
 
 source("CTDwall-setup.R")
 source("CTDwall_normals.R")
+source("CTD_anomaly-helpers.R")
 source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)

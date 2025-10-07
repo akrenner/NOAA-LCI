@@ -19,7 +19,7 @@ if (length (grep ("martin", tolower (getwd()))) > 0) {
   # Generic setup
   setwd("~/myDocs/R-scripts/NOAA-LCI")
 }
-cat ("\n\nStarting ctdprocessing at", as.character (Sys.time()), "\n\n")
+cat ("\n\n## Starting ctdprocessing at", format (Sys.time(), "%Y-%m-%d %H:%M"), "\n\n")
 
 ## load missing packages
 # if (!require("pacman")) install.packages("pacman"
@@ -52,6 +52,6 @@ cat ("## Finished CTD_cleanup.R at ", as.character (Sys.time()), "\n\n")
 # source ("CTD_notesQAQC.R")       ## unfinished; need to retune. Merge into CTD_cleanup.R??
 # cat ("## Finished CTD_notesQAQC.R\n\n")
 
-cat ("## Finished ctd_workflow at ", as.character (Sys.time()), "\n")
+cat ("\n\n## Finished ctd_workflow at ", format (Sys.time(),  "%Y-%m-%d %H:%M"), "\n")
 
 # EOF

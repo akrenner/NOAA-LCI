@@ -14,12 +14,18 @@ renv::status()
 renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
 # renv::init(bioconductor = "3.21")
 
-renv::install (repos = "https://cloud.r-project.org/")
+renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE)
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+renv::install("remotes", prompt = FALSE)
+remotes::install_github("NOAA-EDAB/buoydata")
+renv::install("terra", prompt = FALSE)
+remotes::install_git("https://github.com/STBrinkmann/GVI")
 renv::restore()
 require ("conflicted")
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+
+
 
 
 
