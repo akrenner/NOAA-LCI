@@ -59,7 +59,14 @@ if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG
 
 ## get data from GitHub
 # .... still need to add this here. rsync would be ideal.
-
+dir.create ("~/GISdata/SWMP/", recursive = TRUE)
+if(!file.exists("~/GISdata/LCI/.git/config")){
+  hd <- getwd()
+  setwd ("~/GISdata/")
+  system ("git clone https://github.com/akrenner/LCI.git")
+  setwd(hd); rm(hd)
+}
+## these may/should not be needed, but don't hurt
 dir.create("~/tmp/LCI_noaa/cache/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings = FALSE, recursive = TRUE)

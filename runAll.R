@@ -32,6 +32,10 @@ if(!file.exists(".initialized.rds")){
   source("InitialSetup.R")
   saveRDS(Sys.Date(), file=".initialized.rds")
 }
+hd <- getwd()
+setwd("~/GISdata/LCI/")
+system("git pull")
+setwd(hd); rm (hd)
 
 
 if(0) {
