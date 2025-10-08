@@ -11,7 +11,7 @@ poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 oVars <- rep(oVars, 3)
 
 ## failing a better method to manipulate expressions, do this manually for now
-oVars <- expression(Temperature ~ "[" * ""^o ~ C * "]",
+oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]",
                     Salinity ~ "[" * PSU * "]",
                     Density ~ "[" * sigma[theta] * "]",
                     Oxygen ~ "[" * mu * mol ~ kg^-1 * "]",
@@ -21,7 +21,7 @@ oVars <- expression(Temperature ~ "[" * ""^o ~ C * "]",
                     Buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]",
                     log ~ (PAR),
                     log ~ (turbidity),
-                    Temperature ~ Anomaly ~ "[" * ""^o ~ C * "]",
+                    "Temperature Anomaly [°C]", # Temperature ~ Anomaly ~ "[" * ""^o ~ C * "]",
                     Salinity ~ Anomaly ~ "[" * PSU * "]",
                     Density ~ Anomaly ~ "[" * sigma[theta] * "]",
                     Oxygen ~ Anomaly ~ "[" * mu * mol ~ kg^-1 * "]",

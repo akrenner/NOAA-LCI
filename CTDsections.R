@@ -3,8 +3,6 @@
 ## for QAQC and error checking
 ## option to run this for any one and only section
 
-## to do list:
-## - bathymetry as in wall
 
 if(!exists("indivPlots")) {
   rm(list = ls())
@@ -12,6 +10,10 @@ if(!exists("indivPlots")) {
   indivPlots <- FALSE
   anomalies <- TRUE
   # anomalies <- FALSE
+  plotAll <- TRUE
+}else{
+  anomalies <- TRUE
+  plotAll <- FALSE
 }
 # base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
@@ -23,8 +25,7 @@ if(!indivPlots){
     # decide which anomaly to plot in panneled plots: raw vs scaled by SD
     pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU",
                          "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity")
-                       , c(""
-                           # , "an_"
+                       , c("" # , "an_"
                            , "anS_"
                          ))
     keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
@@ -37,6 +38,7 @@ if(!indivPlots){
   oVarsDFname <- oVarsDFname [keepV]
   oCol3 <- oCol3 [keepV]
   oRange <- oRange [keepV,]
+  rm(keepV)
 }
 
 
@@ -54,12 +56,21 @@ source("CTDsectionFcts.R")  # get pSec to plot sections
 # rm(list = ls()); load("~/tmp/LCI_noaa/cache/ctdwall2.RData")
 
 
-test <- TRUE
-test <- FALSE
-
 ## define survey by month, not date XXX
-if(test) {iX <- 10} else {iX <- rev(seq_along(levels(poAll$survey)))} # rev: new years first
+if(plotAll) {iX <- rev(seq_along(levels(poAll$survey)))} else {
+  iX <- rev(seq_along(levels(poAll$survey)))[1:4] # only plot the last N surveys
+}
 
+
+## make this a function and run in parallel! -- slow
+# require(foreach)
+# require(doParallel)
+# num_cores <- detectCtores(logical = TRUE) - 1
+# cl <- makeCluster(num_cores)
+# registerDoParallel(cl)
+# stopCluster(cl)
+#
+# x <- foreach(sv = iX, .combine = 'c', .export=) %dopar% {
 
 for(sv in iX) {
   # sv <- 151
@@ -284,12 +295,12 @@ rm(iY, iX, s, sv, tn, outD)
 if(.Platform$OS.type == "unix") {
   ncores = 12
 } else {
-  ncores <- 1
+  ncores <- 1  # 2025 laptop: 4 cores, 8 threads
 }
 # parallel::mclapply(X=iX, poAll=poAll, mc.cores=ncores, FUN=function(sv,...){
 # })
 
-
+## future_map from furrr
 
 
 physOc <- poAll

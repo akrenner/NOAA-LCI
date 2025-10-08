@@ -138,7 +138,7 @@ if(0) {
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- expression(Temperature ~ "[" * ""^o ~ C * "]"
+oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
   , Salinity ~ "[" * PSU * "]"
   , Density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
   , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
