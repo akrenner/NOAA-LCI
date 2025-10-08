@@ -78,7 +78,8 @@ for(sv in iX) {
   if(sv %% 10 == 0) {cat(" ", sv, "/", max(iX), "\n", sep = "")}
   s <- subset(poAll, survey == levels(poAll$survey)[sv]) # for testing -- eventually move up for efficiency
   s$Transect <- factor(s$Transect)
-  if(test) {iY <- 1} else {iY <-  seq_along(levels(s$Transect))} # by transect
+  iY <-  seq_along(levels(s$Transect)) # by transect
+  # iY <- 1 ## testing
 
   ## standardize some measures across all casts off one survey -- from CTDwall-setup.R
   oRangeS <- t(sapply(oVarsDFname, FUN = function(vn) {
@@ -304,10 +305,9 @@ if(.Platform$OS.type == "unix") {
 
 
 physOc <- poAll
-if(!test) {
-  # rm(xCo, tn, oVars, ov, poAll, pSec)
-  gc()
-}
+# rm(xCo, tn, oVars, ov, poAll, pSec)
+gc()
+
 
 
 cat("\nfinished CTDsections.R\n\n")
