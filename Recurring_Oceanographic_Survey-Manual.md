@@ -40,7 +40,7 @@ To change the date, the time command has to be issued as well, and visa-versa. W
 - vlith: replace lithium battery if vlith is < 7 (https://rts.as/wp-content/uploads/2018/09/Seabird-SBE-19plus-Profiler-CTD-manual.pdf page 113).
 - casts: CTD stores up to 299 casts. It is advisable to clear the CTD memory after each survey once it has been confirmed that all data has been successfully downloaded. To clear CTD memory, click the 'Init Log' botton. This does not work on the new CTD, serial 8138. Here, manually issue this command, then a second time to confirm: 
 ```
-IR
+InitLogging
 ```
 
  At the very latest, memory should be cleared when approaching 200 casts in memory. 
