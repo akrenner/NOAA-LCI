@@ -74,16 +74,24 @@ ctdAgg <- function(df = poAll, FUN=mean, ...) {
 
 
 poNorm <- ctdAgg(df = poAll, FUN = mean, na.rm = TRUE)
-poN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) })
 nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
+# pN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) }) |>
+#   dplyr::select(-Match_Name, -month, -Depth.saltwater..m.) |>
+#   apply(MARGIN=1, FUN=sd)
+# if(!all.equal(pN, rep(0, nrow(poNorm)))) {stop("investigate discrepancy")}; rm(pN)
+pN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) }) |>
+  dplyr::pull(Temperature_ITS90_DegC) # inefficient to compute, but easy to code
+
 # drop values with N < nMin
-poNorm[,nC]<-sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poNorm [,i])} )
+poNorm[,nC]<-sapply(nC, function(i) {ifelse(pN < nMin, NA, poNorm [,i])} )
 # ## add stn data and Pressure for oce
 
 
 
 poSD <- ctdAgg(df = poAll, sd, na.rm = TRUE)
-poSD[,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSD   [,i])} )
+poSD[,nC] <- sapply(nC, function(i) {ifelse(pN < nMin, NA, poSD   [,i])} )
+
+
 names(poSD) <- paste0("SD_", names(poSD))
 poRA <- ctdAgg(df = poAll, function(x){diff(range(x, na.rm = TRUE))})
 names(poRA) <- paste0("Range_", names(poRA))
@@ -97,14 +105,15 @@ if(0) { ## quarterly means -- not really enough data for these?
   poSorm <- aggregate(oM ~ Match_Name + season + Depth.saltwater..m., data = poAll,
     FUN = mean, na.rm = TRUE) |>
     dplyr::arrange(Match_Name, month, Depth.saltwater..m.)
-  poSorm [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSorm [,i])} )
+  poSorm [,nC] <- sapply(nC, function(i) {ifelse(pN < nMin, NA, poSorm [,i])} )
 }
 
 
 
 ## calculate anomalies and save for further plotting
-normMatch <- match(paste(poAll$Match_Name, poAll$month),
-  paste(poNorm$Match_Name, poNorm$month))
+normMatch <- match(paste(poAll$Match_Name, poAll$month,
+                         poAll$Depth.saltwater..m.),
+  paste(poNorm$Match_Name, poNorm$month, poNorm$Depth.saltwater..m.))
 
 
 poAno <- sapply(seq_len(ncol(oM)), function(i) {
