@@ -47,27 +47,13 @@ dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 #   XXX could do this better, using circular annual means, as elsewhere
 
 # min for a stable mean:
-nMin <- 2
+nMin <- 3 # SD estimate become unstable if too low, affecting range of scaled anomalies
 current_year <- format(Sys.Date(), "%Y")
 
 
 ## output: as poAll, but with month as factor
 poAll$month <- as.numeric(poAll$month)
 
-
-poAll <- dplyr::select(poAll, - Nitrogen.saturation..mg.l.,
-    - Oxygen_sat.perc.,
-    - PAR.Irradiance)
-# poAll$logPAR <- log(poAll$PAR.Irradiance)      ## XXX QAQC -- can PAR ever be negative?
-
-if(0){
-oRange <- oRange[-which(oVarsF == "logPAR"),]
-oVars  <- oVars [-which(oVarsF == "logPAR")]       ## shouldn't have to -- fix in CTDsectionFcts.R!
-oVarsF <- oVarsF[-which(oVarsF == "logPAR")]
-oVarsDFname <- oVarsF[-which(oVarsDFname == "logPAR")]
-oCol3$logPAR <- NULL
-}
-oCol3$spice <- NULL
 
 
 ## XXXX move forward to CTD_cleanup.R!!!       ================================= XXX
@@ -77,7 +63,7 @@ poAll$Match_Name <- as.character(poAll$Match_Name)
 
 
 oM <- as.matrix(poAll [, which(names(poAll) == "Temperature_ITS90_DegC")
-  :which(names(poAll) == "bvf")])
+  :ncol(poAll)])
 
 ctdAgg <- function(df = poAll, FUN=mean, ...) {
   aggregate(oM ~ Match_Name + month + Depth.saltwater..m., data = df,
@@ -90,19 +76,21 @@ ctdAgg <- function(df = poAll, FUN=mean, ...) {
 poNorm <- ctdAgg(df = poAll, FUN = mean, na.rm = TRUE)
 poN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) })
 nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
-poNorm [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poNorm [,i])} )
+# drop values with N < nMin
+poNorm[,nC]<-sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poNorm [,i])} )
 # ## add stn data and Pressure for oce
 
 
 
 poSD <- ctdAgg(df = poAll, sd, na.rm = TRUE)
-poSD [,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSD [,i])} )
+poSD[,nC] <- sapply(nC, function(i) {ifelse(poN[,i] < nMin, NA, poSD   [,i])} )
 names(poSD) <- paste0("SD_", names(poSD))
 poRA <- ctdAgg(df = poAll, function(x){diff(range(x, na.rm = TRUE))})
 names(poRA) <- paste0("Range_", names(poRA))
 poNorm <- cbind (poNorm,
-  poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)],
-  poRA [,which(names(poNorm) == colnames(oM)[1]):ncol(poRA)])
+    poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)]
+  , poRA [,which(names(poNorm) == colnames(oM)[1]):ncol(poRA)]
+  )
 
 if(0) { ## quarterly means -- not really enough data for these?
   season <- Seasonal(poAll$month)
@@ -128,14 +116,17 @@ names(poAno) <- paste0("an_", colnames(oM))
 
 ## scale anomalies by SD
 poASc <- sapply(seq_len(ncol(oM)), function(i) {
-  poAno[,i] / poSD [normMatch, nC[i]]
+#  poAno[,i] / poSD [normMatch, nC[i]]
+  (poAll [,which(names(poAll) == colnames(oM)[i])] -
+    poNorm[normMatch, which(names(poNorm) == colnames(oM)[i])]) /
+    poSD [normMatch, which(names(poSD) == paste0("SD_", colnames(oM)[i]))]
 }) |>
   as.data.frame()
 names(poASc) <- paste0("anS_", colnames(oM))
 rm(normMatch)
 
-poAllan <- cbind(poAll, poAno, poASc); rm (poAno, poASc)
-saveRDS(poAllan, file="~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+poAll <- cbind(poAll, poAno, poASc); rm (poAno, poASc)
+saveRDS(poAll, file="~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 
 
 
@@ -185,7 +176,7 @@ oVarsTitle <- oVarsF |>
 save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData"); graphics.off()
 
-## adapt to cbind of poNorm and poSD
+## adapt to cbind of poNorm and poSD -- these are of no use for anomalies
 oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
 oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
 oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle), paste0("Range-", oVarsTitle))
