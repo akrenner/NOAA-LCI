@@ -198,6 +198,7 @@ There are two ways to go about downloading hex files from the CTD: interactively
 The following instructions work under Windows 11. Install the following software: 
 <!--- [##]: Install required software. Estimated time: --->
 - R, version 4.0.0 or later https://cran.r-project.org/bin/windows/base/release.html, now also available directly from 'Software Center', if you have a NOAA laptop.
+- Rtools https://cran.r-project.org/bin/windows/Rtools/ to match your version of R. This may need help from an administrator to install. 
 - git https://git-scm.com/download/win
 - Python, https://www.python.org/downloads/
 All of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use an IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
