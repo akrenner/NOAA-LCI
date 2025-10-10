@@ -216,6 +216,8 @@ setwd ("~/GISdata/")
 system ("git clone https://github.com/akrenner/LCI.git")
 renv::restore()
 ````
+
+You will be asked to initiate a new project (say yes) and whether you want to proceed (with package installation), again say yes ('Y'). 
 Advanced: In order to push changes to code or data back into the repository and that way share them, you may have to generate a token on the githup.com website. It is recommended to generated a ssh key for passwordless communication.
 
 To process CTD, install SEABIRD's python program with pip. Open a git shell and enter: 

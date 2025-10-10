@@ -88,7 +88,7 @@ poNorm[,nC]<-sapply(nC, function(i) {ifelse(pN < nMin, NA, poNorm [,i])} )
 
 
 
-poSD <- ctdAgg(df = poAll, sd, na.rm = TRUE)
+poSD <- ctdAgg(df = poAll, stats::sd, na.rm = TRUE)
 poSD[,nC] <- sapply(nC, function(i) {ifelse(pN < nMin, NA, poSD   [,i])} )
 
 
