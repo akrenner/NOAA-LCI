@@ -15,9 +15,7 @@
 # position of max buoyancy over time
 
 
-
-rm(list = ls())
-sT <- Sys.time()
+rm (list = ls())
 
 if (.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
@@ -26,7 +24,6 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
-rm (list = ls())
 
 sT <- Sys.time()
 cat ("\nStarting runAll.R at: ", as.character (Sys.time()), "\n")
@@ -37,11 +34,6 @@ pastYear <- FALSE  # plot currentYear-1 ?
 ongoingY <- TRUE   # for quarterly update
 
 
-if(.Platform$OS.type == "windows") {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-} else { ## Linux or macOS platform
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-}
 
 
 if(!file.exists(".initialized.rds")){

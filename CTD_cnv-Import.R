@@ -383,8 +383,9 @@ fileDB$match <- match (toupper (fileDB$FN_matchname), toupper (stnMaster$Match_N
 badM <- which (is.na (fileDB$match))
 if (length (badM) != 59) {
   cat ("\n\n##\n## The following casts don't have a match in main station table:\n")
-  print (fileDB [badM, which (names (fileDB) %in% c("file", "FN_matchname"))])
-  warng ("The number of non-matched CTD casts has changed from 59\n\n")
+  print (fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))])
+  stop (paste0 ("The number of non-matched CTD casts has changed from 59 to ",
+                length (badM), "\n\n"))
 }
 rm (badM)
 ## as of 2022-08-11, these are 59 files (1.3%)

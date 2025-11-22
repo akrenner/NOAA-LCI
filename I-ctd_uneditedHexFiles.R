@@ -16,8 +16,8 @@ rm(list = ls())
 ## interactively find folder of new survey
 if(0) {
   unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/")
-  uneditedD <- unedDL [length(unedDL) - 1] ## skip "Troubleshooting"
-  uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-07"
+  uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
+  uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2024/2024-09"
   # uneditedD <- unedDL [67] # 2024-01
 }
 
