@@ -28,9 +28,9 @@ source("annual-fetchAirWeather.R")
 source("SeldoviaTemp.R") ## fetch SWMP water data
 
 ## plot seasonal means and current/previous year
+source("annual-waterTempSal.R")
 source("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 # source("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
-source("annual-waterTempSal.R")
 source("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
 source("annual-rainy.R")
 source("annual-snowpack.R")

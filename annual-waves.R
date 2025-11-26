@@ -710,7 +710,7 @@ as.data.frame (approx(wDB$datetimestamp, wDB$surf
   , xout = as.POSIXct ("2020-12-31 15:00")))
 
 
-getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
+# suncalc::getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
 
 
 

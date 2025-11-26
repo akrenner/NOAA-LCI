@@ -179,15 +179,22 @@ for(sv in iX) {
           # max(xCo[['distance']])# GIS says that this is correct(3.9 km), also matching section plot
           # ## end of testing
 
+          ## define zbreaks for anomaly plots (0.5, 1, 1.5, 2, 2.5, 3 SDs)
+          if (length(grep("^anS_", oVarsF[ov])) > 0){
+            zb <- seq(-3,3, by=0.5)
+          }else{
+            zb <- NULL
+          }
+
           pSec(xCo
                , N = oVarsF [ov]
                , zCol = oCol3 [[ov]]
-               , zlim = zR, zbreaks = NULL
+               , zlim = zR, zbreaks = zb
                , custcont = 7, labcex = 0.6
                , bathy = bathy_sec, legend.text = oVars [ov]
                , bathycol = rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent so variable label can be seen
           )
-          rm(zR)
+          rm(zR, zb)
         }
 
         ## insert map at a certain position, coordinated with layout above

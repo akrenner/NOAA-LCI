@@ -325,6 +325,7 @@ for (j in seq_along (instSite)) {
     , pastYear = pastYear, ongoingYear = ongoingY
   )
   box()
+  legend("bottomright", bty="n", legend="doi:10.25921/vw8a-8031", cex=0.5) # acknowledgement
   dev.off()
 }
 rm (instSite, tDay)
