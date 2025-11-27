@@ -108,6 +108,8 @@ for(iV in seq_len(nrow(pPage))){
   ## for testing
   ## ov <- 1; tn <- 6 ## AlongBay
   ## ov <- 1; tn <- 2
+  ## anS_salinity, T9
+  ## ov <- 22; tn <- 5
 
   cat("\n\n", oVarsF [ov], " T-", levels(poAll$Transect)[tn], "\n")
 
@@ -297,10 +299,18 @@ for(iV in seq_len(nrow(pPage))){
         ##
         ## if(ov == 2){zB <- c(28, seq(30, 33, 0.2))}else{zB <- NULL} ## fudge salinity colors
         if(oVarsF [ov] == "bvf") {cCont <- NULL} else {cCont <- pretty(oRange [ov, ], 20)}
+
+        if(length(grep("^anS_", oVarsF[ov])) > 0){
+          zb <- seq(-3,3, by=0.5)
+          # zb <- subset (zb, zb != 0)  ## include zero or not?? center a color around zero?
+        }else{
+          zb <- NULL
+        }
+
         pSec(xCo, N = oVarsF [ov]
              , zCol = oCol3 [[ov]]
              , zlim = oRange [ov, ] # fixes colors to global range of that variable
-             # , zbreaks=zB # better?, slower interpolation
+             , zbreaks=zb
              # , custcont = pretty(oRange [ov,], 20)  ## may often fail? -- no contours in range
              , ylim = c(max(physOcY$Depth.saltwater..m., na.rm = TRUE) + 5, 0)  ## need to fix CTDwall-setup.R first
              , drawPalette = FALSE, custcont = cCont, bathy = bathy_sec
@@ -433,7 +443,11 @@ for(iV in seq_len(nrow(pPage))){
 
   ## needs better scaling for infrequent/quarterly surveys
 
-  nCol <- 100
+  if(length(zb)>0){
+    nCol <- length(zb) # +1 # to compensate for missing 0 ?
+  }else{
+    nCol <- 100
+  }
   t.ramp <- oCol3[[ov]](nCol)
   if(pH > 30) {
     yL <- 1.8

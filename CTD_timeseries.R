@@ -1238,8 +1238,9 @@ chlA$deep <- chlAd$Chlorophyll_mg_m3 [match(chlA$Match_Name, chlAd$Match_Name)]
 chlA$lat <- geoC$latitude_DD [match(chlA$Match_Name, geoC$Match_Name)]
 chlA <- chlA [order(chlA$lat), ]
 
+png(paste0(mediaD, "x-chlorophyl_AlongBay_2023.png"))
 par(ylog = TRUE)
-plot(Chlorophyll_mg_m3 ~ lat, chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
+plot(Chlorophyll_mg_m3 ~ lat, data=chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
   , main = "Chlorophyll in May 2023 on AlongBay transect")
 lines(chlA$lat, chlA$deep, col = "darkgreen", lwd = 2)
 legend("topright", lwd = 2, col = c("lightgreen", "darkgreen")

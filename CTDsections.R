@@ -180,7 +180,7 @@ for(sv in iX) {
           # ## end of testing
 
           ## define zbreaks for anomaly plots (0.5, 1, 1.5, 2, 2.5, 3 SDs)
-          if (length(grep("^anS_", oVarsF[ov])) > 0){
+          if(length(grep("^anS_", oVarsF[ov])) > 0){
             zb <- seq(-3,3, by=0.5)
           }else{
             zb <- NULL
