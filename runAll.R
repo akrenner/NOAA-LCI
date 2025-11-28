@@ -84,7 +84,7 @@ if(1) {
 
   ## hex conversion and QAQC plots
   sink(file = "ctdprocessing.log", append = FALSE, split = FALSE)
-  cat("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
+  cat("Started CTD hex conversion at", format(Sys.time(), "%Y-%m-%d %H:%M"), "\n")
   source("FieldNotesDB.R") # first because it doesn't depend on anything else
   source("ctd_workflow.R")              ## approx. 1:30 hours
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
@@ -93,6 +93,7 @@ if(1) {
 }
 
 
+sink(file = runAll.log, append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
@@ -165,8 +166,6 @@ if(0) { # Dec 2019 seasonality
   q()
   source("consensusTree.R")
 }
-sink()
-
 
 ## one-offs
 if(0) {
