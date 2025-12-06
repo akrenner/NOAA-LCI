@@ -37,7 +37,7 @@ rm (list = ls())
 cWD <- getwd()
 setwd ("~/")  ## needed?? good idea??? XXX  (yes, needed for batch file, at least for now)
 sTime <- Sys.time()
-print (sTime)
+print (as.character(sTime))
 
 
 #################################

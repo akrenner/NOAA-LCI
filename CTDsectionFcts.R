@@ -146,21 +146,12 @@ get_section_bathy <- function(section) {
   p_out
 }
 
-addBathy <- function(bathysection) {
-  # separate this because it is called many times and get_section_bathy is slow
-  tgray <- rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) ## transparent
-  with(bathysection, polygon(c(min(dist)*0.9, dist, max(dist)*1.1)
-                        , c(max(depth)*1.1, depth, max(depth)*1.1)
-                        , col = tgray
-                        # , col = "black"
-                        ))
-}
 
 
 
-
-pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
-  labcex = 1.0, plotContours = TRUE, bathy = NULL, label = NULL, ...) {
+pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 4,
+  labcex = 1.0, plotContours = TRUE, bathy = NULL, legend.text = NULL,
+  bathycol = "darkgray", ...) {
   ## hybrid approach -- still use build-in plot.section(for bathymetry)
   ## but manually add contours
   ## XXX missing feature XXX : color scale by quantiles XXX
@@ -169,24 +160,26 @@ pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
     plot(1:10, type = "n")
   } else {
     s <- try(plot(xsec, which = N
-      , showBottom = showBottom
+      , showBottom = FALSE
       , axes = TRUE
       , stationTicks = TRUE
       , showStations = TRUE
       , xtype = "track"
       , ztype = "image"
       , zcol = zCol
+      , legend.text = legend.text
       , ...
     ))
     ## add bathymetry here, then add legend?
     if(class(bathy)[1] == "data.frame"){
-      addBathy(bathy)
+      # tgray <- rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent
+      with(bathy, polygon(c(min(dist)*0.9, dist, max(dist)*1.1)
+        , c(max(depth)*1.1, depth, max(depth)*1.1), col = bathycol
+      ))
     }
   # re-write legend obscured by bathymetry -- no effect somehow :(
-  # if(class(label) != "NULL") {
-  #   legend("bottomright", legend = label, bg="white", bty = "o") ## plotted off-screen? bg has no effect -- bug?
-  # } else {
-  #   legend("bottomright", legend = label, bg="white", bty = "o")
+  # if(class(legend.text) != "NULL") {
+  #   legend("bottomright", legend = legend.text, bg="white", bty = "o") ## plotted off-screen? bg has no effect -- bug?
   # }
     if(class(s) != "try-error") {
       if(plotContours) {
@@ -228,7 +221,8 @@ pSec <- function(xsec, N, cont = TRUE, zCol, showBottom = TRUE, custcont = NULL,
         if(length(custcont) > 1) {
           cLev <- custcont
         } else {
-          cLev <- try(pretty(range(as.numeric(zvar), na.rm = TRUE), custcont), silent = TRUE)
+          cLev <- try(pretty(range(as.numeric(zvar), na.rm = TRUE), n = custcont),
+            silent = TRUE)
         }
         ## dirty hack -- still got to find out why some distances are NA! XXX
         if(any(is.na(distance))) {
@@ -297,16 +291,18 @@ pSec0 <- function(xsec, N, cont = TRUE, custcont = NULL, zcol, ...) {
 KBsectionSort <- function(xCo, transect) {
   ## sort section -- Kasitsna-Bay-Lab specific
   ## sort in here, rather than separately
+  require("oce")
   for(i in seq_along(xCo@data$station)) {
     xCo@data$station[[i]]@metadata$stationId <-
       as.character(xCo@data$station[[i]]@metadata$stationId)
   }
-  if(substr(transect, 1, 8) == "AlongBay") { # extended AlongBay wraps around Pogy Ptp
+  if(substr(transect, 1, 1) == "A") {   # longBay") { # extended AlongBay wraps around Pogy Ptp
     xCo <- sectionSort(xCo, "latitude", decreasing = FALSE)
   } else if(transect == "4") { ## include 9 here?
     xCo <- sectionSort(xCo, "latitude", decreasing = TRUE)
   } else if(transect == "9") {
-    xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
+#   xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
+    xCo <- sectionSort(xCo, "latitude",  decreasing = TRUE)  ## same effect, but safer if using actual positions?
   } else {
     xCo <- sectionSort(xCo, "longitude", decreasing = FALSE)
   }
@@ -352,18 +348,38 @@ makeSection <- function(xC, stn) {
       ocOb@metadata$filename <- sCTD$File.Name [1]
       ocOb@metadata$startTime <- sCTD$isoTime [1]
 
+      ovCol <- (max(which(names(sCTD) %in% c("Temperature_ITS90_DegC",
+        "Salinity_PSU", "Density_sigma.theta.kg.m.3")))+1):ncol(sCTD)
+      # ovCol <- which(names(sCTD) == "Chlorophyll_mg_m3"):ncol(sCTD)
+      ovCol <- which(names(sCTD) == "Oxygen_umol_kg"):ncol(sCTD)
+      for (i in ovCol) {
+        ocOb <- oceSetData(ocOb, names(sCTD)[i], sCTD[,i])
+      }
 
-      ocOb <- oceSetData(ocOb, "Chlorophyll_mg_m3", sCTD$Chlorophyll_mg_m3)
-      ocOb <- oceSetData(ocOb, "turbidity", sCTD$turbidity)
-      ocOb <- oceSetData(ocOb, "logTurbidity", sCTD$logTurbidity)
-      ocOb <- oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
-      ocOb <- oceSetData(ocOb, "logPAR", sCTD$logPAR)
-      ocOb <- oceSetData(ocOb, "O2perc", sCTD$O2perc)
-      #                        ocOb <- oceSetData(ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
-      ocOb <- oceSetData(ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
-      # ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
-      # ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
-      ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
+      # ocOb <- oceSetData(ocOb, "Chlorophyll_mg_m3", sCTD$Chlorophyll_mg_m3)
+      # ocOb <- oceSetData(ocOb, "turbidity", sCTD$turbidity)
+      # ocOb <- oceSetData(ocOb, "logTurbidity", sCTD$logTurbidity)
+      # ocOb <- oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
+      # ocOb <- oceSetData(ocOb, "logPAR", sCTD$logPAR)
+      # ocOb <- oceSetData(ocOb, "O2perc", sCTD$O2perc)
+      # #                        ocOb <- oceSetData(ocOb, "O2 [mg/L]", sCTD$Oxygen_SBE.43..mg.l.)
+      # ocOb <- oceSetData(ocOb, "Oxygen_umol_kg", sCTD$Oxygen_umol_kg)
+      # # ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+      # # ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
+      # ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
+      #
+      # ## anomalies -- scaled or plain??
+      # anPf <- "anS_"
+      # # anPf <- "an_"
+      # anV <- c("Temperature_ITS90_DegC", "Salinity_PSU","Oxygen_umol_kg",
+      #   "Chlorophyll_mg_m3", "turbidity", "bvf")
+      # if(paste0("an_", "Temperature_ITS90_DegC") %in% names(sCTD)) {
+      #   for(i in seq_along(anV)) {
+      #     ocOb <- oceSetData(ocOb, anV[i], sCTD[,which(names(sCTD ==
+      #       paste0(anPf, anV[i])))])
+      #   }
+      # }
+
       ocOb
     }))
 
@@ -389,8 +405,8 @@ seasonize <- function(mon, breaks = c(0, 2, 4, 8, 10, 13)) {
 
 
 is.night <- function(ctd) {
-  require("suncalc")
-  sunAlt <- getSunlightPosition(date = as.POSIXct(ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
+#  require("suncalc")
+  sunAlt <- suncalc::getSunlightPosition(date = as.POSIXct(ctd@data$time [1], origin = "1970-01-01 00:00")  # check origion!! XX -- or use section that doesn't have this problem?
     , lat = ctd@data$latitude [1]
     , lon = ctd@data$longitude [1])$altitude # in radians
   sunDeg <- sunAlt / pi * 180
@@ -400,7 +416,7 @@ isNightsection <- function(ctdsection) {
   ## check whether sun is below horizon at any one station
   sM <- ctdsection@metadata
   sunAlt <- sapply(seq_along(sM$time), FUN = function(i) {
-    getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
+    suncalc::getSunlightPosition(date = sM$time [i], lat = sM$latitude [i], lon = sM$longitude [i])$altitude
   })
   sunDeg <- sunAlt / pi * 180
   isTRUE(any(sunDeg < 0))
@@ -577,12 +593,17 @@ sectionPad <- function(sect, transect, ...) {
 flexTransect <- function(transect, stn) {
   if(transect == "ABext") {
     swMN <- c("4_3", "9_6", "6_2", "7_21", "7_22", paste("AlongBay", 1:13, sep = "_"))
+    swMN <- c("4_3", "9_6", "6_2", "7_22", paste("AlongBay", 1:13, sep = "_"))
   } else if(transect == "4") {
     swMN <- "4_3"
   } else if(transect == "9") {
     swMN <- "9_6"
   } else if(transect == "AlongBay") {
     swMN <- c(paste("AlongBay", 1:13, sep = "_"), "4_3", "9_6")
+  } else if(transect == "6") {
+    swMN <- "6_2"
+  } else if(transect == "7") {
+    swMN <- c("7_21", "7_22")
   } else {
     swMN <- stn$Match_Name [match(transect, stn$Line)][1]  ## think this over XXX !!!
   }

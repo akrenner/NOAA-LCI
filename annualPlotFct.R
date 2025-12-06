@@ -47,7 +47,7 @@ if(0) {
 
 plotSetup <- function(longMean, current, ylab = NULL # , xlim=c(5,355)
                       , ...) {
-  par(xaxs = "i")
+#  par(xaxs = "i")
   plot(1:365
     , seq(min(c(longMean, current), na.rm = TRUE)
       , max(c(longMean, current), na.rm = TRUE), length.out = 365)
@@ -215,10 +215,9 @@ saggregate <- function(x, data, FUN, ..., refDF) { ## account for missing factor
   nA
 }
 
-seasonalMA <- function(var, jday, width = maO) {
+seasonalMA <- function(var, jday, width = maO) {  ## still not used -- abandone?
   ## work in progress -- not yet functioning
   df <- cbind(var = rep(var, 3), jds = c(jday - 365, jday, jday + 365))
-  suppressPackageStartupMessages(require("zoo"))
   if(length(var) > 365) {
     df <- aggregate(var ~ jds + year, df, mean, na.rm = FALSE) # ## NAs are lost -- gap-fill?
   }
@@ -259,7 +258,7 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean(x, na.rm = TRUE)}
   dat <- as.data.frame(dat) # error when using tibble/table
   dat$xVar <- dat [, which(names(dat) == varName)]
 
-  suppressPackageStartupMessages(require("zoo"))
+  # suppressPackageStartupMessages(require("zoo"))
   dat <- dat [order(dat$datetimestamp), ] # just to be sure
 
   ## necessary to use dMeans to pad missiing values as NA!
@@ -483,7 +482,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
     }
   }
   ## fixGap() here??
-  ## smp <- qaqc(smp, qaqc_keep = "0") ## here??
+  ## smp <- SWMPr::qaqc(smp, qaqc_keep = "0") ## here??
   #save(smp, file = cacheStation)
   saveRDS(smp, file = cacheStation)
   return(smp)

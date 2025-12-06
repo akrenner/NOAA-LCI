@@ -24,7 +24,7 @@ dir.create("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursive
 
 
 ## load and process SWMP data
-require("SWMPr")
+# require("SWMPr")
 sldvia <- getSWMP("kacsdwq") # Seldovia deep
 sldvia1 <- getSWMP("kacsewq") # Seldovia deep -- early, no longer updated
 sldvia <- rbind(sldvia1, sldvia); rm(sldvia1)
@@ -95,7 +95,7 @@ is.na(sldvia$sal)[sldvia$sal < 14] <- TRUE # 2 single, disjoint values
 ## impossible negative fluorescence values(should be gone already!)
 is.na(sldvia$chlfluor)[sldvia$chlfluor <= 0] <- TRUE
 
-sldvia$dateTime <- time_vec(sldvia$datetimestamp, station_code = "kacswq", tz_only = FALSE)
+sldvia$dateTime <- SWMPr::time_vec(sldvia$datetimestamp, station_code = "kacswq", tz_only = FALSE)
 
 homerS <- sldvia [sldvia$station == "HomerShallow", ]
 homer <- sldvia [sldvia$station == "HomerDeep", ]

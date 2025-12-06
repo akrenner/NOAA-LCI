@@ -4,12 +4,6 @@
 ## clean data(move to earlier??)
 
 
-## issues:
-## - fix O2perc scale across plots
-## - fix all scales across plots??
-## - add contours
-## attenuation vs turbidity
-
 
 
 ## load data
@@ -31,16 +25,21 @@ if(length(grep("darwin", version$os)) > 0) {
 
 ### data prep
 ## define sections
-physOc$DateISO <- as.Date(format(physOc$isoTime, "%Y-%m-%d"))
-physOc$Transect <- factor(physOc$Transect)
-physOc$year <- factor(format(physOc$isoTime, "%Y"))
+physOc <- data.frame(
+  DateISO = as.Date(format(physOc$isoTime, "%Y-%m-%d")),
+  year = factor(format(physOc$isoTime, "%Y")),
+  month = factor(format(physOc$isoTime, "%m")),
+  physOc
+)
+
+physOc$Transect <- factor(physOc$Transect)  ## reset factor -- safe, in headers
 ## combine CTD and station meta-data
 physOc <- subset(physOc, !is.na(physOc$Transect)) ## who's slipping through the cracks??
 ## stn should be no longer needed -- see dataSetup.R
 # physOc <- cbind(physOc, stn [match(physOc$Match_Name, stn$Match_Name)
 #                               , which(names(stn) %in% c(# "Line",
-#                                                           "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
-physOc$Match_Name <- as.factor(physOc$Match_Name)
+#                                                          "Lon_decDegree", "Lat_decDegree", "Depth_m"))])
+physOc$Match_Name <- as.factor(physOc$Match_Name)  # reset factor
 # print(summary(physOc))
 
 
@@ -48,25 +47,7 @@ physOc$Match_Name <- as.factor(physOc$Match_Name)
 
 ## get coastline and bathymetry
 ## bathymetry and coastline  --  they should come from dataSetup.R
-
-
-
-## bahymetry -- already here from dataSetup.R in load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData"), but apparently not
-load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
-if(!exists("bathyZ")) {  # should already come from dataSetup.R
-  mar_bathy <- stars::read_stars("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
-  names(mar_bathy) <- "topo"
-  names(mar_bathy) <- "topo"
-  bathyZ <- st_as_stars(depth = ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
-    , dimensions = attr(mar_bathy, "dimensions"))
-  rm(mar_bathy)
-}
-
-
-
-
-
-require("ocedata") # coastlineWorldFine
+# require("ocedata") # coastlineWorldFine  # -- still needed?
 
 ## either collate PDF-pages on wall manualy, or piece things together using LaTeX
 # or is there a way to put all together in R?? sounds complicated -- aim for solution #1?
@@ -95,39 +76,6 @@ poAll$logTurbidity <- slog(poAll$turbidity)
 rm(slog)
 
 
-## use hi-res bathymetry profiles now -- this is no longer of use -- abandone!
-if(0) {
-  ## add bathymetry to CTD metadata
-  poAll$Bottom.Depth_main <- stn$Depth_m [match(poAll$Match_Name, stn$Match_Name)]
-
-  if(useSF) {
-    ## migrate to sf, stars/terra
-    require(c("sf", "lubridate"))
-    pop <- poAll %>%
-      st_as_sf(coords = c("longitude_DD", "latitude_DD")) %>%
-      st_set_crs(value = "+proj=longlat +datum=WGS84 +units=m")
-
-    poAll$bathy <- st_extract(bathyZ, at = pop)
-    poAll$Bottom.Depth_survey <- st_extract(bathyP, pop)
-    rm(pop)
-    # sapply(st_intersects(x,y), function(z) if(length(z)==0) NA_integer_ else z[1])
-  } else {
-    require(sp)
-    poP <- poAll
-    coordinates(poP) <- ~ longitude_DD + latitude_DD
-    proj4string(poP) <- crs("+proj=longlat +datum=WGS84 +units=m")
-    poAll$bathy <- extract(bathyP, poP)
-    poAll$Bottom.Depth_survey <- extract(bathyP, poP)
-    if(exists("bathyL")) {
-      bL <- extract(marmap::as.raster(bathyL), poP)
-      poAll$Bottom.Depth_survey <-  ifelse(is.na(poAll$Bottom.Depth_survey)
-        , -1 * bL, poAll$Bottom.Depth_survey) ## or leave them as NA?
-      poAll$bathy <- poAll$Bottom.Depth_survey
-    }
-    poAll$bathy <- poAll$Bottom.Depth_survey
-    rm(poP, bL, bathyP, bathyL, bathy)
-  }
-}
 
 
 # save.image("~/tmp/LCI_noaa/cache-t/ctdwall0.RData")
@@ -155,7 +103,9 @@ for(h in 2:length(levels(surveyW))) {
 }
 surveyW <- factor(format(poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
 
-poAll$survey <- factor(surveyW)  ## need to reset factor levels after combining days
+poAll <- data.frame(survey = surveyW, poAll) |> # keep tail end for CTD data. Need to reset factor levels after combining days
+  dplyr::select(-Nitrogen.saturation..mg.l.) |> # eliminate these here to make oVarsDFname easier
+  dplyr::select(-Oxygen_sat.perc.)
 rm(surveyW, h)
 
 ## migrate code over from CTDwall.R:
@@ -188,26 +138,30 @@ if(0) {
 ################ define variables and their ranges #########################
 # now in CTDsectionFcts.R --? no, need oRange in here and rest is dependend on it
 
-oVars <- expression(temperature ~ "[" * ""^o ~ C * "]"
-  , salinity ~ "[" * PSU * "]"
-  , density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
-  , "turbidity" # it's really turbidity/attenuation # , "logTurbidity"
-  , chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
-  # , "PAR"
-  , log ~(PAR)
+oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
+  , Salinity ~ "[" * PSU * "]"
+  , Density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
   , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
-  , buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression(paste0(N^2, "[", s^-2, "]"))
+  , "PAR"
+  , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
+  , Turbidity ~"[" * m^-1 * "]" # "Turbidity" # it's really turbidity/attenuation # , "logTurbidity"
+  , Buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression(paste0(N^2, "[", s^-2, "]"))
+  , log ~ (PAR)
+  , log ~ (turbidity)
 )
 oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
-  , "turbidity" # , "logTurbidity"
-  ,  "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
-  # , "PAR.Irradiance"
-  , "logPAR"
   , "Oxygen_umol_kg"  # , "O2perc"
+  , "PAR.Irradiance"
+  , "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
+  , "turbidity"
   , "bvf"
+  , "logPAR"
+  , "logTurbidity"
 )
+# needed here for CTD_anomaly-helpers.R
+oVarsDFname <- names(poAll)[which(names(poAll) == "Temperature_ITS90_DegC"):ncol(poAll)]
 
 ## see https://github.com/jlmelville/vizier
 # install.packages("remotes")
@@ -223,38 +177,32 @@ oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
 ## ODV colors from https://theoceancode.netlify.app/post/odv_figures/
 odv <- rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
 
-require("cmocean")  ## for color ramps
-options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+# require("cmocean")  ## for color ramps
+# options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
 ## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
 oCol3 <- list( ## fix versions?
-  # colorRampPalette(oceColorsTurbo(8), bias=0.5)
-  oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
-  , colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
-  , colorRampPalette(cmocean("dense")(5), bias = 0.3)
-  , colorRampPalette(cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
-  , colorRampPalette(cmocean("algae")(5), bias = 3)
+  # colorRampPalette(oce::oceColorsTurbo(8), bias=0.5)
+  temperature = oce::oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
+  , salinity = colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
+  , density = colorRampPalette(cmocean::cmocean("dense")(5), bias = 0.3)
+  , oxygen = cmocean::cmocean("oxy")
+  , PAR = oce::oceColorsTurbo ## viridis::turbo(n, begin = 0.25, end = 0.8)
+  , chlorophyll = colorRampPalette(cmocean::cmocean("algae")(5), bias = 3)
   # , oceColorsTurbo # cmocean("solar")
-  , function(n) {require("viridis"); turbo(n, begin = 0.25, end = 0.8)}
-  , cmocean("oxy")
-  , colorRampPalette(c("white", rev(cmocean("haline")(32)))) # for densityGradient
-  , cmocean("haline") # why is this here? should it be??
+  , turbidity = colorRampPalette(cmocean::cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
+  , bvf = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32)))) # for densityGradient
+  , logPAR = oce::oceColorsTurbo
+  , logTurbidity = cmocean::cmocean("turbid")
+    # , spice = cmocean("haline") # why is this here? should it be??
 )
 rm(odv)
 ## oceColorsTemperature and the likes are dated -- don't use them
 ##(stick to algorithmic pic of scale limits. Cleanups.)
 
 
-oRange <- t(sapply(c("Temperature_ITS90_DegC"
-  , "Salinity_PSU"
-  , "Density_sigma.theta.kg.m.3"
-  , "turbidity" # , "logTurbidity"
-  , "Chlorophyll_mg_m3"
-  , "logPAR"  # , "PAR.Irradiance"
-  , "Oxygen_umol_kg"  # , "Oxygen_SBE.43..mg.l."  # change to umol.kg.! XXX
-  , "bvf"
-)
-, FUN = function(vn) {range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
+oRange <- t(sapply(oVarsDFname, FUN = function(vn) {
+  range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
   # , FUN = function(vn){quantile(poAll [,which(names(poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
 }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
