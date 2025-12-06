@@ -206,16 +206,18 @@ There are two ways to go about downloading hex files from the CTD: interactively
 The following instructions work under Windows 11. Install the following software: 
 <!--- [##]: Install required software. Estimated time: --->
 - R, version 4.3.0 or later https://cran.r-project.org/bin/windows/base/release.html, now also available directly from 'Software Center', if you have a NOAA laptop. It is recommended to get RStudio as well (equally available from 'Software Center'). 
+- Rtools https://cran.r-project.org/bin/windows/Rtools/ to match your version of R. This may need help from an administrator to install. 
 - git https://git-scm.com/download/win
 - Python, https://www.python.org/downloads/
-All of these packages can be installed without administrator privileges in the user directory. To work with R, it is recommended to use an IDE, like RStudio (admin rights required for installation) https://www.rstudio.com/categories/rstudio-ide/
-In addition, a number of add-on R packages, data-files, Python libraries, and folder-structure are required. These will be automatically set-up with the instructions given below. Due to the required downloads, the initial run may take considerably longer than subsequent runs (package downloads could take hours). 
+To work with R, it is recommended to use an IDE, like RStudio (available from NOAA's 'Software Center' or from 
+https://www.rstudio.com/categories/rstudio-ide/). In addition, a number of add-on R packages, data-files, 
+Python libraries, and folder-structure are required. These will be automatically set-up during initial set-up. Due to the required downloads, the initial run may take considerably longer than subsequent runs (package downloads could take hours). 
 
 Open R and paste the following lines of code into the R console to pull R-scripts, CTD data, configuration files, etc. and put them in the appropriate places. Location of the data is hard-coded (\~/GISdata/LCI/), so the scripts can find them. You can also inspect the R-scripts on github at https://github.com/akrenner/NOAA-LCI and all the data at https://github.com/akrenner/LCI. Expect the initial set-up to take over an hours, depending on connection speed. 
 
 
 ````
-rFolder <- "~/myDocs/R-scripts/" # try ~/myDocs/amyfiles if this causes problems
+rFolder <- "~/myDocs/amyfiles/"
 ## set up folder for R scripts and pull scripts from github
 dir.create (rFolder , recursive = TRUE)
 setwd (rFolder)
@@ -239,12 +241,14 @@ Plots will be in
 
 If you want to make edits, it's advisable to do this in a separate branch (or better: fork). To make a new branch, use something like *git checkout \-b mybranch*. To get the latest version and updates, standard git procedures apply: in the git shell (or GUI), navigate to the relevant folder (NOAA-LCI for scripts, LCI for data) and issue *git pull*. This will pull the latest versions from github. It may jam if you made edits in the main branch.  
 
+
+<!---
 ## Seabird processing and cross-platform compatibility
 
 The established workflow relies on Windows-only SBEDataProcessing software from SEABIRD. This can be run on MacOS or GNU/Linux using [wine](https://www.winehq.org/), but a workflow has not yet been established. There is also a new software package Fathom, written in Python, which is cross-platform compatible. However, we have not yet established a batch-processing workflow (last time I checked, chlorophyll sensor wasn't included in the processing, 2025-09-30). Beyond the initial processing of hex files, all R code here is  cross-platform compatible.
 
-
-<!---
+You will be asked to initiate a new project (say yes) and whether you want to proceed (with package installation), again say yes ('Y'). 
+Advanced: used git to fork the repository if you want to make your own changes to the code that should be merged back into the main source. Details of git operations are beyond the scope of this manual. 
 
 To process CTD, install SEABIRD's python program with pip. Open a git shell and enter: 
 ````

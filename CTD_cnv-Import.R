@@ -200,8 +200,8 @@ fileDB <- subset (fileDB, !is.na (time))
 ## ok to ignore warnings regarding NAs introduced by coersion
 
 
-save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/CNVx0.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNVx0.RData")
 
 
 
@@ -213,6 +213,10 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function(i) {
   require (oce)
+
+  ## define columns, possibly one for each CTD?
+  ## this is why par is not recognized on new CTD
+
   ctdF <- try (read.ctd (fNf [i]
     # , columns = "define name of dV/dT"
     , deploymentType = "profile"
@@ -240,6 +244,9 @@ readCNV <- function(i) {
   }
   if (!"turbidity" %in% names (ctdF@data)) {
     ctdF@data$turbidity <- meta (NA)
+  }
+  if ("par/sat/log" %in% names(ctdF@data)){
+    names(ctdF@data)[which(names(ctdF@data) == "par/sat/log")] <- "par"
   }
   ## temporary fix for 8138 until par translation is working XXXX
   if (!"par" %in% names (ctdF@data)) {
@@ -297,8 +304,8 @@ if (runParallel) {
 CTD1 <- as.data.frame (do.call (rbind, CTDx))
 rm (rCNV, readCNV, CTDx)
 rm (fN, fNf)
-save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R -- not yet!
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/CNVx.RData")  ## this to be read by dataSetup.R -- not yet!
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNVx.RData")
 
 
 
@@ -376,8 +383,9 @@ fileDB$match <- match (toupper (fileDB$FN_matchname), toupper (stnMaster$Match_N
 badM <- which (is.na (fileDB$match))
 if (length (badM) != 59) {
   cat ("\n\n##\n## The following casts don't have a match in main station table:\n")
-  print (fileDB [badM, which (names (fileDB) %in% c("file", "FN_matchname"))])
-  stop ("The number of non-matched CTD casts has changed from 59\n\n")
+  print (fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))])
+  stop (paste0 ("The number of non-matched CTD casts has changed from 59 to ",
+                length (badM), "\n\n"))
 }
 rm (badM)
 ## as of 2022-08-11, these are 59 files (1.3%)
@@ -385,7 +393,7 @@ rm (badM)
 ## -> fix filenames accordingly
 
 
-# save.image ("~/tmp/LCI_noaa/cache/CNVx2.RData")
+# save.image ("~/tmp/LCI_noaa/cache-t/CNVx2.RData")
 
 
 

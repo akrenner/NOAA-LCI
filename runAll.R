@@ -15,17 +15,25 @@
 # position of max buoyancy over time
 
 
-rm(list = ls())
-sT <- Sys.time()
+rm (list = ls())
 
-# pastYear <- FALSE  # plot currentYear-1 ?
-# ongoingY <- TRUE
-
-if(.Platform$OS.type == "windows") {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-} else { ## Linux or macOS platform
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+if (.Platform$OS.type=="windows"){
+  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+  # set environment variable to avoid "no such file or directory errors"
+  Sys.setenv(TMPDIR = "C:\tmp")
+}else{ ## Linux or macOS platform
+  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
+
+sT <- Sys.time()
+cat ("\nStarting runAll.R at: ", as.character (Sys.time()), "\n")
+## as of 2023-03-23 expect about 1:25 hours for CTD processing
+
+## for SOB report -- quarterly vs annual -- clarify XXX
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE   # for quarterly update
+
+
 
 
 if(!file.exists(".initialized.rds")){
@@ -40,7 +48,7 @@ setwd(hd); rm (hd)
 
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
-  require(usethis) ## for github rate limits
+  # require(usethis) ## for github rate limits
   usethis::create_github_token()
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
@@ -56,6 +64,7 @@ if(0) {
 
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
+  badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     cat("\n\n##", badP [i], "##\n")
@@ -79,7 +88,7 @@ if(1) {
 
   ## hex conversion and QAQC plots
   sink(file = "ctdprocessing.log", append = FALSE, split = FALSE)
-  cat("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
+  cat("Started CTD hex conversion at", format(Sys.time(), "%Y-%m-%d %H:%M"), "\n")
   source("FieldNotesDB.R") # first because it doesn't depend on anything else
   source("ctd_workflow.R")              ## approx. 1:30 hours
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
@@ -88,30 +97,42 @@ if(1) {
 }
 
 
+sink(file = runAll.log, append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
-## separate out CTD-specific stuff??
-# ; bathymetry
-# ; coastline
-# ; CTD data
 
-## set up required work environment and external files/data (bathymetry)
-source("EnvironmentSetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
 source("CTD_DataAvailability.R")
 
 
 ## the Wall
-source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+
+
+## move CTDwall-setup.R forward, use some output in CTD_timeseries.R ?
+## use CTDwall_normals.R in CTD_timeseries.R ?
+
 source("CTDwall-setup.R")
+source("CTDwall_normals.R")
+source("CTD_anomaly-helpers.R")
+source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-source("CTDwall_normals.R")
 source("CTDwall.R")
 # source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
 # source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+
+## only for SoB? -- mv down?
+## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
+
+
+
+sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
+## State of the Bay Report
+source("AnnualStateOfTheBay.R")
+sink()
+
 
 
 ## 2017 contract
@@ -132,6 +153,10 @@ if(0) { ## 2017 contract
 
 }
 
+if (0){ ## one-off projects
+  source ("archive/CTDwall-reportFigure.R")
+  source ("archive/OA-temps.R")
+}
 
 ## 2019 seasonality
 if(0) { # Dec 2019 seasonality
@@ -145,21 +170,6 @@ if(0) { # Dec 2019 seasonality
   q()
   source("consensusTree.R")
 }
-
-
-
-## only for SoB? -- mv down?
-## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
-
-sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
-## State of the Bay Report
-source("AnnualStateOfTheBay.R")
-sink()
-
-
-## how to execute report?
-# source("MonthlyUpdates/MonthlyTemplate.qmd")
-
 
 ## one-offs
 if(0) {

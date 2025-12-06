@@ -14,12 +14,18 @@ renv::status()
 renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
 # renv::init(bioconductor = "3.21")
 
-renv::install (repos = "https://cloud.r-project.org/")
+renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE)
 # detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+renv::install("remotes", prompt = FALSE)
+remotes::install_github("NOAA-EDAB/buoydata")
+renv::install("terra", prompt = FALSE)
+remotes::install_git("https://github.com/STBrinkmann/GVI")
 renv::restore()
 require ("conflicted")
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+
+
 
 
 
@@ -72,6 +78,54 @@ dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE, recursiv
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/data-products/", showWarnings = FALSE, recursive = TRUE)
+
+
+## more GIS files
+## setup working environment
+dir.create("~/GISdata/data/coastline", recursive = TRUE, showWarnings = FALSE)
+tO <- getOption ("timeout")
+
+options (timeout = max (1200, getOption("timeout")))
+
+## fetch bathymetry, shoreline, weather, swmp, CTD hex/aggregated files
+## bathymetry: gebco and AOOS
+## AOOS http://thredds/ncss/CI_BATHY.nc?var=Band1&disableLLSubset=on&disableProjSubset=on&horizStride=1&time_start=2009-01-01T00%3A00%3A00Z&time_end=2009-01-01T00%3A00%3A00Z&timeStride=1&accept=netcdf4
+## hi-resolution Kachemak Bay DEM
+# outF <- "~/GISdata/LCI/kachemak_bay_13_mhr_2010.nc"
+# # unlink (outF)
+# if (!file.exists(outF)){
+#   download.file (url="https://www.ngdc.noaa.gov/thredds/fileServer/regional/kachemak_bay_13_mhw_2010.nc"
+#                  , destfile=outF, method="auto") ## 269.4 MB
+# }
+# rm (outF)
+
+# ## Zimmermann Cook Inlet Bathymetry
+# outF <- "~/GISdata/LCI/Cook_Bathymetry_Grid.zip"
+# # unlink (outF)
+# if (!file.exists(outF)){
+#   download.file(url="http://www.afsc.noaa.gov/RACE/groundfish/bathymetry/Cook_bathymetry_grid.zip"
+#               , destfile=outF, method="auto")
+# }
+#
+# ## gebco
+
+
+## GSHHG shoreline
+outF <- "~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
+if (!file.exists (outF)) {
+  download.file (url = "https://www.ngdc.noaa.gov/mgg/shorelines/data/gshhg/latest/gshhg-shp-2.3.7.zip"
+                 , destfile = outF, method = "wget") ## 149 MB
+}
+rm (outF)
+
+## CTD aggregated and SWMP -- get from GoogleDrive or from GitHub
+## zooplankton, phytoplankton, etc.
+
+## seabirds
+
+
+options (timeout = tO)
+
 
 
 # EOF

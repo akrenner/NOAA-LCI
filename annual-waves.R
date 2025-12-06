@@ -309,10 +309,10 @@ wDB$tideHght  <- tide_height(DateTime = wDB$datetimestamp)$TideHeight
 # timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
 # wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
 # rm (tStn, timetable)
-require ("lubridate") # time zone conversion
-wDB$localTime <- with_tz (wDB$datetimestamp, "America/Anchorage")
-require ("suncalc")
-wDB$sunAlt <- getSunlightPosition (date = wDB$localTime
+# require ("lubridate") # time zone conversion
+wDB$localTime <- lubridate::with_tz (wDB$datetimestamp, "America/Anchorage")
+# require ("suncalc")
+wDB$sunAlt <- suncalc::getSunlightPosition (date = wDB$localTime
   , lat = 59.643, lon = -151.526)$altitude # in radians
 wDB$sunDeg <- wDB$sunAlt / pi * 180
 ## interpolate home wind direction -- fail (why = ?)
@@ -710,7 +710,7 @@ as.data.frame (approx(wDB$datetimestamp, wDB$surf
   , xout = as.POSIXct ("2020-12-31 15:00")))
 
 
-getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
+# suncalc::getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
 
 
 
