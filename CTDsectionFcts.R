@@ -149,7 +149,7 @@ get_section_bathy <- function(section) {
 
 
 
-pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
+pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 4,
   labcex = 1.0, plotContours = TRUE, bathy = NULL, legend.text = NULL,
   bathycol = "darkgray", ...) {
   ## hybrid approach -- still use build-in plot.section(for bathymetry)
@@ -221,7 +221,8 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 5,
         if(length(custcont) > 1) {
           cLev <- custcont
         } else {
-          cLev <- try(pretty(range(as.numeric(zvar), na.rm = TRUE), custcont), silent = TRUE)
+          cLev <- try(pretty(range(as.numeric(zvar), na.rm = TRUE), n = custcont),
+            silent = TRUE)
         }
         ## dirty hack -- still got to find out why some distances are NA! XXX
         if(any(is.na(distance))) {

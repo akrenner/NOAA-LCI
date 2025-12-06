@@ -99,23 +99,29 @@ for(sv in iX) {
 
     # use flexTransect instead?! XXX
 
+    s$Station <- gsub ("^[A-Z,a-z,0-9]+_", "", s$Match_Name)
+
     if(levels(s$Transect)[tn] == "AlongBay") {
-      s$Transect [(s$Transect == "4") &(s$Station == "3")] <- "AlongBay"
-      s$Transect [(s$Transect == "9") &(s$Station == "6")] <- "AlongBay"
+      s$Transect [s$Match_Name == "4_3"] <- "AlongBay"
+      s$Transect [s$Match_Name == "9_6"] <- "AlongBay"
+    # }
+    # if(levels(s$Transect)[tn] == "ABext") {
 
       ## extended AlongBay Transect -- got function for this already?
       # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
-      fS <- c("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI")
+      fS <- c("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI",   # "6_3", "7_21", "7_20",
+        paste0("AlongBay_", 1:13))
       # nS <- -3:0
       for(k in seq_along(fS)) {
         s$Transect [which(s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
       }
     }
+
     if(levels(s$Transect)[tn] == "4") {
-      s$Transect [(s$Transect == "AlongBay") &(s$Station == "3")] <- "4"
+      s$Transect [s$Match_Name == "AlongBay_3"] <- "4"
     }
     if(levels(s$Transect)[tn] == "9") {
-      s$Transect [(s$Transect == "AlongBay") &(s$Station == "6")] <- "9"
+      s$Transect [s$Match_Name == "9_6"] <- "9"
     }
 
 
@@ -155,6 +161,9 @@ for(sv in iX) {
       }
       rm(fN)
 
+      par(oma=c(3,3,5,3))
+      par(mar=c(5,4,4,2)+0.1)
+
       for(ov in seq_along(oVarsF)) {
         ## ov = 1
         if(ov %in% c(1,2)){      # keep local scale for temp, salinity,
@@ -167,10 +176,10 @@ for(sv in iX) {
           text(5, 5, labels = "no good data")
         } else {
 
-          if(tn == 1 & sv == 151 & ov == 1) {
-            # save(pSec, xCo, oVarsF, ov, oCol3, zR, file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
-            save.image(file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
-          }
+#          if(tn == 1 & sv == 151 & ov == 1) {
+#            # save(pSec, xCo, oVarsF, ov, oCol3, zR, file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+#           save.image(file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
+#          }
           ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
           # bathy_sec <- get_section_bathy(xCo) ## already used up
           #
@@ -195,6 +204,16 @@ for(sv in iX) {
                , bathycol = rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent so variable label can be seen
           )
           rm(zR, zb)
+
+          ## add headings/annotations
+          if(ov == 1) {
+            mtext(paste0(phT$year[1], "-", month.name[phT$month[1]]), side = 3
+              , outer = FALSE, line = 1)
+          }
+          if(ov == length(oVarsF)/2+1) {
+            mtext("Anomalies from monthly means"
+              , side = 3, outer = FALSE, line = 1)
+          }
         }
 
         ## insert map at a certain position, coordinated with layout above
@@ -208,17 +227,11 @@ for(sv in iX) {
                clongitude =  -151.8 # mean(range(poAll$longitude_DD))
           )
         }
-
-        ## mark PAR at night
-        #   if(oVars [ov] == "PAR"){
-        #     if(is.night(xCo@data [[1]][[1]]))
-        #       box(lwd = 4, col = "navy")
-        #   }
         if(indivPlots) {
           if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
             mt <- ""
           } else {
-            mt <- "T"
+            mt <- "Transect"
           }
           mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
                 , side = 3, outer = TRUE, line = -0.9); rm(mt)
@@ -228,10 +241,10 @@ for(sv in iX) {
         if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
           mt <- ""
         } else {
-          mt <- "T"
+          mt <- "Transect-"
         }
-        mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
-              , side = 3, outer = TRUE, line = -0.9, cex = 0.7); rm(mt)
+        mtext(paste0(mt, levels(s$Transect)[tn] )#, " ", levels(poAll$survey)[sv])
+              , side = 3, outer = TRUE, line = 1.5, cex = 1.5); rm(mt)
 
         if(anomalies){
           ## insert KBL-NCCOS logo
