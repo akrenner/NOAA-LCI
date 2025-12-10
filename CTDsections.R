@@ -153,18 +153,23 @@ for(sv in iX) {
                      , " T-", levels(s$Transect)[tn], ".png")
         if(anomalies){
           png(fN, height = 11 * 300, width = 8.5 * 300, res = 300)
-          layout(matrix(1:12, 6, byrow = FALSE))
+          layout(matrix(1:12, 6, byrow = FALSE), heights = c(1, 1, 1, 1, 1, 1.2))
+          # layout(matrix(1:12, 6, byrow = FALSE))
         } else {
           png(fN, height = 8.5 * 200, width = 11 * 200, res = 300)
           layout(matrix(1:6, 3, byrow = FALSE)) # across, then down
         }
+
+        ## remove !anomalies?
+        ## nudge mar to cover up distance along transect for most plots
+
+
       }
       rm(fN)
 
-      par(oma=c(3,3,5,3))
-      par(mar=c(5,4,4,2)+0.1)
-
+     par(oma=c(2,2,5,2))
       for(ov in seq_along(oVarsF)) {
+
         ## ov = 1
         if(ov %in% c(1,2)){      # keep local scale for temp, salinity,
           zR <- oRangeS[ov, ]
@@ -175,18 +180,6 @@ for(sv in iX) {
           plot(1:10, type = "n")
           text(5, 5, labels = "no good data")
         } else {
-
-#          if(tn == 1 & sv == 151 & ov == 1) {
-#            # save(pSec, xCo, oVarsF, ov, oCol3, zR, file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
-#           save.image(file="~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData")
-#          }
-          ## rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/ctdSectionsDBug.RData"); source("CTDsectionFcts.R")
-          # bathy_sec <- get_section_bathy(xCo) ## already used up
-          #
-          # ## testing
-          # max(bathy_sec$dist)
-          # max(xCo[['distance']])# GIS says that this is correct(3.9 km), also matching section plot
-          # ## end of testing
 
           ## define zbreaks for anomaly plots (0.5, 1, 1.5, 2, 2.5, 3 SDs)
           if(length(grep("^anS_", oVarsF[ov])) > 0){
@@ -202,30 +195,41 @@ for(sv in iX) {
                , custcont = 7, labcex = 0.6
                , bathy = bathy_sec, legend.text = oVars [ov]
                , bathycol = rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent so variable label can be seen
+               , xlab = "" # ifelse(ov %in% c(5,10), "Distance along Track [km]", "")
+               , ylab = "" # ifelse(ov == 3, "Depth [m]", "")
+               , mar = c(2, 3, 1, 1.5)
+               # , mgp = c(2.0, 0.7, 0.0)  # see:  getOption("oceMgp")
           )
           rm(zR, zb)
+          if(ov %in% c(5,10)){
+            mtext("Distance along Track [km]", side = 1, outer = FALSE, line = 2.3)
+          }
 
-          ## add headings/annotations
+          ## add column headings
           if(ov == 1) {
-            mtext(paste0(phT$year[1], "-", month.name[phT$month[1]]), side = 3
+            mtext(paste(month.name[phT$month[1]], phT$year[1]), side = 3
               , outer = FALSE, line = 1)
+            mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "W", "N"), side = 3, adj = 0, outer = TRUE)
           }
           if(ov == length(oVarsF)/2+1) {
-            mtext("Anomalies from monthly means"
-              , side = 3, outer = FALSE, line = 1)
+            mtext("Anomalies from monthly means", side = 3, outer = FALSE, line = 1)
+            mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "E", "S"), side = 3, adj = 1, outer = TRUE)
           }
         }
 
         ## insert map at a certain position, coordinated with layout above
         if(ov == 5 & anomalies) {
-          ## map suitable for >= 2025 transects: AB, ABext, T4, T9
+          xP <- par(mar=c(4,4,5,2))
+          par(mar=c())
+          # map suitable for >= 2025 transects: AB, ABext, T4, T9
           plot(xCo, which = 99, coastline = "best", grid = TRUE,
                showStations = TRUE, span = 50,
                # map.xlim = c(-152.2, -151.0), # range(poAll$longitude_DD),
                map.ylim = c(59.2, 59.75),
-               clatitude =  59.4,    # mean(range(poAll$latitude_DD))
+               clatitude =  59.6,    # mean(range(poAll$latitude_DD))
                clongitude =  -151.8 # mean(range(poAll$longitude_DD))
           )
+          par(xP)
         }
         if(indivPlots) {
           if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
@@ -245,6 +249,8 @@ for(sv in iX) {
         }
         mtext(paste0(mt, levels(s$Transect)[tn] )#, " ", levels(poAll$survey)[sv])
               , side = 3, outer = TRUE, line = 1.5, cex = 1.5); rm(mt)
+        mtext (text = "Depth [m]", side = 2, outer = TRUE)
+
 
         if(anomalies){
           ## insert KBL-NCCOS logo
@@ -252,7 +258,7 @@ for(sv in iX) {
           ## NCCOS-KBL logo
           im_h <- nrow(KBL); im_w <- ncol(KBL)
           # ppar <- par()
-          par(mar=c(1,2,1,2.0))
+          par(mar=c(1, 2, 2, 2.0))
           plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
                , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n", bty = "n")
           rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
@@ -273,11 +279,12 @@ for(sv in iX) {
                  # , showSpine = TRUE
             )
           } else {  ## focus on 2025+ monitoring transects: AB-ext, T9, T4
+            par(mar=c(4,4,4,0))
             plot(xCo, which = 99, coastline = "best", grid = TRUE,
-                 showStations = TRUE, span = 50,
+                 showStations = TRUE, # span = 50,
                  # map.xlim = c(-152.2, -151.0), # range(poAll$longitude_DD),
-                 map.ylim = c(59.2, 59.75),
-                 clatitude =  59.4,    # mean(range(poAll$latitude_DD))
+                 map.ylim = c(59.25, 59.77),
+                 clatitude =  59.7,    # mean(range(poAll$latitude_DD))
                  clongitude =  -151.8 # mean(range(poAll$longitude_DD))
             )
           }
