@@ -14,6 +14,7 @@ if(!exists("indivPlots")) {
 }else{
   anomalies <- TRUE
   plotAll <- FALSE
+  # plotAll <- TRUE
 }
 # base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
@@ -166,8 +167,7 @@ for(sv in iX) {
 
       }
       rm(fN)
-
-     par(oma=c(2,2,5,2))
+      if(!indivPlots) {par(oma=c(2,2,5,2))}
       for(ov in seq_along(oVarsF)) {
 
         ## ov = 1
@@ -188,6 +188,12 @@ for(sv in iX) {
             zb <- NULL
           }
 
+          if(indivPlots) {
+            marV <- c(3, 3, 2, 1) ## guessing based on previous plot
+          } else {
+            marV <- c(2, 3, 1, 1.5)
+          }
+
           pSec(xCo
                , N = oVarsF [ov]
                , zCol = oCol3 [[ov]]
@@ -195,25 +201,29 @@ for(sv in iX) {
                , custcont = 7, labcex = 0.6
                , bathy = bathy_sec, legend.text = oVars [ov]
                , bathycol = rgb(t(col2rgb("darkgray")), max = 255, alpha = 0.5 * 255) # transparent so variable label can be seen
-               , xlab = "" # ifelse(ov %in% c(5,10), "Distance along Track [km]", "")
-               , ylab = "" # ifelse(ov == 3, "Depth [m]", "")
-               , mar = c(2, 3, 1, 1.5)
+               , xlab = ifelse(indivPlots, "Along-track Distance [km]", "")
+               , ylab = ifelse(indivPlots, "Depth [m]", "")
+               , mar = marV
                # , mgp = c(2.0, 0.7, 0.0)  # see:  getOption("oceMgp")
           )
-          rm(zR, zb)
-          if(ov %in% c(5,10)){
-            mtext("Distance along Track [km]", side = 1, outer = FALSE, line = 2.3)
-          }
+          rm(zR, zb, marV)
 
-          ## add column headings
-          if(ov == 1) {
-            mtext(paste(month.name[phT$month[1]], phT$year[1]), side = 3
-              , outer = FALSE, line = 1)
-            mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "W", "N"), side = 3, adj = 0, outer = TRUE)
-          }
-          if(ov == length(oVarsF)/2+1) {
-            mtext("Anomalies from monthly means", side = 3, outer = FALSE, line = 1)
-            mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "E", "S"), side = 3, adj = 1, outer = TRUE)
+          if(!indivPlots) {
+            if(ov %in% c(5,10)){
+              mtext("Along-track Distance [km]", side = 1, outer = FALSE, line = 2.3)
+            }
+
+            ## add column headings, y-axis label
+            if(ov == 1) {
+              mtext(paste(month.name[phT$month[1]], phT$year[1]), side = 3
+                    , outer = FALSE, line = 1)
+              mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "W", "N"), side = 3, adj = 0, outer = TRUE)
+              mtext (text = "Depth [m]", side = 2, outer = TRUE)
+            }
+            if(ov == length(oVarsF)/2+1) {
+              mtext("Anomalies from monthly means", side = 3, outer = FALSE, line = 1)
+              mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "E", "S"), side = 3, adj = 1, outer = TRUE)
+            }
           }
         }
 
@@ -249,7 +259,6 @@ for(sv in iX) {
         }
         mtext(paste0(mt, levels(s$Transect)[tn] )#, " ", levels(poAll$survey)[sv])
               , side = 3, outer = TRUE, line = 1.5, cex = 1.5); rm(mt)
-        mtext (text = "Depth [m]", side = 2, outer = TRUE)
 
 
         if(anomalies){
@@ -331,8 +340,9 @@ if(.Platform$OS.type == "unix") {
 ## future_map from furrr
 
 
-physOc <- poAll
+# physOc <- poAll
 # rm(xCo, tn, oVars, ov, poAll, pSec)
+rm(indivPlots) # to re-run from scratch
 gc()
 
 

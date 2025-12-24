@@ -15,7 +15,7 @@ qntl <- c(0.9) # , 0.8)
 currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
 require("RColorBrewer")
 # currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal(6, "Paired")[c(7, 6, 5)]
+currentCol <- brewer.pal(6, "Paired")[c(5, 6, 7)]
 SWMP <- TRUE
 # SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 

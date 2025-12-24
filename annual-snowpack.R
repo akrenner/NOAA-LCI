@@ -25,7 +25,7 @@ pastYear = FALSE
 
 ## delete cache if it's too old
 # -- not yet implemented; do it manually
-flushCache <- FALSE
+flushCache <- TRUE
 
 #########################
 ## try interactive map:

@@ -97,7 +97,7 @@ if(1) {
 }
 
 
-sink(file = runAll.log, append = FALSE)
+sink(file = "runAll.log", append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")

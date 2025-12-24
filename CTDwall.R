@@ -54,7 +54,7 @@ if(0){
     pV <- expand.grid (c("Temperature_ITS90_DegC",
                          "Salinity_PSU"# , "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity", "bvf"
     )
-    , c("anS_" # , "an_", ""
+    , c("anS_", "" # , "an_", ""
     ))
   }
   keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
