@@ -116,7 +116,7 @@ cLegend( # "bottom"# , inset=0.07
   105, 2
   , currentYear = currentYear, mRange = c(min(hmr$year), currentYear - 1)
   , cYcol = currentCol
-  , title = paste(maO, "day moving average")
+  , title = paste(maO, "day moving averages")
   , qntl = qntl
   , pastYear = pastYear, ongoingYear = ongoingY
 )

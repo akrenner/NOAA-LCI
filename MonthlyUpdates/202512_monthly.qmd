@@ -205,7 +205,7 @@ rm(fl, flS, dest, destR, cS)
 ```
 
 ---
-title: "Monthly Kachemak Bay report, December 2025"
+title: "Monthly Oceanographic Kachemak Bay Report, December 2025"
 author:
   - name: "Martin Renner"
     email: martin.renner@noaa.gov
@@ -217,10 +217,10 @@ author:
   - name: "Paul Cziko"
     affiliation:
        - name: NOAA/NCCOS Kasitsna Bay Lab
-# format: html
+format: html
 # format: pdf
 # format: email
-format: docx
+# format: docx
 editor: visual
 # title-block-style: none
 # in terminal: quarto render --to html
@@ -229,13 +229,13 @@ editor: visual
 
 ## Summary
 
-After a month of unseasonal cold, dry weather with Northeasterly winds and ice in shallow waters, little sign of vertical stratification remained. Differences remained between a colder and fresher inner, and a warmer, saltier outer bay. Throughout the water column, temperatures were below the long-term mean, in parts by over 1.2 SD. All but deep waters in the inner bay were 0-1 SD fresher than normal. 
+After a month of unseasonably cold, dry weather with northeasterly winds and ice in shallow waters, little sign of vertical ocean stratification remained. Differences remained between a colder and fresher inner, and a warmer, saltier outer bay. Throughout the water column, temperatures were below the long-term mean, in parts by over 1.2 standard deviations (SD). All but deep waters in the inner bay were 0-1 SD fresher than normal. 
 
 <!-- 2-3 sentences -->
 
 ## Conditions
 
-The month leading up to this survey was unusually cold (@fig-Temp_Airport) and dry, with winds generally blowing from the Northeast. Beluga Lake was frozen but there was virtually snow on the ground at sea-level. Mud Bay was filled with ice and Homer Harbor was impassable for small vessels due to the amount of ice. Hans, Martin, and Paul conducted the KBL monthly survey on 22 December. Due to the short available daylight, only the AlongBay transect was covered.  <!-- `{r} dateAN` , 
+Weather in the month leading up to this survey was unusually cold (@fig-Temp_Airport) and dry, with winds generally blowing from the northeast. Beluga Lake was frozen but there was virtually no snow on the ground at sea-level. Mud Bay was filled with ice and Homer Harbor was impassable for small vessels due to the amount of ice. Hans, Martin, and Paul conducted the KBL monthly survey on 22 December. Due to the short available daylight, only the AlongBay transect was completed.  <!-- `{r} dateAN` , 
 Sea state during this survey varied from Beaufort 1 to Beaufort 4. 
 -->
 A complete set of up-to-date graphs can be found on the Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link).
@@ -250,12 +250,12 @@ A complete set of up-to-date graphs can be found on the Google Drive: [section p
 
 ### Temperature
 
-Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the inner bay off Bear Cove, to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the outer bay, off Seldovia. There was little indication of vertical stratification, however horizontal difference were evident with warmer waters in the outer and coldest waters in the inner bay (@fig-tSections), A thin surface layer of slightly colder surface water was seen at the head of the bay, an area coinciding with impressive ice fog in the early morning. A local spot of colder water was found off Homer Spit (at about 30 km along-track, @fig-tSections). Presumably, colder (and fresher) water from Mud Bay, matching the characteristics of waters from the inner-bay, extended out to this area. 
+Recorded water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the inner bay off Bear Cove, to a maximum of `{r} tsal$temSalR[2]` °C at `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the outer bay, off Seldovia. There was little indication of vertical stratification, however horizontal differences were evident with warmer waters in the outer bay and coldest waters in the inner bay (@fig-tSections). A thin surface layer of slightly colder surface water was seen at the head of the bay, an area coinciding with impressive ice fog in the early morning. A local spot of colder water was found off Homer Spit (at about 30 km along-track, @fig-tSections). Presumably, colder (and fresher) water from Mud Bay, matching the characteristics of waters from the inner-bay, extended out to this area. 
 
-![Longitudinal AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right), showing main parameters from the current survey (left column) and their respective anomaly, i.e. the difference between the current measurements and the long-term monthly mean (2012-current) at the respective place and depth.](./media/Section_T-AlongBay.png){#fig-tSections}
+![Longitudinal AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right), showing main parameters from the present survey (left column) and their respective anomaly, i.e. the difference between the present measurements and the long-term monthly mean (2012-current) at the respective place and depth.](./media/Section_T-AlongBay.png){#fig-tSections}
 
 
-On a larger scale, satellite data showed a similar trend for sea surface temperatures, as observed here for Kachemak Bay, for Cook Inlet: warm waters from the Gulf of Alaska, gradually cooled, as they moved into the increasingly shallow waters of the upper inlet (@fig-SST_GOA).
+On a larger scale, satellite data showed a similar trend for sea surface temperatures, as observed here for Kachemak Bay, for Cook Inlet: warmer waters from the Gulf of Alaska, gradually cooled, as they moved into the increasingly shallow waters of upper Cook Inlet (@fig-SST_GOA).
 
 <!-- Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers, the latter typically reaching their annual peak in September.  -->
 
@@ -264,7 +264,7 @@ On a larger scale, satellite data showed a similar trend for sea surface tempera
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
 
-Everywhere in the bay, and at all depths, water temperatures were below the long-term mean (top-right of @fig-tSections). While much of the North Pacific is still in a warm-water anomaly, the Gulf of Alaska had also moved into a negative temperature anomaly, in line with temperatures throughout Kachemak Bay ([global SST anomaly](https://www.ospo.noaa.gov/products/ocean/sst/anomaly/)). 
+Everywhere in the bay, and at all depths, water temperatures were below the long-term mean (top-right of @fig-tSections). While much of the North Pacific was still in a warm-water anomaly, the Gulf of Alaska had also moved into a negative temperature anomaly, in line with temperatures throughout Kachemak Bay ([global SST anomaly](https://www.ospo.noaa.gov/products/ocean/sst/anomaly/)). 
 The warm-water anomaly that was a feature in Kachemak Bay waters since the beginning of the year, appeared to have come to an end, at least for now (@fig-SWMP-homerdeep-temp,
 <!-- , @fig-TSprofile_T9,  -->
 @fig-TempDeepTS). 
@@ -287,7 +287,7 @@ The warm-water anomaly that was a feature in Kachemak Bay waters since the begin
 ![Bottom-water temperature at mid-bay CTD station T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeepTS}
 
 
-![Bottom water temperature at the inner bay near Glacier Spit (station AlongBay-8).](./media/CTD_AlongBay_8_dayTempBottom41.png){#fig-bottomTemp}
+![Oceanography Station AlongBay-8, near Glacier Spit; Temperature of the deepest 10 m over a bottom depth of 79 m.](./media/CTD_AlongBay_8_dayTempBottom41.png){#fig-bottomTemp}
 
 
 ![Long-term temperature and salinity profiles at mid-bay (T9-6).](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
@@ -302,7 +302,7 @@ The warm-water anomaly that was a feature in Kachemak Bay waters since the begin
 
 Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) in the outer bay to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. The outer bay was a little bit more saline than the inner bay. Differences between deep and surface waters were minute, indicating an almost fully mixed water column (@fig-tSections). Compared to the long-term mean, surface, and especially outer bay waters, were by up to 1 SD saltier. 
 
-Similarly to the heat wave years of 2014-16, the bay experienced anomalously warm waters for the first 2/3 of 2025. Since this fall, SST reverted to being saltier than normal (@fig-SalDeep)
+Similarly to the heat wave years of 2014-16, the bay experienced anomalously warm waters for the first 2/3 of 2025. Since this fall, salinity reverted to being saltier than normal (@fig-SalDeep)
 
 
 ![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}

@@ -320,7 +320,7 @@ for (j in seq_along (instSite)) {
     , currentYear = currentYear
     , mRange = c (min (list (sldviaS, sldvia, homerS, homer)[[j]]$year), currentYear - 1)
     , cYcol = currentCol
-    , title = paste (maO, "day moving average")
+    , title = paste (maO, "day moving averages")
     , qntl = qntl
     , pastYear = pastYear, ongoingYear = ongoingY
   )
@@ -454,13 +454,13 @@ for(i in seq_along(tVars)) {
 
   png(paste0(mediaD, "CTD_", Stn2p, "_day", tVars[i], maO, ".png"),
       width = 300*8, height = 300*6, res = 300)
-  par(mar=c(5.5,5,2,5))
+  par(mar=c(3,5,2,5))
   plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]")
   title (main = paste0 (gsub("^Temp", "", tVars[i]),
     " layer water temperature, Inner Kachemak Bay"),
-    sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
-    ", near Glacier Spit ("# , gsub("^Temp", "", tVars[i]), ": "
-    , tDescpt [i], "), bottom: ", stn$Depth_m[match(Stn2p, stn$Match_Name)], " m")
+    # sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
+    # ", near Glacier Spit ("# , gsub("^Temp", "", tVars[i]), ": "
+    # , tDescpt [i], "), bottom: ", stn$Depth_m[match(Stn2p, stn$Match_Name)], " m")
     ## lookup description!
     # , stn$description [which (stn$Match_Name == Stn2p)]
     )
