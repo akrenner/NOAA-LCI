@@ -403,7 +403,7 @@ tVars <- c("TempBottom", "TempDeep", "TempSurface")
 currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1
 cY2 <- currentYear + 1
 Stn2p <- "9_6"
-Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
+# Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
 # currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
 # currentCol <- c("navyblue", "lightblue") ## brewer
 # currentCol <- c("blue", "magenta") ## brewer
@@ -413,6 +413,8 @@ Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels bel
 
 
 # currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
+
+compYear <- 2016
 
 
 lwd <- 4
@@ -481,12 +483,19 @@ for(i in seq_along(tVars)) {
   pasY$jday <- ifelse(pasY$Year > cY2-1, pasY$jday + 365, pasY$jday)
   pasYa <- aggregate(xvar ~ jday, data = pasY, FUN = mean, na.rm = TRUE)
 
-  lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[2])
+  if(exists ("compYear")){
+    lines(xvar~jday, data=subset (poSSA, Year == 2015), lwd = lwd, col = currentCol[2])
+  }else{
+    lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[2])
+  }
   lines(xvar ~ jday, data = nowYa, lwd = lwd, col = currentCol[3])
+
 
   legend("topleft", lwd=c(rep(lwd, 3), 10),
          col = c("darkgray", currentCol[2:3], "lightgray"),
-         legend=c(paste0("mean ", min(poSS$Year), "-", cY2 - 1), cY2-1, cY2,
+         legend=c(paste0("mean ", min(poSS$Year), "-", cY2 - 1),
+                  ifelse (exists("compYear"), compYear, cY2-1)
+                  , cY2,
                   "SD around mean"),
          bty = "n")
   box()
