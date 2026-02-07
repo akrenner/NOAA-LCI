@@ -965,7 +965,8 @@ for(iS in seq_along(tL)) {
   if(tempName == "Max") {
     thTempL <- c(8, 12) ## list of threshold temperatures
   } else if(tempName == "Deep") {
-    thTempL <- c(4, 4) ## seq(4, 8, by=0.5)
+    thTempL <- c(8, 8) ## seq(4, 8, by=0.5)   ## underlying question:
+    ## when is it warm enough for Alexandrium spp. cyst beds to hatch?
   }
   tbnorm <- longM(T96$TempS, T96$timeStamp)
   # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
@@ -1025,7 +1026,7 @@ for(iS in seq_along(tL)) {
   rm(anomCol, anomL, yLabt)
 
   ## plot timing of 4 degrees C over year
-  if(0 & tempName == "Deep") {
+  if(tempName == "Deep") {
     T96f$Year <- as.numeric(format(T96f$timeStamp, "%Y"))
 
     springM <- sapply(thTempL, function(y) {
@@ -1064,7 +1065,7 @@ for(iS in seq_along(tL)) {
       axis(1, tick = TRUE, labels = FALSE, at = yL)
       axis(1, tick = FALSE, labels = yL, at = yL + 0.5)
       box()
-      abline(h = as.Date(paste0("2000-0", 1:8, "-01")), lty = "dashed", col = "gray")
+      abline(h = as.Date(paste0("2000-0", 1:9, "-01")), lty = "dashed", col = "gray")
       if(tempName == "Max") {xi <- seq_along(thTempL)} else {xi <- 1}
       #      if(as.numeric(format(Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
       #       springM <- springM [1:(nrow(springM)-1),]
@@ -1078,11 +1079,10 @@ for(iS in seq_along(tL)) {
         # lines(springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
       }
       legend("bottomright" ## needs to move below plot and needs to be smaller
-        , lwd = 3
-        , pch = 19, cex = 1
+        , lwd = 3, pch = 19, cex = 1
         , col = colr, legend = thTempL [xi]
         , title = "temperature [°C]" # expression(temperature~"["*degree~C*"]")
-        , bty = "o", ncol = 3, pt.cex = 2, pt.lwd = 3)
+        , bty = "n", ncol = 3, pt.cex = 2, pt.lwd = 3)
       rm(yL, xi)
     } else {  ## version 2 -- year on y-axis
       plot(springM [, 1], levels(factor(T96f$Year)), ylab = ""
