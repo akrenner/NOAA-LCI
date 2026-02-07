@@ -80,6 +80,15 @@ if (0) {  ## plot all years -- rainbow spaghetti
   }
 }
 
+
+## test plot
+if(0){
+plot(atemp~datetimestamp, hmr, type="l")
+with(hmr, datetimestamp[which.min(atemp)])
+with(hmr, datetimestamp[which.max(atemp)])
+}
+
+
 ## aggregate data
 tDay <- prepDF(varName = "atemp", dat = hmr, maO = maO, qntl = qntl
                , currentYear = currentYear)

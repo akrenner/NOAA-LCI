@@ -315,7 +315,7 @@ for (j in seq_along (instSite)) {
     , ylab = "Temperature [°C]" # expression('Temperature'~'['*degree~'C'*']')
     , pastYear = pastYear, ongoingYear = ongoingY
   )
-  title (main = c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer surface water temperature", "Homer bottom water temperature")[j])
+  title (main = c("Seldovia surface water temperature", "Seldovia Harbor bottom water temperature", "Homer Harbor surface water temperature", "Homer Harbor bottom water temperature")[j])
   fAxis(c (0, 15)) # from annualPlotFct.R
   bx <- legend ("bottom", inset = 0.1, bty = "n", legend = "")
   cLegend ("topleft", inset = 0.01
@@ -404,8 +404,7 @@ require(dplyr)
 tVars <- c("TempBottom", "TempDeep", "TempSurface")
 # currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1  ## currentYear already defined above
 cY2 <- currentYear + 1
-Stn2p <- "9_6"
-# Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
+Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
 # currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
 # currentCol <- c("navyblue", "lightblue") ## brewer
 # currentCol <- c("blue", "magenta") ## brewer
@@ -415,14 +414,16 @@ Stn2p <- "9_6"
 
 
 # currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
+Stn2p <- "AlongBay_5"
+
 
 if(0) {  ## for AMSS 2026
   compYear <- 2015
   currentCol <- paletteer::paletteer_d("rcartocolor::Safe")[c(1,2)]
+  Stn2p <- "9_6"
 }
 
 lwd <- 4
-
 for(i in seq_along(tVars)) {
   # i = 1
   poSSA <- sf::st_drop_geometry(poSS) %>%
@@ -465,7 +466,7 @@ for(i in seq_along(tVars)) {
             , ylim = range(poD$xvar, na.rm=TRUE)
             )
   title (main = paste0 (gsub("^Temp", "", tVars[i]),
-    " layer water temperature, Inner Kachemak Bay"),
+    " layer water temperature, Outer Kachemak Bay"),
     # sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
     # ", near Glacier Spit ("# , gsub("^Temp", "", tVars[i]), ": "
     # , tDescpt [i], "), bottom: ", stn$Depth_m[match(Stn2p, stn$Match_Name)], " m")
