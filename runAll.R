@@ -24,6 +24,8 @@ if (.Platform$OS.type=="windows"){
 }else{ ## Linux or macOS platform
   setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 }
+# openProject()
+
 
 sT <- Sys.time()
 cat ("\nStarting runAll.R at: ", as.character (Sys.time()), "\n")
@@ -125,6 +127,7 @@ source("CTDwall.R")
 
 ## only for SoB? -- mv down?
 ## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
+sink()
 
 
 

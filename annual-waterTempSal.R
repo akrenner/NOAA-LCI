@@ -20,6 +20,8 @@ maO <- 31  # 7 days certainly not working, 14 days not enough either
 qntl = c(0.9)
 pMA <- TRUE
 currentYear <- as.numeric (format (Sys.Date(), "%Y")) - 1
+# currentYear <- 2024
+
 #################
 # currentYear <- 2021   ## temp!! XXX
 #################
@@ -400,7 +402,7 @@ base::load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSet
 require(dplyr)
 
 tVars <- c("TempBottom", "TempDeep", "TempSurface")
-currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1
+# currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1  ## currentYear already defined above
 cY2 <- currentYear + 1
 Stn2p <- "9_6"
 # Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
@@ -414,8 +416,10 @@ Stn2p <- "9_6"
 
 # currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
 
-compYear <- 2016
-
+if(0) {  ## for AMSS 2026
+  compYear <- 2015
+  currentCol <- paletteer::paletteer_d("rcartocolor::Safe")[c(1,2)]
+}
 
 lwd <- 4
 
@@ -457,7 +461,9 @@ for(i in seq_along(tVars)) {
   png(paste0(mediaD, "CTD_", Stn2p, "_day", tVars[i], maO, ".png"),
       width = 300*8, height = 300*6, res = 300)
   par(mar=c(3,5,2,5))
-  plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]")
+  plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]"
+            , ylim = range(poD$xvar, na.rm=TRUE)
+            )
   title (main = paste0 (gsub("^Temp", "", tVars[i]),
     " layer water temperature, Inner Kachemak Bay"),
     # sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
