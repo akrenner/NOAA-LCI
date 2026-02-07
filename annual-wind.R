@@ -502,7 +502,7 @@ par (mar = c(3, 4, 1.5, 0.1))
 plotSetup (tDay$lowPerMA, tDay$uppPerMA, ylab = wCaption
   # , ylim=c(0,25)
   #             , ylim=c(0,15) # for spit only
-  , ylim = c(0, 8) # for Homer Airport
+  , ylim = c(0, 15) # for Homer Airport
   , main = metstation)
 
 oP <- par()

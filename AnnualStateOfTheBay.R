@@ -34,7 +34,7 @@ source("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 source("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
 source("annual-rainy.R")
 source("annual-snowpack.R")
-source("annual-waves.R")
+try(source("annual-waves.R"))  # issues with access to bouy data again
 # source("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
 

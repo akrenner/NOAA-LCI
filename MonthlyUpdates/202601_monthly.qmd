@@ -1,0 +1,388 @@
+```{r}
+#| echo: false
+
+## align wd with html dir
+# setwd ("~/myDocs/amyfiles/NOAA-LCI/MonthlyUpdates")
+## can this from from standard NOAA-LCI ?
+
+## bathymetry to plots
+## fix alignment of contour lines
+## sob: fix rainfall units
+
+
+## workflow:
+## connect to VPN (NCCOS-West for SWMP download)
+## runAll.R to process last survey and download latest weather
+## pre-pub update: run AnnualStateOfTheBay.R 
+## run all in this script
+## render this script to html. Copy into gmail and check for errors
+## re-render. Print to PDF
+## publish this quatro
+## copy published website and paste into gmail
+## attach pdf version
+## mail-merge with distribution list
+## delete unsubscribe button
+
+
+## next time: new structure. First: temp and salinity and stratification. 
+## then longt-term trends and anomalies
+## then Biology. 
+## dirty hack for 2025-09 only: run CTD_timeseries.R in advanced branch, then again in main -- to get CTD sob-like graph. 
+
+
+## clear the slate
+rm(list = ls())
+# require("packrat")
+# require("rsconnect")
+require("quarto", quietly = TRUE)
+suppressMessages(qV <- quarto_binary_sitrep())
+if (!qV) {
+  stop("Quarto binary not found. Please install Quarto.")
+}
+unlink("MonthlyUpdates/media/", recursive = TRUE)
+
+
+
+## fetch data from notebook export and CTD processing
+load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc, raw CTD profiles
+physOc$isoDate <- as.Date(physOc$isoTime)
+## find survey, not just last date
+physL <- subset(physOc, as.numeric(format(physOc$isoTime, "%Y")) ==
+  max(as.numeric(format (physOc$isoTime, "%Y"))))
+physL <- subset(physL, as.numeric(format (physL$isoTime, "%m")) ==
+  max(as.numeric(format(physL$isoTime, "%m"))))
+rm(physOc)
+
+# minT = min (c(10.5, 10.6, 9.8, 11))
+# maxT = max (c(13, 15, 14, 12))
+# sDate = as.Date (Sys.Date())
+# sDate = as.Date ("2024-08-26")
+sDate <- max(physL$isoDate)
+dateAN <- format(sDate, "%d %b %Y")
+
+
+sY = as.numeric(format(sDate, "%Y"))
+sM = month.name[as.numeric (format(sDate, "%m"))]
+sSlot = paste0(sM, ", ", sY)
+# sSlot <- "June, 2025"
+
+crew = c("Kris","Martin", "Ross") |> sort()  ## pull from notes
+crewT = paste0(c(paste0 (crew [1:(length(crew) - 1)], collapse = ", "),
+  paste0(crew [length (crew)])), collapse = ", and ")
+
+
+tsal <- with(physL, data.frame(temSal = c(min(Temperature_ITS90_DegC, na.rm = TRUE),
+  max(Temperature_ITS90_DegC, na.rm = TRUE),
+  min(Salinity_PSU, na.rm = TRUE),
+  max(Salinity_PSU, na.rm = TRUE),
+  min(Chlorophyll_mg_m3, na.rm = TRUE),
+  max(Chlorophyll_mg_m3, na.rm = TRUE)),
+stn = c(Match_Name [which.min(Temperature_ITS90_DegC)],
+  Match_Name [which.max(Temperature_ITS90_DegC)],
+  Match_Name [which.min(Salinity_PSU)],
+  Match_Name [which.max(Salinity_PSU)],
+  Match_Name [which.min(Chlorophyll_mg_m3)],
+  Match_Name [which.max(Chlorophyll_mg_m3)]),
+depth = c(Depth.saltwater..m. [which.min(Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.max (Temperature_ITS90_DegC)],
+  Depth.saltwater..m. [which.min (Salinity_PSU)],
+  Depth.saltwater..m. [which.max (Salinity_PSU)],
+  Depth.saltwater..m. [which.min (Chlorophyll_mg_m3)],
+  Depth.saltwater..m. [which.max (Chlorophyll_mg_m3)])
+))
+tsal$stn <- gsub("_", "-", tsal$stn)
+tsal$temSalR <- round(tsal$temSal, 1) |>
+  format(nsmall = 1)
+tsal$depthT <- ifelse(tsal$depth > 5, "depth", "surface")
+# tsal$region <- tsal$stn
+# tsal$region <- gsub ("AlongBay_[7:13]", tsal$region, "inner bay")
+# tsal$region <- gsub ("AlongBay_[1:6]", tsal$region, "outer bay")
+# tsal$region <- gsub ("T4_[1:10]", tsal$region, "outer bay")
+# tsal$region <- ifelse (tsal$region %in% (c("outer bay", "inner bay")), tsal$region, "Cook Inlet")
+
+
+## to-do:
+## tweak title layout : remove "author" and "affiliation"
+## add date?
+## add background graphics, NCCOS logo
+
+
+
+## ----------------------------------------------------------------------
+## copy files for figures
+
+# Struggling with path settings -- circumvent this issue by copying relevant file to local directory
+
+## find files
+## construct mark-down code (all sections of the day, monthly / quarterly)
+dest <- "media/CTDsections/sectionImages/"
+dest <- "media/"
+destR <- paste(getwd(), dest, sep = "/")
+
+
+dir.create(destR, showWarnings = FALSE, recursive = TRUE)
+src <- "~/tmp/LCI_noaa/media/"
+
+# pick transects from last survey; flexible as to monthly/quarterly
+fl <- list.files(paste0 (src, "CTDsections/sectionImages"), pattern = "*.png")
+flC <- grep(substr(sort(fl, decreasing = TRUE)[1], 1, 7), fl, value = TRUE)  # pick last date
+
+# lastDate <- "2025-01-14"
+# lastDate <- substr(sort(fl, decreasing=TRUE)[1], 1,10)
+lastDateT <- format(sDate, "%m/%d/%Y")  ## US style: 04/16/2025
+lastDateT <- format(sDate, "%d %B %Y")  ## 16 April 2025
+
+
+for (i in seq_along(flC)) {
+  cS <- file.copy(from = paste0(src, "CTDsections/sectionImages/", flC [i]),
+    to = paste0(destR, "/Section_", substr (flC [i], 9, nchar (flC [i]))),
+    overwrite = TRUE)
+}
+
+
+## Chlorophyll
+# dest="media/CTDsections/time-sections/"
+# dir.create(dest, showWarnings=FALSE, recursive=TRUE)
+flS <- list.files(paste0("~/tmp/LCI_noaa/CTDsections/time-sections", dest), pattern = "*.png")
+cS <- file.copy(from = paste0 ("~/tmp/LCI_noaa/", dest, flS)
+  , to = destR, overwrite = TRUE)
+TStempSurface <- paste0(destR, "5-TempSurfaceTS.png")
+TSsalinitySurface <- paste0(destR, "5-SalSurfaceTS.png")
+TSchlorophyll <- paste0(destR, "3-9_6-chlorophyll-climatology.png")
+TS_tsprofile <- paste0(destR, "2-9_6-TSprofile.png")
+
+
+## NOAA weather -- replace from rNOAA
+
+## signature data-set graphs
+# check that updates were successful!
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/3-9_6-chlorophyll-anomaly.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-SalDeepTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-TempSurfaceTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/5-T9-6_TempDeepTS.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSprofile.png"
+  , to = destR, overwrite = TRUE)
+
+## State-of-the-bay
+cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=destR, overwrite=TRUE)
+#     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=destR, overwrite=TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-Temp-Deep-Homer.png"
+  , to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-salinity31-d.png"
+  , to = destR, overwrite = TRUE)
+#    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-chlorophyll.png", to=destR, overwrite=TRUE)
+
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/CTD_AlongBay_5_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
+
+# cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/CTD_9_6_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
+
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
+
+
+
+
+# email to:
+## use GMail's mail merge, pulling addresses from this spreadsheet: monthly oceanographic survey
+# subject line in email: Kachemak Bay | December 2025 Oceanographic Survey
+## 
+
+
+
+rm(fl, flS, dest, destR, cS)
+
+## 1. wrap-up text
+## 2. replace graphs: long TS of temp/Salinity/Chlorophyl with SoB-style annual plot
+
+#  <!-- markdown:  -->
+#  <!--   wrap: 72 -->
+# title-block-style: none
+# in terminal: quarto render --to pdf
+# no references to R code in title section!
+
+# Could see if Tim would let you install a browser extension. But this StackEx answer below actually works in chrome; just tried it! in the following lines, pasting in this:
+# <!DOCTYPE html>
+# <html>
+# <head>
+# <title>Page Title</title>
+# </head>
+# <body>
+# 
+# <h1>My First Heading</h1>
+# <p>My first paragraph.</p>
+# 
+# </body>
+# </html>
+# 
+# My First Heading
+# My first paragraph.
+# 
+# 
+# p
+# 
+# 
+# You can actually work around this if you're using a browser with a developer tool that allows you to edit the page's DOM (source), like Chrome, or Firefox with Firebug.
+# 
+# If you're using Chrome, you compose a new email in Gmail, type in some a dummy text, select it, and right click in the email body and select 'inspect element'. Highlight the dummy text, right click and select 'edit as HTML'. Paste in your HTML. [click outside of your changed text to apply it]
+# 
+# When you send your email it should send your edited HTML (provided you haven't done anything too crazy that Gmail prevents).
+# 
+
+
+
+
+```
+
+---
+title: "Monthly Kachemak Bay report, January 2026"
+author:
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: CSS, under contract to NOAA/NCCOS Kasitsna Bay Lab
+  - name: "Kris Holderied"
+    affiliation:
+       - name: NOAA/NCCOS Kasitsna Bay Lab
+  - name: "Paul Cziko"
+    affiliation:
+       - name: NOAA/NCCOS Kasitsna Bay Lab
+format: html
+# format: pdf
+# format: email
+# format: docx
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to html
+# options: html, pdf or docx, email
+---
+
+## Summary
+
+The first half of January 2026 was cold in Kachemak Bay. Homer Airport recorded its lowest air temperatures this century. Water temperatures were the coldest recorded in any January since our ocean surveys started in February 2012 (bested only that month). Outer bay temperatures and salinities showed the connection to inflows of warmer ocean water from the Gulf of Alaska, which was also colder than normal. Salinity values in Kachemak Bay were near normal after being fresher than normal for most of 2025.
+<!-- `{r} dateAN` , -->
+A complete set of up-to-date graphs can be found on this Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link).
+
+
+<!-- 2-3 sentences -->
+
+## Conditions
+
+The month leading up to this survey was unusually cold. Average air temperatures at Homer Airport in late December to early January were about 7 °C below the long-term mean and over 2 °C below the 10th percentile for that month (@fig-Temp_Airport).  The low on 8 January 2026 (-24.4 °C / -12 °F) was the lowest air temperature recorded since the turn of the century, but warmed up approaching the seasonal mean in the second half of the month. 
+Prior to the survey, strong winds and high tides had driven substantial amounts of ice out of Mud Bay. <!-- Mud Bay was filled with ice and Homer Harbor was impassable for small vessels due to the amount of ice.  -->
+Hans, Kris, and Paul conducted the KBL monthly survey on 20 January, covering the AlongBay and mid-bay T9 transects in sea states relatively calm sea states.
+<!-- Beaufort 1 to 2. -->
+
+
+![Recent temperature at the Homer Airport, compared to the seasonal mean.](./media/sa-airTemp-LE.png){#fig-Temp_Airport}
+
+<!-- While within normal limits, it has been a cool and wet June so far. Mean air temperature at Homer Airport were still below 10 °C [50  °F]. Conditions during the survey were choppy in the outer bay ( \< beaufort 5, with short steep waves up to 1.2 m, leading us to skip station AlongBay 1), but were predictably calmer in the inner bay. -->
+<!-- `{r} crewT` -->
+
+## Physical oceanography
+
+### Temperature
+
+Water temperatures during this survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), off Homer Spit, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the outer bay. As expected for this month, the inner bay was colder than the outer bay, with the main transition near the Homer Spit (as indicated by the densely spaced contour lines in @fig-tSections_AB, top-left panel). 
+
+T9 is situated around km 30 of the AlongBay transect, cross-sectioning the inner/outer bay transition zone. Sloping salinity and temperature contour lines showed influx of warmer, more saline water at depth, especially on the south side, and an outflow of colder, fresher water on the surface at the north side of T9 (@fig-tSections_T9). While the entire water column was colder than normal, the strong surface water cold anomalies found near the Spit were likely caused by melting pack ice from Mud Bay (also note the dip in salinity at the same location). 
+
+
+::: {#fig-tSections}
+![AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right).](./media/Section_T-AlongBay.png){#fig-tSections_AB}
+
+![T9 Transect, across bay from Homer Spit (left) to China Poot Bay (right).](./media/Section_T-9.png){#fig-tSections_T9}
+
+<!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
+
+Along bay and cross-sections of main parameters from the current cruise (left column) and their respective anomalies, i.e. the difference between the current measurements and the long-term monthly mean (2012-current) at the respective place and depth.
+:::
+
+
+On a larger scale, satellite sea surface temperature data showed how Kachemak Bay temperatures were driven by an interplay of warm waters from the Gulf of Alaska and gradual cooling as they moved into the increasingly shallow waters (@fig-SST_GOA). 
+
+<!-- Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers, the latter typically reaching their annual peak in September.  -->
+
+![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](media-2026-01/alaska.fc.gif){#fig-SST_GOA}
+
+<!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
+
+
+Everywhere in the bay, and at all depths, water temperatures were below the long-term mean, with some parts reaching over 2 standard deviations (SD) or 3 °C below normal  (top-right of @fig-tSections, @fig-bottomTemp), making this the coldest January for water temperatures in Kachemak Bay since the beginning of our records (we do not have measurements for January 2012; only February 2012 was even colder, @fig-TSprofile_T9). Satellite measurements indicated that sea surface temperatures in the  Gulf of Alaska were also colder than normal ([global SST anomaly](https://www.ospo.noaa.gov/products/ocean/sst/anomaly/)). Globally, the Gulf of Alaska stood out as one of the few areas currently colder than normal, with most of the North Pacific remaining warmer than normal. For three years (2022-2024) temperatures in Kachemak Bay stayed remarkably close to normal, were about 1 SD above normal for most of 2025, but swung over to the cooler side in January 2026 (@fig-SWMP-homerdeep-temp,
+<!-- , @fig-TSprofile_T9,  -->
+@fig-TempDeepTS). 
+
+
+<!-- , water temperatures were again closer normal values. Most values along both, the AlongBay, and T9 transects were within 0.5 standard deviations of the long-term mean (anomaly plots on the right: @fig-tSections_AB, @fig-tSections_T9). While surface layers along T9 remained over 0.5 SD above normal (@fig-tSections_T9, also see @fig-TempDeepTS), deep waters were within 0.5 SD of normal, both in the AlongBay transect and in T9 (@fig-tSections_AB, @fig-tSections_T9, @fig-bottomTemp). -->
+
+
+<!-- https://www.ospo.noaa.gov/products/ocean/sst/anomaly/ -->
+
+
+<!-- Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August, but was diminished compared to previous months (@fig-TempDeepTS). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly about 1 °C above the long-term mean, and remained near the 90th percentile.  -->
+
+<!-- add sob plot on air temperature -->
+
+
+![Water temperature at the Homer Harbor SWMP station, operated by the KBNERR, at approximately 7 m depth (This is the deeper of two sensors, but is still located in the surface layer).](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
+
+
+![Bottom-water temperature at mid-bay CTD station T9-6 compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeepTS}
+
+
+<!-- ![Bottom water temperature at the inner bay near Glacier Spit (station AlongBay-8).](./media/CTD_AlongBay_5_dayTempBottom41.png){#fig-bottomTemp} -->
+
+<!-- ![Bottom water temperature off Homer Spit (station T9-6).](./media/CTD_9_6_dayTempBottom41.png){#fig-bottomTemp} -->
+
+
+![Bottom water temperature at the outer Kachemak Bay (station AlongBay-5).](./media/CTD_AlongBay_5_dayTempBottom41.png){#fig-bottomTemp}
+
+
+![Long-term temperature and salinity profiles at mid-bay (T9-6).](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
+
+<!-- More figures: signature data = time series. Start with figures as-is, then elaborate on them (improving on anomaly plots). -->
+
+<!-- Add map with station numbers -- schematic -->
+
+
+
+### Salinity
+
+Salinity values ranged from `{r} tsal$temSalR[3]` PSU at `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) near Homer Spit to `{r} tsal$temSalR[4]` at `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the mid-bay. Inner bay waters were fresher than outer bay waters. The outer bay was more saline than the inner bay, but in contrast to many other years, much of the water column was still stratified. Signs of a fully mixed water column were evident in the western outer bay (@fig-tSections_AB). Since this fall, salinity swung from being fresher than normal for the first two-thirds of 2025 to being saltier last fall, but returned to close to normal in January 2026 (@fig-SalDeep). 
+
+
+![Variability of deep-water salinity at T9-6 compared to the seasonal long-term mean.](./media/5-SalDeepTS.png){#fig-SalDeep}
+
+### Turbidity
+
+No major spatial differences in turbidity levels were noted, nor were turbidity levels consistently away from expected values (@fig-tSections). 
+
+## Biological conditions
+
+### Phytoplankton
+
+Chlorophyll concentrations were close to zero throughout Kachemak Bay, showing no areas of concentrated activity, as may be expected during January, and especially with temperatures this cold (@fig-tSections, @fig-chlorophyll).
+
+![Trends and seasonal anomaly of Chlorophyll concentrations at T9-6 (mean from surface to 85 m depth)](./media/3-9_6-chlorophyll-anomaly.png){#fig-chlorophyll}
+
+
+
+<!-- ![Time section of Chlorophyll concentrations at T9-6.](./media/3-9_6-chlorophyll-timesection.png){#fig-chlorophyllsection}  -->
+
+
+<!-- ### Zooplankton -->
+
+<!-- Echo sounder returns were weak to moderate at a few stations. No samples were taken.  -->
+<!-- Backscatter? Species composition? -->
+
+<!-- ### Wildlife -->
+
+<!-- One late humpback whale was feeding off Bear Cove near the head of the bay.  -->
+
+
+### Mailing list
+
+Please email Martin at martin.renner\@noaa.gov if you would like to be added to or removed from this mailing list.

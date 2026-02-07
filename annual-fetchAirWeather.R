@@ -70,7 +70,7 @@ source("annualPlotFct.R")  ## pull these functions into here since only used onc
 sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
-nAiro <- getNOAA("HMSA2", clearcache = clearC)  ## function in annualPlotFct -- NDBC site
+nAiro <- try(getNOAA("HMSA2", clearcache = clearC))  ## function in annualPlotFct -- NDBC site -- no longer active???
 
 nWave <- try(getNOAA(buoyID = "46108", clearcache = clearC))
 wave.46108 <- nWave
@@ -89,7 +89,7 @@ weatherL <- list(homer.airport = gNOAAS(station = "Homer Airport", clearcache = 
   , flat.island = gNOAAS(station = "Flat Island Light", clearcache = clearC, cacheF = cF)  ## Flat Island weather station
   , east.amatuli = gNOAAS(station = "East Amatuli Station Light  AK", clearcache = clearC, cacheF = cF)  ## East Amatuli weather station
 )
-weather.spit.buoy <- getNOAA(buoyID = "hmsa2", clearcache = clearC)   ## SWMP Homer Spit weather station
+weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2", clearcache = clearC))   ## SWMP Homer Spit weather station
 
 
 
