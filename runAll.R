@@ -15,9 +15,9 @@
 # position of max buoyancy over time
 
 
-rm (list = ls())
+rm(list = ls())
 
-if (.Platform$OS.type=="windows"){
+if(.Platform$OS.type=="windows"){
   setwd ("~/myDocs/amyfiles/NOAA-LCI/")
   # set environment variable to avoid "no such file or directory errors"
   Sys.setenv(TMPDIR = "C:\tmp")
