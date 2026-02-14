@@ -24,13 +24,16 @@ if(!indivPlots){
   if(anomalies) {
     # decide which anomaly to plot in panneled plots: raw vs scaled by SD
     pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU",
-                         "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity")
+                         # "Oxygen_umol_kg",
+                         "Oxygen_sat.perc.",
+                         "Chlorophyll_mg_m3", "turbidity")
                        , c("" # , "an_"
                            , "anS_"
                          ))
     keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
   } else {
-    keepV <- which(oVarsF %in% c("temperature", "salinity", "Oxygen_umol_kg",
+    keepV <- which(oVarsF %in% c("temperature", "salinity",
+    "Oxygen_sat.perc.", # "Oxygen_umol_kg",
                                  "Chlorophyll_mg_m3", "turbidity"))
   }
   oVarsF <- oVarsF [keepV]

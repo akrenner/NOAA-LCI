@@ -15,6 +15,7 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     Salinity ~ "[" * PSU * "]",
                     Density ~ "[" * sigma[theta] * "]",
                     Oxygen ~ "[" * mu * mol ~ kg^-1 * "]",
+                    "Oxygen saturation [%]",
                     "PAR",
                     Chlorophyll ~ "[" * mg ~ m^-3 * "]",
                     Turbidity ~ "[" * m^-1 * "]",
@@ -24,6 +25,7 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     "Temperature Anomaly [°C]", # Temperature ~ Anomaly ~ "[" * ""^o ~ C * "]",
                     Salinity ~ Anomaly ~ "[" * PSU * "]",
                     Density ~ Anomaly ~ "[" * sigma[theta] * "]",
+                    "Oxygen saturation Anomaly [%]",
                     Oxygen ~ Anomaly ~ "[" * mu * mol ~ kg^-1 * "]",
                     "PAR Anomaly",
                     Chlorophyll ~ Anomaly ~ "[" * mg ~ m^-3 * "]",
@@ -35,6 +37,7 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     Salinity ~ Anomaly ~ "[" * SD * "]",
                     Density ~ Anomaly ~ "[" * SD * "]",
                     Oxygen ~ Anomaly ~ "[" * SD * "]",
+                    "Oxygen Saturation Anomaly [SD",
                     PAR ~ Anomaly ~ "[" * SD * "]",
                     Chlorophyll ~ Anomaly ~ "[" * SD * "]",
                     Turbidity  ~ Anomaly ~ "[" * SD * "]",
@@ -66,8 +69,8 @@ save(oVars, oVarsDFname, oVarsF, oCol3, oRange,
   file = "~/tmp/LCI_noaa/cache/ctd_anomalies.RData")
 
 if(!all.equal(rep(nrow(oRange),4),
-  c(length(oVarsF), length(oVarsDFname), length(oVars), length(oCol3)))
-  ) {stop("Discrepancies in the length of objects that should be equal")}
+  c(length(oVarsF), length(oVarsDFname), length(oVars), length(oCol3)))) {
+  stop("Discrepancies in the length of objects that should be equal")}
 
 if(0) {
 cbind(rep(nrow(oRange),4),

@@ -104,8 +104,8 @@ for(h in 2:length(levels(surveyW))) {
 surveyW <- factor(format(poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
 
 poAll <- data.frame(survey = surveyW, poAll) |> # keep tail end for CTD data. Need to reset factor levels after combining days
-  dplyr::select(-Nitrogen.saturation..mg.l.) |> # eliminate these here to make oVarsDFname easier
-  dplyr::select(-Oxygen_sat.perc.)
+  # dplyr::select(-Oxygen_sat.perc.) |>
+  dplyr::select(-Nitrogen.saturation..mg.l.)    # eliminate these here to make oVarsDFname easier
 rm(surveyW, h)
 
 ## migrate code over from CTDwall.R:
@@ -142,6 +142,7 @@ oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
   , Salinity ~ "[" * PSU * "]"
   , Density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
   , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
+  , "Oxygen saturation [%]"
   , "PAR"
   , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
   , Turbidity ~"[" * m^-1 * "]" # "Turbidity" # it's really turbidity/attenuation # , "logTurbidity"
@@ -152,7 +153,8 @@ oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
 oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
-  , "Oxygen_umol_kg"  # , "O2perc"
+  , "Oxygen_umol_kg"
+  , "Oxygen_sat.perc."
   , "PAR.Irradiance"
   , "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
   , "turbidity"
@@ -186,7 +188,8 @@ oCol3 <- list( ## fix versions?
   temperature = oce::oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
   , salinity = colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
   , density = colorRampPalette(cmocean::cmocean("dense")(5), bias = 0.3)
-  , oxygen = cmocean::cmocean("oxy")
+  , oxygenC = cmocean::cmocean("oxy")
+  , oxygenP = cmocean::cmocean("oxy")
   , PAR = oce::oceColorsTurbo ## viridis::turbo(n, begin = 0.25, end = 0.8)
   , chlorophyll = colorRampPalette(cmocean::cmocean("algae")(5), bias = 3)
   # , oceColorsTurbo # cmocean("solar")
@@ -201,9 +204,9 @@ rm(odv)
 ##(stick to algorithmic pic of scale limits. Cleanups.)
 
 
-oRange <- t(sapply(oVarsDFname, FUN = function(vn) {
-  range(poAll [, which(names(poAll) == vn)], na.rm = TRUE)
-  # , FUN = function(vn){quantile(poAll [,which(names(poAll) == vn)], probs = c(0.01,0.99), na.rm = TRUE)
+oRange <- t(sapply(oVarsDFname, FUN=function(vn) {
+  # range(poAll [, which(names(poAll) == vn)], na.rm=TRUE)
+  quantile(poAll[, which(names(poAll) == vn)], na.rm=TRUE, probs=(c(0.0001, 0.9999)))
 }))
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
