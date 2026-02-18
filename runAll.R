@@ -61,6 +61,7 @@ if(0) {
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
+  badP <- c("paletteer", "lubridate")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     cat("\n\n##", badP [i], "##\n")
@@ -93,7 +94,7 @@ if(1) {
 }
 
 
-sink(file = runAll.log, append = FALSE)
+sink(file = "runAll.log", append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")

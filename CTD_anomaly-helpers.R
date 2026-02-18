@@ -5,8 +5,8 @@
 ## use CTDwall-setup.R as a template
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache/ctdanomalies.RData")
 # rm(list = ls())
-base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
-poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
+base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")          # from CTDwall-setup.R
+poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds") # from CTDwall_normals.R
 
 oVars <- rep(oVars, 3)
 

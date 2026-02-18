@@ -141,7 +141,7 @@ if(0) {
 oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
   , Salinity ~ "[" * PSU * "]"
   , Density ~ "[" * sigma[theta] * "]"  # "sigmaTheta"  ## spell in Greek?
-  , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  # , "O2perc"  ## use bquote ?
+  , Oxygen ~ "[" * mu * mol ~ kg^-1 * "]"  ## use bquote() ?
   , "Oxygen saturation [%]"
   , "PAR"
   , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
@@ -150,7 +150,7 @@ oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
   , log ~ (PAR)
   , log ~ (turbidity)
 )
-oVarsF <- c("temperature"    # need diffrent name for oxygen to use in function
+oVarsF <- c("temperature"    # need different name for oxygen to use in function
   , "salinity"
   , "sigmaTheta"
   , "Oxygen_umol_kg"

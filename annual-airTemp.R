@@ -15,7 +15,7 @@ qntl <- c(0.9) # , 0.8)
 currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
 require("RColorBrewer")
 # currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal(6, "Paired")[c(7, 6, 5)]
+currentCol <- brewer.pal(6, "Paired")[c(1, 5, 6)]
 SWMP <- TRUE
 # SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
@@ -30,7 +30,7 @@ mediaDex <- "~/tmp/LCI_noaa/media/StateOfTheBay-experimental/"
 if (quarterly) {
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
-  currentCol <- currentCol [c(3, 1, 2)]
+  # currentCol <- currentCol [c(3, 1, 2)]
   mediaD <- paste0(mediaD, "update/")
   # mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay-quarterly"
 } else {
