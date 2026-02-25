@@ -531,7 +531,7 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
 
   require("worldmet")
   ## these are needed by worldmet
-  require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
+  # require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
 
   ## catch errors
   if(length(station) != 1L) stop("Can only process one station at a time")

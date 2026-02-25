@@ -45,9 +45,9 @@ levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
 ## pick the variables to plot (only to save time, really). Disable to run
 ## everything under the sun
 ## code copied from CTDsections.R
-if(0){
+if(1){  ## running everything takes hours -- don't do that on a routine basis!
   pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU", "Oxygen_umol_kg",
-                       "Chlorophyll_mg_m3", "turbidity", "bvf")
+                       "Chlorophyll_mg_m3", "turbidity")  #, "bvf")
                      , c("", "an_", "anS_"))
   ## for testing/speed-up
   if(1){

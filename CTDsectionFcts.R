@@ -184,6 +184,12 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 4,
     if(class(s) != "try-error") {
       if(plotContours) {
         # s <- xsec
+        ## remove duplicate stations:
+        ## 1. find the station that is closer to the median of transect sampling time
+        ## 2. if difference from median is < 6 h, pick the longer/deeper sample
+
+
+
         nstation <- length(xsec[['station']])
         depth <- xsec [['depth']][seq_along(xsec@data[['station']][[1]]@data$scan)]
         np <- length(depth)
@@ -198,6 +204,9 @@ pSec <- function(xsec, N, cont = TRUE, zCol, custcont = 4,
         }
         ## fix issue with alignment of contours in some plots
         # distance <- unique(xsec[['distance']])  ## fragile when duplicate stations are present
+
+
+
         distance <- oce::geodDist(xsec@metadata$longitude,xsec@metadata$latitude, alongPath = TRUE) ## for same reason as below
 #       distance <- geodDistlocal(xsec@metadata$longitude,xsec@metadata$latitude)
 

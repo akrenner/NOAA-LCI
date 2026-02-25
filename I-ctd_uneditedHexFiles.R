@@ -21,6 +21,14 @@ if(0) {
   # uneditedD <- unedDL [67] # 2024-01
 }
 
+
+## copy notebookTable.csv to most recent survey
+newD <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited") |>
+  sort()
+file.rename("~/Desktop/notebookTable.csv",
+  paste0(newD [length(newD)]), "notebookTable.csv")
+
+
 ## automatically find the most recent survey based on modification time of notebookTable.csv file
 notes <- list.files("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/"
   , pattern = ".csv", full.names = TRUE, recursive = TRUE)

@@ -9,29 +9,36 @@ if(!exists("indivPlots")) {
   # indivPlots <- TRUE  # one section plot per page, instead of cluster of panels
   indivPlots <- FALSE
   anomalies <- TRUE
-  # anomalies <- FALSE
   plotAll <- TRUE
 }else{
   anomalies <- TRUE
   plotAll <- FALSE
-  # plotAll <- TRUE
 }
+
+
+
 # base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R
 poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 base::load("~/tmp/LCI_noaa/cache/ctd_anomalies.RData")  # from CTD_anomaly-helpers.R
+stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
+stn$Line <- factor(stn$Line)
 
 
 if(!indivPlots){
   if(anomalies) {
     # decide which anomaly to plot in panneled plots: raw vs scaled by SD
     pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU",
-                         "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity")
+                         # "Oxygen_umol_kg",
+                         "Oxygen_sat.perc.",
+                         "Chlorophyll_mg_m3", "turbidity")
                        , c("" # , "an_"
                            , "anS_"
                          ))
     keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
   } else {
-    keepV <- which(oVarsF %in% c("temperature", "salinity", "Oxygen_umol_kg",
+    keepV <- which(oVarsF %in% c("temperature", "salinity",
+    "Oxygen_sat.perc.",
+    # "Oxygen_umol_kg",
                                  "Chlorophyll_mg_m3", "turbidity"))
   }
   oVarsF <- oVarsF [keepV]
@@ -77,10 +84,7 @@ for(sv in iX) {
   # sv <- 151
   cat(sv, " ")
   if(sv %% 10 == 0) {cat(" ", sv, "/", max(iX), "\n", sep = "")}
-  s <- subset(poAll, survey == levels(poAll$survey)[sv]) # for testing -- eventually move up for efficiency
-  s$Transect <- factor(s$Transect)
-  iY <-  seq_along(levels(s$Transect)) # by transect
-  # iY <- 1 ## testing
+  s <- subset(poAll, survey == levels(poAll$survey)[sv]) ## subset current survey
 
   ## standardize some measures across all casts off one survey -- from CTDwall-setup.R
   oRangeS <- t(sapply(oVarsDFname, FUN = function(vn) {
@@ -88,53 +92,24 @@ for(sv in iX) {
   }))
 
 
-  for(tn in iY) {  ## XXX testing XXX
-    #  for(tn in 1:length(levels(poAll$Transect))){
-    ## for testing
-    ## sv <- 10; tn <- 1; s <- subset(poAll, survey == levels(poAll$survey)[sv]) # for testing -- eventually move up for efficiency
-    # s$Transect <- factor(s$Transect)
+  for(ti in seq_along(levels(stn$Line))) {
+    # ti <- 5  # T9
+    stn$Transect <- flexTransect(levels(stn$Line)[ti], stn)
+    s$Transect <- factor(stn$Transect [match(s$Match_Name, stn$Match_Name)])
+    phT <- subset (s, Transect == levels(stn$Line)[ti])
 
-    ## doubly-used stations:
-    # 4-3 = AlongBay-3
-    # 9-6 = AlongBay-6
+    if(length(levels(factor(phT$Match_Name))) > 2) {
 
-    # use flexTransect instead?! XXX
+  #     ## bad shit
+  #     print(nrow(phT))
+  #     print(summary(phT$Transect))
+  #   }
+  # }
+  #     ## end bad shit
 
-    s$Station <- gsub ("^[A-Z,a-z,0-9]+_", "", s$Match_Name)
+      phT$Station <- gsub ("^[A-Z,a-z,0-9]+_", "", phT$Match_Name)
+      phT$transDate <- with(phT, paste0("T-", Transect, " ", DateISO[1]))
 
-    if(levels(s$Transect)[tn] == "AlongBay") {
-      s$Transect [s$Match_Name == "4_3"] <- "AlongBay"
-      s$Transect [s$Match_Name == "9_6"] <- "AlongBay"
-    # }
-    # if(levels(s$Transect)[tn] == "ABext") {
-
-      ## extended AlongBay Transect -- got function for this already?
-      # AB-3, AB_S-2, AB_S-1, AB_S-0:  T6_S02, T7_S22, AB_SPTGM, AB_SPOGI
-      fS <- c("6_2", "7_22", "AlongBay_PTGR", "AlongBay_POGI",   # "6_3", "7_21", "7_20",
-        paste0("AlongBay_", 1:13))
-      # nS <- -3:0
-      for(k in seq_along(fS)) {
-        s$Transect [which(s$Match_Name == fS [k])] <- "AlongBay" ## no need to change station name
-      }
-    }
-
-    if(levels(s$Transect)[tn] == "4") {
-      s$Transect [s$Match_Name == "AlongBay_3"] <- "4"
-    }
-    if(levels(s$Transect)[tn] == "9") {
-      s$Transect [s$Match_Name == "9_6"] <- "9"
-    }
-
-
-    phT <- subset(s, Transect == levels(s$Transect)[tn])
-    phT$transDate <- with(phT, paste0("T-", Transect, " ", DateISO))
-
-
-    if(length(levels(factor(phT$Match_Name))) < 3) {
-      ## do nothing, just skip it
-      # stop(paste(levels(s$Transect)[tn],
-      #   "transect is too short -- should have been caught earlier"))
-    }else { ## shouldn't be necessary -- what's up with Transect = NA??
       ## arrange ctd data into sections
       ## define section -- see section class http://127.0.0.1:16810/library/oce/html/section-class.html
 
@@ -147,27 +122,27 @@ for(sv in iX) {
 
       if(indivPlots) {
         fN <- paste0(outD, levels(poAll$survey)[sv]
-                     , " T-", levels(s$Transect)[tn], "_%02d.png")
+                     , " T-", levels(stn$Line)[ti], "_%02d.png")
         png(fN, height = 8.5 * 200, width = 11 * 200, res = 300)
       } else {
         fN <- paste0(outD, levels(poAll$survey)[sv]
-                     , " T-", levels(s$Transect)[tn], ".png")
+                     , " T-", levels(stn$Line)[ti], ".png")
         if(anomalies){
           png(fN, height = 11 * 300, width = 8.5 * 300, res = 300)
-          layout(matrix(1:12, 6, byrow = FALSE), heights = c(1, 1, 1, 1, 1, 1.2))
-          # layout(matrix(1:12, 6, byrow = FALSE))
+          layout(matrix(1:12, 6, byrow = FALSE)
+                 , heights = c(1, 1, 1, 1, 1, 1.2)
+                 )
         } else {
           png(fN, height = 8.5 * 200, width = 11 * 200, res = 300)
           layout(matrix(1:6, 3, byrow = FALSE)) # across, then down
         }
+        par(oma=c(3,3,5,3), mar=c(5,4,4,2)+0.1)
 
         ## remove !anomalies?
         ## nudge mar to cover up distance along transect for most plots
-
-
       }
       rm(fN)
-      if(!indivPlots) {par(oma=c(2,2,5,2))}
+#     if(!indivPlots) {par(oma=c(2,2,5,2))}
       for(ov in seq_along(oVarsF)) {
 
         ## ov = 1
@@ -176,6 +151,7 @@ for(sv in iX) {
         } else {
           zR <- oRange [ov, ]
         }
+        # if(indivPlots) {zR <- c(24.75,25.0)} # range(s[which(names(s)==oVarsDFname[ov])], na.rm=TRUE)}
         if(all(is.na(zR)) | any(is.infinite(zR))) {
           plot(1:10, type = "n")
           text(5, 5, labels = "no good data")
@@ -217,12 +193,12 @@ for(sv in iX) {
             if(ov == 1) {
               mtext(paste(month.name[phT$month[1]], phT$year[1]), side = 3
                     , outer = FALSE, line = 1)
-              mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "W", "N"), side = 3, adj = 0, outer = TRUE)
+              mtext(ifelse(levels(stn$Transect)[ti] %in% c("AlongBay", "ABext"), "W", "N"), side = 3, adj = 0, outer = TRUE)
               mtext (text = "Depth [m]", side = 2, outer = TRUE)
             }
             if(ov == length(oVarsF)/2+1) {
               mtext("Anomalies from monthly means", side = 3, outer = FALSE, line = 1)
-              mtext(ifelse(levels(s$Transect)[tn] %in% c("AlongBay", "ABext"), "E", "S"), side = 3, adj = 1, outer = TRUE)
+              mtext(ifelse(levels(stn$Transect)[ti] %in% c("AlongBay", "ABext"), "E", "S"), side = 3, adj = 1, outer = TRUE)
             }
           }
         }
@@ -241,23 +217,24 @@ for(sv in iX) {
           )
           par(xP)
         }
+
         if(indivPlots) {
-          if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
+          if(substr(levels(stn$Line)[ti], start=1, stop=1) == "A") {
             mt <- ""
           } else {
             mt <- "Transect"
           }
-          mtext(paste0(mt, levels(s$Transect)[tn], " ", levels(poAll$survey)[sv])
+          mtext(paste0(mt, levels(stn$Line)[ti], " ", levels(poAll$survey)[sv])
                 , side = 3, outer = TRUE, line = -0.9); rm(mt)
         }
       } # end of loop covering all variables measured
       if(!indivPlots) {
-        if(substr(s$Transect[tn], start = 1, stop = 1) == "A") {
+        if(substr(levels(stn$Line)[ti], start = 1, stop = 1) == "A") {
           mt <- ""
         } else {
           mt <- "Transect-"
         }
-        mtext(paste0(mt, levels(s$Transect)[tn] )#, " ", levels(poAll$survey)[sv])
+        mtext(paste0(mt, levels(stn$Line)[ti]) #, " ", levels(poAll$survey)[sv])
               , side = 3, outer = TRUE, line = 1.5, cex = 1.5); rm(mt)
 
 
@@ -320,10 +297,9 @@ for(sv in iX) {
     }
     graphics.off()
   }
-  # dev.off()
 }
 
-rm(iY, iX, s, sv, tn, outD)
+rm(iX, s, sv, ti, outD)
 
 
 
@@ -341,7 +317,6 @@ if(.Platform$OS.type == "unix") {
 
 
 # physOc <- poAll
-# rm(xCo, tn, oVars, ov, poAll, pSec)
 rm(indivPlots) # to re-run from scratch
 gc()
 

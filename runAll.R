@@ -67,6 +67,7 @@ if(0) {
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
+  badP <- c("paletteer", "lubridate")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     cat("\n\n##", badP [i], "##\n")
