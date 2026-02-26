@@ -5,6 +5,16 @@
 ## data from CDMO. Expect approximately 3 hours for a full run
 ## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
+## see instructions in SOP Manual on Google Drive
+## get the latest version of R scripts and data:
+## in Git Bash-n cd to ~/Documents/GISData/LCI and issue
+## git pull
+## then cd to this NOAA-LCI directory and issue
+## git pull
+
+
+
+## features to work on:
 
 # add to time series (signature data)
 # boyyancy profile over time
