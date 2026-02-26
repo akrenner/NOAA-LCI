@@ -5,23 +5,38 @@ r = getOption("repos")
 r["CRAN"] = "https://cloud.r-project.org/"
 options(repos = r)
 
-
+## set up build infrastructure
 if (!require("renv")) {
   install.packages("renv")
-  require ("renv")
 }
-renv::status()
-renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
-# renv::init(bioconductor = "3.21")
+if(!dir.exists("renv")){
+ renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
+  # renv::init(bioconductor = "3.21")
+}
+if(!require("pkgbuild")) {
+  renv::install(c("pkgbuild"), prompt = FALSE)
+}
 
-renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE)
-# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
-renv::install("remotes", prompt = FALSE)
-remotes::install_github("NOAA-EDAB/buoydata")
-renv::install("terra", prompt = FALSE)
-remotes::install_git("https://github.com/STBrinkmann/GVI")
-renv::restore()
-require ("conflicted")
+## sync all packages
+if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
+  ## exclude packages needing compilation
+  exP <- c("GVI", "buoydata", "ConsensusClusterPlus", "textshaping", "ragg")
+  warning("RTools not detected. Some functionality will not be available")
+} else {
+  if(!require('pak')) {renv::install('pak', prompt = FALSE)}
+  if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
+  if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
+  pak::pak("NOAA-EDAB/buoydata")
+  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
+  renv::install("remotes", prompt = FALSE)
+  remotes::install_git("https://github.com/STBrinkmann/GVI")
+  exP <- NULL
+}
+
+renv::restore(prompt = FALSE, exclude = exP); rm(exP)
+# renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE, lock = FALSE)
+# renv::install("terra", prompt = FALSE)
+renv::status()
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 
@@ -29,56 +44,96 @@ unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 
 
 
-## --------------- ensure data is available locally ---------------
+## --------------- ensure data is available locally --------------- ##
+cat ("\n##\n## Downloading more required datasets for initial setup\n##\n")
+
 bDir <- "~/GISdata/LCI/bathymetry/"
 
+## use KBL bathymetry, rather than recreate it
+dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
+isNCCOS <- dir.exists("G:/Shared\ drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/")
+if(!isNCCOS){warning("If you are with NCCOS, your Google Drive does not appear to be mapped to the G: drive. Please fix this, then re-run 'source(\"InitialSetup.R\")'
+If you are not with NCCOS, you may need to copy these files manually (see the Manual).")}
+
+
+
+## bathymetry
 if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"))) {
-  cat ("\n##\n## Downloading more required datasets for initial setup\n##\n")
-  ## use KBL bathymetry, rather than recreate it
-  dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
-  if (1) {
+  if(isNCCOS) {
+    sharedD <- "G:/Shared\ drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/"
+    file.copy(paste0(sharedD, "02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+      , to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+      , overwrite=FALSE, copy.date=TRUE)
+    file.copy(paste0(sharedD, "/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
+      , to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
+      , overwrite=FALSE, copy.date=TRUE)
+  } else {
+    ## find alternative way to download these files. This may not work anymore?
     require ('googledrive')
-    drive_download (file = "https://drive.google.com/file/d/1_XEEX9UcYFZeK-Q2j8WNiZr76loUOzof/view?usp=drive_link"
+    o1 <- options()
+    options(googledrive_quiet=TRUE)
+    googledrive::drive_download (file = "https://drive.google.com/file/d/1_XEEX9UcYFZeK-Q2j8WNiZr76loUOzof/view?usp=drive_link"
       , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
       , overwrite = TRUE)
-    drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
+    googledrive::drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
       , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
       , overwrite = TRUE)
-  } else {
-    ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann
-    ## alternative: NC4 from https://portal.aoos.org/old/cibw#module-metadata/f1844c0d-11da-40ab-b963-9b6b222fe647/82284b16-a985-4233-86cd-242071a290c1
-    options (timeout = max (300, getOption ("timeout"))) # allow up to 5 minutes for downloads
-    ch <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/Cook_bathymetry_grid.zip"
-      , destfile = paste0 (bDir, "Cook_bathymetry_grid.zip"), quiet = FALSE)
-    ci <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/CGOA_bathymetry_grid.zip"
-      , destfile = paste0 (bDir, "CGOA_bathymetry_grid.zip"), quiet = FALSE)
-    if (ch != 0 || ci != 0) {
-      stop ("\nOne of the downloads were unsuccessful. Try again or download the bathymetry files manually.\n")
-    }
-    ## expand zip files
-    unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir = paste0 (bDir, "Cook_bathymetry_grid/"))
-    unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir = paste0 (bDir, "CGOA_bathymetry_grid/"))
-    source ("Currents/bathymetry-merge.R")
+    options(o1); rm(o1)
+    unloadNamespace("googledrive")
   }
 }
+
+## SWMP data
+dir.create ("~/GISdata/SWMP/", recursive = TRUE)
+if(length(list.files("~/GISdata/LCI/SWMP/", ".zip")) < 1) {
+  if(isNCCOS){
+    file.copy(paste0(sharedD, "/02-Science/Data-Archivable_Only/Recurring_Oceanographic_Survey/Archive\ of\ partner\ data/SWMP-example/656839.zip")
+      , to="~/GISdata/LCI/SWMP/656839.zip", overwrite=TRUE)
+  } else {
+    ## should find a way to get this from another online storage
+    warning("SWMP data will be needed. Please see the Manual on how to download the Kachemak Bay SWMP \ndata from CDMO. Then place the zip file into '~/GISdata/LCI/SWMP/'")
+  }
+}
+
+rm(isNCCOS)
+
+
+## for reference only, here are the Zimmerman bathymetries:
+if(0) {
+  ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann
+  ## alternative: NC4 from https://portal.aoos.org/old/cibw#module-metadata/f1844c0d-11da-40ab-b963-9b6b222fe647/82284b16-a985-4233-86cd-242071a290c1
+  options (timeout = max (300, getOption ("timeout"))) # allow up to 5 minutes for downloads
+  ch <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/Cook_bathymetry_grid.zip"
+                       , destfile = paste0 (bDir, "Cook_bathymetry_grid.zip"), quiet = FALSE)
+  ci <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/CGOA_bathymetry_grid.zip"
+                       , destfile = paste0 (bDir, "CGOA_bathymetry_grid.zip"), quiet = FALSE)
+  if (ch != 0 || ci != 0) {
+    stop ("\nOne of the downloads were unsuccessful. Try again or download the bathymetry files manually.\n")
+  }
+  ## expand zip files
+  unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir = paste0 (bDir, "Cook_bathymetry_grid/"))
+  unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir = paste0 (bDir, "CGOA_bathymetry_grid/"))
+  source ("Currents/bathymetry-merge.R")
+}
+
+
 
 
 ## get data from GitHub
 # .... still need to add this here. rsync would be ideal.
-dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 if(!file.exists("~/GISdata/LCI/.git/config")){
   hd <- getwd()
   setwd ("~/GISdata/")
   system ("git clone https://github.com/akrenner/LCI.git")
   setwd(hd); rm(hd)
 }
-## these may/should not be needed, but don't hurt
+## these may/should not be needed, but won't hurt
 dir.create("~/tmp/LCI_noaa/cache/", showWarnings = FALSE, recursive = TRUE)
+dir.create("~/tmp/LCI_noaa/cache-t/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/data-products/", showWarnings = FALSE, recursive = TRUE)
-
 
 ## more GIS files
 ## setup working environment
@@ -114,7 +169,7 @@ options (timeout = max (1200, getOption("timeout")))
 outF <- "~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
 if (!file.exists (outF)) {
   download.file (url = "https://www.ngdc.noaa.gov/mgg/shorelines/data/gshhg/latest/gshhg-shp-2.3.7.zip"
-                 , destfile = outF, method = "wget") ## 149 MB
+    , destfile = outF, method = "wget") ## 149 MB
 }
 rm (outF)
 

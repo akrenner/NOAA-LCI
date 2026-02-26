@@ -1,30 +1,24 @@
 #! /usr/bin/env Rscript
 
-## Execute all Kachemak Bay/Cook Inlet scripts, 2020
-## If this is a new installation, it may be necessary to disconnect from VPN
-## to avoid timeouts. To run up-to-date analysis, connect to VPN in order to
-## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
-## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
+## Execute all Kachemak Bay/Cook Inlet scripts, 2020-2026+
+## To run up-to-date analysis, connect to VPN in order to download latest SWMP
+## data from CDMO. Expect approximately 3+ hours for a full run
+## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
+## If you want to make your own changes to any of these scripts, learn about git
+## Then comment out the code below "for collaborators". As-is, this script will
+## overwrite any changes made to existing scripts.
 
-# add to time series (signature data)
-# freshwater of first 30 m / bottom
-# salinity at T9-6 at 50 m (seasonal influence of ACC?)
-# boyyancy profile over time
-# max buoyancy over time
-# position of max buoyancy over time
+## See the Manual for instructions for an initial run on a new computer.
+
 
 
 rm(list = ls())
 
-if(.Platform$OS.type=="windows"){
-  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-  # set environment variable to avoid "no such file or directory errors"
-  Sys.setenv(TMPDIR = "C:\tmp")
-}else{ ## Linux or macOS platform
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+if(length(grep("NOAA-LCI", getwd())) < 1) {
+  stop("Please open the R Project in NOAA-LCI/")
 }
-# openProject()
+
 
 
 sT <- Sys.time()
@@ -37,17 +31,33 @@ ongoingY <- TRUE   # for quarterly update
 
 
 
-
+## This will only run once, getting required data and packages
 if(!file.exists(".initialized.rds")){
   source("InitialSetup.R")
   saveRDS(Sys.Date(), file=".initialized.rds")
 }
-hd <- getwd()
-setwd("~/GISdata/LCI/")
-system("git pull")
-setwd(hd); rm (hd)
 
 
+########################
+## for collaborators  ##
+## get latest updates ##
+########################
+
+if(length(grep("[M|m]artin", getwd())) < 1) {
+  ## for collaborators: pull latest versions from git and sync packages
+  system("git pull --force")
+  if(!renv::restore()$synchronized) {
+    renv::restore(prompt=FALSE, clean= TRUE)
+  }
+  hd <- getwd()
+  setwd("~/GISdata/LCI/")  ## fetch latest CTD data
+  system("git pull")
+  setwd(hd); rm (hd)
+}
+
+
+
+## testing/updating packages
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
   # require(usethis) ## for github rate limits
@@ -63,15 +73,17 @@ if(0) {
   # }
   # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
 
-
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
-  badP <- c("paletteer", "lubridate", "buoydata")
+  badP <- c("GVI", "yaml")
+  badP <- c("ragg", "textshaping", "pkgbuild")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
-    cat("\n\n##", badP [i], "##\n")
-    print(deps [which(deps$Package == badP[i]), 1])
+    if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
+      cat("\n\n##", badP [i], "##\n")
+      print(deps [which(deps$Package == badP[i]), 1])
+    } else {cat("No dependencies found for: ", badP[i], "\n")}
   }
   rm(badP, deps)
 
@@ -84,13 +96,6 @@ if(0) {
 }
 
 
-if(length(grep("[M|m]artin", getwd())) > 0) {
-  ## for collaborators: pull latest versions from git and sync packages
-  system("git pull")
-  if(!renv::restore()$synchronized) {
-    renv::restore()
-  }
-}
 
 if(1) {
   ## run the first script interactively! :
@@ -162,6 +167,8 @@ if(0) { ## 2017 contract
   source("plotMaps.R")
   source("commMap.R")
 
+  source("CTD_timeseries_freshwater.R")
+
 }
 
 if (0){ ## one-off projects
@@ -182,14 +189,12 @@ if(0) { # Dec 2019 seasonality
   source("consensusTree.R")
 }
 
-## one-offs
+## one-offs -- drifters
 if(0) {
   source("Currents/bathymetry-merge.R")
   source("Currents/ciofs_maxCurrent.r")
   source("Currents/drifter.R")
   source("Currents/plotDrifter.R")
-
-  source("CTD_timeseries_freshwater.R")
 }
 
 

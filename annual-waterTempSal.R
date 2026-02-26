@@ -2,15 +2,6 @@
 ## throughout the year
 ## calc difference in density between upper and lower TS
 
-if (.Platform$OS.type == "unix") {
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-} else {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-}
-if (!exists ("quarterly")) {
-  rm (list = ls())
-  quarterly <- TRUE
-}
 base::load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 
 

@@ -9,6 +9,10 @@
 ## taken down).
 
 
+## things to fix:
+## consolidate annualPlotFct.R use of getNOAA, gNOAA and similar
+## confirm units, esp. for rain/precipitation and wind
+
 # still need to fix annual-wind.R to match this
 # test annual-airTemp.R
 
@@ -50,8 +54,7 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 if(0) {
   ## list availabel buoy stations nearby
   ## less refined than worldmet, so only use this for waverider buoy!
-  require(buoydata)
-  buoydata::buoyDataWorld |>
+  buoydata::buoy_data |>
     dplyr::filter(LAT > 58, LAT < 61) |>
     dplyr::filter(LON > -154, LON < -149) |>
     dplyr::filter(nYEARS >= 10)
@@ -65,23 +68,38 @@ if(0) {
 source("annualPlotFct.R")  ## pull these functions into here since only used once?
 # currently in annualPlotFct.R
 
+## set up cache for rerddap
+if(clearC) {
+  rerddap::cache_delete_all()
+}
+rerddap::cache_setup(full_path="~/tmp/LCI_noaa/cache/noaaBuoy/")
+
+
+
 
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
+## weather from Homer Airport
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
-nAiro <- try(getNOAA("HMSA2", clearcache = clearC))  ## function in annualPlotFct -- NDBC site -- no longer active???
+nAiro <- try(getNOAA("HMSA2"))
 
-nWave <- try(getNOAA(buoyID = "46108", clearcache = clearC))
+## buoydata
+nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
 wave.46108 <- nWave
 
 
 
-# weather.homer.spit <- getNOAAweather(stationID="xxx")
+# weather.homer.spit <- getNOAAweather(stationID="HOMER SPIT") -- has precipitation! (in mm?)
 
+## print available station
+
+
+## fetch a lot of weather -- none currently with precipitation?
+## move to daily summaries?
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
-
-weatherL <- list(homer.airport = gNOAAS(station = "Homer Airport", clearcache = clearC, cacheF = cF, showsites = TRUE)  ## Homer Airport weather station)
+weatherL <- list(homer.airport = gNOAAS(station = "Homer AP", clearcache = clearC
+    , cacheF = cF, showsites = TRUE)  ## Homer Airport weather station)
   , homer.spit = gNOAAS(station = "Homer Spit", clearcache = clearC, cacheF = cF)  ## Homer Spit weather station
   , homer.spit2 = gNOAAS(station = "KACHEMAK BAY RESERVE", clearcache = clearC, cacheF = cF)  ## SWMP Homer Spit weather station
   , kachomet = sAir
@@ -89,7 +107,7 @@ weatherL <- list(homer.airport = gNOAAS(station = "Homer Airport", clearcache = 
   , flat.island = gNOAAS(station = "Flat Island Light", clearcache = clearC, cacheF = cF)  ## Flat Island weather station
   , east.amatuli = gNOAAS(station = "East Amatuli Station Light  AK", clearcache = clearC, cacheF = cF)  ## East Amatuli weather station
 )
-weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2", clearcache = clearC))   ## SWMP Homer Spit weather station
+weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
 
 
 

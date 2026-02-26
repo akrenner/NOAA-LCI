@@ -9,15 +9,9 @@
 # rm (list = ls())
 print (Sys.time())
 # CTD processing
-if (length (grep ("martin", tolower (getwd()))) > 0) {
-  if (.Platform$OS.type != "windows") {
-    setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-  } else {
-    setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-  }
-} else {
-  # Generic setup
-  setwd("~/myDocs/R-scripts/NOAA-LCI")
+
+if (length (grep ("NOAA-LCI", getwd()) < 1) {
+    stop("Need to set working directory to 'NOAA-LCI'")
 }
 cat ("\n\n## Starting ctdprocessing at", format (Sys.time(), "%Y-%m-%d %H:%M"), "\n\n")
 

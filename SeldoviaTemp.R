@@ -20,7 +20,6 @@ SWMPfile <- sF [which.max(file.info(sF)$ctime)]; rm(sF)
 ## set-up local environment and load functions
 dir.create("~/tmp/LCI_noaa/media/2019/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay", showWarnings = FALSE, recursive = TRUE)
-#  setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 ## load and process SWMP data

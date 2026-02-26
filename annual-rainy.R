@@ -5,7 +5,6 @@ if (!exists ("quarterly")) {
   quarterly <- TRUE
   quarterly <- FALSE
 }
-# setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 

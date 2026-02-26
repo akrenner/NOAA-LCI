@@ -532,22 +532,22 @@
     },
     "GSODR": {
       "Package": "GSODR",
-      "Version": "5.0.0",
+      "Version": "5.0.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Global Surface Summary of the Day ('GSOD') Weather Data Client",
-      "Authors@R": "c( person(\"Adam H.\", \"Sparks\", , \"adamhsparks@gmail.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-0061-8359\")), person(\"Tomislav\", \"Hengl\", , \"tom.hengl@isric.org\", role = \"aut\", comment = c(ORCID = \"0000-0002-9921-5129\")), person(\"Andrew\", \"Nelson\", , \"dr.andy.nelson@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0002-7249-3778\")), person(\"Hugh\", \"Parsonage\", , \"hugh.parsonage@gmail.com\", role = c(\"cph\", \"ctb\"), comment = c(ORCID = \"0000-0003-4055-0835\")), person(\"Taras\", \"Kaduk\", , \"taras.kaduk@gmail.com\", role = \"ctb\", comment = \"Suggestion for handling bulk station downloads more\\n        efficiently\"), person(\"Gwenael\", \"Giboire\", , \"gwenael.giboire@oda-groupe.com\", role = \"ctb\", comment = \"Several bug reports in early versions and testing feedback\"), person(\"Łukasz\", \"Pawlik\", , \"lukpawlik@gmail.com\", role = \"ctb\", comment = \"Reported bug in windspeed conversion calculation\"), person(\"Ross\", \"Darnell\", , \"Ross.Darnell@data61.csiro.au\", role = \"ctb\", comment = c(\"Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to\\n        fail\", ORCID = \"0000-0002-7973-6322\")), person(\"Tyler\", \"Widdison\", , \"Tyler.Widdison@usav.org\", role = \"ctb\", comment = \"Reported bug where\\n        `nearest_stations()` did not return stations in order of nearest to\\n        farthest\"), person(\"Wenbo\", \"Lv\", , \"lyu.geosocial@gmail.com\", role = \"ctb\", comment = \"Provided suggestions for improving documentation\"), person(\"Curtin University\", role = c(\"fnd\", \"cph\"), comment = c(url = \"http://www.curtin.edu.au/\", ROR = \"02n415q13\")), person(\"Grains Research and Development Corporation\", role = c(\"fnd\", \"cph\"), comment = c(Project = \"GRDC Project CUR2210-005OPX (AAGI-CU)\", ROR = \"02xwr1996\")) )",
-      "Description": "Provides automated downloading, parsing, cleaning, unit conversion and formatting of Global Surface Summary of the Day ('GSOD') weather data from the from the USA National Centers for Environmental Information ('NCEI').  Units are converted from from United States Customary System ('USCS') units to International System of Units ('SI').  Stations may be individually checked for number of missing days defined by the user, where stations with too many missing observations are omitted.  Only stations with valid reported latitude and longitude values are permitted in the final data.  Additional useful elements, saturation vapour pressure ('es'), actual vapour pressure ('ea') and relative humidity ('RH') are calculated from the original data using the improved August-Roche-Magnus approximation (Alduchov & Eskridge 1996) and included in the final data set.  The resulting metadata include station identification information, country, state, latitude, longitude, elevation, weather observations and associated flags.  For information on the 'GSOD' data from 'NCEI', please see the 'GSOD' 'readme.txt' file available from, <https://www1.ncdc.noaa.gov/pub/data/gsod/readme.txt>.",
+      "Authors@R": "c( person(\"Adam H.\", \"Sparks\", , \"adamhsparks@gmail.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-0061-8359\")), person(\"Tomislav\", \"Hengl\", , \"tom.hengl@isric.org\", role = \"aut\", comment = c(ORCID = \"0000-0002-9921-5129\")), person(\"Andrew\", \"Nelson\", , \"dr.andy.nelson@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0002-7249-3778\")), person(\"Hugh\", \"Parsonage\", , \"hugh.parsonage@gmail.com\", role = c(\"cph\", \"ctb\"), comment = c(ORCID = \"0000-0003-4055-0835\")), person(\"Taras\", \"Kaduk\", , \"taras.kaduk@gmail.com\", role = \"ctb\", comment = \"Suggestion for handling bulk station downloads more\\n        efficiently\"), person(\"Gwenael\", \"Giboire\", , \"gwenael.giboire@oda-groupe.com\", role = \"ctb\", comment = \"Several bug reports in early versions and testing feedback\"), person(\"Łukasz\", \"Pawlik\", , \"lukpawlik@gmail.com\", role = \"ctb\", comment = \"Reported bug in windspeed conversion calculation\"), person(\"Ross\", \"Darnell\", , \"Ross.Darnell@data61.csiro.au\", role = \"ctb\", comment = c(\"Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to\\n        fail\", ORCID = \"0000-0002-7973-6322\")), person(\"Tyler\", \"Widdison\", , \"Tyler.Widdison@usav.org\", role = \"ctb\", comment = \"Reported bug where\\n        `nearest_stations()` did not return stations in order of nearest to\\n        farthest\"), person(\"Wenbo\", \"Lv\", , \"lyu.geosocial@gmail.com\", role = \"ctb\", comment = \"Provided suggestions for improving documentation\"), person(\"Curtin University\", role = c(\"fnd\", \"cph\"), comment = c(url = \"http://www.curtin.edu.au/\", ROR = \"02n415q13\")) )",
+      "Description": "Provides automated downloading, parsing, cleaning, unit conversion and formatting of Global Surface Summary of the Day ('GSOD') weather data from the from the USA National Centers for Environmental Information ('NCEI').  The data were retired on 2025-08-29 and are no longer updated. Units are converted from from United States Customary System ('USCS') units to International System of Units ('SI').  Stations may be individually checked for number of missing days defined by the user, where stations with too many missing observations are omitted.  Only stations with valid reported latitude and longitude values are permitted in the final data.  Additional useful elements, saturation vapour pressure ('es'), actual vapour pressure ('ea') and relative humidity ('RH') are calculated from the original data using the improved August-Roche-Magnus approximation (Alduchov & Eskridge 1996) and included in the final data set.  The resulting metadata include station identification information, country, state, latitude, longitude, elevation, weather observations and associated flags.  For information on the 'GSOD' data from 'NCEI', please see the 'GSOD' 'readme.txt' file available from, <https://www.ncei.noaa.gov/pub/data/gsod/readme.txt>.",
       "License": "MIT + file LICENSE",
-      "URL": "https://docs.ropensci.org/GSODR/, https://github.com/ropensci/GSODR",
-      "BugReports": "https://github.com/ropensci/GSODR/issues",
+      "URL": "https://docs.ropensci.org/GSODR/, https://codeberg.org/ropensci/GSODR",
+      "BugReports": "https://codeberg.org/ropensci/GSODR/issues",
       "Depends": [
         "R (>= 3.5.0)"
       ],
       "Imports": [
+        "cli",
         "curl",
         "data.table (>= 1.15.4)",
-        "lifecycle",
         "R.utils",
         "stats",
         "utils",
@@ -569,7 +569,7 @@
       ],
       "VignetteBuilder": "knitr",
       "ByteCompile": "TRUE",
-      "Config/Needs/build": "moodymudskipper/devtag",
+      "Config/Needs/build": "maelle/devtag2",
       "Config/roxyglobals/filename": "globals.R",
       "Config/roxyglobals/unique": "FALSE",
       "Config/testthat/edition": "3",
@@ -582,7 +582,7 @@
       "X-schema.org-applicationCategory": "Tools",
       "X-schema.org-isPartOf": "https://ropensci.org",
       "X-schema.org-keywords": "US-NCEI, meteorological-data, global-weather, weather, weather-data, meteorology, station-data, surface-weather, data-access, US-NCDC",
-      "Author": "Adam H. Sparks [aut, cre] (ORCID: <https://orcid.org/0000-0002-0061-8359>), Tomislav Hengl [aut] (ORCID: <https://orcid.org/0000-0002-9921-5129>), Andrew Nelson [aut] (ORCID: <https://orcid.org/0000-0002-7249-3778>), Hugh Parsonage [cph, ctb] (ORCID: <https://orcid.org/0000-0003-4055-0835>), Taras Kaduk [ctb] (Suggestion for handling bulk station downloads more efficiently), Gwenael Giboire [ctb] (Several bug reports in early versions and testing feedback), Łukasz Pawlik [ctb] (Reported bug in windspeed conversion calculation), Ross Darnell [ctb] (Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to fail, ORCID: <https://orcid.org/0000-0002-7973-6322>), Tyler Widdison [ctb] (Reported bug where `nearest_stations()` did not return stations in order of nearest to farthest), Wenbo Lv [ctb] (Provided suggestions for improving documentation), Curtin University [fnd, cph] (url: http://www.curtin.edu.au/, ROR: <https://ror.org/02n415q13>), Grains Research and Development Corporation [fnd, cph] (Project: GRDC Project CUR2210-005OPX (AAGI-CU), ROR: <https://ror.org/02xwr1996>)",
+      "Author": "Adam H. Sparks [aut, cre] (ORCID: <https://orcid.org/0000-0002-0061-8359>), Tomislav Hengl [aut] (ORCID: <https://orcid.org/0000-0002-9921-5129>), Andrew Nelson [aut] (ORCID: <https://orcid.org/0000-0002-7249-3778>), Hugh Parsonage [cph, ctb] (ORCID: <https://orcid.org/0000-0003-4055-0835>), Taras Kaduk [ctb] (Suggestion for handling bulk station downloads more efficiently), Gwenael Giboire [ctb] (Several bug reports in early versions and testing feedback), Łukasz Pawlik [ctb] (Reported bug in windspeed conversion calculation), Ross Darnell [ctb] (Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to fail, ORCID: <https://orcid.org/0000-0002-7973-6322>), Tyler Widdison [ctb] (Reported bug where `nearest_stations()` did not return stations in order of nearest to farthest), Wenbo Lv [ctb] (Provided suggestions for improving documentation), Curtin University [fnd, cph] (url: http://www.curtin.edu.au/, ROR: <https://ror.org/02n415q13>)",
       "Maintainer": "Adam H. Sparks <adamhsparks@gmail.com>"
     },
     "GVI": {
@@ -2440,7 +2440,7 @@
       "LazyData": "true",
       "RoxygenNote": "7.3.2",
       "Depends": [
-        "R (>= 4.1.0)"
+        "R (>= 3.5)"
       ],
       "Imports": [
         "dplyr",
@@ -2458,16 +2458,14 @@
         "plotly"
       ],
       "VignetteBuilder": "knitr",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "buoydata",
-      "RemoteUsername": "NOAA-EDAB",
-      "RemotePkgRef": "NOAA-EDAB/buoydata",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "e717f0a7bbbfd88117a79aa4227ee4beaef46192",
-      "NeedsCompilation": "no",
       "Author": "Andy Beet [aut, cre]",
-      "Maintainer": "Andy Beet <andrew.beet@noaa.gov>"
+      "Maintainer": "Andy Beet <andrew.beet@noaa.gov>",
+      "RemoteType": "github",
+      "RemoteUsername": "NOAA-EDAB",
+      "RemoteRepo": "buoydata",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "221381694254cbbe8c8eda14e5833cbbb155701c",
+      "RemoteHost": "api.github.com"
     },
     "cachem": {
       "Package": "cachem",
@@ -4051,11 +4049,11 @@
     },
     "emmeans": {
       "Package": "emmeans",
-      "Version": "2.0.1",
+      "Version": "2.0.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Estimated Marginal Means, aka Least-Squares Means",
-      "Date": "2025-12-10",
+      "Date": "2026-02-20",
       "Authors@R": "c(person(\"Russell V.\", \"Lenth\", role = c(\"aut\", \"cph\"),  email = \"russell-lenth@uiowa.edu\"), person(\"Julia\", \"Piaskowski\", role = c(\"cre\", \"aut\"), email = \"julia.piask@gmail.com\"), person(\"Balazs\", \"Banfai\", role = \"ctb\"), person(\"Ben\", \"Bolker\", role = \"ctb\"), person(\"Paul\", \"Buerkner\", role = \"ctb\"), person(\"Iago\", \"Giné-Vázquez\", role = \"ctb\"), person(\"Maxime\", \"Hervé\", role = \"ctb\"), person(\"Maarten\", \"Jung\", role = \"ctb\"), person(\"Jonathon\", \"Love\", role = \"ctb\"), person(\"Fernando\", \"Miguez\", role = \"ctb\"), person(\"Hannes\", \"Riebl\", role = \"ctb\"), person(\"Henrik\", \"Singmann\", role = \"ctb\"))",
       "Maintainer": "Julia Piaskowski <julia.piask@gmail.com>",
       "Depends": [
@@ -4118,7 +4116,7 @@
         "sommer",
         "survival"
       ],
-      "URL": "https://rvlenth.github.io/emmeans/,https://rvlenth.github.io/emmeans/",
+      "URL": "https://rvlenth.github.io/emmeans/, https://github.com/rvlenth/emmeans/",
       "BugReports": "https://github.com/rvlenth/emmeans/issues",
       "LazyData": "yes",
       "ByteCompile": "yes",
@@ -4315,31 +4313,30 @@
     },
     "factoextra": {
       "Package": "factoextra",
-      "Version": "1.0.7",
+      "Version": "2.0.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Extract and Visualize the Results of Multivariate Data Analyses",
-      "Date": "2020-04-01",
-      "Authors@R": "c( person(\"Alboukadel\", \"Kassambara\", role = c(\"aut\", \"cre\"), email = \"alboukadel.kassambara@gmail.com\"), person(\"Fabian\", \"Mundt\", role = c(\"aut\"), email = \"f.mundt@inventionate.de\") )",
-      "Description": "Provides some easy-to-use functions to extract and visualize the output of multivariate data analyses, including 'PCA' (Principal Component Analysis), 'CA' (Correspondence Analysis), 'MCA' (Multiple Correspondence Analysis), 'FAMD' (Factor Analysis of Mixed Data), 'MFA' (Multiple Factor Analysis) and 'HMFA' (Hierarchical Multiple Factor Analysis) functions from different R packages. It contains also functions for simplifying some clustering analysis steps and provides 'ggplot2' - based elegant data visualization.",
+      "Date": "2026-03-02",
+      "Authors@R": "c( person(\"Alboukadel\", \"Kassambara\", role = c(\"aut\", \"cre\"), email = \"alboukadel.kassambara@gmail.com\", comment = c(ORCID = \"0009-0002-9136-0791\")), person(\"Fabian\", \"Mundt\", role = \"aut\", email = \"f.mundt@inventionate.de\"), person(\"Laszlo\", \"Erdey\", role = \"ctb\", email = \"erdey.laszlo@econ.unideb.hu\", comment = c(ORCID = \"0000-0002-6781-4303\", affiliation = \"Faculty of Economics and Business, University of Debrecen, Hungary\", contribution = \"Modern compatibility fixes, tests, and maintenance updates\")) )",
+      "Description": "Provides easy-to-use functions to extract and visualize the output of multivariate data analyses, including 'PCA' (Principal Component Analysis), 'CA' (Correspondence Analysis), 'MCA' (Multiple Correspondence Analysis), 'FAMD' (Factor Analysis of Mixed Data), 'MFA' (Multiple Factor Analysis), and 'HMFA' (Hierarchical Multiple Factor Analysis) from different R packages. It also includes helpers for simplifying clustering analysis workflows and provides 'ggplot2'-based data visualization.",
       "License": "GPL-2",
       "LazyData": "true",
+      "LazyDataCompression": "xz",
       "Encoding": "UTF-8",
       "Depends": [
-        "R (>= 3.1.2)",
-        "ggplot2 (>= 2.2.0)"
+        "R (>= 4.1.0)",
+        "ggplot2 (>= 3.5.2)"
       ],
       "Imports": [
-        "abind",
-        "cluster",
-        "dendextend",
-        "FactoMineR",
-        "ggpubr(>= 0.1.5)",
+        "cluster (>= 2.1.8.2)",
+        "dendextend (>= 1.19.1)",
+        "FactoMineR (>= 2.13)",
+        "ggpubr (>= 0.6.3)",
         "grid",
+        "rlang (>= 1.1.7)",
         "stats",
-        "reshape2",
-        "ggrepel",
-        "tidyr"
+        "ggrepel (>= 0.9.5)"
       ],
       "Suggests": [
         "ade4",
@@ -4347,14 +4344,16 @@
         "igraph",
         "MASS",
         "knitr",
-        "mclust"
+        "mclust",
+        "testthat (>= 3.0.0)"
       ],
-      "URL": "http://www.sthda.com/english/rpkgs/factoextra",
+      "URL": "https://github.com/kassambara/factoextra, https://rpkgs.datanovia.com/factoextra/index.html",
       "BugReports": "https://github.com/kassambara/factoextra/issues",
       "Collate": "'cluster_utilities.R' 'decathlon2.R' 'print.factoextra.R' 'get_hmfa.R' 'fviz_hmfa.R' 'get_mfa.R' 'fviz_mfa.R' 'deprecated.R' 'fviz_add.R' 'eigenvalue.R' 'utilities.R' 'dist.R' 'fviz_dend.R' 'hcut.R' 'get_pca.R' 'fviz_cluster.R' 'eclust.R' 'facto_summarize.R' 'fviz.R' 'fviz_ca.R' 'fviz_contrib.R' 'fviz_cos2.R' 'fviz_ellipses.R' 'fviz_famd.R' 'get_mca.R' 'fviz_mca.R' 'fviz_mclust.R' 'fviz_nbclust.R' 'fviz_pca.R' 'fviz_silhouette.R' 'get_ca.R' 'get_clust_tendency.R' 'get_famd.R' 'hkmeans.R' 'housetasks.R' 'multishapes.R' 'poison.R' 'zzz.R'",
-      "RoxygenNote": "7.1.0",
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
       "NeedsCompilation": "no",
-      "Author": "Alboukadel Kassambara [aut, cre], Fabian Mundt [aut]",
+      "Author": "Alboukadel Kassambara [aut, cre] (ORCID: <https://orcid.org/0009-0002-9136-0791>), Fabian Mundt [aut], Laszlo Erdey [ctb] (ORCID: <https://orcid.org/0000-0002-6781-4303>, affiliation: Faculty of Economics and Business, University of Debrecen, Hungary, contribution: Modern compatibility fixes, tests, and maintenance updates)",
       "Maintainer": "Alboukadel Kassambara <alboukadel.kassambara@gmail.com>",
       "Repository": "CRAN"
     },
@@ -4458,18 +4457,20 @@
     },
     "flashClust": {
       "Package": "flashClust",
-      "Version": "1.01-2",
+      "Version": "1.1-4",
       "Source": "Repository",
-      "Date": "2012-08-21",
-      "Title": "Implementation of optimal hierarchical clustering",
-      "Author": "code by Fionn Murtagh and R development team, modifications and packaging by Peter Langfelder",
+      "Date": "2026-03-02",
+      "Title": "Implementation of Fast Hierarchical Clustering",
+      "Authors@R": "c(person(given = c(\"Fionn\"), family = \"Murtagh\", role = \"aut\"), person(given = c(\"\"), family = \"R development team\", role = \"aut\"), person(given = \"Peter\", family = \"Langfelder\", role = c(\"com\", \"cre\"), email = \"Peter.Langfelder@gmail.com\"))",
       "Maintainer": "Peter Langfelder <Peter.Langfelder@gmail.com>",
       "Depends": [
         "R (>= 2.3.0)"
       ],
       "ZipData": "no",
       "License": "GPL (>= 2)",
-      "Description": "Fast implementation of hierarchical clustering",
+      "Description": "A fast implementation of hierarchical clustering that incorporates original code from Fionn Murtagh.",
+      "NeedsCompilation": "yes",
+      "Author": "Fionn Murtagh [aut], R development team [aut], Peter Langfelder [com, cre]",
       "Repository": "CRAN"
     },
     "fontawesome": {
@@ -4668,16 +4669,16 @@
     },
     "fs": {
       "Package": "fs",
-      "Version": "1.6.6",
+      "Version": "1.6.7",
       "Source": "Repository",
       "Title": "Cross-Platform File System Operations Based on 'libuv'",
-      "Authors@R": "c( person(\"Jim\", \"Hester\", role = \"aut\"), person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"), person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = c(\"aut\", \"cre\")), person(\"libuv project contributors\", role = \"cph\", comment = \"libuv library\"), person(\"Joyent, Inc. and other Node contributors\", role = \"cph\", comment = \"libuv library\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Authors@R": "c( person(\"Jim\", \"Hester\", role = \"aut\"), person(\"Hadley\", \"Wickham\", role = \"aut\"), person(\"Gábor\", \"Csárdi\", role = \"aut\"), person(\"Jeroen\", \"Ooms\", , \"jeroenooms@gmail.com\", role = \"cre\"), person(\"libuv project contributors\", role = \"cph\", comment = \"libuv library\"), person(\"Joyent, Inc. and other Node contributors\", role = \"cph\", comment = \"libuv library\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
       "Description": "A cross-platform interface to file system operations, built on top of the 'libuv' C library.",
       "License": "MIT + file LICENSE",
       "URL": "https://fs.r-lib.org, https://github.com/r-lib/fs",
       "BugReports": "https://github.com/r-lib/fs/issues",
       "Depends": [
-        "R (>= 3.6)"
+        "R (>= 4.1)"
       ],
       "Imports": [
         "methods"
@@ -4698,14 +4699,15 @@
       "ByteCompile": "true",
       "Config/Needs/website": "tidyverse/tidytemplate",
       "Config/testthat/edition": "3",
+      "Config/usethis/last-upkeep": "2025-04-23",
       "Copyright": "file COPYRIGHTS",
       "Encoding": "UTF-8",
       "Language": "en-US",
-      "RoxygenNote": "7.2.3",
+      "RoxygenNote": "7.3.3",
       "SystemRequirements": "GNU make",
       "NeedsCompilation": "yes",
-      "Author": "Jim Hester [aut], Hadley Wickham [aut], Gábor Csárdi [aut, cre], libuv project contributors [cph] (libuv library), Joyent, Inc. and other Node contributors [cph] (libuv library), Posit Software, PBC [cph, fnd]",
-      "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
+      "Author": "Jim Hester [aut], Hadley Wickham [aut], Gábor Csárdi [aut], Jeroen Ooms [cre], libuv project contributors [cph] (libuv library), Joyent, Inc. and other Node contributors [cph] (libuv library), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
+      "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
       "Repository": "CRAN"
     },
     "furrr": {
@@ -5058,11 +5060,11 @@
     },
     "geosphere": {
       "Package": "geosphere",
-      "Version": "1.5-20",
+      "Version": "1.6-5",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Spherical Trigonometry",
-      "Date": "2024-10-02",
+      "Date": "2026-03-01",
       "LinkingTo": [
         "Rcpp"
       ],
@@ -5075,8 +5077,8 @@
       ],
       "Suggests": [
         "methods",
-        "raster",
-        "terra"
+        "terra",
+        "sf"
       ],
       "Authors@R": "c( person(\"Robert J.\", \"Hijmans\", role = c(\"cre\", \"aut\"),  email = \"r.hijmans@gmail.com\"), person(\"Charles\", \"Karney\", role = \"ctb\", comment=\"GeographicLib\"),\t person(\"Ed\", \"Williams\", role = \"ctb\"), person(\"Chris\", \"Vennes\", role = \"ctb\"))",
       "Description": "Spherical trigonometry for geographic applications. That is, compute distances and related measures for angular (longitude/latitude) locations.",
@@ -6341,7 +6343,7 @@
     },
     "highr": {
       "Package": "highr",
-      "Version": "0.11",
+      "Version": "0.12",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Syntax Highlighting for R Source Code",
@@ -6363,9 +6365,9 @@
       "BugReports": "https://github.com/yihui/highr/issues",
       "VignetteBuilder": "knitr",
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.1",
+      "RoxygenNote": "7.3.3",
       "NeedsCompilation": "no",
-      "Author": "Yihui Xie [aut, cre] (<https://orcid.org/0000-0003-0645-5666>), Yixuan Qiu [aut], Christopher Gandrud [ctb], Qiang Li [ctb]",
+      "Author": "Yihui Xie [aut, cre] (ORCID: <https://orcid.org/0000-0003-0645-5666>), Yixuan Qiu [aut], Christopher Gandrud [ctb], Qiang Li [ctb]",
       "Maintainer": "Yihui Xie <xie@yihui.name>",
       "Repository": "CRAN"
     },
@@ -7322,7 +7324,7 @@
     },
     "later": {
       "Package": "later",
-      "Version": "1.4.7",
+      "Version": "1.4.8",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Utilities for Scheduling Functions to Execute Later with Event Loops",
@@ -7837,72 +7839,74 @@
     },
     "lme4": {
       "Package": "lme4",
-      "Version": "1.1-38",
+      "Version": "2.0-1",
       "Source": "Repository",
       "Title": "Linear Mixed-Effects Models using 'Eigen' and S4",
-      "Authors@R": "c( person(\"Douglas\",\"Bates\", role=\"aut\", comment=c(ORCID=\"0000-0001-8316-9503\")), person(\"Martin\",\"Maechler\", role=\"aut\", comment=c(ORCID=\"0000-0002-8685-9910\")), person(\"Ben\",\"Bolker\",email=\"bbolker+lme4@gmail.com\", role=c(\"aut\",\"cre\"), comment=c(ORCID=\"0000-0002-2127-0443\")), person(\"Steven\",\"Walker\",role=\"aut\", comment=c(ORCID=\"0000-0002-4394-9078\")), person(\"Rune Haubo Bojesen\",\"Christensen\", role=\"ctb\", comment=c(ORCID=\"0000-0002-4494-3399\")), person(\"Henrik\",\"Singmann\", role=\"ctb\", comment=c(ORCID=\"0000-0002-4842-3657\")), person(\"Bin\", \"Dai\", role=\"ctb\"), person(\"Fabian\", \"Scheipl\", role=\"ctb\", comment=c(ORCID=\"0000-0001-8172-3603\")), person(\"Gabor\", \"Grothendieck\", role=\"ctb\"), person(\"Peter\", \"Green\", role=\"ctb\", comment=c(ORCID=\"0000-0002-0238-9852\")), person(\"John\", \"Fox\", role=\"ctb\"), person(\"Alexander\", \"Bauer\", role=\"ctb\"), person(\"Pavel N.\", \"Krivitsky\", role=c(\"ctb\",\"cph\"), comment=c(ORCID=\"0000-0002-9101-3362\", \"shared copyright on simulate.formula\")), person(\"Emi\", \"Tanaka\", role = \"ctb\", comment = c(ORCID=\"0000-0002-1455-259X\")), person(\"Mikael\", \"Jagan\", role = \"ctb\", comment = c(ORCID=\"0000-0002-3542-2938\")), person(\"Ross D.\", \"Boylan\", email=\"ross.boylan@ucsf.edu\", role=(\"ctb\"), comment = c(ORCID=\"0009-0003-4123-8090\")), person(\"Anna\", \"Ly\", role = \"ctb\", comment = c(ORCID = \"0000-0002-0210-0342\")) )",
-      "Description": "Fit linear and generalized linear mixed-effects models. The models and their components are represented using S4 classes and methods.  The core computational algorithms are implemented using the 'Eigen' C++ library for numerical linear algebra and 'RcppEigen' \"glue\".",
+      "Authors@R": "c(person(\"Douglas\", \"Bates\", role = \"aut\", comment = c(ORCID = \"0000-0001-8316-9503\")), person(\"Martin\", \"Maechler\", role = \"aut\", comment = c(ORCID = \"0000-0002-8685-9910\")), person(\"Ben\", \"Bolker\", role = c(\"cre\", \"aut\"), email = \"bbolker+lme4@gmail.com\", comment = c(ORCID = \"0000-0002-2127-0443\")), person(\"Steven\", \"Walker\", role = \"aut\", comment = c(ORCID = \"0000-0002-4394-9078\")), person(\"Rune Haubo Bojesen\", \"Christensen\", role = \"ctb\", comment = c(ORCID = \"0000-0002-4494-3399\")), person(\"Henrik\", \"Singmann\", role = \"ctb\", comment = c(ORCID = \"0000-0002-4842-3657\")), person(\"Bin\", \"Dai\", role = \"ctb\"), person(\"Fabian\", \"Scheipl\", role = \"ctb\", comment = c(ORCID = \"0000-0001-8172-3603\")), person(\"Gabor\", \"Grothendieck\", role = \"ctb\"), person(\"Peter\", \"Green\", role = \"ctb\", comment = c(ORCID = \"0000-0002-0238-9852\")), person(\"John\", \"Fox\", role = \"ctb\"), person(\"Alexander\", \"Bauer\", role = \"ctb\"), person(\"Pavel N.\", \"Krivitsky\", role = c(\"ctb\", \"cph\"), comment = c(ORCID = \"0000-0002-9101-3362\", \"shared copyright on simulate.formula\")), person(\"Emi\", \"Tanaka\", role = \"ctb\", comment = c(ORCID = \"0000-0002-1455-259X\")), person(\"Mikael\", \"Jagan\", role = \"aut\", comment = c(ORCID = \"0000-0002-3542-2938\")), person(\"Ross D.\", \"Boylan\", role = \"ctb\", comment = c(ORCID = \"0009-0003-4123-8090\")), person(\"Anna\", \"Ly\", role = \"aut\", comment = c(ORCID = \"0000-0002-0210-0342\")))",
+      "Description": "Fit linear and generalized linear mixed-effects models.  The models and their components are represented using S4 classes and methods.  The core computational algorithms are implemented using the 'Eigen' C++ library for numerical linear algebra and 'RcppEigen' \"glue\".",
       "Depends": [
-        "R (>= 3.6.0)",
+        "R (>= 3.6)",
         "Matrix",
         "methods",
         "stats"
       ],
       "LinkingTo": [
+        "Matrix (>= 1.5-0)",
         "Rcpp (>= 0.10.5)",
-        "RcppEigen (>= 0.3.3.9.4)",
-        "Matrix (>= 1.5-0)"
+        "RcppEigen (>= 0.3.3.9.4)"
       ],
       "Imports": [
+        "MASS",
+        "Rdpack",
+        "boot",
         "graphics",
         "grid",
-        "splines",
-        "utils",
-        "parallel",
-        "MASS",
         "lattice",
-        "boot",
-        "nlme (>= 3.1-123)",
         "minqa (>= 1.1.15)",
+        "nlme (>= 3.1-123)",
         "nloptr (>= 1.0.4)",
-        "reformulas (>= 0.3.0)",
+        "parallel",
+        "reformulas (>= 0.4.3.1)",
         "rlang",
-        "Rdpack"
+        "splines",
+        "utils"
       ],
-      "RdMacros": "Rdpack",
       "Suggests": [
-        "knitr",
-        "rmarkdown",
-        "MEMSS",
-        "testthat (>= 0.8.1)",
-        "ggplot2",
-        "mlmRev",
-        "optimx (>= 2013.8.6)",
-        "gamm4",
-        "pbkrtest",
         "HSAUR3",
-        "numDeriv",
+        "MEMSS",
         "car",
         "dfoptim",
+        "gamm4",
+        "ggplot2",
+        "glmmTMB",
+        "knitr",
+        "merDeriv",
         "mgcv",
-        "statmod",
+        "mlmRev",
+        "numDeriv",
+        "optimx (>= 2013.8.6)",
+        "pbkrtest",
+        "rmarkdown",
         "rr2",
         "semEff",
-        "tibble",
-        "merDeriv"
+        "statmod",
+        "testthat (>= 0.8.1)",
+        "tibble"
       ],
       "Enhances": [
         "DHARMa",
         "performance"
       ],
+      "RdMacros": "Rdpack",
       "VignetteBuilder": "knitr",
       "LazyData": "yes",
       "License": "GPL (>= 2)",
       "URL": "https://github.com/lme4/lme4/",
       "BugReports": "https://github.com/lme4/lme4/issues",
       "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.3",
       "NeedsCompilation": "yes",
-      "Author": "Douglas Bates [aut] (ORCID: <https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut] (ORCID: <https://orcid.org/0000-0002-8685-9910>), Ben Bolker [aut, cre] (ORCID: <https://orcid.org/0000-0002-2127-0443>), Steven Walker [aut] (ORCID: <https://orcid.org/0000-0002-4394-9078>), Rune Haubo Bojesen Christensen [ctb] (ORCID: <https://orcid.org/0000-0002-4494-3399>), Henrik Singmann [ctb] (ORCID: <https://orcid.org/0000-0002-4842-3657>), Bin Dai [ctb], Fabian Scheipl [ctb] (ORCID: <https://orcid.org/0000-0001-8172-3603>), Gabor Grothendieck [ctb], Peter Green [ctb] (ORCID: <https://orcid.org/0000-0002-0238-9852>), John Fox [ctb], Alexander Bauer [ctb], Pavel N. Krivitsky [ctb, cph] (ORCID: <https://orcid.org/0000-0002-9101-3362>, shared copyright on simulate.formula), Emi Tanaka [ctb] (ORCID: <https://orcid.org/0000-0002-1455-259X>), Mikael Jagan [ctb] (ORCID: <https://orcid.org/0000-0002-3542-2938>), Ross D. Boylan [ctb] (ORCID: <https://orcid.org/0009-0003-4123-8090>), Anna Ly [ctb] (ORCID: <https://orcid.org/0000-0002-0210-0342>)",
+      "Author": "Douglas Bates [aut] (ORCID: <https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut] (ORCID: <https://orcid.org/0000-0002-8685-9910>), Ben Bolker [cre, aut] (ORCID: <https://orcid.org/0000-0002-2127-0443>), Steven Walker [aut] (ORCID: <https://orcid.org/0000-0002-4394-9078>), Rune Haubo Bojesen Christensen [ctb] (ORCID: <https://orcid.org/0000-0002-4494-3399>), Henrik Singmann [ctb] (ORCID: <https://orcid.org/0000-0002-4842-3657>), Bin Dai [ctb], Fabian Scheipl [ctb] (ORCID: <https://orcid.org/0000-0001-8172-3603>), Gabor Grothendieck [ctb], Peter Green [ctb] (ORCID: <https://orcid.org/0000-0002-0238-9852>), John Fox [ctb], Alexander Bauer [ctb], Pavel N. Krivitsky [ctb, cph] (ORCID: <https://orcid.org/0000-0002-9101-3362>, shared copyright on simulate.formula), Emi Tanaka [ctb] (ORCID: <https://orcid.org/0000-0002-1455-259X>), Mikael Jagan [aut] (ORCID: <https://orcid.org/0000-0002-3542-2938>), Ross D. Boylan [ctb] (ORCID: <https://orcid.org/0009-0003-4123-8090>), Anna Ly [aut] (ORCID: <https://orcid.org/0000-0002-0210-0342>)",
       "Maintainer": "Ben Bolker <bbolker+lme4@gmail.com>",
       "Repository": "CRAN"
     },
@@ -8078,7 +8082,7 @@
     },
     "magick": {
       "Package": "magick",
-      "Version": "2.9.0",
+      "Version": "2.9.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Advanced Graphics and Image-Processing in R",
@@ -8117,7 +8121,7 @@
         "gifski"
       ],
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "Language": "en-US",
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>)",
@@ -8604,7 +8608,7 @@
     },
     "mirai": {
       "Package": "mirai",
-      "Version": "2.6.0",
+      "Version": "2.6.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Minimalist Async Evaluation Framework for R",
@@ -8621,6 +8625,7 @@
       ],
       "Suggests": [
         "cli",
+        "later",
         "litedown",
         "otel",
         "otelsdk",
@@ -9410,7 +9415,7 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.3.4",
+      "Version": "2.3.5",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Toolkit for Encryption, Signatures and Certificates Based on OpenSSL",
@@ -10570,7 +10575,7 @@
     },
     "ragg": {
       "Package": "ragg",
-      "Version": "1.5.0",
+      "Version": "1.5.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Graphic Devices Based on AGG",
@@ -10599,7 +10604,7 @@
       "Config/testthat/edition": "3",
       "Config/usethis/last-upkeep": "2025-04-25",
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "SystemRequirements": "freetype2, libpng, libtiff, libjpeg, libwebp, libwebpmux",
       "NeedsCompilation": "yes",
       "Author": "Thomas Lin Pedersen [cre, aut] (ORCID: <https://orcid.org/0000-0002-5147-4711>), Maxim Shemanarev [aut, cph] (Author of AGG), Tony Juricic [ctb, cph] (Contributor to AGG), Milan Marusinec [ctb, cph] (Contributor to AGG), Spencer Garrett [ctb] (Contributor to AGG), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
@@ -10966,7 +10971,7 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.1.7",
+      "Version": "1.1.8",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Project Environments",
@@ -11010,11 +11015,11 @@
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.3",
       "VignetteBuilder": "knitr",
+      "NeedsCompilation": "yes",
       "Config/Needs/website": "tidyverse/tidytemplate",
       "Config/testthat/edition": "3",
       "Config/testthat/parallel": "true",
       "Config/testthat/start-first": "bioconductor,python,install,restore,snapshot,retrieve,remotes",
-      "NeedsCompilation": "no",
       "Author": "Kevin Ushey [aut, cre] (ORCID: <https://orcid.org/0000-0003-2880-7407>), Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Kevin Ushey <kevin@rstudio.com>",
       "Repository": "CRAN"
@@ -11073,11 +11078,11 @@
     },
     "rerddap": {
       "Package": "rerddap",
-      "Version": "1.2.2",
+      "Version": "1.2.3",
       "Source": "Repository",
       "Title": "General Purpose Client for 'ERDDAP™' Servers",
       "Description": "General purpose R client for 'ERDDAP™' servers. Includes functions to search for 'datasets', get summary information on 'datasets', and fetch 'datasets', in either 'csv' or 'netCDF' format. 'ERDDAP™' information:  <https://upwell.pfeg.noaa.gov/erddap/information.html>.",
-      "Date": "2026-01-07",
+      "Date": "2026-02-25",
       "License": "MIT + file LICENSE",
       "Authors@R": "c( person(\"Scott\", \"Chamberlain\", role = \"aut\"), person(\"Ben\", \"Tupper\", role = \"ctb\"), person(\"Salvador Jesús Fernández\", \"Bejarano\", role = \"ctb\"), person(\"Roy\", \"Mendelssohn\", role = c(\"cre\", \"ctb\"), email = \"roy.mendelssohn@noaa.gov\") )",
       "URL": "https://docs.ropensci.org/rerddap/, https://github.com/ropensci/rerddap",
@@ -13245,7 +13250,7 @@
     },
     "systemfonts": {
       "Package": "systemfonts",
-      "Version": "1.3.1",
+      "Version": "1.3.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "System Native Font Finding",
@@ -13352,7 +13357,7 @@
     },
     "textshaping": {
       "Package": "textshaping",
-      "Version": "1.0.4",
+      "Version": "1.0.5",
       "Source": "Repository",
       "Title": "Bindings to the 'HarfBuzz' and 'Fribidi' Libraries for Text Shaping",
       "Authors@R": "c( person(\"Thomas Lin\", \"Pedersen\", , \"thomas.pedersen@posit.co\", role = c(\"cre\", \"aut\"), comment = c(ORCID = \"0000-0002-5147-4711\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
@@ -14088,12 +14093,12 @@
     },
     "useful": {
       "Package": "useful",
-      "Version": "1.2.6.1",
+      "Version": "1.2.7",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Collection of Handy, Useful Functions",
-      "Date": "2018-10-07",
-      "Authors@R": "c( person(c(\"Jared\", \"P.\"), \"Lander\", email = \"packages@jaredlander.com\", role = c(\"cre\", \"aut\")), person(\"Nicholas\", \"Galasinao\", email = \"nicholas.galasinao@gmail.com\", role = \"ctb\"), person(\"Joshua\", \"Kraut\", email = \"joshua.kraut@gmail.com\", role = \"ctb\"), person(\"Daniel\", \"Chen\", email = \"dan dcheny@gmail.com\", role = \"ctb\"))",
+      "Date": "2026-02-25",
+      "Authors@R": "c( person(c(\"Jared\", \"P.\"), \"Lander\", email = \"packages@jaredlander.com\", role = c(\"cre\", \"aut\")), person(\"Nicholas\", \"Galasinao\", email = \"nicholas.galasinao@gmail.com\", role = \"ctb\"), person(\"Joshua\", \"Kraut\", email = \"joshua.kraut@gmail.com\", role = \"ctb\"), person(\"Daniel\", \"Chen\", email = \"dcheny@gmail.com\", role = \"ctb\"))",
       "Description": "A set of little functions that have been found useful to do little odds and ends such as plotting the results of K-means clustering, substituting special text characters, viewing parts of a data.frame, constructing formulas from text and building design and response matrices.",
       "License": "BSD_3_clause + file LICENSE",
       "Depends": [
@@ -14102,24 +14107,25 @@
       "Imports": [
         "plyr",
         "dplyr (>= 0.5.0)",
-        "magrittr",
         "purrr (>= 0.1.0)",
         "stats",
         "scales",
         "utils",
         "Matrix",
-        "assertthat"
+        "assertthat",
+        "tibble",
+        "rlang"
       ],
       "LazyLoad": "yes",
       "ByteCompile": "TRUE",
       "Suggests": [
         "testthat",
-        "tibble",
         "covr"
       ],
       "URL": "https://github.com/jaredlander/useful",
       "BugReports": "https://github.com/jaredlander/useful/issues",
-      "RoxygenNote": "6.1.0",
+      "RoxygenNote": "7.3.2",
+      "Encoding": "UTF-8",
       "NeedsCompilation": "no",
       "Author": "Jared P. Lander [cre, aut], Nicholas Galasinao [ctb], Joshua Kraut [ctb], Daniel Chen [ctb]",
       "Maintainer": "Jared P. Lander <packages@jaredlander.com>",
@@ -14286,7 +14292,7 @@
     },
     "vegan": {
       "Package": "vegan",
-      "Version": "2.7-2",
+      "Version": "2.7-3",
       "Source": "Repository",
       "Title": "Community Ecology Package",
       "Authors@R": "c(person(\"Jari\", \"Oksanen\", role=c(\"aut\",\"cre\"), email=\"jhoksane@gmail.com\"), person(\"Gavin L.\", \"Simpson\", role=\"aut\", email=\"ucfagls@gmail.com\"), person(\"F. Guillaume\", \"Blanchet\", role=\"aut\"), person(\"Roeland\", \"Kindt\", role=\"aut\"), person(\"Pierre\", \"Legendre\", role=\"aut\"), person(\"Peter R.\", \"Minchin\", role=\"aut\"), person(\"R.B.\", \"O'Hara\", role=\"aut\"), person(\"Peter\", \"Solymos\", role=\"aut\"), person(\"M. Henry H.\", \"Stevens\", role=\"aut\"), person(\"Eduard\", \"Szoecs\", role=\"aut\"), person(\"Helene\", \"Wagner\", role=\"aut\"), person(\"Matt\", \"Barbour\", role=\"aut\"), person(\"Michael\", \"Bedward\", role=\"aut\"), person(\"Ben\", \"Bolker\", role=\"aut\"), person(\"Daniel\", \"Borcard\", role=\"aut\"), person(\"Tuomas\", \"Borman\", role=\"aut\"), person(\"Gustavo\", \"Carvalho\", role=\"aut\"), person(\"Michael\", \"Chirico\", role=\"aut\"), person(\"Miquel\", \"De Caceres\", role=\"aut\"), person(\"Sebastien\", \"Durand\", role=\"aut\"), person(\"Heloisa Beatriz Antoniazi\", \"Evangelista\", role=\"aut\"), person(\"Rich\", \"FitzJohn\", role=\"aut\"), person(\"Michael\", \"Friendly\", role=\"aut\"), person(\"Brendan\",\"Furneaux\", role=\"aut\"), person(\"Geoffrey\", \"Hannigan\", role=\"aut\"), person(\"Mark O.\", \"Hill\", role=\"aut\"), person(\"Leo\", \"Lahti\", role=\"aut\"), person(\"Cameron\", \"Martino\", role=\"aut\"), person(\"Dan\", \"McGlinn\", role=\"aut\"), person(\"Marie-Helene\", \"Ouellette\", role=\"aut\"), person(\"Eduardo\", \"Ribeiro Cunha\", role=\"aut\"), person(\"Tyler\", \"Smith\", role=\"aut\"), person(\"Adrian\", \"Stier\", role=\"aut\"), person(\"Cajo J.F.\", \"Ter Braak\", role=\"aut\"), person(\"James\", \"Weedon\", role=\"aut\"))",
@@ -14862,7 +14868,7 @@
     },
     "xts": {
       "Package": "xts",
-      "Version": "0.14.1",
+      "Version": "0.14.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "eXtensible Time Series",

@@ -5,7 +5,6 @@
 ## use zoopCoomunity as a template
 
 
-## source ("P:/My Documents/Documents/myDocs/amyfiles/NOAA-LCI/zoopDecimate.R")
 
 rm (list = ls())
 
@@ -15,7 +14,6 @@ if (!tr) {
   install.packages ("pacman")
 }
 
-# setwd ("~/myDocs/amyfiles/NOAA-LCI/"); source ("dataSetup.R")
 tr <- try (load ("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")) # from dataSetup.R -- of interest: zooC and zooCenv
 if (class (tr) == "try-error") {
   dir.create ("~/tmp/LCI_noaa/cache/", recursive = TRUE, showWarnings = FALSE)
