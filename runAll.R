@@ -67,7 +67,7 @@ if(0) {
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
-  badP <- c("paletteer", "lubridate")
+  badP <- c("paletteer", "lubridate", "buoydata")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     cat("\n\n##", badP [i], "##\n")
@@ -84,6 +84,13 @@ if(0) {
 }
 
 
+if(length(grep("[M|m]artin", getwd())) > 0) {
+  ## for collaborators: pull latest versions from git and sync packages
+  system("git pull")
+  if(!renv::restore()$synchronized) {
+    renv::restore()
+  }
+}
 
 if(1) {
   ## run the first script interactively! :

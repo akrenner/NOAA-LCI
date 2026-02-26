@@ -721,7 +721,7 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
 
 ## if missing, install buoydata
 if(!require("buoydata")) {
-  renv::install("NOAA-EDAB/buoydata", prompt = FALSE)
+  pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
 }
 
 
