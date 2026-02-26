@@ -1,15 +1,12 @@
 #! /usr/bin/env Rscript
 
 ## Execute all Kachemak Bay/Cook Inlet scripts, 2020
-## If this is a new installation, it may be necessary to disconnect from VPN
-## to avoid timeouts. To run up-to-date analysis, connect to VPN in order to
-## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
-## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
+## To run up-to-date analysis, connect to VPN in order to download latest SWMP
+## data from CDMO. Expect approximately 3 hours for a full run
+## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
 
 # add to time series (signature data)
-# freshwater of first 30 m / bottom
-# salinity at T9-6 at 50 m (seasonal influence of ACC?)
 # boyyancy profile over time
 # max buoyancy over time
 # position of max buoyancy over time
@@ -17,14 +14,10 @@
 
 rm(list = ls())
 
-if(.Platform$OS.type=="windows"){
-  setwd ("~/myDocs/amyfiles/NOAA-LCI/")
-  # set environment variable to avoid "no such file or directory errors"
-  Sys.setenv(TMPDIR = "C:\tmp")
-}else{ ## Linux or macOS platform
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+if(length(grep("NOAA-LCI", getwd())) < 1) {
+  stop("Please open the R Project in NOAA-LCI/")
 }
-# openProject()
+
 
 
 sT <- Sys.time()
