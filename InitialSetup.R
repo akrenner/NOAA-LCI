@@ -8,24 +8,28 @@ options(repos = r)
 
 if (!require("renv")) {
   install.packages("renv")
-  require ("renv")
 }
 if(!dir.exists("renv")){
  renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
   # renv::init(bioconductor = "3.21")
 }
 
-renv::install(c("pak", "remotes", "Rcpp", "BiocManager"), prompt = FALSE)
+## sync all packages
+renv::install(c("pak", "remotes", "Rcpp", "BiocManager", "pkgbuild"), prompt = FALSE)
 pak::pak("NOAA-EDAB/buoydata")
 remotes::install_git("https://github.com/STBrinkmann/GVI")
 BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
-# renv::restore(prompt = FALSE, exclude="GVI")
-renv::restore(prompt = FALSE)
+if(.Platform$OS.type == "windows") {
+  if (!pkgbuild::has_rtools()){ ## exclude packages in need of compilation
+    exP <- c("GVI")
+    warning("RTools not detected. Some functionality may not be available")
+  } else {exP <- NULL}
+} else {exP <- NULL}
+
+renv::restore(prompt = FALSE, exclude = exP); rm(exP)
 # renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE, lock = FALSE)
-# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
 # renv::install("terra", prompt = FALSE)
 renv::status()
-# require ("conflicted")
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 

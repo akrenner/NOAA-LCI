@@ -9410,7 +9410,7 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.3.4",
+      "Version": "2.3.5",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Toolkit for Encryption, Signatures and Certificates Based on OpenSSL",
@@ -9908,6 +9908,45 @@
       "NeedsCompilation": "no",
       "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], RStudio [cph]",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
+      "Repository": "CRAN"
+    },
+    "pkgbuild": {
+      "Package": "pkgbuild",
+      "Version": "1.4.8",
+      "Source": "Repository",
+      "Title": "Find Tools Needed to Build R Packages",
+      "Authors@R": "c( person(\"Hadley\", \"Wickham\", role = \"aut\"), person(\"Jim\", \"Hester\", role = \"aut\"), person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
+      "Description": "Provides functions used to build R packages. Locates compilers needed to build R packages on various platforms and ensures the PATH is configured appropriately so R can use them.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://github.com/r-lib/pkgbuild, https://pkgbuild.r-lib.org",
+      "BugReports": "https://github.com/r-lib/pkgbuild/issues",
+      "Depends": [
+        "R (>= 3.5)"
+      ],
+      "Imports": [
+        "callr (>= 3.2.0)",
+        "cli (>= 3.4.0)",
+        "desc",
+        "processx",
+        "R6"
+      ],
+      "Suggests": [
+        "covr",
+        "cpp11",
+        "knitr",
+        "Rcpp",
+        "rmarkdown",
+        "testthat (>= 3.2.0)",
+        "withr (>= 2.3.0)"
+      ],
+      "Config/Needs/website": "tidyverse/tidytemplate",
+      "Config/testthat/edition": "3",
+      "Config/usethis/last-upkeep": "2025-04-30",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
+      "NeedsCompilation": "no",
+      "Author": "Hadley Wickham [aut], Jim Hester [aut], Gábor Csárdi [aut, cre], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
+      "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
       "Repository": "CRAN"
     },
     "pkgconfig": {
@@ -11073,11 +11112,11 @@
     },
     "rerddap": {
       "Package": "rerddap",
-      "Version": "1.2.2",
+      "Version": "1.2.3",
       "Source": "Repository",
       "Title": "General Purpose Client for 'ERDDAP™' Servers",
       "Description": "General purpose R client for 'ERDDAP™' servers. Includes functions to search for 'datasets', get summary information on 'datasets', and fetch 'datasets', in either 'csv' or 'netCDF' format. 'ERDDAP™' information:  <https://upwell.pfeg.noaa.gov/erddap/information.html>.",
-      "Date": "2026-01-07",
+      "Date": "2026-02-25",
       "License": "MIT + file LICENSE",
       "Authors@R": "c( person(\"Scott\", \"Chamberlain\", role = \"aut\"), person(\"Ben\", \"Tupper\", role = \"ctb\"), person(\"Salvador Jesús Fernández\", \"Bejarano\", role = \"ctb\"), person(\"Roy\", \"Mendelssohn\", role = c(\"cre\", \"ctb\"), email = \"roy.mendelssohn@noaa.gov\") )",
       "URL": "https://docs.ropensci.org/rerddap/, https://github.com/ropensci/rerddap",
@@ -14088,12 +14127,12 @@
     },
     "useful": {
       "Package": "useful",
-      "Version": "1.2.6.1",
+      "Version": "1.2.7",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Collection of Handy, Useful Functions",
-      "Date": "2018-10-07",
-      "Authors@R": "c( person(c(\"Jared\", \"P.\"), \"Lander\", email = \"packages@jaredlander.com\", role = c(\"cre\", \"aut\")), person(\"Nicholas\", \"Galasinao\", email = \"nicholas.galasinao@gmail.com\", role = \"ctb\"), person(\"Joshua\", \"Kraut\", email = \"joshua.kraut@gmail.com\", role = \"ctb\"), person(\"Daniel\", \"Chen\", email = \"dan dcheny@gmail.com\", role = \"ctb\"))",
+      "Date": "2026-02-25",
+      "Authors@R": "c( person(c(\"Jared\", \"P.\"), \"Lander\", email = \"packages@jaredlander.com\", role = c(\"cre\", \"aut\")), person(\"Nicholas\", \"Galasinao\", email = \"nicholas.galasinao@gmail.com\", role = \"ctb\"), person(\"Joshua\", \"Kraut\", email = \"joshua.kraut@gmail.com\", role = \"ctb\"), person(\"Daniel\", \"Chen\", email = \"dcheny@gmail.com\", role = \"ctb\"))",
       "Description": "A set of little functions that have been found useful to do little odds and ends such as plotting the results of K-means clustering, substituting special text characters, viewing parts of a data.frame, constructing formulas from text and building design and response matrices.",
       "License": "BSD_3_clause + file LICENSE",
       "Depends": [
@@ -14102,24 +14141,25 @@
       "Imports": [
         "plyr",
         "dplyr (>= 0.5.0)",
-        "magrittr",
         "purrr (>= 0.1.0)",
         "stats",
         "scales",
         "utils",
         "Matrix",
-        "assertthat"
+        "assertthat",
+        "tibble",
+        "rlang"
       ],
       "LazyLoad": "yes",
       "ByteCompile": "TRUE",
       "Suggests": [
         "testthat",
-        "tibble",
         "covr"
       ],
       "URL": "https://github.com/jaredlander/useful",
       "BugReports": "https://github.com/jaredlander/useful/issues",
-      "RoxygenNote": "6.1.0",
+      "RoxygenNote": "7.3.2",
+      "Encoding": "UTF-8",
       "NeedsCompilation": "no",
       "Author": "Jared P. Lander [cre, aut], Nicholas Galasinao [ctb], Joshua Kraut [ctb], Daniel Chen [ctb]",
       "Maintainer": "Jared P. Lander <packages@jaredlander.com>",
