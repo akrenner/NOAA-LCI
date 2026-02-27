@@ -1,10 +1,8 @@
 #! /usr/bin/env Rscript
 
-## execute all Kachemak Bay/Cook Inlet scripts, 2020
-if(.Platform$OS.type == "unix") {
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-} else {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# ## execute all Kachemak Bay/Cook Inlet scripts
+if(length(grep("NOAA-LCI", getwd())) < 1) {
+  stop("Please open the R Project in NOAA-LCI/")
 }
 
 
