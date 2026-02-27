@@ -369,9 +369,9 @@ addTimehelpers <- function(df) {
   ## assumes "datetimestamp" is present
   df$jday <- as.integer(strftime(df$datetimestamp, "%j"))
   df$year <- as.integer(strftime(df$datetimestamp, "%Y"))
-  suppressPackageStartupMessages(require(lubridate))
-  df$month <- month(df$datetimestamp)
-  df$week <- week(df$datetimestamp)
+  # suppressPackageStartupMessages(require(lubridate))
+  df$month <- lubridate::month(df$datetimestamp)
+  df$week <- lubridate::week(df$datetimestamp)
   return(df)
 }
 
@@ -428,16 +428,21 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
   cacheStation <- paste0(cacheFolder, station, ".rds")
 
   zF <- list.files("~/GISdata/LCI/SWMP", ".zip", full.names = TRUE)
-  if(length(zF) < 1) {stop("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
+  if(length(zF) < 1) {stop("Need SWMP data! Download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm
+Select 'Advanced Query' and download all data from Kachemak Bay (2001-present) as a zip
+file. Place that zip file in '~/GISdata/LCI/SWMP/' (this folder should already exist). Add
+a freshly downloaded complete file at least once a year.")}
   SMPfile <- zF [which.max(file.info(zF)$ctime)] ## find most recent file
   rm(zF)
 
-  ## delete cacheFolder if zip file is newer
+  ## delete cacheStation if zip file is newer or file is corrupted
   if(file.exists(cacheStation)) {
-    if(file.info(cacheStation)$ctime < file.info(SMPfile)$ctime) {
+    if(file.info(cacheStation)$ctime < file.info(SMPfile)$ctime |
+      class(try(readRDS(cacheStation))) == "try-error") {
       unlink(cacheStation)
     }
   }
+
 
   if(file.exists(cacheStation)) {
     # base::load(cacheStation)
@@ -476,15 +481,16 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
         smp <- rbind(smp, smp3)
         if(any(is.na(smp$datetimestamp))) {stop("NAs in timestamp")}
 
-        rm(smp2, smp3, fN)
+        rm(smp3, fN)
       }
       smp <- smp [which(!duplicated(smp$datetimestamp)), ]
     }
   }
   ## fixGap() here??
   ## smp <- SWMPr::qaqc(smp, qaqc_keep = "0") ## here??
-  #save(smp, file = cacheStation)
-  saveRDS(smp, file = cacheStation)
+  if (class(smp2)[1] != "try-error") {
+    saveRDS(smp, file = cacheStation)
+  }
   return(smp)
 }
 
@@ -746,7 +752,8 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
     nc_close(goes.nc)
   }
 
-  buoyID <- tolower(buoyID)
+  # buoyID <- tolower(buoyID)
+  buoyID <- toupper(buoyID)
   cacheF <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
 
   if(clearcache) {
@@ -757,7 +764,7 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
   }
 
 
-  require("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
+  # require("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
   if(file.exists(cacheF)) {
     wDB <- readRDS(cacheF)
     startY <- max(wDB$datetimestamp) |>
@@ -769,9 +776,10 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
       dplyr::select(Y1) |>
       as.numeric()
   }
-  buoydata::get_buoy_data(buoyid = buoyID,
-    year = startY:as.integer(format(Sys.Date(), "%Y"))
-    , outDir = "~/tmp/LCI_noaa/cache/noaaWeather")
+  buoydata::get_buoy_data(buoyid = buoyID)
+    # year = startY:as.integer(format(Sys.Date(), "%Y"))
+    # , outDir = "~/tmp/LCI_noaa/cache/noaaWeather")
+
   # wB <- combine_buoy_data(buoyID, variable="WVHT", inDir="~/tmp/LCI_noaa/cache/noaaWeather/")
   wB <- list.files(path = paste0("~/tmp/LCI_noaa/cache/noaaWeather/",  ## should only read new files XXX
     buoyID, "/"), patter = "\\.csv$",

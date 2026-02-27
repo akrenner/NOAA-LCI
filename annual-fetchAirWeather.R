@@ -9,6 +9,10 @@
 ## taken down).
 
 
+## things to fix:
+## consolidate annualPlotFct.R use of getNOAA, gNOAA and similar
+## confirm units, esp. for rain/precipitation and wind
+
 # still need to fix annual-wind.R to match this
 # test annual-airTemp.R
 
@@ -50,8 +54,7 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 if(0) {
   ## list availabel buoy stations nearby
   ## less refined than worldmet, so only use this for waverider buoy!
-  require(buoydata)
-  buoydata::buoyDataWorld |>
+  buoydata::buoy_data |>
     dplyr::filter(LAT > 58, LAT < 61) |>
     dplyr::filter(LON > -154, LON < -149) |>
     dplyr::filter(nYEARS >= 10)
@@ -65,14 +68,22 @@ if(0) {
 source("annualPlotFct.R")  ## pull these functions into here since only used once?
 # currently in annualPlotFct.R
 
+## set up cache for rerddap
+if(clearC) {
+  rerddap::cache_delete_all()
+}
+rerddap::cache_setup(full_path="~/tmp/LCI_noaa/cache/noaaBuoy/")
+
+
+
 
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
-nAiro <- try(getNOAA("HMSA2", clearcache = clearC))  ## function in annualPlotFct -- NDBC site -- no longer active???
-
-nWave <- try(getNOAA(buoyID = "46108", clearcache = clearC))
+nAiro <- try(getNOAA("HMSA2"))
+##
+nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
 wave.46108 <- nWave
 
 
@@ -89,7 +100,7 @@ weatherL <- list(homer.airport = gNOAAS(station = "Homer Airport", clearcache = 
   , flat.island = gNOAAS(station = "Flat Island Light", clearcache = clearC, cacheF = cF)  ## Flat Island weather station
   , east.amatuli = gNOAAS(station = "East Amatuli Station Light  AK", clearcache = clearC, cacheF = cF)  ## East Amatuli weather station
 )
-weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2", clearcache = clearC))   ## SWMP Homer Spit weather station
+weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
 
 
 
