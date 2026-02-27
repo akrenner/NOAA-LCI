@@ -10,18 +10,22 @@ if (!require("renv")) {
   install.packages("renv")
   require ("renv")
 }
-renv::status()
-renv::init(bioconductor = TRUE) ## for ConsennsusClusterPlus
-# renv::init(bioconductor = "3.21")
+if(!dir.exists("renv")){
+ renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
+  # renv::init(bioconductor = "3.21")
+}
 
-renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE)
-# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
-renv::install("remotes", prompt = FALSE)
-remotes::install_github("NOAA-EDAB/buoydata")
-renv::install("terra", prompt = FALSE)
+renv::install(c("pak", "remotes", "Rcpp", "BiocManager"), prompt = FALSE)
+pak::pak("NOAA-EDAB/buoydata")
 remotes::install_git("https://github.com/STBrinkmann/GVI")
-renv::restore()
-require ("conflicted")
+BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
+# renv::restore(prompt = FALSE, exclude="GVI")
+renv::restore(prompt = FALSE)
+# renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE, lock = FALSE)
+# detach ("package:renv", unload=TRUE) ## detach to avoid renv::load masking base::load
+# renv::install("terra", prompt = FALSE)
+renv::status()
+# require ("conflicted")
 conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 
@@ -72,7 +76,7 @@ if(!file.exists("~/GISdata/LCI/.git/config")){
   system ("git clone https://github.com/akrenner/LCI.git")
   setwd(hd); rm(hd)
 }
-## these may/should not be needed, but don't hurt
+## these may/should not be needed, but won't hurt
 dir.create("~/tmp/LCI_noaa/cache/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings = FALSE, recursive = TRUE)
