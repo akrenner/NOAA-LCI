@@ -15,18 +15,18 @@ if(!dir.exists("renv")){
 }
 
 ## sync all packages
-renv::install(c("pak", "Rcpp", "BiocManager", "pkgbuild"), prompt = FALSE)
-pak::pak("NOAA-EDAB/buoydata")
-BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
-if(.Platform$OS.type == "windows") {
-  if (!pkgbuild::has_rtools()){ ## exclude packages in need of compilation
-    exP <- c("GVI")
-    warning("RTools not detected. Some functionality may not be available")
-  } else {
-    renv::install("remotes", prompt = FALSE)
-    remotes::install_git("https://github.com/STBrinkmann/GVI")
-    exP <- NULL}
-} else {exP <- NULL}
+renv::install(c("pkgbuild"), prompt = FALSE)
+if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){ ## exclude packages in need of compilation
+  exP <- c("GVI", "buoydata", "ConsensusClusterPlus")
+  warning("RTools not detected. Some functionality will not be available")
+} else {
+  renv::install(c("pak", "Rcpp", "BiocManager"))
+  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
+  pak::pak("NOAA-EDAB/buoydata")
+  renv::install("remotes", prompt = FALSE)
+  remotes::install_git("https://github.com/STBrinkmann/GVI")
+  exP <- NULL
+}
 
 renv::restore(prompt = FALSE, exclude = exP); rm(exP)
 # renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE, lock = FALSE)
