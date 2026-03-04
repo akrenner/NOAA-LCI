@@ -171,21 +171,44 @@ annualP$A_pa <- aggregate (A_pa~year, kphyto, FUN=mean)$A_pa
 
 
 
-## barplot of Alexandrium frequency -- not working graphically
-kphytox <- kphyto
-kphytox$Alexandrium <- factor(kphytox$Pseudo_nitzschia, levels = rev(levels(kphytox$Alexandrium)))
-aClass <- aggregate(Alexandrium~year, kphytox, FUN=summary)
-aClass <- data.frame (year=aClass$year, N_sample = rowSums(aClass[,2:ncol(aClass)]),
-  aClass[,2:ncol(aClass)])
-proTmp <- aClass[,3:ncol(aClass)]/aClass$N_sample
+## barplot of Alexandrium/Pseudo-nitzschia frequencies
+pdf("~/tmp/LCI_noaa/media/HAB/frequencyTS_HAB.pdf", height=8, width=7)
+par(mfrow=c(2,1), mar=c(1,4,2,1), oma=c(2, .5, .5, .5))
 
-pdf("~/tmp/LCI_noaa/media/HAB/occuranceTS_PseudoNitschia.pdf", height=4, width=7)
-barplot(t(proTmp), names.arg = aClass$year
-  , col = c("white", rev(RColorBrewer::brewer.pal(3, "Set1")))
-)
-box()
+spL <- c("Pseudo_nitzschia", "Alexandrium")
+cols <-  rev(RColorBrewer::brewer.pal(3, "Set1"))
+for(i in seq_along(spL)) {
+  kp <- kphyto
+  kp$spp <- kp[,which(names(kp)==spL[i])]
+  kp$spp <- factor(kp$spp, levels = rev(levels(kp$Alexandrium)))
+  aClass <- aggregate(spp~year, kp, FUN=summary)
+  aClass <- data.frame(year=aClass$year, N_sample=rowSums(aClass[,2:ncol(aClass)]),
+                       aClass[,2:ncol(aClass)])
+  proTmp <- (aClass[,3:ncol(aClass)] / aClass$N_sample) |>
+    as.data.frame() |>
+    dplyr::select(-N)
+
+  crds <- barplot(t(proTmp), col = cols,
+    main = c("Pseudo-nitschia spp.", "Alexandrium spp.")[i],
+    ylab=""
+    , ylim=c(0, 0.8)
+    )
+
+  if(i==1){legend("topleft", legend=c("present", "abundant", "bloom")
+                  , fill=cols, bty="n")
+  } else{
+    pIdx <- seq_along(aClass$year)
+    pIdx <- pIdx[which(pIdx %% 2 == 0)]
+    mtext(aClass$year[pIdx], at = crds[pIdx], side = 1, line = 0.5)
+    mtext("Year", side=1, line = 1.5)
+    mtext("Proportion of samples", side=2, outer=TRUE, line = -1.5)
+    mtext("Data courtesy of KBNERR", side=1, cex=0.7, adj=1, line = 1.5)
+  }
+  box()
+}
 dev.off()
-rm(proTmp, aClass, kphytox)
+rm(kp, i, proTmp, spL, cols)
+
 
 
 if(0){
@@ -205,27 +228,47 @@ dev.off()
 
 
 
+
 ## match this with earliest date reaching threshold bottom temp
 
 CTD <- read.csv("~/tmp/LCI_noaa/data-products/CTDcastSummaries.csv")
+CTD$timeStamp <- as.POSIXct(CTD$timeStamp)
 # SWMP <- read
-
 
 ## bottom time over 8 degrees C
 stN <- c("AlongBay_7", "9_6")
 
 pdf("~/tmp/LCI_noaa/media/HAB/TS_bottomTemp.pdf", height=8, width=7)
-par(mfrow=c(2,1))
+par(mfrow=c(2,1), mar=c(1,4,2,1), oma=c(3, 0, .5, .5))
+
 for (i in seq_along(stN)) {
   cStn <- subset(CTD, Match_Name == stN [i])
-  cStn <- subset(cStn, Year < 2026)
-  plot (aggregate(TempBottom~Year, data = cStn, function(x){sum(x > 8)})
-        , type="b", ylab="Months of high bottom temperatures"
-        , main = stN[i])
+  if(0) {
+  # ## use natural spline to get better estimates of time > 8 degrees  --  wild swings, currently not useful
+  # iTmp <- spline(x=cStn$timeStamp, y=cStn$TempBottom
+  #                , xout=seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
+  #                , method="natural")  ## options: fmm, natural, periodic, hyman
+  # iTmp$x <- as.POSIXct(iTmp$x)
+  # plot(iTmp, type="l")
 }
-dev.off()
 
-plot(aggregate(TempBottom~Year, data = cStn, FUN=mean))
+  cStn <- subset(cStn, Year < 2026)
+
+  cMY <- aggregate(TempBottom~month+Year, data = cStn, FUN=mean)
+  plot (aggregate(TempBottom~Year, data = cMY, function(x){sum(x > 8)})
+        , type="b", ylab="", xlab="", axes = FALSE
+        , main = c("AlongBay-7, depth: 144 m", "T9-6, depth: 100 m")[i] #stN[i]
+        )
+  axis(2)
+  box()
+}
+axis(1)
+# pIdx <- seq_along(aClass$year)
+# pIdx <- pIdx[which(pIdx %% 2 == 0)]
+# mtext(aClass$year[pIdx], at = crds[pIdx], side = 1, line = 0.5)
+mtext("Year", side=1, line = 2.5)
+mtext("Time with bottom temperature > 8 °C [months]", side=2, outer=TRUE, line = -1.6)
+dev.off()
 
 
 ## predictive variables to extract/calculate from t96:
@@ -250,6 +293,8 @@ ctdEx <- function(Match_Name = "9_6", sdate, thrT=8, Nd=40) {
   } else {
     dT8 <- min(yD$month, na.rm=TRUE)
   }
+
+
   rm(yD)
   dS <- subset (tPr, as.numeric(difftime(sdate, tPr$timeStamp, units="days")) <= Nd)
   mSST <- mean(dS$SST, na.rm=TRUE)
