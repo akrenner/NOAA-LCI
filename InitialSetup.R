@@ -16,13 +16,16 @@ if(!dir.exists("renv")){
 
 ## sync all packages
 renv::install(c("pkgbuild"), prompt = FALSE)
-if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){ ## exclude packages in need of compilation
-  exP <- c("GVI", "buoydata", "ConsensusClusterPlus")
+if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
+  ## exclude packages needing compilation
+  exP <- c("GVI", "buoydata", "ConsensusClusterPlus")  ## exclude "googledrive"?
   warning("RTools not detected. Some functionality will not be available")
 } else {
-  renv::install(c("pak", "Rcpp", "BiocManager"))
-  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
+  if(!require('pak')) {renv::install('pak', prompt = FALSE)}
+  if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
+  if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
   pak::pak("NOAA-EDAB/buoydata")
+  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
   renv::install("remotes", prompt = FALSE)
   remotes::install_git("https://github.com/STBrinkmann/GVI")
   exP <- NULL
@@ -48,12 +51,16 @@ if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG
   dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
   if (1) {
     require ('googledrive')
-    drive_download (file = "https://drive.google.com/file/d/1_XEEX9UcYFZeK-Q2j8WNiZr76loUOzof/view?usp=drive_link"
+    o1 <- options()
+    options(googledrive_quiet=TRUE)
+    googledrive::drive_download (file = "https://drive.google.com/file/d/1_XEEX9UcYFZeK-Q2j8WNiZr76loUOzof/view?usp=drive_link"
       , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
       , overwrite = TRUE)
-    drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
+    googledrive::drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
       , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
       , overwrite = TRUE)
+    options(o1) rm(o1)
+    unloadNamespace("googledrive")
   } else {
     ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann
     ## alternative: NC4 from https://portal.aoos.org/old/cibw#module-metadata/f1844c0d-11da-40ab-b963-9b6b222fe647/82284b16-a985-4233-86cd-242071a290c1
@@ -84,11 +91,11 @@ if(!file.exists("~/GISdata/LCI/.git/config")){
 }
 ## these may/should not be needed, but won't hurt
 dir.create("~/tmp/LCI_noaa/cache/", showWarnings = FALSE, recursive = TRUE)
+dir.create("~/tmp/LCI_noaa/cache-t/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/StateOfTheBay/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDcasts/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/media/CTDsections/", showWarnings = FALSE, recursive = TRUE)
 dir.create("~/tmp/LCI_noaa/data-products/", showWarnings = FALSE, recursive = TRUE)
-
 
 ## more GIS files
 ## setup working environment

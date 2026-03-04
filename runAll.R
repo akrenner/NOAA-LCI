@@ -1,25 +1,14 @@
 #! /usr/bin/env Rscript
 
-## Execute all Kachemak Bay/Cook Inlet scripts, 2020
+## Execute all Kachemak Bay/Cook Inlet scripts, 2020-2026+
 ## To run up-to-date analysis, connect to VPN in order to download latest SWMP
-## data from CDMO. Expect approximately 3 hours for a full run
+## data from CDMO. Expect approximately 3+ hours for a full run
 ## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
 
-## see instructions in SOP Manual on Google Drive
-## get the latest version of R scripts and data:
-## in Git Bash-n cd to ~/Documents/GISData/LCI and issue
-## git pull
-## then cd to this NOAA-LCI directory and issue
-## git pull
+## If you want to make your own changes to any of these scripts, learn about git
+## Then comment out the code below "for collaborators". As-is, this script will
+## overwrite any changes made to existing scripts.
 
-
-
-## features to work on:
-
-# add to time series (signature data)
-# boyyancy profile over time
-# max buoyancy over time
-# position of max buoyancy over time
 
 
 rm(list = ls())
@@ -40,17 +29,33 @@ ongoingY <- TRUE   # for quarterly update
 
 
 
-
+## This will only run once, getting required data and packages
 if(!file.exists(".initialized.rds")){
   source("InitialSetup.R")
   saveRDS(Sys.Date(), file=".initialized.rds")
 }
-hd <- getwd()
-setwd("~/GISdata/LCI/")
-system("git pull")
-setwd(hd); rm (hd)
 
 
+########################
+## for collaborators  ##
+## get latest updates ##
+########################
+
+if(length(grep("[M|m]artin", getwd())) < 1) {
+  ## for collaborators: pull latest versions from git and sync packages
+  system("git pull --force")
+  if(!renv::restore()$synchronized) {
+    renv::restore(prompt=FALSE, clean= TRUE)
+  }
+  hd <- getwd()
+  setwd("~/GISdata/LCI/")  ## fetch latest CTD data
+  system("git pull")
+  setwd(hd); rm (hd)
+}
+
+
+
+## testing/updating packages
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
   # require(usethis) ## for github rate limits
@@ -66,15 +71,16 @@ if(0) {
   # }
   # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
 
-
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
   badP <- c("GVI", "yaml")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
-    cat("\n\n##", badP [i], "##\n")
-    print(deps [which(deps$Package == badP[i]), 1])
+    if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
+      cat("\n\n##", badP [i], "##\n")
+      print(deps [which(deps$Package == badP[i]), 1])
+    } else {cat("No dependencies found for: ", paste(badP, collapse = ", "))}
   }
   rm(badP, deps)
 
@@ -87,13 +93,6 @@ if(0) {
 }
 
 
-if(length(grep("[M|m]artin", getwd())) > 0) {
-  ## for collaborators: pull latest versions from git and sync packages
-  system("git pull")
-  if(!renv::restore()$synchronized) {
-    renv::restore()
-  }
-}
 
 if(1) {
   ## run the first script interactively! :
