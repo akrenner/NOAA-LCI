@@ -59,7 +59,7 @@ if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG
     googledrive::drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
       , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
       , overwrite = TRUE)
-    options(o1) rm(o1)
+    options(o1); rm(o1)
     unloadNamespace("googledrive")
   } else {
     ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann

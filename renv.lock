@@ -532,22 +532,22 @@
     },
     "GSODR": {
       "Package": "GSODR",
-      "Version": "5.0.0",
+      "Version": "5.0.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Global Surface Summary of the Day ('GSOD') Weather Data Client",
-      "Authors@R": "c( person(\"Adam H.\", \"Sparks\", , \"adamhsparks@gmail.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-0061-8359\")), person(\"Tomislav\", \"Hengl\", , \"tom.hengl@isric.org\", role = \"aut\", comment = c(ORCID = \"0000-0002-9921-5129\")), person(\"Andrew\", \"Nelson\", , \"dr.andy.nelson@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0002-7249-3778\")), person(\"Hugh\", \"Parsonage\", , \"hugh.parsonage@gmail.com\", role = c(\"cph\", \"ctb\"), comment = c(ORCID = \"0000-0003-4055-0835\")), person(\"Taras\", \"Kaduk\", , \"taras.kaduk@gmail.com\", role = \"ctb\", comment = \"Suggestion for handling bulk station downloads more\\n        efficiently\"), person(\"Gwenael\", \"Giboire\", , \"gwenael.giboire@oda-groupe.com\", role = \"ctb\", comment = \"Several bug reports in early versions and testing feedback\"), person(\"Łukasz\", \"Pawlik\", , \"lukpawlik@gmail.com\", role = \"ctb\", comment = \"Reported bug in windspeed conversion calculation\"), person(\"Ross\", \"Darnell\", , \"Ross.Darnell@data61.csiro.au\", role = \"ctb\", comment = c(\"Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to\\n        fail\", ORCID = \"0000-0002-7973-6322\")), person(\"Tyler\", \"Widdison\", , \"Tyler.Widdison@usav.org\", role = \"ctb\", comment = \"Reported bug where\\n        `nearest_stations()` did not return stations in order of nearest to\\n        farthest\"), person(\"Wenbo\", \"Lv\", , \"lyu.geosocial@gmail.com\", role = \"ctb\", comment = \"Provided suggestions for improving documentation\"), person(\"Curtin University\", role = c(\"fnd\", \"cph\"), comment = c(url = \"http://www.curtin.edu.au/\", ROR = \"02n415q13\")), person(\"Grains Research and Development Corporation\", role = c(\"fnd\", \"cph\"), comment = c(Project = \"GRDC Project CUR2210-005OPX (AAGI-CU)\", ROR = \"02xwr1996\")) )",
-      "Description": "Provides automated downloading, parsing, cleaning, unit conversion and formatting of Global Surface Summary of the Day ('GSOD') weather data from the from the USA National Centers for Environmental Information ('NCEI').  Units are converted from from United States Customary System ('USCS') units to International System of Units ('SI').  Stations may be individually checked for number of missing days defined by the user, where stations with too many missing observations are omitted.  Only stations with valid reported latitude and longitude values are permitted in the final data.  Additional useful elements, saturation vapour pressure ('es'), actual vapour pressure ('ea') and relative humidity ('RH') are calculated from the original data using the improved August-Roche-Magnus approximation (Alduchov & Eskridge 1996) and included in the final data set.  The resulting metadata include station identification information, country, state, latitude, longitude, elevation, weather observations and associated flags.  For information on the 'GSOD' data from 'NCEI', please see the 'GSOD' 'readme.txt' file available from, <https://www1.ncdc.noaa.gov/pub/data/gsod/readme.txt>.",
+      "Authors@R": "c( person(\"Adam H.\", \"Sparks\", , \"adamhsparks@gmail.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-0061-8359\")), person(\"Tomislav\", \"Hengl\", , \"tom.hengl@isric.org\", role = \"aut\", comment = c(ORCID = \"0000-0002-9921-5129\")), person(\"Andrew\", \"Nelson\", , \"dr.andy.nelson@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0002-7249-3778\")), person(\"Hugh\", \"Parsonage\", , \"hugh.parsonage@gmail.com\", role = c(\"cph\", \"ctb\"), comment = c(ORCID = \"0000-0003-4055-0835\")), person(\"Taras\", \"Kaduk\", , \"taras.kaduk@gmail.com\", role = \"ctb\", comment = \"Suggestion for handling bulk station downloads more\\n        efficiently\"), person(\"Gwenael\", \"Giboire\", , \"gwenael.giboire@oda-groupe.com\", role = \"ctb\", comment = \"Several bug reports in early versions and testing feedback\"), person(\"Łukasz\", \"Pawlik\", , \"lukpawlik@gmail.com\", role = \"ctb\", comment = \"Reported bug in windspeed conversion calculation\"), person(\"Ross\", \"Darnell\", , \"Ross.Darnell@data61.csiro.au\", role = \"ctb\", comment = c(\"Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to\\n        fail\", ORCID = \"0000-0002-7973-6322\")), person(\"Tyler\", \"Widdison\", , \"Tyler.Widdison@usav.org\", role = \"ctb\", comment = \"Reported bug where\\n        `nearest_stations()` did not return stations in order of nearest to\\n        farthest\"), person(\"Wenbo\", \"Lv\", , \"lyu.geosocial@gmail.com\", role = \"ctb\", comment = \"Provided suggestions for improving documentation\"), person(\"Curtin University\", role = c(\"fnd\", \"cph\"), comment = c(url = \"http://www.curtin.edu.au/\", ROR = \"02n415q13\")) )",
+      "Description": "Provides automated downloading, parsing, cleaning, unit conversion and formatting of Global Surface Summary of the Day ('GSOD') weather data from the from the USA National Centers for Environmental Information ('NCEI').  The data were retired on 2025-08-29 and are no longer updated. Units are converted from from United States Customary System ('USCS') units to International System of Units ('SI').  Stations may be individually checked for number of missing days defined by the user, where stations with too many missing observations are omitted.  Only stations with valid reported latitude and longitude values are permitted in the final data.  Additional useful elements, saturation vapour pressure ('es'), actual vapour pressure ('ea') and relative humidity ('RH') are calculated from the original data using the improved August-Roche-Magnus approximation (Alduchov & Eskridge 1996) and included in the final data set.  The resulting metadata include station identification information, country, state, latitude, longitude, elevation, weather observations and associated flags.  For information on the 'GSOD' data from 'NCEI', please see the 'GSOD' 'readme.txt' file available from, <https://www.ncei.noaa.gov/pub/data/gsod/readme.txt>.",
       "License": "MIT + file LICENSE",
-      "URL": "https://docs.ropensci.org/GSODR/, https://github.com/ropensci/GSODR",
-      "BugReports": "https://github.com/ropensci/GSODR/issues",
+      "URL": "https://docs.ropensci.org/GSODR/, https://codeberg.org/ropensci/GSODR",
+      "BugReports": "https://codeberg.org/ropensci/GSODR/issues",
       "Depends": [
         "R (>= 3.5.0)"
       ],
       "Imports": [
+        "cli",
         "curl",
         "data.table (>= 1.15.4)",
-        "lifecycle",
         "R.utils",
         "stats",
         "utils",
@@ -569,7 +569,7 @@
       ],
       "VignetteBuilder": "knitr",
       "ByteCompile": "TRUE",
-      "Config/Needs/build": "moodymudskipper/devtag",
+      "Config/Needs/build": "maelle/devtag2",
       "Config/roxyglobals/filename": "globals.R",
       "Config/roxyglobals/unique": "FALSE",
       "Config/testthat/edition": "3",
@@ -582,7 +582,7 @@
       "X-schema.org-applicationCategory": "Tools",
       "X-schema.org-isPartOf": "https://ropensci.org",
       "X-schema.org-keywords": "US-NCEI, meteorological-data, global-weather, weather, weather-data, meteorology, station-data, surface-weather, data-access, US-NCDC",
-      "Author": "Adam H. Sparks [aut, cre] (ORCID: <https://orcid.org/0000-0002-0061-8359>), Tomislav Hengl [aut] (ORCID: <https://orcid.org/0000-0002-9921-5129>), Andrew Nelson [aut] (ORCID: <https://orcid.org/0000-0002-7249-3778>), Hugh Parsonage [cph, ctb] (ORCID: <https://orcid.org/0000-0003-4055-0835>), Taras Kaduk [ctb] (Suggestion for handling bulk station downloads more efficiently), Gwenael Giboire [ctb] (Several bug reports in early versions and testing feedback), Łukasz Pawlik [ctb] (Reported bug in windspeed conversion calculation), Ross Darnell [ctb] (Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to fail, ORCID: <https://orcid.org/0000-0002-7973-6322>), Tyler Widdison [ctb] (Reported bug where `nearest_stations()` did not return stations in order of nearest to farthest), Wenbo Lv [ctb] (Provided suggestions for improving documentation), Curtin University [fnd, cph] (url: http://www.curtin.edu.au/, ROR: <https://ror.org/02n415q13>), Grains Research and Development Corporation [fnd, cph] (Project: GRDC Project CUR2210-005OPX (AAGI-CU), ROR: <https://ror.org/02xwr1996>)",
+      "Author": "Adam H. Sparks [aut, cre] (ORCID: <https://orcid.org/0000-0002-0061-8359>), Tomislav Hengl [aut] (ORCID: <https://orcid.org/0000-0002-9921-5129>), Andrew Nelson [aut] (ORCID: <https://orcid.org/0000-0002-7249-3778>), Hugh Parsonage [cph, ctb] (ORCID: <https://orcid.org/0000-0003-4055-0835>), Taras Kaduk [ctb] (Suggestion for handling bulk station downloads more efficiently), Gwenael Giboire [ctb] (Several bug reports in early versions and testing feedback), Łukasz Pawlik [ctb] (Reported bug in windspeed conversion calculation), Ross Darnell [ctb] (Reported bug in 'Windows OS' versions causing 'GSOD' data untarring to fail, ORCID: <https://orcid.org/0000-0002-7973-6322>), Tyler Widdison [ctb] (Reported bug where `nearest_stations()` did not return stations in order of nearest to farthest), Wenbo Lv [ctb] (Provided suggestions for improving documentation), Curtin University [fnd, cph] (url: http://www.curtin.edu.au/, ROR: <https://ror.org/02n415q13>)",
       "Maintainer": "Adam H. Sparks <adamhsparks@gmail.com>"
     },
     "GVI": {
@@ -2440,7 +2440,7 @@
       "LazyData": "true",
       "RoxygenNote": "7.3.2",
       "Depends": [
-        "R (>= 4.1.0)"
+        "R (>= 3.5)"
       ],
       "Imports": [
         "dplyr",
@@ -2458,16 +2458,14 @@
         "plotly"
       ],
       "VignetteBuilder": "knitr",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "buoydata",
-      "RemoteUsername": "NOAA-EDAB",
-      "RemotePkgRef": "NOAA-EDAB/buoydata",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "e717f0a7bbbfd88117a79aa4227ee4beaef46192",
-      "NeedsCompilation": "no",
       "Author": "Andy Beet [aut, cre]",
-      "Maintainer": "Andy Beet <andrew.beet@noaa.gov>"
+      "Maintainer": "Andy Beet <andrew.beet@noaa.gov>",
+      "RemoteType": "github",
+      "RemoteUsername": "NOAA-EDAB",
+      "RemoteRepo": "buoydata",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "221381694254cbbe8c8eda14e5833cbbb155701c",
+      "RemoteHost": "api.github.com"
     },
     "cachem": {
       "Package": "cachem",
@@ -4315,31 +4313,30 @@
     },
     "factoextra": {
       "Package": "factoextra",
-      "Version": "1.0.7",
+      "Version": "2.0.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Extract and Visualize the Results of Multivariate Data Analyses",
-      "Date": "2020-04-01",
-      "Authors@R": "c( person(\"Alboukadel\", \"Kassambara\", role = c(\"aut\", \"cre\"), email = \"alboukadel.kassambara@gmail.com\"), person(\"Fabian\", \"Mundt\", role = c(\"aut\"), email = \"f.mundt@inventionate.de\") )",
-      "Description": "Provides some easy-to-use functions to extract and visualize the output of multivariate data analyses, including 'PCA' (Principal Component Analysis), 'CA' (Correspondence Analysis), 'MCA' (Multiple Correspondence Analysis), 'FAMD' (Factor Analysis of Mixed Data), 'MFA' (Multiple Factor Analysis) and 'HMFA' (Hierarchical Multiple Factor Analysis) functions from different R packages. It contains also functions for simplifying some clustering analysis steps and provides 'ggplot2' - based elegant data visualization.",
+      "Date": "2026-03-02",
+      "Authors@R": "c( person(\"Alboukadel\", \"Kassambara\", role = c(\"aut\", \"cre\"), email = \"alboukadel.kassambara@gmail.com\", comment = c(ORCID = \"0009-0002-9136-0791\")), person(\"Fabian\", \"Mundt\", role = \"aut\", email = \"f.mundt@inventionate.de\"), person(\"Laszlo\", \"Erdey\", role = \"ctb\", email = \"erdey.laszlo@econ.unideb.hu\", comment = c(ORCID = \"0000-0002-6781-4303\", affiliation = \"Faculty of Economics and Business, University of Debrecen, Hungary\", contribution = \"Modern compatibility fixes, tests, and maintenance updates\")) )",
+      "Description": "Provides easy-to-use functions to extract and visualize the output of multivariate data analyses, including 'PCA' (Principal Component Analysis), 'CA' (Correspondence Analysis), 'MCA' (Multiple Correspondence Analysis), 'FAMD' (Factor Analysis of Mixed Data), 'MFA' (Multiple Factor Analysis), and 'HMFA' (Hierarchical Multiple Factor Analysis) from different R packages. It also includes helpers for simplifying clustering analysis workflows and provides 'ggplot2'-based data visualization.",
       "License": "GPL-2",
       "LazyData": "true",
+      "LazyDataCompression": "xz",
       "Encoding": "UTF-8",
       "Depends": [
-        "R (>= 3.1.2)",
-        "ggplot2 (>= 2.2.0)"
+        "R (>= 4.1.0)",
+        "ggplot2 (>= 3.5.2)"
       ],
       "Imports": [
-        "abind",
-        "cluster",
-        "dendextend",
-        "FactoMineR",
-        "ggpubr(>= 0.1.5)",
+        "cluster (>= 2.1.8.2)",
+        "dendextend (>= 1.19.1)",
+        "FactoMineR (>= 2.13)",
+        "ggpubr (>= 0.6.3)",
         "grid",
+        "rlang (>= 1.1.7)",
         "stats",
-        "reshape2",
-        "ggrepel",
-        "tidyr"
+        "ggrepel (>= 0.9.5)"
       ],
       "Suggests": [
         "ade4",
@@ -4347,14 +4344,16 @@
         "igraph",
         "MASS",
         "knitr",
-        "mclust"
+        "mclust",
+        "testthat (>= 3.0.0)"
       ],
-      "URL": "http://www.sthda.com/english/rpkgs/factoextra",
+      "URL": "https://github.com/kassambara/factoextra, https://rpkgs.datanovia.com/factoextra/index.html",
       "BugReports": "https://github.com/kassambara/factoextra/issues",
       "Collate": "'cluster_utilities.R' 'decathlon2.R' 'print.factoextra.R' 'get_hmfa.R' 'fviz_hmfa.R' 'get_mfa.R' 'fviz_mfa.R' 'deprecated.R' 'fviz_add.R' 'eigenvalue.R' 'utilities.R' 'dist.R' 'fviz_dend.R' 'hcut.R' 'get_pca.R' 'fviz_cluster.R' 'eclust.R' 'facto_summarize.R' 'fviz.R' 'fviz_ca.R' 'fviz_contrib.R' 'fviz_cos2.R' 'fviz_ellipses.R' 'fviz_famd.R' 'get_mca.R' 'fviz_mca.R' 'fviz_mclust.R' 'fviz_nbclust.R' 'fviz_pca.R' 'fviz_silhouette.R' 'get_ca.R' 'get_clust_tendency.R' 'get_famd.R' 'hkmeans.R' 'housetasks.R' 'multishapes.R' 'poison.R' 'zzz.R'",
-      "RoxygenNote": "7.1.0",
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
       "NeedsCompilation": "no",
-      "Author": "Alboukadel Kassambara [aut, cre], Fabian Mundt [aut]",
+      "Author": "Alboukadel Kassambara [aut, cre] (ORCID: <https://orcid.org/0009-0002-9136-0791>), Fabian Mundt [aut], Laszlo Erdey [ctb] (ORCID: <https://orcid.org/0000-0002-6781-4303>, affiliation: Faculty of Economics and Business, University of Debrecen, Hungary, contribution: Modern compatibility fixes, tests, and maintenance updates)",
       "Maintainer": "Alboukadel Kassambara <alboukadel.kassambara@gmail.com>",
       "Repository": "CRAN"
     },
@@ -4458,18 +4457,20 @@
     },
     "flashClust": {
       "Package": "flashClust",
-      "Version": "1.01-2",
+      "Version": "1.1-4",
       "Source": "Repository",
-      "Date": "2012-08-21",
-      "Title": "Implementation of optimal hierarchical clustering",
-      "Author": "code by Fionn Murtagh and R development team, modifications and packaging by Peter Langfelder",
+      "Date": "2026-03-02",
+      "Title": "Implementation of Fast Hierarchical Clustering",
+      "Authors@R": "c(person(given = c(\"Fionn\"), family = \"Murtagh\", role = \"aut\"), person(given = c(\"\"), family = \"R development team\", role = \"aut\"), person(given = \"Peter\", family = \"Langfelder\", role = c(\"com\", \"cre\"), email = \"Peter.Langfelder@gmail.com\"))",
       "Maintainer": "Peter Langfelder <Peter.Langfelder@gmail.com>",
       "Depends": [
         "R (>= 2.3.0)"
       ],
       "ZipData": "no",
       "License": "GPL (>= 2)",
-      "Description": "Fast implementation of hierarchical clustering",
+      "Description": "A fast implementation of hierarchical clustering that incorporates original code from Fionn Murtagh.",
+      "NeedsCompilation": "yes",
+      "Author": "Fionn Murtagh [aut], R development team [aut], Peter Langfelder [com, cre]",
       "Repository": "CRAN"
     },
     "fontawesome": {
@@ -5058,11 +5059,11 @@
     },
     "geosphere": {
       "Package": "geosphere",
-      "Version": "1.5-20",
+      "Version": "1.6-5",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Spherical Trigonometry",
-      "Date": "2024-10-02",
+      "Date": "2026-03-01",
       "LinkingTo": [
         "Rcpp"
       ],
@@ -5075,8 +5076,8 @@
       ],
       "Suggests": [
         "methods",
-        "raster",
-        "terra"
+        "terra",
+        "sf"
       ],
       "Authors@R": "c( person(\"Robert J.\", \"Hijmans\", role = c(\"cre\", \"aut\"),  email = \"r.hijmans@gmail.com\"), person(\"Charles\", \"Karney\", role = \"ctb\", comment=\"GeographicLib\"),\t person(\"Ed\", \"Williams\", role = \"ctb\"), person(\"Chris\", \"Vennes\", role = \"ctb\"))",
       "Description": "Spherical trigonometry for geographic applications. That is, compute distances and related measures for angular (longitude/latitude) locations.",
@@ -8078,7 +8079,7 @@
     },
     "magick": {
       "Package": "magick",
-      "Version": "2.9.0",
+      "Version": "2.9.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Advanced Graphics and Image-Processing in R",
@@ -8117,7 +8118,7 @@
         "gifski"
       ],
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "Language": "en-US",
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>)",
@@ -8604,7 +8605,7 @@
     },
     "mirai": {
       "Package": "mirai",
-      "Version": "2.6.0",
+      "Version": "2.6.1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Minimalist Async Evaluation Framework for R",
@@ -8621,6 +8622,7 @@
       ],
       "Suggests": [
         "cli",
+        "later",
         "litedown",
         "otel",
         "otelsdk",
@@ -14902,7 +14904,7 @@
     },
     "xts": {
       "Package": "xts",
-      "Version": "0.14.1",
+      "Version": "0.14.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "eXtensible Time Series",
