@@ -185,7 +185,6 @@ rm (turbM, turb, turbC, poNorm)
 #   unlist())
 physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function(i){
-                                    # require("oce")
                                     cast <- subset(physOc, File.Name == levels(physOc$File.Name)[i])
                                     bvf <- oce::swN2(pressure=cast$Pressure..Strain.Gauge..db.
                                                        , sigmaTheta=cast$Density_sigma.theta.kg.m.3
@@ -309,10 +308,7 @@ rm(tRange)
 tPhase <- function(tstmp, lat, lon){  ## REVIEW THIS! XXX
   ## return radians degree of tidal phase during cast
   poSS$sunAlt <- with(poSS, suncalc::getSunlightPosition(data = data.frame(date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
-  ## require(oce)
-  ## poSS$sunAlt <- with(poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
 }
-# POss$tidePhase <- unlist(mclapply(poSS$timeStamp, mc.cores=nCPUs))
 rm(tPhase)
 
 
@@ -411,12 +407,10 @@ poSS$FreshWaterCont <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=funct
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  # require("readr")
   fW <- subset(physOc,(File.Name==fn) &(Depth.saltwater..m. > deepThd))
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep2 <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  # require("readr")
   fW <- subset(physOc, File.Name==fn) |>
     subset(Depth.saltwater..m. > 40)
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
@@ -549,12 +543,8 @@ save.image("~/tmp/LCI_noaa/cache-t/troublesPO.RData")
 SCo <- stn[match(poSS$Match_Name, stn$Match_Name)
            , names(stn) %in% c("Lon_decDegree", "Lat_decDegree")]
 SCo <- as.matrix(cbind(SCo, cbind(poSS$longitude_DD, poSS$latitude_DD)))
-# require("oce") ## reduce number of dependencies
 StDis <- oce::geodDist(SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
-# require("fields")  ## use oce here instead?
-# StDis <- sapply(1:nrow(SCo), FUN = function(i){
-#     rdist.earth(matrix(SCo [i,1:2], nrow = 1), matrix(SCo [i,3:4], nrow = 1), miles = FALSE)
-# })
+
 # The two are close but not as identical as they should be
 StDis <- ifelse(is.na(StDis), 0, StDis) # NAs are being weird, ignore them!
 StDisA <- data.frame(poSS$File.Name, StDis)[StDis > 1,]
@@ -718,9 +708,6 @@ if(printSampleDates){
 #################
 
 zoop <- read.csv("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton.csv", as.is = TRUE)
-
-## require("XLConnect")
-## stn <- readWorksheetFromFile("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
 ## stn <- subset(stn, !is.na(Lon_decDegree))
 
 ## georeference zoop table
@@ -766,15 +753,12 @@ if(length(grep("plastic", zoop$Species)) > 0){
 }
 # substring(zoop$Species, 1,1) <- toupper(substring(zoop$Species, 1,1)) # not working ?
 zoop$Species <- paste(toupper(substring(zoop$Species, 1,1)) , substring(zoop$Species, 2, 100), sep = "")
-print(sort(levels(factor(zoop$Species))))
+# print(sort(levels(factor(zoop$Species))))
 
 ## lookup depth from field notes
 base::load("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
 zoop$Depth <- sam$Depth [match(zoop$SampleID, sam$SampleID)]
 zoop$Depth <- ifelse(zoop$Depth > 60, 50, zoop$Depth)
-
-save.image("~/tmp/LCI_noaa/cache-t/fileDump.RData")
-# rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/fileDump.RData")
 
 ## export zooplankton data to standardized file(matching first columns as in CTD aggregates)
 zoopOut <- with(zoop, data.frame(Station = Match_Name, Date = isoDate, Time
@@ -956,13 +940,11 @@ latL <- c(58.8,60.6)
 
 
 # require("sp"); require("rgdal"); require("rgeos") # for gBuffer
-# require("sp")
 require("sf")
 
 
 spTran <- function(x, p4){
-  require("sf")
-  suppressWarnings(y <- st_transform(x, p4))
+  suppressWarnings(y <- sf::st_transform(x, p4))
   return(y)
 }
 
@@ -1022,7 +1004,6 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-# require("zip")
 tD <- tempdir()
 zip::unzip("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
@@ -1117,33 +1098,28 @@ rm(spTran, pr)
 ## AOOS model data:
 ## - Tidal current speed
 if(0){ ## not working?
-  require(ncdf4)
   url <- "http://thredds.aoos.org/thredds/dodsC/NOAA_CSDL_ROMS.nc?lon[0:1:787][0:1:145],lat[0:1:787][0:1:145],u[0:1:532][0][0:1:787][0:1:145],v[0:1:532][0][0:1:787][0:1:145],time[0:1:532]" # 500 MB? -- only need climatology; how to do that?
   ## or could actually look up individual pixels
-  con <- nc_open(url)
+  con <- ncdf4::nc_open(url)
   print(con)
-  lon <- ncvar_get(con, "lon")
-  lat <- ncvar_get(con, "lat")
-  u <- ncvar_get(con, "u")
-  v <- ncvar_get(con, "v")
+  lon <- ncdf4::ncvar_get(con, "lon")
+  lat <- ncdf4::ncvar_get(con, "lat")
+  u <- ncdf4::ncvar_get(con, "u")
+  v <- ncdf4::ncvar_get(con, "v")
 }
 
 ## match stnP and birds at different levels of buffer
 # for(i in length(stnB)){
 
-# require("rgeos")
 require("gdistance")
 require("parallel")
 bDist <- function(stnL){
-    ## stnL is SpatialPointsDataFrame
-    ## buffDist <- unlist(mclapply(1:nrow(stnL), FUN = function(i){
-    buffDist <- sapply(1:nrow(stnL), FUN = function(i){
-        sDis <- gdistance(stnL [i,], stnL, byid = TRUE)
-        bufD <- min(subset(sDis, sDis > 0)) / 2
-        return(bufD)
-    }
-    )
-    ## )
+  ## stnL is SpatialPointsDataFrame
+  buffDist <- sapply(1:nrow(stnL), FUN = function(i){
+    sDis <- gdistance::gdistance(stnL [i,], stnL, byid = TRUE)
+    bufD <- min(subset(sDis, sDis > 0)) / 2
+    return(bufD)
+  })
 }
 ## stnB <- mean(bDist(stn))
 ## stnB <- mean(bDist(subset(stn, stn$Plankton)))
