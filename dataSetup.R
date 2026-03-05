@@ -940,6 +940,7 @@ if(printSampleDates){
 ## seabirds ##
 ##############
 
+if(file.exists("~/tmp/NPPSDv2countW_-1.RData")) {
 stnB <- c(1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
@@ -1016,7 +1017,7 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 # slot(phyCenv, "proj4string") <- LLprj
 # slot(zooCenv, "proj4string") <- LLprj
 # slot(NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
-
+}
 
 
 ## coastline from gshhs
