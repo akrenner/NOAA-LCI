@@ -1,6 +1,7 @@
 ## frequency of Alexandrium and Pseudo-nitschia in phytoplankton samples
 rm(list=ls())
 ## 9 years go look at quantitatively
+if(0) {
 phyt <- read.csv("~/GISdata/LCI/phytoplankton/phytoplankton.csv", skip = 1)
 # phyt2 <- read.csv("~/tmp/LCI_noaa/data-products/phytoplankton.csv", skip = 1)
 
@@ -43,7 +44,6 @@ phyt [which.max(phyt$Pseudo.nitzschia.spp..),1:7]
 
 t9 <- subset (phyt, phyt$Station=="9_6")
 
-
 plot(log1p(Alexandrium.spp.)~ISOtime, t9)
 plot(log1p(Pseudo.nitzschia.spp.)~ISOtime, t9)
 
@@ -57,7 +57,7 @@ summary(phyt$Pseudo.nitzschia.spp.)
 summary(phyt$Alexandrium.spp.)
 
 
-
+}
 
 
 
@@ -177,7 +177,7 @@ par(mfrow=c(2,1), mar=c(1,4,2,1), oma=c(2, .5, .5, .5))
 
 spL <- c("Pseudo_nitzschia", "Alexandrium")
 cols <-  rev(RColorBrewer::brewer.pal(3, "Set1"))
-for(i in seq_along(spL)) {
+for(i in 2:1) {
   kp <- kphyto
   kp$spp <- kp[,which(names(kp)==spL[i])]
   kp$spp <- factor(kp$spp, levels = rev(levels(kp$Alexandrium)))
@@ -190,11 +190,10 @@ for(i in seq_along(spL)) {
 
   crds <- barplot(t(proTmp), col = cols,
     main = c("Pseudo-nitschia spp.", "Alexandrium spp.")[i],
-    ylab=""
-    , ylim=c(0, 0.8)
+    ylab="", ylim=list(c(0, 0.8), c(0,0.24))[[i]]
     )
 
-  if(i==1){legend("topleft", legend=c("present", "abundant", "bloom")
+  if(i==2){legend("topleft", legend=c("present", "abundant", "bloom")
                   , fill=cols, bty="n")
   } else{
     pIdx <- seq_along(aClass$year)
@@ -215,17 +214,22 @@ if(0){
   hist(summary(factor(kphyto$year)), main="Samples per year", xlab="")
   plot(summary(factor(kphyto$year))~levels(factor(kphyto$year)), type="l"
        , ylab="N samples", xlab="year", ylim=c(0,510))
+
+  pdf("~/tmp/LCI_noaa/media/HAB/hab-timeseries.pdf", height=4, width=7)
+  pcol <- c("brown", "red")
+  plot(P_pa~year, annualP, type="b", col=pcol[1], lwd=3, ylim=c(0,max(annualP$P_pa)),
+       ylab="Proportion of positive samples")
+  points (A_pa~year, annualP, type="b", col=pcol[2], lwd=3, new=TRUE)
+  legend("topleft", bty="n", legend=c("Pseudo-nitschia", "Alexandrium"), lwd=3, col=pcol)
+  dev.off()
+
 }
 
 
-pdf("~/tmp/LCI_noaa/media/HAB/hab-timeseries.pdf", height=4, width=7)
-pcol <- c("brown", "red")
-plot(P_pa~year, annualP, type="b", col=pcol[1], lwd=3, ylim=c(0,max(annualP$P_pa)),
-     ylab="Proportion of positive samples")
-points (A_pa~year, annualP, type="b", col=pcol[2], lwd=3, new=TRUE)
-legend("topleft", bty="n", legend=c("Pseudo-nitschia", "Alexandrium"), lwd=3, col=pcol)
-dev.off()
 
+
+## stack temp months plots (2+)
+## same x-lim as HAB plot
 
 
 
@@ -236,39 +240,88 @@ CTD$timeStamp <- as.POSIXct(CTD$timeStamp)
 # SWMP <- read
 
 ## bottom time over 8 degrees C
-stN <- c("AlongBay_7", "9_6")
 
-pdf("~/tmp/LCI_noaa/media/HAB/TS_bottomTemp.pdf", height=8, width=7)
-par(mfrow=c(2,1), mar=c(1,4,2,1), oma=c(3, 0, .5, .5))
+pdf("~/tmp/LCI_noaa/media/HAB/TS_TempBottom_days.pdf", height=5, width=7)
 
-for (i in seq_along(stN)) {
-  cStn <- subset(CTD, Match_Name == stN [i])
-  if(0) {
-  # ## use natural spline to get better estimates of time > 8 degrees  --  wild swings, currently not useful
-  # iTmp <- spline(x=cStn$timeStamp, y=cStn$TempBottom
-  #                , xout=seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
-  #                , method="natural")  ## options: fmm, natural, periodic, hyman
-  # iTmp$x <- as.POSIXct(iTmp$x)
-  # plot(iTmp, type="l")
+stN <- c("AlongBay_7", "9_6", "AlongBay_5")
+cols <- RColorBrewer::brewer.pal(length(stN), "Set2")
+
+plot(TempBottom~Year, data = CTD, ylim=c(25,165), type="n",
+     xlim=c(min(kphyto$year), max(kphyto$year)),
+     xlab="Year", ylab="Time with bottom temperature > 8 °C [days]"
+     , main="Temperature")
+for(i in seq_along(stN)) {
+  cStn <- subset(CTD, Match_Name==stN[i])
+  # if(stN[i] == "AlongBay_7") {cStn <- subset(cStn, Year > 2016)}
+  spl <- with(cStn, smooth.spline(x=timeStamp, y=TempBottom, cv = TRUE))
+  ## lFit <- loess(TempBottom~timeStamp, data = cStn)
+  nData <- seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
+  splInt <- predict(spl, x = as.numeric(nData))
+  sDF <- data.frame(timeStamp=as.POSIXct(splInt$x), TempBottom=splInt$y)
+  sDF$Year <- as.numeric(format(sDF$timeStamp, "%Y"))
+  rm(spl, nData, splInt)
+
+  sY <- c(2016, 2012, 2016)[i]
+  sDF <- subset(sDF, (sY < Year) & (Year < 2026))
+
+  # plot (aggregate(TempBottom~Year, data = sDF, function(x){sum(x > 8)})
+  #        , type = "b", col = i
+  # )
+  lines (aggregate(TempBottom~Year, data = sDF, function(x){sum(x > 8)})
+         , type = "b", col = cols[i], lwd=3
+         )
 }
-
-  cStn <- subset(cStn, Year < 2026)
-
-  cMY <- aggregate(TempBottom~month+Year, data = cStn, FUN=mean)
-  plot (aggregate(TempBottom~Year, data = cMY, function(x){sum(x > 8)})
-        , type="b", ylab="", xlab="", axes = FALSE
-        , main = c("AlongBay-7, depth: 144 m", "T9-6, depth: 100 m")[i] #stN[i]
-        )
-  axis(2)
-  box()
-}
-axis(1)
-# pIdx <- seq_along(aClass$year)
-# pIdx <- pIdx[which(pIdx %% 2 == 0)]
-# mtext(aClass$year[pIdx], at = crds[pIdx], side = 1, line = 0.5)
-mtext("Year", side=1, line = 2.5)
-mtext("Time with bottom temperature > 8 °C [months]", side=2, outer=TRUE, line = -1.6)
+legend("topleft", legend=c("AlongBay-7", "T9-6", "AlongBay-5"),
+       lwd=3, col=cols[1:i], bty="n")
 dev.off()
+rm(stN, cols, sDF, cStn)
+
+
+
+##########################
+## timing of temperature #
+##########################
+
+pdf("~/tmp/LCI_noaa/media/HAB/TS_TempTiming.pdf", height=5, width=7)
+
+stN <- c("AlongBay_7", "9_6", "AlongBay_5")
+cols <- RColorBrewer::brewer.pal(length(stN), "Set2")
+yR <- c(175, 247)
+
+plot(TempBottom~Year, data = CTD, ylim=yR, type="n",
+     xlim=c(min(kphyto$year), max(kphyto$year)),
+     xlab="Year", ylab="First day with bottom temperature > 8 °C",
+     main="Timing of warming", axes = FALSE)
+axis(1)
+axis(2, at=pretty(yR),
+  labels = format(seq(as.POSIXct("2026-01-01 12:00"), as.POSIXct("2026-12-31 12:00"),
+    by="1 day"), "%d %b")[pretty(yR)+1])
+box()
+for(i in seq_along(stN)) {
+  cStn <- subset(CTD, Match_Name==stN[i])
+  ## fit spline for interpolating threshold day
+  spl <- with(cStn, smooth.spline(x=timeStamp, y=TempBottom, cv = TRUE))
+  ## lFit <- loess(TempBottom~timeStamp, data = cStn)
+  nData <- seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
+  splInt <- predict(spl, x = as.numeric(nData))
+  sDF <- data.frame(timeStamp=as.POSIXct(splInt$x), TempBottom=splInt$y)
+  sDF$Year <- as.numeric(format(sDF$timeStamp, "%Y"))
+  rm(spl, nData, splInt)
+
+  sY <- c(2016, 2012, 2016)[i]
+  sDF <- subset(sDF, (sY < Year) & (Year < 2026))
+
+  # plot (aggregate(TempBottom~Year, data = sDF, function(x){min(which(x > 8))})
+  #        , type = "b", col = i
+  # )
+  lines (aggregate(TempBottom~Year, data = sDF, function(x){min(which(x > 8))})
+         , type = "b", col = cols[i], lwd=3
+  )
+}
+legend("topleft", legend=c("AlongBay-7", "T9-6", "AlongBay-5"),
+  lwd=3, col=cols[1:i], bty="n")
+dev.off()
+rm(cols, sDF, cStn)
 
 
 ## predictive variables to extract/calculate from t96:
@@ -281,6 +334,8 @@ dev.off()
 # mChl: mean Chlorophyl conc in preceeding N days
 # mPCL: mean depth of pycnocline in preceeding N days
 # mStab: mean stability
+
+if(0) {## not yet
 
 ctdEx <- function(Match_Name = "9_6", sdate, thrT=8, Nd=40) {
   tPr <- subset(CTD, CTD$Match_Name==Match_Name)
@@ -337,6 +392,6 @@ randomForest::varImpPlot(rf)
 
 # rf <- randomForestSRC::
 
-
+}
 
 
