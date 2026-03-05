@@ -293,9 +293,10 @@ plot(TempBottom~Year, data = CTD, ylim=yR, type="n",
      xlab="Year", ylab="First day with bottom temperature > 8 °C",
      main="Timing of warming", axes = FALSE)
 axis(1)
-axis(2, at=pretty(yR),
+fD <- 2
+axis(2, at=pretty(yR)+fD,
   labels = format(seq(as.POSIXct("2026-01-01 12:00"), as.POSIXct("2026-12-31 12:00"),
-    by="1 day"), "%d %b")[pretty(yR)+1])
+    by="1 day"), "%d %b")[pretty(yR)+fD])
 box()
 for(i in seq_along(stN)) {
   cStn <- subset(CTD, Match_Name==stN[i])
