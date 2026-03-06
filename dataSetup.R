@@ -925,6 +925,7 @@ if(printSampleDates){
 ##############
 
 if(file.exists("~/tmp/NPPSDv2countW_-1.RData")) {
+
 stnB <- c(1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
 
@@ -999,6 +1000,12 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 # slot(phyCenv, "proj4string") <- LLprj
 # slot(zooCenv, "proj4string") <- LLprj
 # slot(NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
+} else {
+  stnP <- stn
+  stnP <- st_as_sf(stnP, coords=c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)  ## add LLprj
+  poSS <- st_as_sf(poSS, coords=c("longitude_DD", "latitude_DD"), crs=LLprj, remove=FALSE)
+  phyCenv <- st_as_sf(phyCenv, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
+  zooCenv <- st_as_sf(zooCenv, coords= c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)
 }
 
 

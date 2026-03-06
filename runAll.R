@@ -9,6 +9,8 @@
 ## Then comment out the code below "for collaborators". As-is, this script will
 ## overwrite any changes made to existing scripts.
 
+## See the Manual for instructions for an initial run on a new computer.
+
 
 
 rm(list = ls())
