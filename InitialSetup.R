@@ -51,12 +51,12 @@ dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 
 ## use KBL bathymetry, rather than recreate it
 isNCCOS <- dir.exists("G:/Shared\ drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/")
+if(!isNCCOS){warning("If you are with NCCOS, your Google Drive does not appear to be mapped to the G: drive. Please fix this, then re-run 'source(\"InitialSetup.R\")'
+If you are not with NCCOS, you may need to copy these files manually (see the Manual).")}
 
 
 
 ## bathymetry
-if(!isNCCOS){warning("If you are with NCCOS, your Google Drive does not appear to be mapped to the G: drive. Please fix this, then re-run 'source(\"InitialSetup.R\")'
-If you are not with NCCOS, you may need to copy these files manually (see the Manual).")}
 if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"))) {
   if(isNCCOS) {
     file.copy("G:\Shared\ drives\NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff",
