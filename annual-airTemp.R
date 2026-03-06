@@ -4,7 +4,6 @@ if (!exists("quarterly")) {
   rm(list = ls())
   quarterly <- TRUE
 }
-# setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 

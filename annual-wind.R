@@ -10,8 +10,6 @@ if (!exists ("quarterly")) {
 }
 
 
-# setwd("~/myDocs/amyfiles/NOAA-LCI/")
-# setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
 
 
 ##########################################################

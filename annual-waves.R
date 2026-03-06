@@ -3,7 +3,6 @@
 ## wave height from bouy data ##
 ################################
 
-# setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 if (!exists ("quarterly")) {

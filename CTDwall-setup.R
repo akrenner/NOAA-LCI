@@ -12,13 +12,6 @@
 rm(list = ls()); base::load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
 # rm(list = ls()); base::load("~/tmp/LCI_noaa/cache/dataSetupEnd.RData")
 
-if(length(grep("NOAA-LCI", getwd())) < 1){  ## not really needed -- for convenience
-  if(length(grep("darwin", version$os)) > 0) {
-    setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-  } else {
-    try(setwd("~/myDocs/amyfiles/NOAA-LCI/"))
-  }
-}
 
 ## link physOc and stn
 ## should be poSS and stn -- check!

@@ -1,7 +1,6 @@
 ## nutrient data is sampled only about monthly; not working within existing
 ## plotting framework. Consider custom approach. Worth the pain=?
 
-# setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 if (!exists ("quarterly")) {
   rm (list = ls())
   quarterly <- TRUE
