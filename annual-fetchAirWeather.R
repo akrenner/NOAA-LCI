@@ -80,19 +80,26 @@ rerddap::cache_setup(full_path="~/tmp/LCI_noaa/cache/noaaBuoy/")
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
+## weather from Homer Airport
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
 nAiro <- try(getNOAA("HMSA2"))
-##
+
+## buoydata
 nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
 wave.46108 <- nWave
 
 
 
-# weather.homer.spit <- getNOAAweather(stationID="xxx")
+# weather.homer.spit <- getNOAAweather(stationID="HOMER SPIT") -- has precipitation! (in mm?)
 
+## print available station
+
+
+## fetch a lot of weather -- none currently with precipitation?
+## move to daily summaries?
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
-
-weatherL <- list(homer.airport = gNOAAS(station = "Homer Airport", clearcache = clearC, cacheF = cF, showsites = TRUE)  ## Homer Airport weather station)
+weatherL <- list(homer.airport = gNOAAS(station = "Homer AP", clearcache = clearC
+    , cacheF = cF, showsites = TRUE)  ## Homer Airport weather station)
   , homer.spit = gNOAAS(station = "Homer Spit", clearcache = clearC, cacheF = cF)  ## Homer Spit weather station
   , homer.spit2 = gNOAAS(station = "KACHEMAK BAY RESERVE", clearcache = clearC, cacheF = cF)  ## SWMP Homer Spit weather station
   , kachomet = sAir
