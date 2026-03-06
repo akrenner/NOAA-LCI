@@ -923,6 +923,7 @@ if(printSampleDates){
 ##############
 ## seabirds ##
 ##############
+LLprj <- 4326
 
 if(file.exists("~/tmp/NPPSDv2countW_-1.RData")) {
 
@@ -932,7 +933,6 @@ stnB <- 10e3                           # buffer -- 10 km
 # require("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 # LLprj <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
-LLprj <- 4326
 
 
 ## bounding-box for LCI
@@ -1000,12 +1000,13 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 # slot(phyCenv, "proj4string") <- LLprj
 # slot(zooCenv, "proj4string") <- LLprj
 # slot(NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
+
 } else {
   stnP <- stn
-  stnP <- st_as_sf(stnP, coords=c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)  ## add LLprj
-  poSS <- st_as_sf(poSS, coords=c("longitude_DD", "latitude_DD"), crs=LLprj, remove=FALSE)
-  phyCenv <- st_as_sf(phyCenv, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
-  zooCenv <- st_as_sf(zooCenv, coords= c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)
+  stnP <- sf::st_as_sf(stnP, coords=c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)  ## add LLprj
+  poSS <- sf::st_as_sf(poSS, coords=c("longitude_DD", "latitude_DD"), crs=LLprj, remove=FALSE)
+  phyCenv <- sf::st_as_sf(phyCenv, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
+  zooCenv <- sf::st_as_sf(zooCenv, coords= c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)
 }
 
 
@@ -1157,25 +1158,26 @@ require("dplyr")
 birds <- bind_rows(xo)                 # 10 s
 print(warnings())
 
-birds <- with(birds, cbind(SampleID = paste(Match_Name
-                                             , format(startTime, format = "%Y-%m-%d"
-                                                     , usetz = FALSE))
-                    #      , Match_Name
-                           , season = Seasonal(format(startTime, format = "%m"))
-                           , birds))
-birdS <- subset(birds, birds$SampleID %in% poSS$SampleID) # specific to sample time
-birdS <- birds []    ### what's this for??? FIX this XXX
+if(exists("birds")) {
+  birds <- with(birds, cbind(SampleID = paste(Match_Name
+                                              , format(startTime, format = "%Y-%m-%d"
+                                                       , usetz = FALSE))
+                             #      , Match_Name
+                             , season = Seasonal(format(startTime, format = "%m"))
+                             , birds))
+  birdS <- subset(birds, birds$SampleID %in% poSS$SampleID) # specific to sample time
+  birdS <- birds []    ### what's this for??? FIX this XXX
 
-## further trim species list in birdS
-bC <- birdS [,which(names(birdS) == "ALTE"):ncol(birdS)]
-bC <- bC [,which(colSums(bC) > 0)]
-birdS <- cbind(birdS [,1:which(names(birdS) == "jdate")]
-               , bC); rm(bC)
-## pro-rate unidentified spp  XXXX
+  ## further trim species list in birdS
+  bC <- birdS [,which(names(birdS) == "ALTE"):ncol(birdS)]
+  bC <- bC [,which(colSums(bC) > 0)]
+  birdS <- cbind(birdS [,1:which(names(birdS) == "jdate")]
+                 , bC); rm(bC)
+  ## pro-rate unidentified spp  XXXX
 
-rm(findBirds, lBuff, birds)
-rm(stnB)
-
+  rm(findBirds, lBuff, birds)
+  rm(stnB)
+}
 ## birdS:
 ## these are specific to samples! Samples may not be independent, i.e. may contain overlapping
 ## bird observations, if sample sites within buffer distance of each other!  Do NOT use this for

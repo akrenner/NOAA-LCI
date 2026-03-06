@@ -42,47 +42,82 @@ unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 
 
 
-## --------------- ensure data is available locally ---------------
-bDir <- "~/GISdata/LCI/bathymetry/"
+## --------------- ensure data is available locally --------------- ##
+cat ("\n##\n## Downloading more required datasets for initial setup\n##\n")
 
+bDir <- "~/GISdata/LCI/bathymetry/"
+dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
+dir.create ("~/GISdata/SWMP/", recursive = TRUE)
+
+## use KBL bathymetry, rather than recreate it
+isNCCOS <- dir.exists("G:/Shared\ drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/")
+
+
+
+## bathymetry
+if(!isNCCOS){warning("If you are with NCCOS, your Google Drive does not appear to be mapped to the G: drive. Please fix this, then re-run 'source(\"InitialSetup.R\")'
+If you are not with NCCOS, you may need to copy these files manually (see the Manual).")}
 if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"))) {
-  cat ("\n##\n## Downloading more required datasets for initial setup\n##\n")
-  ## use KBL bathymetry, rather than recreate it
-  dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
-  if (1) {
+  if(isNCCOS) {
+    file.copy("G:\Shared\ drives\NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff",
+              to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"),
+              overwrite=FALSE, copy.date=TRUE)
+    file.copy("G:\Shared\ drives\NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff",
+              to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff"),
+              overwrite=FALSE, copy.date=TRUE)
+  } else {
+    ## find alternative way to download these files. This may not work anymore?
     require ('googledrive')
     o1 <- options()
     options(googledrive_quiet=TRUE)
     googledrive::drive_download (file = "https://drive.google.com/file/d/1_XEEX9UcYFZeK-Q2j8WNiZr76loUOzof/view?usp=drive_link"
-      , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
-      , overwrite = TRUE)
+                                 , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
+                                 , overwrite = TRUE)
     googledrive::drive_download (file = "https://drive.google.com/file/d/1W8ie9YHEoneJne75d2flTT5QJqDKhapp/view?usp=drive_link"
-      , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
-      , overwrite = TRUE)
+                                 , path = paste0 (bDir, "KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff")
+                                 , overwrite = TRUE)
     options(o1); rm(o1)
     unloadNamespace("googledrive")
-  } else {
-    ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann
-    ## alternative: NC4 from https://portal.aoos.org/old/cibw#module-metadata/f1844c0d-11da-40ab-b963-9b6b222fe647/82284b16-a985-4233-86cd-242071a290c1
-    options (timeout = max (300, getOption ("timeout"))) # allow up to 5 minutes for downloads
-    ch <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/Cook_bathymetry_grid.zip"
-      , destfile = paste0 (bDir, "Cook_bathymetry_grid.zip"), quiet = FALSE)
-    ci <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/CGOA_bathymetry_grid.zip"
-      , destfile = paste0 (bDir, "CGOA_bathymetry_grid.zip"), quiet = FALSE)
-    if (ch != 0 || ci != 0) {
-      stop ("\nOne of the downloads were unsuccessful. Try again or download the bathymetry files manually.\n")
-    }
-    ## expand zip files
-    unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir = paste0 (bDir, "Cook_bathymetry_grid/"))
-    unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir = paste0 (bDir, "CGOA_bathymetry_grid/"))
-    source ("Currents/bathymetry-merge.R")
   }
 }
+
+## SWMP data
+if(length(list.files("~/GISdata/LCI/SWMP/", ".zip")) < 1) {
+  if(isNCCOS){
+    file.copy("G:/Shared drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Data-Archivable_Only/Recurring_Oceanographic_Survey/Archive\ of\ partner\ data/SWMP-example/656839.zip",
+              to="~/GISdata/LCI/SWMP/656839.zip", overwrite=TRUE)
+  } else {
+    ## should find a way to get this from another online storage
+    warning("SWMP data will be needed. Please see the Manual on how to download the Kachemak Bay SWMP \ndata from CDMO. Then place the zip file into '~/GISdata/LCI/SWMP/'")
+  }
+}
+
+rm(isNCCOS)
+
+
+## for reference only, here are the Zimmerman bathymetries:
+if(0) {
+  ## these were supposed to be on NOAA servers, but NOAA dropped the ball. Credit: Mark Zimmermann
+  ## alternative: NC4 from https://portal.aoos.org/old/cibw#module-metadata/f1844c0d-11da-40ab-b963-9b6b222fe647/82284b16-a985-4233-86cd-242071a290c1
+  options (timeout = max (300, getOption ("timeout"))) # allow up to 5 minutes for downloads
+  ch <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/Cook_bathymetry_grid.zip"
+                       , destfile = paste0 (bDir, "Cook_bathymetry_grid.zip"), quiet = FALSE)
+  ci <- download.file ("http://web.archive.org/web/20170513133945/https://www.afsc.noaa.gov/RACE/groundfish/Bathymetry/CGOA_bathymetry_grid.zip"
+                       , destfile = paste0 (bDir, "CGOA_bathymetry_grid.zip"), quiet = FALSE)
+  if (ch != 0 || ci != 0) {
+    stop ("\nOne of the downloads were unsuccessful. Try again or download the bathymetry files manually.\n")
+  }
+  ## expand zip files
+  unzip (paste0 (bDir, "Cook_bathymetry_grid.zip"), exdir = paste0 (bDir, "Cook_bathymetry_grid/"))
+  unzip (paste0 (bDir, "CGOA_bathymetry_grid.zip"), exdir = paste0 (bDir, "CGOA_bathymetry_grid/"))
+  source ("Currents/bathymetry-merge.R")
+}
+
+
 
 
 ## get data from GitHub
 # .... still need to add this here. rsync would be ideal.
-dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 if(!file.exists("~/GISdata/LCI/.git/config")){
   hd <- getwd()
   setwd ("~/GISdata/")
@@ -131,7 +166,7 @@ options (timeout = max (1200, getOption("timeout")))
 outF <- "~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
 if (!file.exists (outF)) {
   download.file (url = "https://www.ngdc.noaa.gov/mgg/shorelines/data/gshhg/latest/gshhg-shp-2.3.7.zip"
-                 , destfile = outF, method = "wget") ## 149 MB
+    , destfile = outF, method = "wget") ## 149 MB
 }
 rm (outF)
 
