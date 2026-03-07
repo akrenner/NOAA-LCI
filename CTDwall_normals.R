@@ -11,8 +11,6 @@
 ## review all XXX
 
 
-
-
 ## -- fix submission to NCEI first
 ## then tweak turbidity upstream. Fix PAR while at it
 ## then fix things here, using turbidity and none of the beam stuff
@@ -21,11 +19,19 @@
 
 
 
-
 rm(list = ls())
-graphics.off()
+## select reference interval for normal calculations: all, or restricted
+referenceInterval <- 2012:as.numeric(format(Sys.time(), "%Y"))     ## all
+referenceInterval <- 2012:2025                                     ## as given
+referenceInterval <- 2012:(as.numeric(format(Sys.time(), "%Y"))-1) ## all but current year
+
+
+
 load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+
+
 normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
+dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 
 
 
@@ -35,7 +41,6 @@ Seasonal <- function(month) {           # now using breaks from zoop analysis --
   cut(month, breaks = c(-13, 0, 2, 4, 8, 10, 25)
     , labels = c("fall", "winter", "spring", "summer", "fall", "winter"))
 }
-dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 
 
 
@@ -67,7 +72,7 @@ oM <- as.matrix(poAll [, which(names(poAll) == "Temperature_ITS90_DegC")
 
 ctdAgg <- function(df = poAll, FUN=mean, ...) {
   aggregate(oM ~ Match_Name + month + Depth.saltwater..m., data = df,
-    # subset = format(isoTime, "%Y") != current_year,       ## exclude current year -- a good idea? XXX
+    subset=as.numeric(format(isoTime, "%Y")) %in% referenceInterval,
     FUN = FUN, ...) |>
     dplyr::arrange(Match_Name, month, Depth.saltwater..m.)
 }

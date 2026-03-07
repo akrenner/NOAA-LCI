@@ -341,17 +341,24 @@ if(0) {## not yet
 ctdEx <- function(Match_Name = "9_6", sdate, thrT=8, Nd=40) {
   tPr <- subset(CTD, CTD$Match_Name==Match_Name)
 
+  spl <- with(tPr, smooth.spline(x=timeStamp, y=TempBottom, cv = TRUE))
+  nData <- seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
+  splInt <- predict(spl, x = as.numeric(nData))
+  sDF <- data.frame(timeStamp=as.POSIXct(splInt$x), TempBottom=splInt$y)
+  sDF$Year <- as.numeric(format(sDF$timeStamp, "%Y"))
+  rm(spl, nData, splInt)
+
+  ## calculate this annual stuff once, then read it in for each sample
+  ## first date above threshold
+
+  ## days above threshold
+
   yD <- subset (tPr, (tPr$Year == as.numeric(format(sdate, "%Y"))) &
                   (TempBottom > thrT)
   )
-  if(nrow(yD) < 1) {
-    dT8 <- 13
-  } else {
-    dT8 <- min(yD$month, na.rm=TRUE)
-  }
-
-
+  if(nrow(yD) < 1) {dT8 <- 13} else {dT8 <- min(yD$month, na.rm=TRUE)}
   rm(yD)
+
   dS <- subset (tPr, as.numeric(difftime(sdate, tPr$timeStamp, units="days")) <= Nd)
   mSST <- mean(dS$SST, na.rm=TRUE)
   mBotTemp <- mean(dS$TempBottom, na.rm=TRUE)
