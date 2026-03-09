@@ -18,7 +18,7 @@ if(!dir.exists("renv")){
 renv::install(c("pkgbuild"), prompt = FALSE)
 if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   ## exclude packages needing compilation
-  exP <- c("GVI", "buoydata", "ConsensusClusterPlus")  ## exclude "googledrive"?
+  exP <- c("GVI", "buoydata", "ConsensusClusterPlus", "Rcpp")  ## exclude "googledrive"?
   warning("RTools not detected. Some functionality will not be available")
 } else {
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}

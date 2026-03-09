@@ -47,7 +47,7 @@ if(length(grep("[M|m]artin", getwd())) < 1) {
   ## for collaborators: pull latest versions from git and sync packages
   system("git pull --force")
   if(!renv::restore()$synchronized) {
-    renv::restore(prompt=FALSE, clean= TRUE)
+    renv::restore(prompt=FALSE)
   }
   hd <- getwd()
   setwd("~/GISdata/LCI/")  ## fetch latest CTD data
