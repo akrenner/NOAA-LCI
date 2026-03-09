@@ -48,6 +48,7 @@ if(length(grep("[M|m]artin", getwd())) < 1) {
   system("git pull --force")
   if(!renv::restore()$synchronized) {
     renv::restore(prompt=FALSE)
+    renv::restore(prompt=FALSE, exclude = c("forecast", "gstat"))
   }
   hd <- getwd()
   setwd("~/GISdata/LCI/")  ## fetch latest CTD data
@@ -76,7 +77,7 @@ if(0) {
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
   badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
-  badP <- c("GVI", "yaml")
+  badP <- c("GVI", "yaml", "imputeTS")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
@@ -96,7 +97,7 @@ if(0) {
 
 
 
-if(1) {
+if(.Platform$OS.type != "unix") {
   ## run the first script interactively! :
   # source("I-ctd_uneditedHexFiles.R")
 
@@ -108,6 +109,8 @@ if(1) {
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat("Finished CTD hex conversion and processing at: ", as.character(Sys.time()), "\n")
   sink()
+} {
+  cat("Need to upate aggregated CTD files from ResearchWorkSpace or GoogleDrive\n")
 }
 
 
