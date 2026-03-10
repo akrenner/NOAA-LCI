@@ -79,10 +79,11 @@ if (0) {
 source ("annualPlotFct.R")
 # wDB <- getNOAA (buoyID = 46108)
 load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
-if (difftime (Sys.time(), max (nWave$datetimestamp), units = "days") > 40) {
+if (difftime (Sys.time(), max (nWave$timestamp), units = "days") > 40) {
   cat ("\nFetching new buoy data from NOAA...\n")
-  source ("annual-fetchAirWeather.R")
-  load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+  # source ("annual-fetchAirWeather.R")
+  # load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+  nWave <- try(getNOAA(buoyID = "46108"))  ## copied from annual-fetchAirWeather.R
 }
 wDB <- nWave
 
@@ -140,11 +141,13 @@ if (0) {
 ## mean daily wave height -- for when do we have data
 
 ## field names translations -- rnoaa legacy
+names(wDB) <- toupper(names(wDB))
 wDB$wave_height <- ifelse (wDB$WVHT == 99, NA, wDB$WVHT)
 wDB$average_wpd <- ifelse (wDB$APD == 99, NA, wDB$APD)
 wDB$mean_wave_dir <- ifelse (wDB$MWD == 999, NA, wDB$MWD)
 wDB$dominant_wpd <- ifelse (wDB$DPD == 99, NA, wDB$DPD)
 wDB$air_temperature <- ifelse (wDB$ATMP == 999, NA, wDB$ATMP)
+wDB$datetimestamp <- wDB$TIMESTAMP
 
 dailyW <- aggregate (wave_height ~ format (datetimestamp
   , "%Y-%m-%d")

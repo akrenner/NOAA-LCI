@@ -5,6 +5,19 @@
 rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData") # frm dataSetup.R
 ## need to get physOc.
 
+
+deepThd <- 20   ## deep vs surface layer -- copied from CTD_timeseries.R
+dir_plot <- "~/tmp/LCI_noaa/media/freshwater/"          ## find plots here
+dir_data <- "~/tmp/LCI_noaa/data-products/freshwater/"  ## data exports
+
+
+
+
+corVar <- "precipitation" ## this has changed with different data sources
+tVar <- "temperature"
+
+
+
 physOc$freshwater <- ceiling(max(physOc$Salinity_PSU, na.rm=TRUE)) -
   physOc$Salinity_PSU
 
@@ -12,9 +25,6 @@ stationsL <- c("9_8", "9_6", "9_2", "4_2", "4_6", "4_7"
                , "AlongBay_3", "AlongBay_10"
                , "T9", "T4")
 depth_layer <- c("surface", "deep", "all")
-deepThd <- 20   ## deep vs surface layer -- copied from CTD_timeseries.R
-dir_plot <- "~/tmp/LCI_noaa/media/freshwater/"
-dir_data <- "~/tmp/LCI_noaa/data-products/freshwater/"
 for(i in seq_along(c(dir_plot, dir_data))) {
   dir.create(c(dir_plot, dir_data)[i], showWarnings = FALSE, recursive = TRUE)
 }
@@ -285,30 +295,82 @@ dev.off()
 
 ## fetch weather
 ## add this to annulPlotFct.R
-if(!require("GSODR")) {
-  renv::install("GSODR", repos="https://ropensci.r-universe.dev")
+
+
+## replace GSODR with worldmet (riem is the other option; buoydata has no precip!)
+nb <- worldmet::import_ghcn_stations() |>
+  dplyr::filter(state=="AK")
+
+for(i in c("Sitka", "Juneau", "Ketchikan")){
+  print(nb[grep(toupper(i), nb$name),])
 }
-require("GSODR")
-## has good wind data, including GUSTS and MAXSPD,
-nb <- nearest_stations(LAT=59.6, LON=-151.5, distance=100)
+nb [grep("Sitka", nb$name),]$id
+nb [grep("Juneau", nb$name),]$id
+nb [grep("Ketch", nb$STATION_LOC),]$id
+nb |>
+  dplyr::filter(lat > 58, lat < 61) |>
+  dplyr::filter(lng > -154, lng < -149)
 
-## Sitka
-nb <- nearest_stations(LAT=57.05, LON=-135.3, distance=50)
-# nb
+source("annualPlotFct.R")
+stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP", "KETCHIKAN AP")
 
-yrs <- 2012:as.numeric(format(Sys.Date(), "%Y"))
-## daily weather data from Seldovia airport, Homer airport, Homer spit, KBNERR, Sitka
-weather <- lapply(c("703621-25516", "703410-25507", "997176-99999"
-  , "998167-99999", "703710-25333"), function(i) {get_GSOD(years = yrs, station = i)
-  })
+weather <- lapply(seq_along(stnL), function(i) {
+  getNOAAweather(station=stnL[i])
+})
+names(weather) <- stnL
+rm(stnL)
 
-names(weather) <- c("Seldovia Airport", "Homer Airport", "Homer Spit"
-                     , "KBNERR", "Sitka Airport")
-# lapply(seq_along(weather), function(i) {
-#   summary(weather[[i]]$PRCP)
-# })
-rm(yrs)
+prcpIdx <- sapply(seq_along(stnL), function(i) {corVar %in% names(weather[[i]])})
+weather <- weather[[which(prcpIdx)]]
 
+if(0) {
+  nb <- buoydata::buoy_data
+  nb [grep("Sitka", nb$STATION_LOC),]$ID
+  nb [grep("Juneau", nb$STATION_LOC),]$ID
+  nb [grep("Ketch", nb$STATION_LOC),]$ID
+
+  nb |>
+    dplyr::filter(LAT > 58, LAT < 61) |>
+    dplyr::filter(LON > -154, LON < -149) |>
+    dplyr::filter(nYEARS >= 10)
+
+  source("annualPlotFct.R")
+  stnL <- c("AMAA2", "AUGA2", "FILA2", "HMSA2", "PILA2", "ITKA2", "46083", "KECA2")
+  weather <- lapply(seq_along(stnL), function(i) {getNOAA(buoyID=stnL[i])})
+  # no current shortcut to cache or to subset years
+  cbind(stnL, nb$STATION_LOC[match(stnL, nb$ID)])
+  nb [which(nb$ID %in% stnL),which(names(nb) %in% c("ID", "STATION_LOC"))]
+
+  names(weather) <- c("East Amatuli Island", "Augustine Island", "Flat Island",
+                      "Homer Spit", "Pilot Rock", "Sitka", "Fairweather Ground", "Kechikan")
+  ## adapt variable names to usage in GSODR
+}
+
+if(0) {
+  if(!require("GSODR")) {
+    renv::install("GSODR", repos="https://ropensci.r-universe.dev")
+  }
+  require("GSODR")
+  ## has good wind data, including GUSTS and MAXSPD,
+  nb <- nearest_stations(LAT=59.6, LON=-151.5, distance=100)
+
+  ## Sitka
+  nb <- nearest_stations(LAT=57.05, LON=-135.3, distance=50)
+  # nb
+
+  yrs <- 2012:as.numeric(format(Sys.Date(), "%Y"))
+  ## daily weather data from Seldovia airport, Homer airport, Homer spit, KBNERR, Sitka
+  weather <- lapply(c("703621-25516", "703410-25507", "997176-99999"
+                      , "998167-99999", "703710-25333"), function(i) {get_GSOD(years = yrs, station = i)
+                      })
+
+  names(weather) <- c("Seldovia Airport", "Homer Airport", "Homer Spit"
+                      , "KBNERR", "Sitka Airport")
+  rm(yrs)
+  # lapply(seq_along(weather), function(i) {
+  #   summary(weather[[i]]$PRCP)
+  # })
+}
 
 
 
@@ -332,10 +394,10 @@ frsh <- subset(freshLng, subset =(station == "T9") &(depth == "all"))
 frsh$datetimestamp <- as.Date(as.character(frsh$datetimestamp))
 
 
-# wther = weather[[1]]; freshStn = frsh; ld = 30; wVar = "PRCP"; k = 31
-# wther = weather[[1]]; freshStn = frsh; ld = 30; wVar = "TEMP"; k = 31
+# wther = weather[[1]]; freshStn = frsh; ld = 30; wVar = corVar; k = 31
+# wther = weather[[1]]; freshStn = frsh; ld = 30; wVar = tVar; k = 31
 
-corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
+corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = corVar, CI=FALSE){
   ld <- as.integer(ld)
   ## moving average/sum of XX days prior to ocean measurement
   wther$ma <- wther |>
@@ -360,7 +422,7 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
 }
 
 
-# corCalc(wther = weather[[1]], freshStn = frsh, ld = 0, k = 31, wVar = "PRCP")
+# corCalc(wther = weather[[1]], freshStn = frsh, ld = 0, k = 31, wVar = corVar)
 
 
 ## optimize for: k(MA), ld(lag), station, depth
@@ -368,8 +430,8 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = "PRCP", CI=FALSE){
 
 
 ## given station and weather, find optimal k and lag combination
-# wh=weather[[1]]; st=subset(freshLng, sdcombo == "AlongBay_10 surface"); wVar="TEMP"; ld=0:120; k=1:70
-optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
+# wh=weather[[1]]; st=subset(freshLng, sdcombo == "AlongBay_10 surface"); wVar=tVar; ld=0:120; k=1:70
+optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = corVar, parE = FALSE) {
   ld_k <- expand.grid(ld, k)
   names(ld_k) <- c("ld", "k")
 
@@ -382,14 +444,14 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
         }, mc.cores=detectCores()-1)
       cC <- do.call("cbind", cC)
     } else {
-      cl <- makeClusterPSOCK(detectCores()-1)
+      cl <- parallel::makeClusterPSOCK(detectCores()-1)
       clusterExport(cl, c("wh", "st", "ld_k", "wVar", "corCalc")
         , envir = environment())
-      cC <- parSapply(cl, seq_len(nrow(ld_k)), function(i) {
+      cC <- parallel::parSapply(cl, seq_len(nrow(ld_k)), function(i) {
         corCalc(wther = wh, freshStn = st, ld = ld_k$ld[i], k = ld_k$k[i]
           , wVar=wVar, CI=TRUE)
       })
-      stopCluster(cl)
+      parallel::stopCluster(cl)
     }
   } else {
     cC <- sapply(seq_len(nrow(ld_k)), function(i) {
@@ -408,11 +470,11 @@ optimalkLd <- function(wh, st, ld=0:120, k=1:60, wVar = "PRCP", parE = FALSE) {
 freshLng$sdcombo <- factor(paste(freshLng$station, freshLng$depth))
 lags <- 0:140
 maWs <- 1:120
-clim <- c("TEMP", "PRCP")
+clim <- c(tVar, corVar)
 # lags<-0:120
 # maWs<-1:90
 combs <- expand.grid(airport = c("Homer", "Seldovia"), clim = clim)
-combs$climate <- factor(ifelse(combs$clim == "TEMP", "temperature"
+combs$climate <- factor(ifelse(combs$clim == tVar, "temperature"
   , "precipitation"))
 
 ## could wrap this lapply call into optimalkLd above, but output would be
@@ -421,7 +483,7 @@ s <- Sys.time()
 maxR <- lapply(seq_len(nrow(combs)), function(i) {
   optimalkLd(weather[[i %% 2 + 1]],
     subset(freshLng, sdcombo == "AlongBay_10 surface"),
-    ld=lags, k=maWs, wVar = combs$clim[i], parE=TRUE)
+    ld=lags, k=maWs, wVar = combs$clim[i], parE=FALSE)  ## parE=TRUE is having issues
 })
 difftime(s, Sys.time())
 ## serial: user: 884 system 14.69 elapsed 1105
@@ -466,7 +528,7 @@ for(i in seq_along(clim)) {
     z=matrix(maxRS[[i]]$r, nrow = length(lags), byrow = FALSE),
     xlab = "lag [d]", ylab = "MA window [d]",
     main = paste("Sitka Airport",
-       ifelse(clim[i] == "TEMP", "tempeature", "precipitation"),
+       ifelse(clim[i] == tVar, "temperature", "precipitation"),
        "x freshwater at AlongBay_3 deep")
     , asp = 1)
 }
@@ -479,7 +541,7 @@ rm(lags, maWs, combs)
 
 
 
-for(wV in c("TEMP", "PRCP")) {
+for(wV in c(tVar, corVar)) {
   cat("\n\n", wV, "\n")
     maxR <- sapply(seq_along(levels(freshLng$sdcombo)), function(w){
       sapply(seq_len(70), function(k) {
@@ -497,7 +559,7 @@ for(wV in c("TEMP", "PRCP")) {
 
 
 freshLng$sdcombo <- factor(paste(freshLng$station, freshLng$depth))
-for(wV in c("TEMP", "PRCP")) {
+for(wV in c(tVar, corVar)) {
   cat("\n\n", wV, "\n")
   maxR <- sapply(seq_along(levels(freshLng$sdcombo)), function(w){
     frsh <- subset(freshLng, sdcombo == levels(freshLng$sdcombo)[w])
@@ -533,7 +595,7 @@ r_col <- ggplot2::scale_fill_stepsn(colors=c('#b2182b','#ef8a62','#fddbc7',
 pdf(paste0(dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
 frsh <- subset(freshLng, sdcombo == "AlongBay_10 surface")
 cC <- sapply(1:120, function(ld) {
-  corCalc(weather[[1]], frsh, ld = ld, wVar = "PRCP", k = 31)
+  corCalc(weather[[1]], frsh, ld = ld, wVar = corVar, k = 31)
 })
 plot(cC, type="l", xlab = "lag [days]", ylab = "correlation coefficient"
   , main = paste0("AlongBay-10 surface freshwater x Seldovia precipitation")
@@ -550,7 +612,7 @@ dev.off()
 pdf(paste0(dir_plot, "crosscor-AB10-SxSeldoviaPRCP.pdf"))
 frsh <- subset(freshLng, sdcombo == "AlongBay_10 surface")
 cC <- sapply(1:120, function(ld) {
-  corCalc(weather[[1]], frsh, ld = ld, wVar = "PRCP", k = 31)
+  corCalc(weather[[1]], frsh, ld = ld, wVar = corVar, k = 31)
 })
 plot(cC, type="l", xlab = "lag [days]", ylab = "correlation coefficient"
      , main = paste0("AlongBay-10 surface freshwater x Seldovia precipitation")

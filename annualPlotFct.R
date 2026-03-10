@@ -434,6 +434,12 @@ a freshly downloaded complete file at least once a year.")}
   SMPfile <- zF [which.max(file.info(zF)$ctime)] ## find most recent file
   rm(zF)
 
+  ## recommend new CDMO download if file is older than 6 month
+  if(difftime(Sys.time(), file.info(SMPfile)$ctime, units="days") > 180) {
+    warning("The latest file from CDMO is over 180 days old. It is recommended to
+download a fresh, complete zip-file from CDMO and add it to '~/GISdata/LCI/SWMP/'")
+    }
+
   ## delete cacheStation if zip file is newer or file is corrupted
   if(file.exists(cacheStation)) {
     if(file.info(cacheStation)$ctime < file.info(SMPfile)$ctime |
@@ -454,13 +460,8 @@ a freshly downloaded complete file at least once a year.")}
   if(any(is.na(smp$datetimestamp))) {stop("NAs in timestamp")}
   #  ## not sure where the bad line is coming from, but it has to go
   # smp <- smp [!is.na(smp$datetimestamp),]
+
   fN <- difftime(Sys.time(), max(smp$datetimestamp), units = "days")
-  ## recommend new CDMO download if file is older than 6 month
-  if(fN > 180) {warning(
-    "The latest file from CDMO is over 180 days old. It is recommended to
-download a fresh, complete file from CDMO and add it to '~/GISdata/LCI/SWMP/'")}
-
-
   ## catch for stations that are inactive?
   if((2 < fN) &&(fN < 5 * 365.25)) { # skip downloads for less than 2 day and legacy stations
     # ## skip downloads for legacy stations

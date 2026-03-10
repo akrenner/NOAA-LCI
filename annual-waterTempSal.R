@@ -131,28 +131,31 @@ require ("RColorBrewer")
 currentCol <- rev(brewer.pal (3, "Greens"))
 
 waterL <- list (homerS, homer, sldviaS, sldvia)
+
+
 pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow = c(2, 2), mar = c(3, 4, 3, 1))
 
 for (i in seq_along (waterL)) {
-  hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
-    , currentYear = currentYear, qntl = qntl))
-  if (class (hM) != "try-error") {
-    aPlot (hM, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]"
-      , main = c ("Homer shallow", "Homer deep", "Seldovia shallow"
-        , pastYear = pastYear, ongoingYear = ongoingY
-        , "Seldovia deep")[i]
-      # , ylim=c(1, 1.3)
-    )
-    cLegend ("topleft", inset = 0.05
-      , mRange = c (min (homerS$year), currentYear - 1)
-      , currentYear = currentYear
-      , pastYear = pastYear, ongoingYear = ongoingY
-      , cYcol = currentCol # "blue"
-      , qntl = qntl [1]
-    )
-    axis (1, at = 366, labels = FALSE)
-  }
+  if(any(!is.na(waterL[[i]]))) {  ## weird, 2026-03 CDMO is not reporting chlorophyll
+    hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
+                       , currentYear = currentYear, qntl = qntl))
+    if (class (hM) != "try-error") {
+      aPlot (hM, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]"
+             , main = c ("Homer shallow", "Homer deep", "Seldovia shallow"
+                         , pastYear = pastYear, ongoingYear = ongoingY
+                         , "Seldovia deep")[i]
+             # , ylim=c(1, 1.3)
+      )
+      cLegend ("topleft", inset = 0.05
+               , mRange = c (min (homerS$year), currentYear - 1)
+               , currentYear = currentYear
+               , pastYear = pastYear, ongoingYear = ongoingY
+               , cYcol = currentCol # "blue"
+               , qntl = qntl [1]
+      )
+      axis (1, at = 366, labels = FALSE)
+    }  }
 }
 dev.off()
 rm (waterL, hM, i)
@@ -162,40 +165,42 @@ rm (waterL, hM, i)
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
-hM <- prepDF (dat = homerS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
-sL <- prepDF (dat = sldviaS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
-# summary (sL)
+if(any(!is.na(homerS$chlfluor))) {
 
-# pdf (paste0 (mediaD, "sa-Fluorescence.pdf"), height=4, width=6)
-png (paste0 (mediaD, "sa-Fluorescence.png"), height = 4 * 300, width = 6 * 300, res = 300)
-par (mar = c(3, 4, 3, 1))
-aPlot (sL, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]", main = "Seldovia"
-  # , ylim=c(1, 1.3)
-  , pastYear = pastYear, ongoingYear = ongoingY
-  # , ylim=c(0,10)  # to avoid clash of legend and plot
-  , ylim = c(0, max (sL$maU1_chlfluor))
-)
-cLegend ("topleft", inset = 0.05
-  , mRange = c (min (homerS$year), currentYear - 1)
-  , currentYear = currentYear
-  , cYcol = currentCol
-  , qntl = qntl [1]
-  , pastYear = pastYear, ongoingYear = ongoingY
-)
-## Homer not to be trusted? Or just not enough data!
-# aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll", main="Homer"
-#        #, ylim=c(1, 1.3)
-#        )
+  hM <- prepDF (dat = homerS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
+  sL <- prepDF (dat = sldviaS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
+  # summary (sL)
 
-## plot all years to show variability
-# plot (chlfluor~jday, data=sL, type="n"
-#       , ylim=range (sL [,20:ncol (sL)], na.rm=TRUE)
-#       )
-# for (i in 20:ncol (sL)){
-#   lines (sL[,i]~sL$jday, col = i)
-# }
-dev.off()
+  # pdf (paste0 (mediaD, "sa-Fluorescence.pdf"), height=4, width=6)
+  png (paste0 (mediaD, "sa-Fluorescence.png"), height = 4 * 300, width = 6 * 300, res = 300)
+  par (mar = c(3, 4, 3, 1))
+  aPlot (sL, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]", main = "Seldovia"
+         # , ylim=c(1, 1.3)
+         , pastYear = pastYear, ongoingYear = ongoingY
+         # , ylim=c(0,10)  # to avoid clash of legend and plot
+         , ylim = c(0, max (sL$maU1_chlfluor))
+  )
+  cLegend ("topleft", inset = 0.05
+           , mRange = c (min (homerS$year), currentYear - 1)
+           , currentYear = currentYear
+           , cYcol = currentCol
+           , qntl = qntl [1]
+           , pastYear = pastYear, ongoingYear = ongoingY
+  )
+  ## Homer not to be trusted? Or just not enough data!
+  # aPlot (hM, "chlfluor", currentCol=currentCol, ylab="Chlorophyll", main="Homer"
+  #        #, ylim=c(1, 1.3)
+  #        )
 
+  ## plot all years to show variability
+  # plot (chlfluor~jday, data=sL, type="n"
+  #       , ylim=range (sL [,20:ncol (sL)], na.rm=TRUE)
+  #       )
+  # for (i in 20:ncol (sL)){
+  #   lines (sL[,i]~sL$jday, col = i)
+  # }
+  dev.off()
+}
 
 
 
