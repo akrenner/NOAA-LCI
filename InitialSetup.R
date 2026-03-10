@@ -25,6 +25,7 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
     Sys.setenv(NANONEXT_LIBS = 1)
     install.packages("nanonext")   ## still fails on current macbook, BUT ok on mini
     ## as root: R CMD javareconf
+    ## brew install rust imagemagick libgit2
   }
 
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
