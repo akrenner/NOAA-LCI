@@ -109,7 +109,7 @@ if(.Platform$OS.type != "unix") {
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat("Finished CTD hex conversion and processing at: ", as.character(Sys.time()), "\n")
   sink()
-} {
+} else {
   cat("Need to upate aggregated CTD files from ResearchWorkSpace or GoogleDrive\n")
 }
 

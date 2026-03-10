@@ -23,17 +23,17 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
 } else {
   if(.Platform$OS.type == "unix") {
     Sys.setenv(NANONEXT_LIBS = 1)
-    install.packages("nanonext")   ## still fails on current macbook
+    install.packages("nanonext")   ## still fails on current macbook, BUT ok on mini
   }
 
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
-  pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
-  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
-  renv::install("remotes", prompt = FALSE)
-  renv::restore('sf', prompt = FALSE)
-  remotes::install_git("https://github.com/STBrinkmann/GVI")
+  if(!require('sf')) {renv::install('sf', prompt = FALSE)}
+  if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
+  if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
+  if(!require("GVI")) {remotes::install_git("https://github.com/STBrinkmann/GVI")}
+  if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
   exP <- NULL
 }
 
@@ -65,10 +65,12 @@ If you are not with NCCOS, you may need to copy these files manually (see the Ma
 ## bathymetry
 if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"))) {
   if(isNCCOS) {
-    file.copy("G:\Shared\ drives\NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff",
+    gdF <- "G:/Shared drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Data-Archivable_Only/"
+    gdF <- "G:/Shared drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/"
+      file.copy(paste0(gdF, "bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"),
               to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff"),
               overwrite=FALSE, copy.date=TRUE)
-    file.copy("G:\Shared\ drives\NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/02-Science/Reference/GIS-Layers_Reference/bathymetry/KBL-bathymetry-ensemble/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff",
+    file.copy(paste0(gdF, "KBL-bathymetry-ensemble/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff"),
               to=paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_ResearchArea_100m_EPSG3338.tiff"),
               overwrite=FALSE, copy.date=TRUE)
   } else {
