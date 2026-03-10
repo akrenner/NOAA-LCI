@@ -7,7 +7,7 @@ options(repos = r)
 
 
 if (!require("renv")) {
-  install.packages("renv")
+  install.packages("renv", prompt = FALSE)
 }
 if(!dir.exists("renv")){
  renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
@@ -15,18 +15,24 @@ if(!dir.exists("renv")){
 }
 
 ## sync all packages
-renv::install(c("pkgbuild"), prompt = FALSE)
+renv::install(c("pkgbuild"), prompt = FALSE, force = TRUE)
 if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   ## exclude packages needing compilation
   exP <- c("GVI", "buoydata", "ConsensusClusterPlus", "Rcpp")  ## exclude "googledrive"?
   warning("RTools not detected. Some functionality will not be available")
 } else {
+  if(.Platform$OS.type == "unix") {
+    Sys.setenv(NANONEXT_LIBS = 1)
+    install.packages("nanonext")   ## still fails on current macbook
+  }
+
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
-  pak::pak("NOAA-EDAB/buoydata")
+  pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
   BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
   renv::install("remotes", prompt = FALSE)
+  renv::restore('sf', prompt = FALSE)
   remotes::install_git("https://github.com/STBrinkmann/GVI")
   exP <- NULL
 }
