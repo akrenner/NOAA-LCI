@@ -10,7 +10,7 @@
 print (Sys.time())
 # CTD processing
 
-if (length (grep ("NOAA-LCI", getwd()) < 1) {
+if (length (grep ("NOAA-LCI", getwd()) < 1)) {
     stop("Need to set working directory to 'NOAA-LCI'")
 }
 cat ("\n\n## Starting ctdprocessing at", format (Sys.time(), "%Y-%m-%d %H:%M"), "\n\n")

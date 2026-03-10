@@ -693,7 +693,7 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
 
 
 
-gNOAAS <- function(station, clearcache, cacheF = FALSE, showsites = FALSE) {
+gNOAAS <- function(station, clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
   NWeather2SWMP <- function(dat) {  ## convert to SWMP format
     fixF <- function(field) {
       if(field %in% names(dat)) {

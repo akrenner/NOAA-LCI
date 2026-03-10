@@ -7,29 +7,35 @@ options(repos = r)
 
 ## set up build infrastructure
 if (!require("renv")) {
-  install.packages("renv")
+  install.packages("renv", prompt = FALSE)
 }
 if(!dir.exists("renv")){
  renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
   # renv::init(bioconductor = "3.21")
 }
-if(!require("pkgbuild")) {
-  renv::install(c("pkgbuild"), prompt = FALSE)
-}
 
 ## sync all packages
+if(!require("pkgbuild")) {renv::install(c("pkgbuild"), prompt = FALSE, force = TRUE)}
 if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   ## exclude packages needing compilation
-  exP <- c("GVI", "buoydata", "ConsensusClusterPlus", "textshaping", "ragg")
+  exP <- c("GVI", "buoydata", "ConsensusClusterPlus", "Rcpp", "ragg", "textshaping")  ## exclude "googledrive"?
   warning("RTools not detected. Some functionality will not be available")
 } else {
+  if(.Platform$OS.type == "unix") {
+    Sys.setenv(NANONEXT_LIBS = 1)
+    install.packages("nanonext")   ## still fails on current macbook, BUT ok on mini
+    ## as root: R CMD javareconf
+    ## brew install rust imagemagick libgit2
+  }
+
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
-  pak::pak("NOAA-EDAB/buoydata")
-  BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)
-  renv::install("remotes", prompt = FALSE)
-  remotes::install_git("https://github.com/STBrinkmann/GVI")
+  if(!require('sf')) {renv::install('sf', prompt = FALSE)}
+  if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
+  if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
+  if(!require("GVI")) {remotes::install_git("https://github.com/STBrinkmann/GVI")}
+  if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
   exP <- NULL
 }
 
@@ -48,9 +54,10 @@ unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
 cat ("\n##\n## Downloading more required datasets for initial setup\n##\n")
 
 bDir <- "~/GISdata/LCI/bathymetry/"
+dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
+dir.create ("~/GISdata/LCI/SWMP/", recursive = TRUE)
 
 ## use KBL bathymetry, rather than recreate it
-dir.create (paste0 (bDir, "KBL-bathymetry/"), showWarnings = FALSE, recursive = TRUE)
 isNCCOS <- dir.exists("G:/Shared\ drives/NOS\ NCCOS\ Lab\ -\ Kasitsna\ Bay\ Admin/")
 if(!isNCCOS){warning("If you are with NCCOS, your Google Drive does not appear to be mapped to the G: drive. Please fix this, then re-run 'source(\"InitialSetup.R\")'
 If you are not with NCCOS, you may need to copy these files manually (see the Manual).")}
@@ -84,7 +91,6 @@ if (!file.exists(paste0 (bDir, "/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG
 }
 
 ## SWMP data
-dir.create ("~/GISdata/SWMP/", recursive = TRUE)
 if(length(list.files("~/GISdata/LCI/SWMP/", ".zip")) < 1) {
   if(isNCCOS){
     file.copy(paste0(sharedD, "/02-Science/Data-Archivable_Only/Recurring_Oceanographic_Survey/Archive\ of\ partner\ data/SWMP-example/656839.zip")
