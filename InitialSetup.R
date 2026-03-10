@@ -24,6 +24,7 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   if(.Platform$OS.type == "unix") {
     Sys.setenv(NANONEXT_LIBS = 1)
     install.packages("nanonext")   ## still fails on current macbook, BUT ok on mini
+    ## as root: R CMD javareconf
   }
 
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
