@@ -563,7 +563,7 @@ sectionPad <- function(sect, transect, ...) {
   # for(i in seq_along(transect$stationId)){
 
   ## sort transect correctly!(esp. for AlongBay!)
-  if(transect$line [1] == "AlongBay") {
+  if(substr(transect$line [1], 1,1) == "A") {  # longBay") { # extended AlongBay wraps around Pogy Ptp
     transect <- transect [order(transect$latitude, decreasing = FALSE), ]
   } else if(transect$line [1] %in% c("4", "9")) {
     transect <- transect [order(transect$latitude, decreasing = TRUE), ]
@@ -571,23 +571,33 @@ sectionPad <- function(sect, transect, ...) {
     transect <- transect [order(transect$longitude, decreasing = FALSE), ]
   }
 
-  for(i in seq_len(nrow(transect))) {
-    ## only insert dummy first and last stations. skip all others to avoid overdoing things
-    #  for(i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
-    #   if(!transect$stationId [i]  %in% levels(section@metadata$stationId)){
-    stationIDs <- sapply(seq_along(sect@data$station), FUN = function(k) {
-      sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
-    if(!transect$station [i]  %in% stationIDs) {  ## current results are horrid. Not why=?
-      # if(!as.character(transect$station [i])  %in% levels(sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
-      #       cat("No station", transect$stationId [i], "\n")
-      ## add a dummy-station(sectionAddCtd and sectionAddStation are synonymous)
-      sect <- sectionAddCtd(sect, cloneCTD(sect@data$station [[1]]
-        , latitude = transect$latitude [i]
-        , longitude = transect$longitude [i]
-        , station = transect$station [i]
-        , bottom = transect$bottom [i]
-      )
-      )
+  ## do this ONLY if first OR last station in transect are missing
+  # sectionIDs <- sect@data$station ---- test/fix this part!
+  # fPresent <- transect$station[1] %in% sectionIDs
+  # lPresent <- transect$station[nrow(transect)] %in% sectionIDs
+  # if (!fPresent | !lPresent)
+  stationIDs <- sapply(seq_along(sect@data$station), FUN = function(k) {
+    sect@data$station[[k]]@metadata$stationId})  ## oce example files use "station", not "stationId"
+  if ((!transect$station [1] %in% stationIDs) |
+      (!transect$station[nrow(transect)] %in% stationIDs)) {
+
+    for(i in seq_len(nrow(transect))) {
+      ## only insert dummy first and last stations. skip all others to avoid overdoing things
+      #  for(i in c(1, nrow(transect))){  ## loosing bottom-topography in the process :(
+      #   if(!transect$stationId [i]  %in% levels(section@metadata$stationId)){
+      if(!transect$station [i]  %in% stationIDs) {  ## current results are horrid. Not why=?
+
+        # if(!as.character(transect$station [i])  %in% levels(sect@data$station[[1]]@metadata$stationId)){ ## this seems fragile! XXX
+        #       cat("No station", transect$stationId [i], "\n")
+        ## add a dummy-station(sectionAddCtd and sectionAddStation are synonymous)
+        sect <- sectionAddCtd(sect, cloneCTD(sect@data$station [[1]]
+                                             , latitude = transect$latitude [i]
+                                             , longitude = transect$longitude [i]
+                                             , station = transect$station [i]
+                                             , bottom = transect$bottom [i]
+        )
+        )
+      }
     }
   }
   # section <- sectionSort(section, ...)

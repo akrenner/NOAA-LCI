@@ -98,15 +98,17 @@ wave.46108 <- nWave
 ## fetch a lot of weather -- none currently with precipitation?
 ## move to daily summaries?
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
-weatherL <- list(homer.airport = gNOAAS(station = "Homer AP", clearcache = clearC
-    , cacheF = cF, showsites = TRUE)  ## Homer Airport weather station)
-  , homer.spit = gNOAAS(station = "Homer Spit", clearcache = clearC, cacheF = cF)  ## Homer Spit weather station
-  , homer.spit2 = gNOAAS(station = "KACHEMAK BAY RESERVE", clearcache = clearC, cacheF = cF)  ## SWMP Homer Spit weather station
-  , kachomet = sAir
-  , augustine = gNOAAS(station = "Augustine Island", clearcache = clearC, cacheF = cF)  ## Augustine Island weather station
-  , flat.island = gNOAAS(station = "Flat Island Light", clearcache = clearC, cacheF = cF)  ## Flat Island weather station
-  , east.amatuli = gNOAAS(station = "East Amatuli Station Light  AK", clearcache = clearC, cacheF = cF)  ## East Amatuli weather station
-)
+gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
+
+weatherL <- list(homer.airport = gN("Homer AP", TRUE)
+                 # , homer.spit = gN("Homer Spit")
+                 # , homer.spit2=gN("KACHEMAK BAY RESERVE")
+                   , kachomet = sAir
+                 # , augustine = gN("Augustine Island")
+                 # , flat.island = gN("Flat Island Light")
+                 # , east.amatuli = gN("East Amatuli Station Light  AK")
+                 )
+rm (cF, gN)
 weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
 
 
