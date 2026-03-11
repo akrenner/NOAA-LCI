@@ -304,9 +304,9 @@ nb <- worldmet::import_ghcn_stations() |>
 for(i in c("Sitka", "Juneau", "Ketchikan")){
   print(nb[grep(toupper(i), nb$name),])
 }
-nb [grep("Sitka", nb$name),]$id
-nb [grep("Juneau", nb$name),]$id
-nb [grep("Ketch", nb$STATION_LOC),]$id
+nb [grep("Sitka", nb$name),]$name
+nb [grep("Juneau", nb$name),]$name
+nb [grep("Ketch", nb$STATION_LOC),]$name
 nb |>
   dplyr::filter(lat > 58, lat < 61) |>
   dplyr::filter(lng > -154, lng < -149)
@@ -314,14 +314,17 @@ nb |>
 source("annualPlotFct.R")
 stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP", "KETCHIKAN AP")
 
-weather <- lapply(seq_along(stnL), function(i) {
+weather <- lapply(seq_along(weather), function(i) {
   getNOAAweather(station=stnL[i])
 })
 names(weather) <- stnL
-rm(stnL)
 
-prcpIdx <- sapply(seq_along(stnL), function(i) {corVar %in% names(weather[[i]])})
-weather <- weather[[which(prcpIdx)]]
+prcpIdx <- sapply(seq_along(weather), function(i) {corVar %in% names(weather[[i]])})
+if(any(!prcpIdx)){
+  stop(paste0("Station ", stnL[which(!prcpIdx)], " does not provide precipitation data\n"))
+  weather <- weather[[which(prcpIdx)]]
+}
+rm(stnL, prcpIdx)
 
 if(0) {
   nb <- buoydata::buoy_data
@@ -405,6 +408,7 @@ corCalc <- function(wther, freshStn, ld = 0, k = 31, wVar = corVar, CI=FALSE){
     data.table::frollmean(algo = "fast", align = "center", hasNA = TRUE, n = k,
       na.rm = TRUE) |>
     dplyr::lead(n = ld)  ## it's lag or lead?
+  wther$YEARMODA <- as.Date(wther$date)
   wther$fresh <- freshStn$freshwater[match(wther$YEARMODA,
     freshStn$datetimestamp)]
   # wther <- subset(wther, !is.na(fresh))

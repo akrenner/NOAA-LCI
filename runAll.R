@@ -90,9 +90,7 @@ if(0) {
 
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
-  badP <- c("lubridate", "tidyr", "gsw", "openssl", "parallel")
   badP <- c("GVI", "yaml")
-  badP <- c("ragg", "textshaping", "pkgbuild")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
