@@ -28,14 +28,21 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
     ## brew install rust imagemagick libgit2
   }
 
+  ## install critical infrastructure first
   if(!require('pak')) {renv::install('pak', prompt = FALSE)}
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
   if(!require('sf')) {renv::install('sf', prompt = FALSE)}
   if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
-  if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
-  if(!require("GVI")) {remotes::install_git("https://github.com/STBrinkmann/GVI")}
   if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
+  if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
+  if(!require("terra")) {renv::install("terra", prompt = FALSE)}
+  if(!require("GVI")) {   ## fails to install into renv, but installs into default user library
+    require("terra")
+    # remotes::install_git("https://github.com/STBrinkmann/GVI")
+    renv::install("STBrinkmann/GVI")
+    unloadNamespace("terra")
+  }  ## no longer working -- find replacement
   exP <- NULL
 }
 
