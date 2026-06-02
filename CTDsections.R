@@ -90,6 +90,8 @@ for(sv in iX) {
   oRangeS <- t(sapply(oVarsDFname, FUN = function(vn) {
     range(s [, which(names(s) == vn)], na.rm = TRUE)
   }))
+  # oRangeS [1,] <- c(0.8, 6.5)  # for one-off reports spanning multiple months
+  # oRangeS [2,] <- c(29.6, 31.8)  # for one-off reports spanning multiple months
 
 
   for(ti in seq_along(levels(stn$Line))) {
