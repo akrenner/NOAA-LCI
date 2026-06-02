@@ -24,20 +24,17 @@ clearC = FALSE
 
 
 ##########################################################
-## parameters to agree upon
-metstation <- "kachomet"  # SWMP
-# metstation <- "FILA2"     # Flat Island  -- something with subsets
-# metstation <- "AUGA2"     # Augustine Island  --- subsets
-# metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
-# metstation <- "AMAA2"     # East Amatuli, Barren
-metstation <- "HMSA2"       # Homer Spit(starts in 2012) -- crash at gale pictogram
-# metstation <- "PAHO"      # Homer Airport -- using riem package
+## potential local meterological stations (buoydata network and others)
+## kachomet (SWMP), Flat Island, Augustine Island, East Amatuli Island
+## Homer Spit (starting 2012), Homer Airport (e.g. PAHO with riem), Seldovia
+
+## min requirements:
+# wave buoy waves, Homer Aiport precipitation, temperature, wind (or from Spit)
+
+## package options
 
 
-wStations <- c("kachomet", "FILA2"
-  , "AUGA2", "46105"
-  , "AMAA2", "HMSA2"
-)
+
 wStations <- c("HOMER AIRPORT", "HOMER SPIT"
   , "FLAT ISLAND LIGHT", "KACHEMAK BAY RESERVE"
   , "EAST AMATULI STATION LIGHT  AK", "AUGUSTINE ISLAND")
@@ -54,10 +51,13 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 if(0) {
   ## list availabel buoy stations nearby
   ## less refined than worldmet, so only use this for waverider buoy!
+  # file.remove("renv/library/windows/R-4.6/x86_64-w64-mingw32/buoydata/data/Rdata.rdb")
   buoydata::buoy_data |>
     dplyr::filter(LAT > 58, LAT < 61) |>
     dplyr::filter(LON > -154, LON < -149) |>
     dplyr::filter(nYEARS >= 10)
+  ## has East Amatuli,k Augustine, Flat Island, Homer Spit, Seldovia
+  seldovia <- buoydata::get_buoy_data("OVIA2")
 }
 
 
@@ -83,36 +83,6 @@ sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 ## weather from Homer Airport
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
 nAiro <- try(getNOAA("HMSA2"))
-
-## buoydata
-nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
-wave.46108 <- nWave
-
-
-
-# weather.homer.spit <- getNOAAweather(stationID="HOMER SPIT") -- has precipitation! (in mm?)
-
-## print available station
-
-
-## fetch a lot of weather -- none currently with precipitation?
-## move to daily summaries?
-cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
-gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
-
-weatherL <- list(homer.airport = gN("Homer AP", TRUE)
-                 # , homer.spit = gN("Homer Spit")
-                 # , homer.spit2=gN("KACHEMAK BAY RESERVE")
-                   , kachomet = sAir
-                 # , augustine = gN("Augustine Island")
-                 # , flat.island = gN("Flat Island Light")
-                 # , east.amatuli = gN("East Amatuli Station Light  AK")
-                 )
-rm (cF, gN)
-weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
-
-
-
 ## ------------clean up weather data and move to metric units ----------------
 
 ## match noaa to swmp data -- move this into a annualPltFct.R function XX !
@@ -134,6 +104,38 @@ hmr <- with(nAir, data.frame(datetimestamp = valid
   , totsorad = rep(is.na(nrow(nAir)))
 ))
 rm(nAir)
+
+## buoydata
+nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
+wave.46108 <- nWave
+weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
+
+
+
+
+## print available station to worldmet GHCN
+## fetch a lot of weather -- check for precipitation!
+## move to daily summaries?
+gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, showsites = ss)}
+gN <- function(stn, ss = FALSE) {
+  a <- try(getNOAAweather(station = stn, clearcache = clearC, showsites = ss))
+  if(class(a)[1] == "try-error"){cat(stn, "failed\n")}else{a}
+}
+
+cat("## This may take a long time, especially on the first run over a slow connection\n\n")
+weatherL <- list(homer.airport = gN("Homer AP", TRUE)
+                  , homer.spit = gN("Homer Spit")
+                  , homer.spit2=gN("KACHEMAK BAY RESERVE")
+                  , kachomet = sAir
+                  , seldovia = gN("Seldovia AP")  # "Seldovia" is a water station
+                  , augustine = gN("Augustine Island")
+                  , flat.island = gN("Flat Island Light")
+                  , east.amatuli = gN("East Amatuli Station Light  AK")
+                 )
+rm (gN)
+
+
+
 
 
 

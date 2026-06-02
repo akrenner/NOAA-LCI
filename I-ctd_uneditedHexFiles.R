@@ -25,7 +25,8 @@ if(0) {
 ## copy notebookTable.csv to most recent survey
     ### remember this survey for the next step!
 
-tempL <- "C:/Users/Martin.Renner/Desktop/notebookTable.csv"   ## XXXX breaks on other computers -- look for fix XXX
+#tempL <- "C:/Users/Martin.Renner/Desktop/notebookTable.csv"
+tempL <- "~/../Desktop/notebookTable.csv"  # works only on PCs
 if(file.exists(tempL)){
   newD <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited\ .hex\ files") |>
     sort(decreasing = TRUE)

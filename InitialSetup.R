@@ -29,12 +29,13 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   }
 
   ## install critical infrastructure first
-  if(!require('pak')) {renv::install('pak', prompt = FALSE)}
+#  if(!require('pak')) {renv::install('pak', prompt = FALSE)} # renv does it all?
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
   if(!require('sf')) {renv::install('sf', prompt = FALSE)}
+  if(!require("openmeteo")) {renv::install("tpisel/openmeteo")}
   if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
-  if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
+  if(!require("buoydata")) {renv::install("NOAA-EDAB/buoydata", prompt = FALSE)}
   if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
   if(!require("terra")) {renv::install("terra", prompt = FALSE)}
   if(!require("GVI")) {   ## fails to install into renv, but installs into default user library
@@ -47,11 +48,9 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
 }
 
 renv::restore(prompt = FALSE, exclude = exP); rm(exP)
-# renv::install (repos = "https://cloud.r-project.org/", prompt = FALSE, lock = FALSE)
-# renv::install("terra", prompt = FALSE)
 renv::status()
-conflicted::conflicts_prefer(base::load())
 unloadNamespace("renv")  ## detach to avoid renv::load masking base::load
+conflicted::conflicts_prefer(base::load())
 
 
 

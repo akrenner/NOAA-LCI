@@ -137,7 +137,7 @@ pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow = c(2, 2), mar = c(3, 4, 3, 1))
 
 for (i in seq_along (waterL)) {
-  if(any(!is.na(waterL[[i]]))) {  ## weird, 2026-03 CDMO is not reporting chlorophyll
+  if(any(!is.na(waterL[[i]]))) {  ## weird, 2026-03 CDMO is not reporting chlorophyll   XXX
     hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
                        , currentYear = currentYear, qntl = qntl))
     if (class (hM) != "try-error") {
@@ -165,8 +165,8 @@ rm (waterL, hM, i)
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
-if(any(!is.na(homerS$chlfluor))) {
-
+# if(any(!is.na(homerS$chlfluor))) {
+if(any(!is.na(subset(homerS$chlfluor, homerS$year==2015)))){   # historic data disappeared, 2025 and 25 are back
   hM <- prepDF (dat = homerS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
   sL <- prepDF (dat = sldviaS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
   # summary (sL)
