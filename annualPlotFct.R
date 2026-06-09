@@ -514,8 +514,12 @@ download a fresh, complete zip-file from CDMO and add it to '~/GISdata/LCI/SWMP/
 
 
 
-getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
-  ## utilize worldmet::importNOAA adding caching function
+getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
+ # options: worldmet: has precipication, but still unstable
+ # buoydata -- no precip?
+ # GSODR -- no precip?
+
+## utilize worldmet::importNOAA adding caching function -- sunset
 
   # ## try other options -- does not appear to be working. Even example(get_GSOD()) fails :(
   # require("GSODTools")
@@ -538,20 +542,23 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
     test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
   }
 
-  # require("worldmet")
+  # require("worldmet") ## worldmet is still under active depelopment, 2026-05-28
   ## these are needed by worldmet
   # require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
 
-  ## catch errors
-  if(length(station) != 1L) stop("Can only process one station at a time")
+  ## multiple stations
+  # if(length(station) != 1L) mirai::daemons(4)  #stop("Can only process one station at a time")
+  if(length(station) != 1L) stop("Can only process one station at a time")  ## don't know how to cache multiple stations
+
 
   ## cache data
   if(class(cacheF) == "character") {
-    cacheFolder <- cacheF
-    dir.create(cacheFolder, showWarnings = FALSE, recursive = TRUE)
+    cacheF <- paste0(cacheF, "/")
+    dir.create(cacheF, showWarnings = FALSE, recursive = TRUE)
   } else {
-    cacheFolder <- tempdir()
+    cacheF <- tempdir()
   }
+  cacheFolder <- cacheF
   if(clearcache) {
     unlink(cacheFolder, recursive = TRUE)
   }
@@ -559,33 +566,25 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
 
 
   # Warning message:
-  #   ! The integrated surface database has been deprecated by NOAA, and data is now only available until 2025.
-  # ℹ Please consider using `worldmet::import_ghcn_stations()` and `worldmet::import_ghcn_hourly()` to access data from the new Global Historical
-  # Climatology Network.
+  #   ! The integrated surface database has been deprecated by NOAA, and data is
+  #  now only available until 2025. Please consider using `worldmet::import_ghcn_stations()`
+  #  and `worldmet::import_ghcn_hourly()` to access data from the new Global Historical
+  #  Climatology Network.
 
- if(1){ ## new API -- old code is not getting data from NOAA past 2025
 
-   fetchMeta <- function() {
-     wrldSites <- worldmet::import_ghcn_stations() |>
+   if(!file.exists(paste0(cacheFolder, "meta2.rds")) || clearcache) {
+     wrldSites <- worldmet::import_ghcn_stations(country = "US") |>
        dplyr::rename(latitude=lat) |>
        dplyr::rename(longitude=lng)
-     saveRDS(wrldSites, paste0(cacheFolder, "meta2.rds"))
-     wrldSites
-   }
-
-   metaD <- try(fetchMeta())
-   ## in case of running this offline
-   if(class(metaD)[1] == "try-error"){
-     wrldSites <- readRDS(paste0(cacheFolder, "meta2.rds"))
+     saveRDS(wrldSites, file = paste0(cacheFolder, "meta2.rds"))
    } else {
-     wrldSites <- metaD
+     wrldSites <- readRDS(paste0(cacheFolder, "meta2.rds"))
    }
 
    if(showsites) {
      AKpick <- wrldSites |>
        dplyr::filter(55 < latitude & latitude < 61) |>
        dplyr::filter(-154 < longitude & longitude < -148)
-     # print(AKpick)
      cat("Nearby stations:\n\n", paste(AKpick$name, collapse = "\n "))
    }
    if(!station %in% wrldSites$name) {
@@ -596,101 +595,54 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
    ## pick up previous years from cache
    if(file.exists(paste0(cacheFolder, station, "2.rds"))) {
      cWeather <- readRDS(paste0(cacheFolder, station, "2.rds"))
-     yR <- as.numeric(levels(factor(format(cWeather$date, "%Y")))) |>
+     yR <- as.numeric(levels(factor(format(ccW$date, "%Y")))) |>
        sort() |>
        tail(n=1)
    } else {
      yR <- NULL
    }
-   if(class(metaD)[1]!="try-error"){
-     ## possible to speed up downloads by picking years in hourly data?
-     cWeather <- worldmet::import_ghcn_hourly(station=stn$id, year = yR,
-       abbr_names = FALSE, append_codes=TRUE, hourly = TRUE)
-     ## better to use worldmet::import_ghcn_daily ??!?!   XXXXXXXXXXXXXX  going out of business as well?
-     saveRDS(cWeather, paste0(cacheFolder, station, "2.rds"))
+
+  if(0) { ## test GHCN!
+    renv::install("worldmet") # only this works with Homer AP
+    renv::install("~/src/worldmet_1.0.0.tar.gz") # error with Homer
+    renv::install("~/src/worldmet_0.10.2.tar.gz") # no import_ghcn_hourly
+    packageVersion("worldmet")
+    x <- worldmet::import_ghcn_hourly(station="USW00025507" #HOMER AP"
+            , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    y <- worldmet::import_ghcn_hourly(station="USL000OVIA2" #SELDOVIA"
+            , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    z <- worldmet::import_ghcn_hourly(station="USL000FILA2" #Flat island
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+  }
+
+   if(0) {  ## daily -- this is working, 2026-05-28
+     ## better to use worldmet::import_ghcn_daily ??!?!
+     nWeather <- try(worldmet::import_ghcn_daily(station=stn$id, year=yR,
+       append_codes = FALSE, progress=FALSE, extra = TRUE))
+   } else {
+     nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
+       abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
+       extra = TRUE))
    }
 
-
- } else{
-
-
-   ## old, deprecated wrldmet code
-
-   fetchMeta <- function() {  ## old function -- not updated any longer
-     wrldSites <- worldmet::getMeta(plot = FALSE, returnMap = FALSE) ## download everything? country="US", state="AK",
-     saveRDS(wrldSites, paste0(cacheFolder, "meta.rds"))
-     wrldSites
+   if (exists ("cWeather")){
+     if(class(nWeather)[1] != "try-error"){
+       outWeather <- rbind(cWeather, nWeather); rm (ccW)
+     }else{
+       outWeather <- cWeather
+       warning(paste0("No new data from ", station))
+     }
+   } else if (class(nWeather)[1] != "try-error") {
+     outWeather <- nWeather
+   } else {
+     warning (paste ("No data for", station, stn [1]))
    }
+   saveRDS(outWeather, paste0(cacheFolder, station, "2.rds"))
+   # mirai::daemons(0)  ## reset daemons to shut down background processes
 
-
-  ## load caches
-  if(file.exists(paste0(cacheFolder, "meta.rds"))) {
-    wrldSites <- readRDS(paste0(cacheFolder, "meta.rds"))
-  } else {
-    wrldSites <- fetchMeta()
-  }
-   if(!station %in% wrldSites$station) {
-    stop(paste("Station", station, "not found in worldmet meta data."))
-  }
-  if(difftime(Sys.Date(), as.Date(wrldSites$end [match(station, wrldSites$station)])
-    , units = "days") > 28) {
-    wrldSites <- fetchMeta()
-  }
-  if(showsites) {
-    AKpick <- wrldSites |>
-      dplyr::filter(55 < latitude & latitude < 61) |>
-      dplyr::filter(-154 < longitude & longitude < -148)
-    # print(AKpick)
-    cat("Nearby stations:\n\n", paste(AKpick$station, collapse = "\n "))
-  }
-  stn <- wrldSites [match(station, wrldSites$station), ]
-
-  ## cache inventory
-  cYears <- list.files(cacheFolder, pattern = stn$code) |>
-    substr(start = 14, 17) |>
-    as.numeric()
-
-  ## set-up years to fetch
-  yR <- as.numeric(format(stn$begin, "%Y")):
-  as.numeric(format(stn$end, "%Y"))                 # all available years
-  # yR <- 2022:as.numeric(format(Sys.Date(), "%Y"))   # minimal for testing
-  ## revise yR, use as many cached files, as possible
-  yR <- yR [which(!yR %in% cYears)]
-  yR <- unique(c(yR, as.numeric(format(Sys.Date(), "%Y")))) # always fetch last year again
-
-  weather <- worldmet::importNOAA(code = stn$code
-    , year = yR
-    , hourly = TRUE
-    , path = cacheFolder
-  )
-  cWeather <- lapply(list.files(cacheFolder, pattern = stn$code), function(i) { # relist, in case of missing data
-    readRDS(paste0(cacheFolder, i))
-  }) |>   ## all years are cached and read again -- no need to combine them
-    dplyr::bind_rows() |>
-    dplyr::select(!year)
-
-  # cWeather <- lapply(list.files(cacheFolder, pattern=stn$code), function(i){ # relist, in case of missing data
-  #   readRDS(paste0(cacheFolder, i))
-  # })
-  # # cWeather <- do.call("rbind", cWeather)
-  # # weather <- unique(rbind(cWeather, weather))
-  # weatherO <- do.call("rbind", cWeather) |>
-  #   dplyr::select(!(year))
-  # #   rbind(weather) |>
-  # #   dplyr::distinct()
-  # weatherO
-
-  # hmr <- worldmet::importNOAA(code="703410-25507" # PAHO, Homer airport
-  #                    , year=2000:cYear  ## starts in 1973
-  #                    , hourly=FALSE
-  #                    , path=cacheFolder)
-  # hsp <- worldmet::importNOAA(code="997176-99999"
-  #                    , hourly=FALSE
-  #                    , year=2012:cYear
-  #                    , cacheFolder)
- }
- cWeather
+   outWeather
 }
+
 
 
 
@@ -778,16 +730,15 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
 
   ## clean-up data/convert units, as appropriate, for compatibility with getNOAA
 
-
   rW
 }
 
 
 
-## if missing, install buoydata
-if(!require("buoydata")) {
-  pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
-}
+# ## if missing, install buoydata
+# if(!require("buoydata")) {
+#   pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
+# }
 
 
 getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # default=kachemak bay wavebuoy

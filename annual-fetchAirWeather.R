@@ -20,24 +20,22 @@
 ## all NOAA stations
 stations <- c("")
 clearC = FALSE
-# clearC=TRUE  ## if errors occur, try this
+
+ clearC=TRUE  ## if errors occur, try this
 
 
 ##########################################################
-## parameters to agree upon
-metstation <- "kachomet"  # SWMP
-# metstation <- "FILA2"     # Flat Island  -- something with subsets
-# metstation <- "AUGA2"     # Augustine Island  --- subsets
-# metstation <- "46105"     # 10 NM NW of east Amatuli  --- no data? in stmet only?
-# metstation <- "AMAA2"     # East Amatuli, Barren
-metstation <- "HMSA2"       # Homer Spit(starts in 2012) -- crash at gale pictogram
-# metstation <- "PAHO"      # Homer Airport -- using riem package
+## potential local meterological stations (buoydata network and others)
+## kachomet (SWMP), Flat Island, Augustine Island, East Amatuli Island
+## Homer Spit (starting 2012), Homer Airport (e.g. PAHO with riem), Seldovia
+
+## min requirements:
+# wave buoy waves, Homer Aiport precipitation, temperature, wind (or from Spit)
+
+## package options
 
 
-wStations <- c("kachomet", "FILA2"
-  , "AUGA2", "46105"
-  , "AMAA2", "HMSA2"
-)
+
 wStations <- c("HOMER AIRPORT", "HOMER SPIT"
   , "FLAT ISLAND LIGHT", "KACHEMAK BAY RESERVE"
   , "EAST AMATULI STATION LIGHT  AK", "AUGUSTINE ISLAND")
@@ -54,10 +52,13 @@ wStations <- c("HOMER AIRPORT", "HOMER SPIT"
 if(0) {
   ## list availabel buoy stations nearby
   ## less refined than worldmet, so only use this for waverider buoy!
+  # file.remove("renv/library/windows/R-4.6/x86_64-w64-mingw32/buoydata/data/Rdata.rdb")
   buoydata::buoy_data |>
     dplyr::filter(LAT > 58, LAT < 61) |>
     dplyr::filter(LON > -154, LON < -149) |>
     dplyr::filter(nYEARS >= 10)
+  ## has East Amatuli,k Augustine, Flat Island, Homer Spit, Seldovia
+  seldoviat <- buoydata::get_buoy_data("OVIA2")
 }
 
 
@@ -99,14 +100,15 @@ wave.46108 <- nWave
 ## move to daily summaries?
 cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
 gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
+gN <- function(stn, ss = FALSE) {getNOAAweather(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
 
 weatherL <- list(homer.airport = gN("Homer AP", TRUE)
-                 # , homer.spit = gN("Homer Spit")
-                 # , homer.spit2=gN("KACHEMAK BAY RESERVE")
-                   , kachomet = sAir
-                 # , augustine = gN("Augustine Island")
-                 # , flat.island = gN("Flat Island Light")
-                 # , east.amatuli = gN("East Amatuli Station Light  AK")
+                  , homer.spit = gN("Homer Spit")
+                  , homer.spit2=gN("KACHEMAK BAY RESERVE")
+                  , kachomet = sAir
+                  , augustine = gN("Augustine Island")
+                  , flat.island = gN("Flat Island Light")
+                  , east.amatuli = gN("East Amatuli Station Light  AK")
                  )
 rm (cF, gN)
 weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station

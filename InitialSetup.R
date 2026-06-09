@@ -34,7 +34,8 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
   if(!require('sf')) {renv::install('sf', prompt = FALSE)}
   if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
-  if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
+  # if(!require("buoydata")) {pak::pak("NOAA-EDAB/buoydata", ask = FALSE)}    ## mini: fails with package dependencies -- missing github credentials
+  if(!require("buoydata")) {renv::install("NOAA-EDAB/buoydata", prompt = FALSE)}
   if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
   if(!require("terra")) {renv::install("terra", prompt = FALSE)}
   if(!require("GVI")) {   ## fails to install into renv, but installs into default user library
