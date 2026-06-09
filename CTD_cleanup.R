@@ -272,12 +272,24 @@ physOc$Match_Name <- gsub ("_C$", "-C", physOc$Match_Name)
 physOc$Match_Name <- gsub ("_D$", "-D", physOc$Match_Name)
 
 
-
 ## ensure that every station has a unique Match_Name, even those used in two
 ## transects (9_6, 4_3, AlongBay_3, AlongBay_6)
 physOc$Match_Name <- ifelse (physOc$Match_Name == "4_3", "AlongBay_3", physOc$Match_Name)
 physOc$Match_Name <- ifelse (physOc$Match_Name == "AlongBay_6", "9_6", physOc$Match_Name)
 
+## track down remaining Match_Name miss-matches one-on-one
+physOc$Match_Name <- gsub("^Subbay_BEAR-", "Subbay_Bear-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_CHINAPOOT-", "Subbay_Chinapoot-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_HALIBUT-", "Subbay_Halibut-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_JAKOLOF-", "Subbay_Jakolof-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_KASITSNA-", "Subbay_Kasitsna-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_PETERSON-", "Subbay_Peterson-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_SADIE-", "Subbay_Sadie-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_SELDOVIA-", "Subbay_Seldovia-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_TUTKA-", "Subbay_Tutka-", physOc$Match_Name)
+## numbered stations
+physOc$Match_Name <- gsub("^Subbay_SADIE", "Subbay_Sadie-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_TUTKA", "Subbay_Tutka-", physOc$Match_Name)
 
 
 
@@ -324,8 +336,8 @@ if (0) {
   physOc$Match_Name <- gsub ("extra$", "", physOc$Match_Name)
 
   ## fixing a few individual stations
-  physOc$Match_Name <- gsub ("9_North", "9_1", physOc$Match_Name, fixed = TRUE)
-  physOc$Match_Name <- gsub ("9_South", "9_1", physOc$Match_Name)
+  physOc$Match_Name <- gsub ("9_NORTH", "9_1", toupper(physOc$Match_Name), fixed = TRUE) # XXX fix 2026-07-16 -- review
+  physOc$Match_Name <- gsub ("9_SOUTH", "9_1", toupper(physOc$Match_Name))
   ## could also match some of the Tutka_1-9, but probably little point in doing that
   print (badStn <- showBad (physOc))
   # print (stn$Match_Name)
@@ -372,17 +384,30 @@ physOc$Bottom.Depth <- stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
 
 ## print (sort (levels (factor (physOc$longitude_DD))))
 ## physOc [which (physOc$longitude_DD == "NA"),]
-if (max (physOc$longitude_DD, na.rm = TRUE) > 0) {stop ("some longites are positive")}
+if (max (physOc$longitude_DD, na.rm = TRUE) > 0) {stop ("some longitudees are positive")}
 
+
+save.image("~/tmp/LCI_noaa/cache-t/ctdcleanupPos.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdcleanupPos.RData")
 
 ## write stations with missing positions to file
 noPos <- levels (factor (physOc$File.Name [which (is.na (physOc$longitude_DD))]))
 noPos <- levels (factor (physOc$Match_Name [which (is.na (physOc$longitude_DD))]))
 cat ("#\n#\n#\n# missing locations for these stations:\n\n")
 print (noPos)
+
+print(summary (factor(physOc$File.Name [physOc$Match_Name %in% noPos])) |>
+        sort(decreasing=TRUE))
+
+
+
+
 write (noPos, file = "~/tmp/LCI_noaa/data-products/missingLocations_CTD.txt")
 rm (noPos)
 # summary (physOc$longitude_DD)
+
+
+
 
 
 
@@ -600,7 +625,7 @@ save.image ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")
 summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))
 noLL <- which (is.na (physOc$latitude_DD))
-levels (factor (physOc$Match_Name[noLL]))
+summary (factor (physOc$Match_Name[noLL])) |> sort(decreasing=TRUE)
 ## AlongBay_3.5 -- bad position? Aborted because of high waves. Not in Database, but is in notebooks
 ## remove unresolved positions -- still too many!
 physOc <- subset (physOc, !is.na (latitude_DD))

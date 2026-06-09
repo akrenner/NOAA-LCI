@@ -319,7 +319,6 @@ if(.Platform$OS.type == "unix") {
 
 
 # physOc <- poAll
-rm(indivPlots) # to re-run from scratch
 gc()
 
 

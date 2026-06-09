@@ -118,6 +118,37 @@ physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |
   dplyr::bind_rows()
 rm(aD)
 
+
+physOcT <- subset(physOcT, nchar(physOcT$Date) > 4)
+# for(i in seq_along(levels(factor(physOcT$Date)))) {
+#   cat(i, "\n")
+#   x <- as.POSIXct(paste(levels(factor(physOcT$Date))[i], physOcT$Time[i]))
+# }
+# levels(factor(physOcT$Date))
+
+
+## figure out what's going on with turbidity, attenuation, and transmission
+
+# summary(as.factor(subset(physOcT, !is.na(Beam_transmission))$CTD.serial)) ## all 4141 -- only 4141 has Beam_transmission
+# summary(as.factor(subset(physOcT, !is.na(Beam_attenuation))$CTD.serial))  ## all 4141
+# summary(as.factor(subset(physOcT, !is.na(Turbidity))$CTD.serial))         ## all 5028 and 8138 -- exals attenuation?!
+
+# tF <- 21:23
+# summary(physOcT[,tF])
+# summary(subset(physOcT, CTD.serial==4141)[,tF])
+# summary(subset(physOcT, CTD.serial==5028)[,tF])
+# summary(subset(physOcT, CTD.serial==8138)[,tF])
+
+
+
+
+## Beam_attenuation and Beam_transmission are distinct measures, even though
+## they are both measures of turbidity. Only the 4141 instrument has both.
+## Beam_attenuation appears to be the same as Turbidity, therefore the
+## substitution above. Could look into when/where attenuation differes from
+## transmission, but so far unclear why that should be of interest.
+
+
 physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , isoTime=as.POSIXct(paste(Date, Time))
                                      , latitude_DD=Latitude_DD
@@ -134,56 +165,15 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                      , PAR.Irradiance
                                      , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                     , turbidity = Turbidity
-                                     , Beam_attenuation
-                                     , Beam_transmission
+                                     , turbidity = ifelse (is.na (Turbidity),
+                                         Beam_attenuation, Turbidity)
+                                     # , Beam_attenuation
+                                    #  , Beam_transmission  ## causing all sorts of issues -- abandon for now
 ))
 
 
-## merge Beam_attenuation and Beam_transmission into Turbidity (units of attenuation)
-## calculate monthly means, then regress transmission and attenuation
-## this is no longer a hard measurement -- that's why this is here rather than in
-## CTD prep scripts for published data.
 
-## merge 'turbidity' and beam attenuation given their similar menas (0.77 vs 0.78), and ranges
-## empirically translate beam_transmission, as that is the only viable option
-month <- factor(format(physOc$isoTime, "$m"))
-turbC <- ifelse(is.na(physOc$turbidity), physOc$Beam_attenuation,
-                physOc$turbidity)
-poNorm <- aggregate(cbind(turbC, Beam_transmission) ~ Match_Name +
-  month + Depth.saltwater..m., data=physOc, FUN = mean, na.rm = TRUE)
-turbM <- loess(Beam_transmission~turbC, poNorm, span=0.5)
-turb <- predict(turbM, newdata=turbC)
-if(0) {
-  plot (Beam_transmission~turbC, poNorm)
-  ndat <- data.frame(turbC = seq(min(turbC, na.rm = TRUE), max(turbC,
-    na.rm = TRUE), length.out = 100))
-  lines (ndat$turbC, predict(turbM, newdata=ndat), col="blue", lwd=2)
-  rm(ndat)
-}
-## apply model to all CTD data
-physOc$turbidity <- ifelse (is.na(turbC), turb, turbC)
-physOc <- physOc |>
-  dplyr::select(-Beam_attenuation, -Beam_transmission)
-rm (turbM, turb, turbC, poNorm)
-
-
-
-## add new derived variable: slope of density gradient
-## best to do this here = ??
-## plan A: calculate slope for each step
-## plan B: fit smoothing spline and produce derivative
-# cast <- factor(paste0(physOc$Match_Name, physOc$isoTime))
-# physOc$densityGradient <- sapply(1:length(levels(cast))
-#                                   , function(i){
-#                                     cst <- subset(physOc, cast == levels(cast)[i])
-#                                     slp <-(stats::lag(cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
-#                                      (stats::lag(cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
-#                                     #slp <- data.frame(gradient=slp)
-#                                     slp
-#                                   }) |>
-#   unlist())
-physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
+physOc$bvf <- sapply(seq_along(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function(i){
                                     cast <- subset(physOc, File.Name == levels(physOc$File.Name)[i])
                                     bvf <- oce::swN2(pressure=cast$Pressure..Strain.Gauge..db.
@@ -195,6 +185,8 @@ physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly ident
                                   }) |>
   unlist()
 physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
+
+
 
 stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset(stn, !is.na(Lon_decDegree))
@@ -720,17 +712,24 @@ zoop <- cbind(Match_Name = paste(zoop$Transect, zoop$Station, sep = "_")
                                        , format = "%d-%b-%y %H:%M")
              , zoop)
 zoop$Match_Name <- as.character(zoop$Match_Name)
-zoop$Match_Name <- ifelse(zoop$Station == "Sadie C", "Sadie_C", zoop$Match_Name)
-zoop$Match_Name <- ifelse(zoop$Transect == "TKBay", "Tutka_A", zoop$Match_Name)
+
 zoop$Match_Name <- gsub("^KB_", "AlongBay_", zoop$Match_Name)
-zoop$Match_Name <- gsub("Peterson Bay_", "Peterson_", zoop$Match_Name, fixed = TRUE)
-zoop$Match_Name <- gsub("^_$", "Halibut_B", zoop$Match_Name) # or A,C?
-                                        # no matching CTD data on that date
-zoop$Match_Name <- gsub("^_", "", zoop$Match_Name)
+zoop$Match_Name <- gsub("^Bear_B", "Subbay_Bear-B", zoop$Match_Name)
+zoop$Match_Name <- gsub("^_Sadie\ C", "Subbay_Sadie-C", zoop$Match_Name)
+zoop$Match_Name <- gsub("^Peterson\ Bay_B", "Subbay_Peterson-B", zoop$Match_Name)
+zoop$Match_Name <- gsub("^TKBay_1", "Subbay_Tutka-A", zoop$Match_Name)
+zoop$Match_Name <- gsub("^TKBay_1", "Subbay_Tutka-A", zoop$Match_Name)
+zoop$Match_Name <- ifelse(zoop$SampleID=="KBBR_HalibutCove", "Subbay_Halibut-B",
+                          zoop$Match_Name)
+zoop <- subset(zoop, nchar(zoop$Date) > 4)
+
 refN <- match(zoop$Match_Name, stn$Match_Name)
-## zoop$Match_Name [is.na(refN)]    # bad zoop stations that don't match master list
+if(any(is.na(refN))) {
+  print (levels(factor(zoop$Match_Name [which(is.na(refN))])))
+
+  stop("zooplankton station does not match reference list")
+  }
 # add geographic coordinates from stn
-if(any(is.na(refN))){stop("zooplankton station does not match reference list")}
 zoop <- cbind(stn[refN, match(c("Lon_decDegree", "Lat_decDegree"), names(stn))]
                , isoDate = strptime(zoop$Date, format = "%d-%b-%y") # output with tz?
              , zoop)

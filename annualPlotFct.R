@@ -858,30 +858,33 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
 
   # buoyID <- tolower(buoyID)
   buoyID <- toupper(buoyID)
-  cacheF <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
+  cacheRDS <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
 
   if(clearcache) {
-    unlink(paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)
-    unlink(cacheF)
+    unlink(cacheRDS)
     # unlink("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
+    # unlink(paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)  ## old structure
     # dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
 
-  if(file.exists(cacheF)) {
-    wDB <- readRDS(cacheF)
-    startY <- max(wDB$datetimestamp) |>
-      format("%Y") |>
-      as.numeric() - 1
+  if(file.exists(cacheRDS)) {
+    wDB <- readRDS(cacheRDS)
+    if(difftime(Sys.time(), max(wDB$timestamp), units="days") > 30) {
+      wDBu <- try(buoydata::get_buoy_data(buoyid = buoyID))
+      if(class(wDBu)[1]=="try-error"){
+        warning("Unable to get buoydata updates")
+      }else{
+        wDB <- wDBu
+      }
+    }
   } else {
-    startY <- buoydata::buoy_data |>
-      dplyr::filter(ID == buoyID) |>
-      dplyr::select(Y1) |>
-      as.numeric()
+    wDB <- buoydata::get_buoy_data(buoyid = buoyID)
   }
-  wDB <- buoydata::get_buoy_data(buoyid = buoyID)
   wDB$timestamp <- wDB$time
+  saveRDS(wDB, cacheRDS)
   return(wDB)
 }
+
 
 gNOAAbuoy <- function(buoyID, clearcache = FALSE) {
   ## wrapper for getNOAA to fix units and field names to fit SWAMP data

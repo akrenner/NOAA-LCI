@@ -82,7 +82,7 @@ sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
 ## weather from Homer Airport
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
-nAiro <- try(getNOAA("HMSA2"))
+nAiro <- try(getNOAA(buoyID="HMSA2"))
 ## ------------clean up weather data and move to metric units ----------------
 
 ## match noaa to swmp data -- move this into a annualPltFct.R function XX !
@@ -123,7 +123,7 @@ gN <- function(stn, ss = FALSE) {
 }
 
 cat("## This may take a long time, especially on the first run over a slow connection\n\n")
-weatherL <- list(homer.airport = gN("Homer AP", TRUE)
+weatherL <- list(homer.airport = gN("Homer AP", TRUE)                                         # fails XXX
                   , homer.spit = gN("Homer Spit")
                   , homer.spit2=gN("KACHEMAK BAY RESERVE")
                   , kachomet = sAir
@@ -152,7 +152,7 @@ save(nWave, file = "~/tmp/LCI_noaa/cache/annual-Wave.RData")
 save(hmr, file = "~/tmp/LCI_noaa/cache/annual-noaaAirWeather.RData")
 save(hmr = sAir, file = "~/tmp/LCI_noaa/cache/annual-SWMPAirWeather.RData")
 
-save.image("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
+# save.image("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 save(nWave, hmr, sAir, weatherL, file = "~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 ## EOF

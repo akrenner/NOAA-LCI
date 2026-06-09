@@ -87,6 +87,8 @@ rm(slog)
 
 
 poAll <- poAll [order(poAll$isoTime), ]
+
+
 surveyW <- factor(poAll$DateISO)
 
 ## use nominal month and year from notebook -- eventually
@@ -140,6 +142,7 @@ oVars <- expression("Temperature [°C]"  #" ~ "[" * ""^oC * "]"
   , "PAR"
   , Chlorophyll ~ "[" * mg ~ m^-3 * "]" # , "chlorophyll" #, "logFluorescence"
   , Turbidity ~"[" * m^-1 * "]" # "Turbidity" # it's really turbidity/attenuation # , "logTurbidity"
+#  , "Beam transmission [%]"
   , Buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]"  # , "N^2[s^-2]"  # density gradient [Δσ/Δdepth]"# , expression(paste0(N^2, "[", s^-2, "]"))
   , log ~ (PAR)
   , log ~ (turbidity)
@@ -152,6 +155,7 @@ oVarsF <- c("temperature"    # need different name for oxygen to use in function
   , "PAR.Irradiance"
   , "Chlorophyll_mg_m3" #"fluorescence" # , "chlorophyll" #, "logFluorescence"
   , "turbidity"
+#  , "Beam_transmission"
   , "bvf"
   , "logPAR"
   , "logTurbidity"
@@ -188,6 +192,7 @@ oCol3 <- list( ## fix versions?
   , chlorophyll = colorRampPalette(cmocean::cmocean("algae")(5), bias = 3)
   # , oceColorsTurbo # cmocean("solar")
   , turbidity = colorRampPalette(cmocean::cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
+#  , Beam_transmission = colorRampPalette(cmocean::cmocean("turbid")(5), bias = 3) # , cmocean("matter")  # or turbid
   , bvf = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32)))) # for densityGradient
   , logPAR = oce::oceColorsTurbo
   , logTurbidity = cmocean::cmocean("turbid")

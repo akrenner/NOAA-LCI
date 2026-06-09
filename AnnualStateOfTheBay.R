@@ -17,7 +17,6 @@ print(sT <- Sys.time())
 quarterly <- TRUE
 # quarterly <- FALSE
 
-## State of the Bay Report 2019
 
 ## plot SWMP weather data for annual state of the bay report
 

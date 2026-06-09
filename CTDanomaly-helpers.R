@@ -19,6 +19,7 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     "PAR",
                     Chlorophyll ~ "[" * mg ~ m^-3 * "]",
                     Turbidity ~ "[" * m^-1 * "]",
+                    # "Beam transmission [%]",
                     Buoyancy ~ frequency ~ N^2 ~ "[" * s^-2 * "]",
                     log ~ (PAR),
                     log ~ (turbidity),
@@ -30,6 +31,7 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     "PAR Anomaly",
                     Chlorophyll ~ Anomaly ~ "[" * mg ~ m^-3 * "]",
                     Turbidity ~ Anomaly ~ "[" * m^-1 * "]",
+                    # "Beam transmission Anomaly [%]",
                     Buoyancy ~ frequency ~ Anomaly ~ N^2 ~ "[" * s^-2 * "]",
                     log ~ (PAR) ~ Anomaly,
                     log ~ (turbidity) ~ Anomaly,
@@ -41,13 +43,14 @@ oVars <- expression("Temperature [°C]",     #Temperature ~ "[" * ""^o ~ C * "]"
                     PAR ~ Anomaly ~ "[" * SD * "]",
                     Chlorophyll ~ Anomaly ~ "[" * SD * "]",
                     Turbidity  ~ Anomaly ~ "[" * SD * "]",
+#                    "Beam attenuation anomaly [SD]",
                     Buoyancy ~ frequency ~ Anomaly ~ N^2 ~ "[" * SD * "]",
                     log ~ (PAR) ~ Anomaly ~ "[" * SD * "]",
                     log ~ (turbidity) ~ Anomal ~ "[" * SD * "]"
 )
 
 oVarsF <- c(oVarsF, paste0("an_", oVarsDFname), paste0("anS_", oVarsDFname))
-oVarsDFname <- names(poAll)[which(names(poAll) == "Temperature_ITS90_DegC"):
+oVarsDFname <- names(poAll)[which(names(poAll) == "Temperature_ITS90_DegC"):  # to deal with oce way of handling temperature, salinity, density
   ncol(poAll)] # update of version from CTDwall-setup.R
 
 oCol3 <- c(oCol3,
@@ -68,11 +71,8 @@ oRange <- t(sapply(oVarsDFname, FUN = function(vn) {
 save(oVars, oVarsDFname, oVarsF, oCol3, oRange,
   file = "~/tmp/LCI_noaa/cache/ctd_anomalies.RData")
 
-if(!all.equal(rep(nrow(oRange),4),
-  c(length(oVarsF), length(oVarsDFname), length(oVars), length(oCol3)))) {
-  stop("Discrepancies in the length of objects that should be equal")}
+dfnameL <- c(length(oVarsF), length(oVarsDFname), length(oVars), length(oCol3))
 
-if(0) {
-cbind(rep(nrow(oRange),4),
-  c(length(oVarsF), length(oVarsDFname), length(oVars), length(oCol3)))
-}
+if(!all.equal(rep(nrow(oRange),4), dfnameL)) {
+  stop(paste ("Discrepancies in the length of objects that should be equal: ",
+          paste (dfnameL, collapse = ", ")))}

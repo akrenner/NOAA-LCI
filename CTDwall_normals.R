@@ -29,12 +29,23 @@ referenceInterval <- 2012:(as.numeric(format(Sys.time(), "%Y"))-1) ## all but cu
 
 
 
+
+## 12 months plot in a circle/rectangle, map in the middle
+posterP <- TRUE
+# posterP <- FALSE
+
+
+if(posterP) {
+  normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
+} else {
+  normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals_one-page/"
+}
+dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
+
+
+
 load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R -- load poAll
 
-
-
-normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
-dir.create(normDir, showWarnings=FALSE, recursive=TRUE)
 
 
 
@@ -66,29 +77,43 @@ poAll$month <- as.numeric(poAll$month)
 
 ## XXXX move forward to CTD_cleanup.R!!!       ================================= XXX
 poAll$Match_Name <- as.character(poAll$Match_Name)
+# poAll$Match_Name <- factor(poAll$Match_Name)
 # poAll$Match_Name <- ifelse (poAll$Match_Name == "4_3", "AlongBay_3", poAll$Match_Name)
 # poAll$Match_Name <- ifelse (poAll$Match_Name == "AlongBay_6", "9_6", poAll$Match_Name)
+
+
+
+## troubleshooting
+# poAllx <- poAll
+# poAll <- subset(poAll, DateISO < as.Date("2026-07-01"))
+# poAll <- poAllx
 
 
 oM <- as.matrix(poAll [, which(names(poAll) == "Temperature_ITS90_DegC")
   :ncol(poAll)])
 
-ctdAgg <- function(df = poAll, FUN=mean, ...) {
-  aggregate(oM ~ Match_Name + month + Depth.saltwater..m., data = df,
+ctdAgg <- function(df = poAll, dM = oM, FUN=mean, ...) {
+  # df$Depth.saltwater..m. <-   as.factor(df$Depth.saltwater..m.) # breaks model below
+  # df$Match_Name <- as.factor(df$Match_Name)                     # makes no difference
+  aggregate(dM ~ Match_Name + month + Depth.saltwater..m., data = df,
     subset=as.numeric(format(isoTime, "%Y")) %in% referenceInterval,
     FUN = FUN, ...) |>
     dplyr::arrange(Match_Name, month, Depth.saltwater..m.)
 }
 
 
-poNorm <- ctdAgg(df = poAll, FUN = mean, na.rm = TRUE)
+poNorm <- ctdAgg(df = poAll, dM = oM, FUN = mean, na.rm = TRUE)
 nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
+
+
+
 # pN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) }) |>
 #   dplyr::select(-Match_Name, -month, -Depth.saltwater..m.) |>
 #   apply(MARGIN=1, FUN=sd)
 # if(!all.equal(pN, rep(0, nrow(poNorm)))) {stop("investigate discrepancy")}; rm(pN)
-pN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) }) |>
+pN <- ctdAgg(df = poAll, dM = oM, FUN = function(x) {sum(!is.na(x)) }) |>
   dplyr::pull(Temperature_ITS90_DegC) # inefficient to compute, but easy to code
+# pN <- ctdAgg(df = poAll, FUN = function(x) {length(x)}) |> dplyr::pull(Temperature_ITS90_DegC)
 
 # drop values with N < nMin
 poNorm[,nC]<-sapply(nC, function(i) {ifelse(pN < nMin, NA, poNorm [,i])} )
@@ -96,12 +121,12 @@ poNorm[,nC]<-sapply(nC, function(i) {ifelse(pN < nMin, NA, poNorm [,i])} )
 
 
 
-poSD <- ctdAgg(df = poAll, stats::sd, na.rm = TRUE)
+poSD <- ctdAgg(df = poAll, dM = oM, stats::sd, na.rm = TRUE)
 poSD[,nC] <- sapply(nC, function(i) {ifelse(pN < nMin, NA, poSD   [,i])} )
 
 
 names(poSD) <- paste0("SD_", names(poSD))
-poRA <- ctdAgg(df = poAll, function(x){diff(range(x, na.rm = TRUE))})
+poRA <- ctdAgg(df = poAll, dM = oM, function(x){diff(range(x, na.rm = TRUE))})
 names(poRA) <- paste0("Range_", names(poRA))
 poNorm <- cbind (poNorm,
     poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)]
@@ -195,7 +220,7 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
 
 ## adapt to cbind of poNorm and poSD -- these are of no use for anomalies
 oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
-oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
+oVarsDFname <- c(oVarsDFname, paste0("SD-", oVarsDFname), paste0("Range-", oVarsDFname))
 oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle), paste0("Range-", oVarsTitle))
 oVars <- rep(oVars,2)
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))
@@ -209,9 +234,7 @@ oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {heat.colors}), # for SD
            )
 
 
-## 12 months plot in a circle/rectangle, map in the middle
-posterP <- TRUE
-# posterP <- FALSE
+
 
 source("CTDsectionFcts.R")
 ## load KBL logo
@@ -220,17 +243,17 @@ KBL <- png::readPNG("pictograms/KBL-Informal-NCCOS_tag_below_22hr.png")
 
 
 if(0) {## parallelize this plotting code for speed? -- maybe too much trouble?
-plotNorm <- function (i, cmbs) {
-  j <- cmbs [i,2]
-  ov <- cmbs [i,1]
-  ## prep transect -- j
-  ### ....
-  cat("Transect:", j, oVarsTitle [ov], "\n")
-}
+  plotNorm <- function (i, cmbs) {
+    j <- cmbs [i,2]
+    ov <- cmbs [i,1]
+    ## prep transect -- j
+    ### ....
+    cat("Transect:", j, oVarsTitle [ov], "\n")
+  }
 
-require("parallel")
-cmbs <- expand.grid(ov = seq_along(oVarsF), j = c("AlongBay", "9", "ABext"))
-x <- lapply(seq_len(nrow(cmbs)), FUN = plotNorm, cmbs=cmbs)
+  require("parallel")
+  cmbs <- expand.grid(ov = seq_along(oVarsF), j = c("AlongBay", "9", "ABext"))
+  x <- lapply(seq_len(nrow(cmbs)), FUN = plotNorm, cmbs=cmbs)
 }
 
 
@@ -271,7 +294,7 @@ for (j in c("AlongBay", "9", "ABext")) {
       layout(matrix(rev(c(12, 1:2, 11, 14, 3, 10, 13, 4, 9, 15, 5, 8:6)), ncol = 3, byrow = TRUE))  ## winter on top
       # layout.show(n=13)
     } else {
-      png(paste0(normDir, j, colnames(oM)[ov], "%02d.png")) ## for testing
+      png(paste0(normDir, j, "_", oVarsF[ov], "%02d.png")) ## for testing
     }
     for(k in seq_along(month.abb)) {
       # k = 8
@@ -307,22 +330,24 @@ for (j in c("AlongBay", "9", "ABext")) {
       }
       mtext(month.name[k], 3, line = 0.5)
     }
-   if(posterP) {
-     if(exists("xCoM")) {
+     if(exists("xCom")) {
        ## map
-       oce::plot(xCoM, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
+       oce::plot(xCom, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
        # XX      mtext(paste0("Transect: ", j), line = -2)
-       rm(xCoM)
+       rm(xCom)
      }
      ## NCCOS-KBL logo
-      im_h <- nrow(KBL); im_w <- ncol(KBL)
-      # ppar <- par()
-      par(mar=c(1,2,1,2.0))
-      plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
-        , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n", bty = "n")
-      rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
+   if(posterP) {
+     im_h <- nrow(KBL); im_w <- ncol(KBL)
+     # ppar <- par()
+     par(mar=c(1,2,1,2.0))
+     plot(1:2, type = 'n', axes = FALSE, xlab = "", ylab = "", asp = 1
+          , xlim = c(0, im_w), ylim = c(0, im_h), xaxt = "n", yaxt = "n", bty = "n")
+     rasterImage(KBL, xleft = 0, ybottom = 0, xright = im_w, ytop = im_h)
+   }
 
       ## color scale bar
+   if(posterP) {lineC=-10.0} else {lineC=-24}
       nCol <- 100
       t.ramp <- oCol3[[ov]](nCol)
       yL <- 1.5
@@ -334,16 +359,16 @@ for (j in c("AlongBay", "9", "ABext")) {
       title(main = oVars [ov], cex = 3, line = 0.5)
       lVal <-  pretty(c(zR [1, ov], zR [2, ov]))
       axis(1, at = (lVal - zR [1, ov]) / (zR [2, ov] - zR [1, ov]) * nCol
-           , labels = lVal, lwd = 0, line = -10.0, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
+           , labels = lVal, lwd = 0, line = lineC, tick = TRUE, lwd.ticks = 1)    ## any way to calculate line = x?
       ## main title:
       mtext(paste0(oVarsTitle [ov], "\nTransect: ", j), side = 1, line = -2, cex = 1.5)
 
-    }
+    # }
     dev.off()
     cat("Transect:", j, oVarsTitle [ov], "\n")
   }
 }
-rm(KBL, im_h, im_w)
+rm(KBL, im_h, im_w, lineC)
 
 
 

@@ -14,6 +14,25 @@ if(0) {
   ## Be patient
 }
 
+
+#######################################################
+## For collaborators -- get the latest updates       ##
+## This will overwrite any changes you may have made ##
+#######################################################
+
+if(length(grep("[M|m]artin", getwd())) < 1) {
+  ## for collaborators: pull latest versions from git and sync packages
+  system("git pull --force")
+  system ("git checkout main")
+  if(!renv::restore()$synchronized) {
+    renv::restore(prompt=FALSE, clean= TRUE)
+  }
+  hd <- getwd()
+  setwd("~/GISdata/LCI/")  ## fetch latest CTD data
+  system("git pull")
+  setwd(hd); rm (hd)
+}
+
 ## Execute all Kachemak Bay/Cook Inlet scripts. In a new installation, it's
 ## recommended to disconnect from VPN first, to avoid network timeouts. Expect
 ## over 3 hours for the initial run, which needs to download many external files
@@ -62,23 +81,6 @@ if(!file.exists(".initialized.rds")){
 }
 
 
-#######################################################
-## For collaborators -- get the latest updates       ##
-## This will overwrite any changes you may have made ##
-#######################################################
-
-if(length(grep("[M|m]artin", getwd())) < 1) {
-  ## for collaborators: pull latest versions from git and sync packages
-  system("git pull --force")
-  system ("git checkout main")
-  if(!renv::restore()$synchronized) {
-    renv::restore(prompt=FALSE, clean= TRUE)
-  }
-  hd <- getwd()
-  setwd("~/GISdata/LCI/")  ## fetch latest CTD data
-  system("git pull")
-  setwd(hd); rm (hd)
-}
 
 
 
@@ -120,8 +122,8 @@ if(0) {
     # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
   }
 
-  # renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
-  # renv::install("~/src/oce_1.7-10.tar.gz")
+  renv::update(exclude = c("oce", "buoydata", "worldmet")) ## rerun for all/specific packages to update
+  # renv::install("~/src/oce_1.8-3.tar.gz")
 
   ## Delete left-over lock files if package installation is stuck
   # unlink(list.files(.libPaths(), pattern = "^00LOCK", full.names = TRUE), recursive = TRUE)
@@ -157,7 +159,6 @@ if(.Platform$OS.type != "unix") {
   cat("Need to upate aggregated CTD files from ResearchWorkSpace or GoogleDrive\n")
 }
 
-sink(file = "runAll.log", append = FALSE)
 
 
 
@@ -165,12 +166,13 @@ sink(file = "runAll.log", append = FALSE)
 ## Analyse and plot oceanographic and biological data ##
 ########################################################
 
+sink(file = "runAll.log", append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
-source("CTD_DataAvailability.R")
+source("CTDdataAvailability.R")
 
 
 ## Plot The Wall
@@ -180,14 +182,11 @@ source("CTD_DataAvailability.R")
 
 source("CTDwall-setup.R")
 source("CTDwall_normals.R")  # climatologies
-source("CTD_anomaly-helpers.R")
-source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+source("CTDanomaly-helpers.R")
+source("CTDtimeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-# quickPlot <- !as.numeric(format(Sys.time(), "%H")) %in% c(0:6,18:24)
-if(as.numeric(format(Sys.time(), "%H")) %in% c(0:6, 18:24)) {
-  quickPlot <- TRUE
-} else {quickPlot <- TRUE}
+quickPlot <- as.numeric(format(Sys.time(), "%H")) %in% 8:18
 source("CTDwall.R", local = TRUE); rm(quickPlot)
 sink()
 
@@ -246,7 +245,7 @@ source("CTD_timeseries_freshwater.R")
 
 
 ## update metadata
-source("metaDataCompilation.R")
+# source("metaDataCompilation.R")
 
 
 

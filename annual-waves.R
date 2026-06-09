@@ -78,14 +78,17 @@ if (0) {
 
 source ("annualPlotFct.R")
 # wDB <- getNOAA (buoyID = 46108)
-load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
-if (difftime (Sys.time(), max (nWave$timestamp), units = "days") > 40) {
-  cat ("\nFetching new buoy data from NOAA...\n")
-  # source ("annual-fetchAirWeather.R")
-  # load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
-  nWave <- try(getNOAA(buoyID = "46108"))  ## copied from annual-fetchAirWeather.R
-}
-wDB <- nWave
+
+
+
+# load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+load ("~/tmp/LCI_noaa/cache/annual-Wave.RData") # nWave from annual-fetchAirWeather.R
+## this already tried to update weather -- no need to do that again
+
+if(class(nWave)[1] == "try-error") {
+  stop ("Was unable to obtain buoy data. Try to re-run annual-fetchAirWeather.R")
+} else {wDB <- nWave}
+
 
 hmr <- weatherL$augustine
 ## is all the Augustine Island part obsolete? replicated elsewhere? XXX
