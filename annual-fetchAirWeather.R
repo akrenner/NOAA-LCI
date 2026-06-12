@@ -20,8 +20,7 @@
 ## all NOAA stations
 stations <- c("")
 clearC = FALSE
-
- clearC=TRUE  ## if errors occur, try this
+clearC=TRUE  ## if errors occur, try this
 
 
 ##########################################################
@@ -58,7 +57,7 @@ if(0) {
     dplyr::filter(LON > -154, LON < -149) |>
     dplyr::filter(nYEARS >= 10)
   ## has East Amatuli,k Augustine, Flat Island, Homer Spit, Seldovia
-  seldoviat <- buoydata::get_buoy_data("OVIA2")
+  seldovia <- buoydata::get_buoy_data("OVIA2")
 }
 
 
