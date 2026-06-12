@@ -137,7 +137,7 @@ pdf ("~/tmp/LCI_noaa/media/StateOfTheBay/FluorescenceA.pdf")
 par (mfrow = c(2, 2), mar = c(3, 4, 3, 1))
 
 for (i in seq_along (waterL)) {
-  if(any(!is.na(waterL[[i]]))) {  ## weird, 2026-03 CDMO is not reporting chlorophyll
+  if(any(!is.na(waterL[[i]]))) {  ## weird, 2026-03 CDMO is not reporting chlorophyll   XXX
     hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
                        , currentYear = currentYear, qntl = qntl))
     if (class (hM) != "try-error") {

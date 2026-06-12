@@ -514,12 +514,64 @@ download a fresh, complete zip-file from CDMO and add it to '~/GISdata/LCI/SWMP/
 
 
 
-getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
- # options: worldmet: has precipication, but still unstable
- # buoydata -- no precip?
- # GSODR -- no precip?
+## try out openmeteo package as an alternative source of weather data
+## unfinished !
+## Need to translate field names, possibly units
+getDailyWeather <- function(station = "Homer Spit", start = "2000-01-01",
+  daily = c("temperature_2m_min", "temperature_2m_max", "rain_sum", "precipitation_sum",
+    "windspeed_10m_max", "wind_gusts_10m_max", "wind_direction_10m_dominant")){
 
-## utilize worldmet::importNOAA adding caching function -- sunset
+  # openmeteo -- archive only -- still active on github
+  # openmeteo::weather_history() -- only 2021 forward ???
+
+  ## daily_history_vars: temperature_2m_max, temperature_2m_min  (apparent_temperature?)
+  ##       rain_sum, windspeed_10m_max, windspeed_gusts_10min_max
+  ## hourly_history_vars: rain, precipitation, apparent_temperature, wave_height, wave_period, wave_direction
+
+
+  ## try with: East Amatuli, Augustine Island,
+  findAK <- function(site) {
+    openmeteo::geocode(site, n_results=99) |>
+      dplyr::filter(country_code=="US") |>
+      dplyr::filter(longitude < -140) |>
+      dplyr::filter(latitude < 61)
+  }
+
+  akStn <- c("Augustine Island","Flat Island",
+  "Homer Horbor", "Seldovia Airport", "Homer Airport")
+  akStn <- tolower(akStn)
+  for (i in seq_along(akStn)) {
+    try(findAK(akStn[i]))
+  }
+
+  site <- openmeteo::geocode("Flat Island", n_results=100) |>
+    dplyr::filter(country_code=="US")
+  site[order(site$latitude, decreasing = TRUE),][1:5,]
+
+  ## cache data
+
+  wD <- openmeteo::weather_history(location=station, start, end=Sys.Date(),
+    daily=daily, response_units = list(temperature_unites = "celsius",
+      windspeed_unit = "kmh", precipitation_unit = "mm"))
+
+  ## get mean temperature
+  wH <- openmeteo::weather_history(location=station, start, end=Sys.Date(),
+    hourly = c("temperature_2m"), response_units="celsius")
+
+  openmeteo::weather_history()
+
+}
+
+
+getGSOD_Weather <- function(station) {
+## use GSODR instead -- largely untested.
+  ## has East Amatuli,k Augustine, Flat Island, Homer Spit, Seldovia
+  # buoydata
+  seldoviat <- buoydata::get_buoy_data("OVIA2") # not useful for general weather
+  # GSODR -- using NCEI data, but awkward; has Temp, Windspeed, Gusts, Precipitation.
+  stn <- GSODR::nearest_stations(59, -151, 100)  # Only Seldovia and Homer airports
+  a <- GSODR::get_GSOD(2025:2026, station=stn$STNID)
+  a <- GSODR::get_GSOD()
 
   # ## try other options -- does not appear to be working. Even example(get_GSOD()) fails :(
   # require("GSODTools")
@@ -533,13 +585,45 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
   # test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
   # test <- get_GSOD(years=2024,station = "994720-99999") ## flat island
 
-  if(0) {
-    # if(!require("GSODR")) {
-    #   renv::install("GSODR", repos="https://ropensci.r-universe.dev", dependencies="all")
-    # }
-    require("GSODR")
-    ## has good wind data, including GUSTS and MAXSPD,
-    test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
+  #   renv::install("GSODR", repos="https://ropensci.r-universe.dev", dependencies="all")
+  require("GSODR")
+  ## has good wind data, including GUSTS and MAXSPD,
+  test <- GSODR::get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
+
+}
+
+
+
+getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
+ # options: worldmet: has precipication, is way to go. Watch out for versions; broke in the past (2026-05)
+ # buoydata -- no precip?
+ # GSODR -- no precip?
+
+  if(0){
+    stn1 <- worldmet::import_ghcn_inventory(database="hourly", progress = FALSE) |>
+      dplyr::filter(country=="US")
+    stn1b <- worldmet::import_ghcn_inventory(database="daily", progress = FALSE) |>
+      dplyr::filter(country=="US")
+
+    stnL <- worldmet::import_ghcn_stations() |>
+      dplyr::filter(country=="US") |>
+      dplyr::filter(state=="AK") |>
+      dplyr::filter(lng < -148) |>
+      dplyr::filter(lng > -157) |>
+      dplyr::filter(lat < 59.8)
+    # [1] "AKHIOK"               "ALITAK"               "AUGUSTINE ISLAND"     "FLAT ISLAND LIGHT"
+    # [5] "KACHEMAK BAY RESERVE" "HOMER SPIT"           "KODIAK ISLAND"        "SELDOVIA"
+    # [9] "SITKINAK(USCG)"       "KODIAK AP"            "KING SALMON"          "ILIAMNA AP"
+    # [13] "HOMER AP"             "SELDOVIA AP"          "IGIUGIG AP"           "KING SALMON 42 SE"
+
+    stn1[which(stn1$id %in% stnL$id[grep("seldovia", stnL$name, ignore.case = TRUE, value=FALSE)]),] |>
+      #  dplyr::filter(id=="USL000OVIA2")  # network L, start: 2008
+      dplyr::filter(id=="USW00025516")   # network W, start: 1998
+
+    stn1b[which(stn1b$id %in% stnL$id[grep("seldovia", stnL$name, ignore.case = TRUE, value=FALSE)]),]
+
+    x <- worldmet::import_ghcn_daily(stn2$id[which(stn2$name == "HOMER SPIT")],)  # no data
+    y <- worldmet::import_ghcn_hourly(stn2$id[which(stn2$name == "HOMER SPIT")])  # now working, 131k records
   }
 
   # require("worldmet") ## worldmet is still under active depelopment, 2026-05-28
@@ -549,7 +633,6 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
   ## multiple stations
   # if(length(station) != 1L) mirai::daemons(4)  #stop("Can only process one station at a time")
   if(length(station) != 1L) stop("Can only process one station at a time")  ## don't know how to cache multiple stations
-
 
   ## cache data
   if(class(cacheF) == "character") {
@@ -564,13 +647,11 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
   }
   station <- toupper(station)
 
-
   # Warning message:
   #   ! The integrated surface database has been deprecated by NOAA, and data is
   #  now only available until 2025. Please consider using `worldmet::import_ghcn_stations()`
   #  and `worldmet::import_ghcn_hourly()` to access data from the new Global Historical
   #  Climatology Network.
-
 
    if(!file.exists(paste0(cacheFolder, "meta2.rds")) || clearcache) {
      wrldSites <- worldmet::import_ghcn_stations(country = "US") |>
@@ -619,11 +700,12 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
      ## better to use worldmet::import_ghcn_daily ??!?!
      nWeather <- try(worldmet::import_ghcn_daily(station=stn$id, year=yR,
        append_codes = FALSE, progress=FALSE, extra = TRUE))
-   } else {
-     nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
+   }
+   ## should be working again, using github version, 2026-06-11
+   ## but: latest update on weather: 2026-02
+   nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
        abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
        extra = TRUE))
-   }
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
@@ -694,9 +776,6 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
   ## see https://medium.com/@holtan.chase/retrieving-data-from-national-data-buoy-center-api-f94d262c7ea7
   ## https://www.ndbc.noaa.gov/faq/rt_data_access.shtml  -- at least some archived data available
 
-
-
-  # require("riem")
   if(clearcache) {
     unlink(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
   }
@@ -732,13 +811,6 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
 
   rW
 }
-
-
-
-# ## if missing, install buoydata
-# if(!require("buoydata")) {
-#   pak::pak("NOAA-EDAB/buoydata", ask = FALSE)
-# }
 
 
 getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # default=kachemak bay wavebuoy

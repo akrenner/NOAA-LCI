@@ -487,12 +487,16 @@ cLegend ("top"
 ## find closest airport temperature for every reported wave buoy record
 ## see https://stackoverflow.com/questions/43472234/fastest-way-to-find-nearest-value-in-vector
 
-hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp), ]
-hap <- unique (hap, by = "datetimestamp") # remove duplicates
-b <- as.numeric (hap$datetimestamp)
-cuts <- c(-Inf, b[-1] - diff(b) / 2, Inf)
-idx <- cut (as.numeric (wDB$datetimestamp), cuts, labels = b)
-wDB$air_temperature <- hap$atemp [idx]
+if("datetimestamp" %in% names(weatherL$homer.airport)){
+  hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp), ]
+  hap <- unique (hap, by = "datetimestamp") # remove duplicates
+  b <- as.numeric (hap$datetimestamp)
+  cuts <- c(-Inf, b[-1] - diff(b) / 2, Inf)
+  idx <- cut (as.numeric (wDB$datetimestamp), cuts, labels = b)
+  wDB$air_temperature <- hap$atemp [idx]
+}else{
+  stop ("annual-waves.R only works with hourly weather data")
+}
 
 hist (subset (wDB$air_temperature, wDB$surf > 1)
   , main = "Air temperature when surf is good"
