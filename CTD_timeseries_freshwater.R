@@ -314,7 +314,13 @@ nb |>
 source("annualPlotFct.R")
 stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP", "KETCHIKAN AP")
 
-weather <- lapply(seq_along(weather), function(i) {
+# weather<- list()
+# for(i in seq_along(stnL)) {
+#   cat(stnL[i])
+#   try(weather[[i]] <- getNOAAweather(station=stnL[i]))
+#   # weather [[i]] <- getNOAAweather(station=stnL[i])
+# }
+weather <- lapply(seq_along(stnL), function(i) {
   getNOAAweather(station=stnL[i])
 })
 names(weather) <- stnL

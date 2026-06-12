@@ -20,7 +20,7 @@
 ## all NOAA stations
 stations <- c("")
 clearC = FALSE
-clearC=TRUE  ## if errors occur, try this
+# clearC=TRUE  ## if errors occur, try this
 
 
 ##########################################################
@@ -83,37 +83,6 @@ sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 ## weather from Homer Airport
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
 nAiro <- try(getNOAA("HMSA2"))
-
-## buoydata
-nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
-wave.46108 <- nWave
-
-
-
-# weather.homer.spit <- getNOAAweather(stationID="HOMER SPIT") -- has precipitation! (in mm?)
-
-## print available station
-
-
-## fetch a lot of weather -- none currently with precipitation?
-## move to daily summaries?
-cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
-gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
-gN <- function(stn, ss = FALSE) {getNOAAweather(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
-
-weatherL <- list(homer.airport = gN("Homer AP", TRUE)
-                  , homer.spit = gN("Homer Spit")
-                  , homer.spit2=gN("KACHEMAK BAY RESERVE")
-                  , kachomet = sAir
-                  , augustine = gN("Augustine Island")
-                  , flat.island = gN("Flat Island Light")
-                  , east.amatuli = gN("East Amatuli Station Light  AK")
-                 )
-rm (cF, gN)
-weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
-
-
-
 ## ------------clean up weather data and move to metric units ----------------
 
 ## match noaa to swmp data -- move this into a annualPltFct.R function XX !
@@ -135,6 +104,39 @@ hmr <- with(nAir, data.frame(datetimestamp = valid
   , totsorad = rep(is.na(nrow(nAir)))
 ))
 rm(nAir)
+
+## buoydata
+nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
+wave.46108 <- nWave
+weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
+
+
+
+
+## print available station to worldmet GHCN
+## fetch a lot of weather -- check for precipitation!
+## move to daily summaries?
+cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
+gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
+gN <- function(stn, ss = FALSE) {
+  a <- try(getNOAAweather(station = stn, clearcache = clearC, cacheF = cF, showsites = ss))
+  if(class(a)[1] == "try-error"){cat(stn, "failed\n")}else{a}
+}
+
+cat("## This may take a long time, especially on the first run over a slow connection\n\n")
+weatherL <- list(homer.airport = gN("Homer AP", TRUE)
+                  , homer.spit = gN("Homer Spit")
+                  , homer.spit2=gN("KACHEMAK BAY RESERVE")
+                  , kachomet = sAir
+                  , seldovia = gN("Seldovia AP")  # "Seldovia" is a water station
+                  , augustine = gN("Augustine Island")
+                  , flat.island = gN("Flat Island Light")
+                  , east.amatuli = gN("East Amatuli Station Light  AK")
+                 )
+rm (cF, gN)
+
+
+
 
 
 
