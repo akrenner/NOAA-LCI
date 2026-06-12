@@ -213,7 +213,6 @@ save.image("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/freshwater_ts2.RData")
 
 
-require("imputeTS")
 require("SWMPr")
 
 
@@ -301,25 +300,17 @@ dev.off()
 nb <- worldmet::import_ghcn_stations() |>
   dplyr::filter(state=="AK")
 
-for(i in c("Sitka", "Juneau", "Ketchikan")){
+for(i in c("Sitka", "Juneau", "Ketchikan", "Yakutat", "Belingham")){
   print(nb[grep(toupper(i), nb$name),])
 }
-nb [grep("Sitka", nb$name),]$name
-nb [grep("Juneau", nb$name),]$name
-nb [grep("Ketch", nb$STATION_LOC),]$name
 nb |>
   dplyr::filter(lat > 58, lat < 61) |>
   dplyr::filter(lng > -154, lng < -149)
 
 source("annualPlotFct.R")
-stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP", "KETCHIKAN AP")
-
-# weather<- list()
-# for(i in seq_along(stnL)) {
-#   cat(stnL[i])
-#   try(weather[[i]] <- getNOAAweather(station=stnL[i]))
-#   # weather [[i]] <- getNOAAweather(station=stnL[i])
-# }
+# for some reason no (longer) precipitation data from Ketchikan AP (or Katchikan)
+stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP",
+          "YAKUTAT AP") #, "KETCHIKAN AP")
 weather <- lapply(seq_along(stnL), function(i) {
   getNOAAweather(station=stnL[i])
 })

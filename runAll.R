@@ -71,7 +71,6 @@ if(length(grep("[M|m]artin", getwd())) < 1) {
 }
 
 
-
 ## testing/updating packages
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
@@ -106,6 +105,16 @@ if(0) {
   renv::clean()
   renv::snapshot()
   renv::status()
+}
+
+
+
+
+## temp until CRAN is updated
+## check that all packages are up to date
+if(packageVersion("worldmet") != '1.1.0.9000') {
+  renv::install("openair-project/worldmet")
+  # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
 }
 
 

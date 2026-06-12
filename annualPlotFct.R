@@ -676,7 +676,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
    ## pick up previous years from cache
    if(file.exists(paste0(cacheFolder, station, "2.rds"))) {
      cWeather <- readRDS(paste0(cacheFolder, station, "2.rds"))
-     yR <- as.numeric(levels(factor(format(ccW$date, "%Y")))) |>
+     yR <- as.numeric(levels(factor(format(cWeather$date, "%Y")))) |>
        sort() |>
        tail(n=1)
    } else {
@@ -709,7 +709,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, cacheF = NU
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
-       outWeather <- rbind(cWeather, nWeather); rm (ccW)
+       outWeather <- rbind(cWeather, nWeather); rm (cWeather)
      }else{
        outWeather <- cWeather
        warning(paste0("No new data from ", station))
