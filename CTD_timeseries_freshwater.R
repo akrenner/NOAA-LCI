@@ -310,18 +310,34 @@ nb |>
 source("annualPlotFct.R")
 # for some reason no (longer) precipitation data from Ketchikan AP (or Katchikan)
 stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP",
-          "YAKUTAT AP") #, "KETCHIKAN AP")
+          "YAKUTAT AP", "BELLINGHAM INTL AP") #, "KETCHIKAN AP")  # KETCHIKAN AP may be only daily?s
+
+
+for (i in seq_along(stnL)) {
+  cat (stnL[i], "\n")
+  weather [[i]] <- getNOAAweather(station=stnL[i], clearcache = TRUE)
+}
 weather <- lapply(seq_along(stnL), function(i) {
   getNOAAweather(station=stnL[i])
 })
-names(weather) <- stnL
+names(weather) <- gsub(" ", "_", stnL)
+save.image("~/tmp/LCI_noaa/cache-t/fresh1.RData")
+# rm (list=ls()); load("~/tmp/LCI_noaa/cache-t/fresh1.RData")
+
+## try again if any failed
+wFail <- sapply (seq_along(weather), function(i) {class(weather[[i]])[1] == "NULL"})
+if (any (wFail)){
+  for(i in which(wFail)) {
+    weather[[i]] <- getNOAAweather(station=stnL[i])
+  }
+}
 
 prcpIdx <- sapply(seq_along(weather), function(i) {corVar %in% names(weather[[i]])})
 if(any(!prcpIdx)){
-  stop(paste0("Station ", stnL[which(!prcpIdx)], " does not provide precipitation data\n"))
+  stop(paste0("Station ", stnL[which(!prcpIdx)], " does not provide " , corVar, " data\n"))
   weather <- weather[[which(prcpIdx)]]
 }
-rm(stnL, prcpIdx)
+rm(stnL, prcpIdx, wFail)
 
 if(0) {
   nb <- buoydata::buoy_data
