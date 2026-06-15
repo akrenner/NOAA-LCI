@@ -665,7 +665,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
       saveRDS(wrldSites, file = cacheMeta)
     }
   }
-  sAKpick <- wrldSites |>
+  AKpick <- wrldSites |>
     dplyr::rename(latitude=lat) |>
     dplyr::rename(longitude=lng) |>
     dplyr::filter(55 < latitude & latitude < 61) |>
