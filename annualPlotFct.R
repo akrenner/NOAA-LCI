@@ -624,6 +624,18 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
     x <- worldmet::import_ghcn_daily(stn2$id[which(stn2$name == "HOMER SPIT")],)  # no data
     y <- worldmet::import_ghcn_hourly(stn2$id[which(stn2$name == "HOMER SPIT")])  # now working, 131k records
   }
+  if(0) { ## test GHCN!
+    renv::install("worldmet") # only this works with Homer AP
+    renv::install("~/src/worldmet_1.0.0.tar.gz") # error with Homer
+    renv::install("~/src/worldmet_0.10.2.tar.gz") # no import_ghcn_hourly
+    packageVersion("worldmet")
+    x <- worldmet::import_ghcn_hourly(station="USW00025507" #HOMER AP"
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    y <- worldmet::import_ghcn_hourly(station="USL000OVIA2" #SELDOVIA"
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    z <- worldmet::import_ghcn_hourly(station="USL000FILA2" #Flat island
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+  }
 
   # require("worldmet") ## worldmet is still under active depelopment, 2026-05-28
   ## these are needed by worldmet
@@ -689,18 +701,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
    } else {
      yR <- NULL
    }
-   if(0) { ## test GHCN!
-    renv::install("worldmet") # only this works with Homer AP
-    renv::install("~/src/worldmet_1.0.0.tar.gz") # error with Homer
-    renv::install("~/src/worldmet_0.10.2.tar.gz") # no import_ghcn_hourly
-    packageVersion("worldmet")
-    x <- worldmet::import_ghcn_hourly(station="USW00025507" #HOMER AP"
-            , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
-    y <- worldmet::import_ghcn_hourly(station="USL000OVIA2" #SELDOVIA"
-            , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
-    z <- worldmet::import_ghcn_hourly(station="USL000FILA2" #Flat island
-                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
-  }
+
    if(0) {  ## daily -- this is working, 2026-05-28
      ## better to use worldmet::import_ghcn_daily ??!?!
      nWeather <- try(worldmet::import_ghcn_daily(station=stn$id, year=yR,
@@ -713,7 +714,16 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
        abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
        extra = TRUE))
    if("year" %in% names(nWeather)) {  ## to avoid rbind error below
-     nWeather <- nWeather |> dplyr::select(!"year")
+     nWeather <- nWeather |>
+       dplyr::select(!"year") |>
+       as.data.frame()
+   }
+   colM <- !names(nWeather) %in% names(cWeather)
+   if(any(colM)) {
+     # cat("Column mismatch:", names(nWeather)[which(colM)], "\n\n") # only seen sky_cover so far
+     for(i in which(colM)) {
+       nWeather <- nWeather[,-i]
+     }
    }
 
    if (exists ("cWeather")){
