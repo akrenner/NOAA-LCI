@@ -593,8 +593,7 @@ getGSOD_Weather <- function(station) {
 }
 
 
-getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
-  cacheF = "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/", showsites = FALSE) {
+getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites = FALSE) {
  # options: worldmet: has precipication, is way to go. Watch out for versions; broke in the past (2026-05)
  # buoydata -- no precip?
  # GSODR -- no precip?
@@ -634,6 +633,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
   # if(length(station) != 1L) mirai::daemons(4)  #stop("Can only process one station at a time")
   if(length(station) != 1L) stop("Can only process one station at a time")  ## don't know how to cache multiple stations
   station <- toupper(station)
+  cacheF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/" ## hard-code this
   cacheMeta <- paste0(cacheF, "meta.rds")
   cacheStation <- gsub(" ", "_", paste0(cacheF, station, ".rds"))
 

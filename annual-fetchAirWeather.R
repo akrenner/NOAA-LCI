@@ -116,10 +116,9 @@ weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather
 ## print available station to worldmet GHCN
 ## fetch a lot of weather -- check for precipitation!
 ## move to daily summaries?
-cF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/"
 gN <- function(stn, ss = FALSE) {gNOAAS(station = stn, clearcache = clearC, cacheF = cF, showsites = ss)}
 gN <- function(stn, ss = FALSE) {
-  a <- try(getNOAAweather(station = stn, clearcache = clearC, cacheF = cF, showsites = ss))
+  a <- try(getNOAAweather(station = stn, clearcache = clearC, showsites = ss))
   if(class(a)[1] == "try-error"){cat(stn, "failed\n")}else{a}
 }
 
