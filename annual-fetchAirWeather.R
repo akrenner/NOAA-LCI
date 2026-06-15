@@ -132,7 +132,7 @@ weatherL <- list(homer.airport = gN("Homer AP", TRUE)
                   , flat.island = gN("Flat Island Light")
                   , east.amatuli = gN("East Amatuli Station Light  AK")
                  )
-rm (cF, gN)
+rm (gN)
 
 
 
