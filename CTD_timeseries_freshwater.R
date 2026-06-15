@@ -308,27 +308,31 @@ nb |>
   dplyr::filter(lng > -154, lng < -149)
 
 source("annualPlotFct.R")
-# for some reason no (longer) precipitation data from Ketchikan AP (or Katchikan)
-stnL <- c("HOMER AP", "HOMER SPIT", "SELDOVIA", "SITKA AP", "JUNEAU AP",
-          "YAKUTAT AP", "BELLINGHAM INTL AP") #, "KETCHIKAN AP")  # KETCHIKAN AP may be only daily?s
+# for some reason no (longer) precipitation data from Ketchikan AP (or Ketchikan)
+stnL <- c("HOMER AP",  # "HOMER SPIT",
+          "SELDOVIA AP", "SITKA AP", "JUNEAU AP"
+          #, "YAKUTAT AP", "BELLINGHAM INTL AP"
+          ) #, "KETCHIKAN AP")  # KETCHIKAN AP may be only daily?s
 
-
+weather <- list()
 for (i in seq_along(stnL)) {
   cat (stnL[i], "\n")
-  weather [[i]] <- getNOAAweather(station=stnL[i], clearcache = TRUE)
+  weather [[i]] <- try(getNOAAweather(station=stnL[i], clearcache = FALSE))
 }
-weather <- lapply(seq_along(stnL), function(i) {
-  getNOAAweather(station=stnL[i])
-})
+# weather <- lapply(seq_along(stnL), function(i) {
+#   getNOAAweather(station=stnL[i], clearcache = FALSE)
+# })
 names(weather) <- gsub(" ", "_", stnL)
 save.image("~/tmp/LCI_noaa/cache-t/fresh1.RData")
 # rm (list=ls()); load("~/tmp/LCI_noaa/cache-t/fresh1.RData")
 
 ## try again if any failed
-wFail <- sapply (seq_along(weather), function(i) {class(weather[[i]])[1] == "NULL"})
-if (any (wFail)){
-  for(i in which(wFail)) {
-    weather[[i]] <- getNOAAweather(station=stnL[i])
+for(j in 1:3){
+  wFail <- sapply (seq_along(weather), function(i) {class(weather[[i]])[1] != "tbl_df"})
+  if (any (wFail)){
+    for(i in which(wFail)) {
+      weather[[i]] <- try(getNOAAweather(station=stnL[i]))
+    }
   }
 }
 
@@ -337,6 +341,13 @@ if(any(!prcpIdx)){
   stop(paste0("Station ", stnL[which(!prcpIdx)], " does not provide " , corVar, " data\n"))
   weather <- weather[[which(prcpIdx)]]
 }
+
+for (i in seq_along(stnL)) {
+  cat("\n\n", stnL[i], "\n")
+  print(summary(weather[[i]]))
+}
+
+
 rm(stnL, prcpIdx, wFail)
 
 if(0) {

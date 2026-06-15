@@ -634,13 +634,13 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
   # if(length(station) != 1L) mirai::daemons(4)  #stop("Can only process one station at a time")
   if(length(station) != 1L) stop("Can only process one station at a time")  ## don't know how to cache multiple stations
   station <- toupper(station)
-  cacheMeta <- paste0(cacheF, "meta2.rds")
-  cacheStation <- gsub(" ", "_", paste0(cacheF, station, "2.rds"))
+  cacheMeta <- paste0(cacheF, "meta.rds")
+  cacheStation <- gsub(" ", "_", paste0(cacheF, station, ".rds"))
 
   if(clearcache) {
     try(file.remove(cacheMeta), silent = TRUE)
     try(file.remove(cacheStation), silent = TRUE)
-    unlink(cacheF, recursive = TRUE)
+    try(unlink(cacheF, recursive = TRUE))
   }
 
   ## cache data
@@ -661,9 +661,11 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
     wrldSites <- readRDS(cacheMeta)
   } else {
     wrldSites <- worldmet::import_ghcn_stations(country = "US")
-    saveRDS(wrldSites, file = cacheMeta)
+    if(class(wrldSites)[1]=="tbl_df") {
+      saveRDS(wrldSites, file = cacheMeta)
+    }
   }
-  AKpick <- wrldSites |>
+  sAKpick <- wrldSites |>
     dplyr::rename(latitude=lat) |>
     dplyr::rename(longitude=lng) |>
     dplyr::filter(55 < latitude & latitude < 61) |>
@@ -682,17 +684,12 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
    ## pick up previous years from cache
    if(file.exists(cacheStation)) {
      cWeather <- readRDS(cacheStation)
-     yR <- as.numeric(levels(factor(format(cWeather$date, "%Y")))) |>
-       sort()
+     cY <- as.numeric(levels(factor(format(cWeather$date, "%Y"))))
+     yR <- max(cY):as.numeric(format(Sys.Date(), "%Y"))
    } else {
      yR <- NULL
    }
-   nYear <-1970:as.numeric(format(Sys.Date(), "%Y"))
-   nY <- c(subset (nYear, !nYear %in% yR),
-           as.numeric(format(Sys.Date(), "%Y"))
-           )
-
-  if(0) { ## test GHCN!
+   if(0) { ## test GHCN!
     renv::install("worldmet") # only this works with Homer AP
     renv::install("~/src/worldmet_1.0.0.tar.gz") # error with Homer
     renv::install("~/src/worldmet_0.10.2.tar.gz") # no import_ghcn_hourly
@@ -712,23 +709,25 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
    ## should be working again, using github version, 2026-06-11
    ## but: latest update on weather: 2026-02
 
-   nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=nY,
+   nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
        abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
        extra = TRUE))
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
        outWeather <- rbind(cWeather, nWeather); rm (cWeather)
+       outWeather <- unique(outWeather)
+       saveRDS(outWeather, file = cacheStation)
      }else{
        outWeather <- cWeather
        warning(paste0("No new data from ", station))
      }
    } else if (class(nWeather)[1] != "try-error") {
      outWeather <- nWeather
+     saveRDS(outWeather, file = cacheStation)
    } else {
      stop (paste ("No data for", station, stn [1]))
    }
-   saveRDS(outWeather, paste0(cacheFolder, station, "2.rds"))
    # mirai::daemons(0)  ## reset daemons to shut down background processes
 
    outWeather
