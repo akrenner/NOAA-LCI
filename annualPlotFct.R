@@ -685,7 +685,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
    if(file.exists(cacheStation)) {
      cWeather <- readRDS(cacheStation)
      cY <- as.numeric(levels(factor(format(cWeather$date, "%Y"))))
-     yR <- max(cY):as.numeric(format(Sys.Date(), "%Y"))
+     yR <- max(cY):as.numeric(format(Sys.Date(), "%Y")) # update most recent data
    } else {
      yR <- NULL
    }
@@ -712,6 +712,9 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
    nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
        abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
        extra = TRUE))
+   if("year" %in% names(nWeather)) {  ## to avoid rbind error below
+     nWeather <- nWeather |> dplyr::select(!"year")
+   }
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
