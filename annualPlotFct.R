@@ -718,16 +718,17 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
        dplyr::select(!"year") |>
        as.data.frame()
    }
-   colM <- !names(nWeather) %in% names(cWeather)
-   if(any(colM)) {
-     # cat("Column mismatch:", names(nWeather)[which(colM)], "\n\n") # only seen sky_cover so far
-     for(i in which(colM)) {
-       nWeather <- nWeather[,-i]
-     }
-   }
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
+       colM <- !names(nWeather) %in% names(cWeather)
+       if(any(colM)) {
+         # cat("Column mismatch:", names(nWeather)[which(colM)], "\n\n") # only seen sky_cover so far
+         for(i in which(colM)) {
+           nWeather <- nWeather[,-i]
+         }
+       }
+
        outWeather <- rbind(nWeather, cWeather) # to prioritize latest data
        outWeather <- outWeather[!duplicated(outWeather$date),]
        outWeather <- outWeather[order(outWeather$date),]
