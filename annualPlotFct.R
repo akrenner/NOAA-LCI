@@ -718,8 +718,9 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE,
 
    if (exists ("cWeather")){
      if(class(nWeather)[1] != "try-error"){
-       outWeather <- rbind(cWeather, nWeather); rm (cWeather)
-       outWeather <- unique(outWeather)
+       outWeather <- rbind(nWeather, cWeather) # to prioritize latest data
+       outWeather <- outWeather[!duplicated(outWeather$date),]
+       outWeather <- outWeather[order(outWeather$date),]
        saveRDS(outWeather, file = cacheStation)
      }else{
        outWeather <- cWeather
