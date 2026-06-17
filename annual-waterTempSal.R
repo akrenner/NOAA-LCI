@@ -165,8 +165,8 @@ rm (waterL, hM, i)
 # rm (list=ls()); load ("~/tmp/LCI_noaa/cache/annualXtmp.RData"); source("annualPlotFct.R"); dat=homerS; varName="chlfluor"; sumFct=function (x){mean (x, na.rm=FALSE)}
 
 
-if(any(!is.na(homerS$chlfluor))) {
-
+# if(any(!is.na(homerS$chlfluor))) {
+if(any(!is.na(subset(homerS$chlfluor, homerS$year==2015)))){   # historic data disappeared, 2025 and 25 are back
   hM <- prepDF (dat = homerS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
   sL <- prepDF (dat = sldviaS, varName = "chlfluor", maO = maO, currentYear = currentYear, qntl = qntl)
   # summary (sL)
