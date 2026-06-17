@@ -509,6 +509,17 @@ combs$climate <- factor(ifelse(combs$clim == tVar, "temperature"
 ## could wrap this lapply call into optimalkLd above, but output would be
 ## unnecessarily complicated, so don't
 s <- Sys.time()
+
+## XXXX not enough finite observations -- possible to fix this error??? XXXXXXX or skip this whole part?
+maxR <- numeric(nrow(combs))
+for (i in 1:nrow(combs)){
+  maxR [[i]]<- try(
+    optimalkLd(weather [[i %% 2 + 1]], subset(freshLng, sdcombo = "AlongBay_10 surface"), ld=lags, k=maWs, wVar=combs$clim[i], parE=FALSE)
+  , silent = TRUE)
+  if(class(maxR[[i]])[1] == "try-error") {cat(i, "\n")}
+}
+
+
 maxR <- lapply(seq_len(nrow(combs)), function(i) {
   optimalkLd(weather[[i %% 2 + 1]],
     subset(freshLng, sdcombo == "AlongBay_10 surface"),
