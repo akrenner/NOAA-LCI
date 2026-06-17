@@ -715,8 +715,7 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
        extra = TRUE))
    if("year" %in% names(nWeather)) {  ## to avoid rbind error below
      nWeather <- nWeather |>
-       dplyr::select(!"year") |>
-       as.data.frame()
+       dplyr::select(!"year")
    }
 
    if (exists ("cWeather")){

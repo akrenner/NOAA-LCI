@@ -345,7 +345,7 @@ if(any(!prcpIdx)){
 
 for (i in seq_along(stnL)) {
   cat("\n\n", stnL[i], "\n")
-  print(summary(weather[[i]]))
+  print(summary(weather[[i]][,1:12]))
 }
 
 
