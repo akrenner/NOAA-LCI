@@ -867,8 +867,6 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
     # dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
 
-
-  # require("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
   if(file.exists(cacheF)) {
     wDB <- readRDS(cacheF)
     startY <- max(wDB$datetimestamp) |>
