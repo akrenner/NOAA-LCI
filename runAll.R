@@ -104,7 +104,7 @@ if(0) {
 
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
-  badP <- c("GVI", "yaml")
+  badP <- c("GVI", "yaml", "randomForest", "stinepack")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
     if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
@@ -179,6 +179,7 @@ source("CTD_anomaly-helpers.R")
 source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
+# quickPlot <- !as.numeric(format(Sys.time(), "%H")) %in% c(0:6,18:24)
 if(as.numeric(format(Sys.time(), "%H")) %in% c(0:6, 18:24)) {
   quickPlot <- TRUE
 } else {quickPlot <- TRUE}
