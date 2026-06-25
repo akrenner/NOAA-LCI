@@ -24,7 +24,8 @@ mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 if (quarterly) {
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
-  mediaD <- gsub ("/$", "_monthly/", mediaD)
+# mediaD <- gsub ("/$", "_monthly/", mediaD)
+  mediaD <- paste0(mediaD, "/update/")
   currentCol <- currentCol [c(3, 1, 2)]
 } else {
   pastYear <- TRUE  ## winter/spring publication schedule
@@ -141,7 +142,7 @@ for (i in seq_along (waterL)) {
     hM <- try (prepDF (dat = waterL [[i]], varName = "chlfluor", maO = maO
                        , currentYear = currentYear, qntl = qntl))
     if (class (hM) != "try-error") {
-      aPlot (hM, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]"
+      aPlot (hM, "chlfluor", currentCol = currentCol, ylab = "Chlorophyll [mg/l]"  ## check units!
              , main = c ("Homer shallow", "Homer deep", "Seldovia shallow"
                          , pastYear = pastYear, ongoingYear = ongoingY
                          , "Seldovia deep")[i]
@@ -331,7 +332,7 @@ rm (instSite, tDay)
 
 
 
-
+if(0){
 #################################################################################
 ## plot raw Seldovia surface temperature from Aug to May (to match Aquaculture) #
 #################################################################################
@@ -380,10 +381,10 @@ legend ("topright", bty="n", col=lCol, lwd=rep (3,3)
 
 dev.off()
 rm (ssT, lCol)
+}
 
 
-
-# save.image("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
+save.image("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
 
 ## plot SST anomaly from CTD data
@@ -392,22 +393,14 @@ rm (ssT, lCol)
 
 ## prep data -- tool something new here to match prepDF -- eventually export this to CTDwall_normals.R
 
-# rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/sob_watertmp2.RData")
 source("annualPlotFct.R")
 base::load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # physOc and stn from dataSetup.R
-require(dplyr)
+require(dplyr) # needed for %>% pipe
 
-tVars <- c("TempBottom", "TempDeep", "TempSurface")
+tVars <- c("TempBottom", "TempDeep", "TempSurface", "Chlorophyll", "O2perc", "minO2")
 # currentYear <- as.numeric(format(Sys.Date(), "%Y"))-1  ## currentYear already defined above
 cY2 <- currentYear + 1
 Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels below
-# currentCol <- c ("lightblue", "navyblue", "aquamarine")  # use RColorBrewer?
-# currentCol <- c("navyblue", "lightblue") ## brewer
-# currentCol <- c("blue", "magenta") ## brewer
-# currentCol <- paletteer::paletteer_d("nord::frost")[c(2,3)]
-# currentCol <- paletteer::paletteer_d("rcartocolor::Safe")[c(1,2)]
-## currentCol <- same as before!!
-
 
 # currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
 Stn2p <- "AlongBay_5"
@@ -422,6 +415,19 @@ if(0) {  ## for AMSS 2026
 lwd <- 4
 for(i in seq_along(tVars)) {
   # i = 1
+
+  if(tVars[i] == "Chlorophyll"){
+    currentCol <- oce::oceColorsChlorophyll(5)[c(1, 2,4)]
+    mTitle <- "Total water column Chlorophyll, Outer Kachemak Bay"
+    yAx <- expression("Chlorophyll concentration [mg m"^-2 * "]")
+    tempP <- FALSE
+  }else{
+    mTitle <- paste0 (gsub("^Temp", "", tVars[i]),
+      " layer water temperature, Outer Kachemak Bay")
+    yAx <- "Temperature [°C]"
+    tempP <- TRUE
+  }
+
   poSSA <- sf::st_drop_geometry(poSS) %>%
     dplyr::mutate(xvar = .[,which(names(.) == tVars[i])]) |>
     dplyr::filter(Match_Name == Stn2p) |>
@@ -458,19 +464,13 @@ for(i in seq_along(tVars)) {
   png(paste0(mediaD, "CTD_", Stn2p, "_day", tVars[i], maO, ".png"),
       width = 300*8, height = 300*6, res = 300)
   par(mar=c(3,5,2,5))
-  plotSetup(poD$SDup, poD$SDlo, ylab = "Temperature [°C]"
+  plotSetup(poD$SDup, poD$SDlo, ylab = yAx
             , ylim = range(poD$xvar, na.rm=TRUE)
             )
-  title (main = paste0 (gsub("^Temp", "", tVars[i]),
-    " layer water temperature, Outer Kachemak Bay"),
-    # sub = paste0 ("Oceanography Station ", gsub("_", "-", Stn2p),
-    # ", near Glacier Spit ("# , gsub("^Temp", "", tVars[i]), ": "
-    # , tDescpt [i], "), bottom: ", stn$Depth_m[match(Stn2p, stn$Match_Name)], " m")
-    ## lookup description!
-    # , stn$description [which (stn$Match_Name == Stn2p)]
-    )
-
-  fAxis(c (0, 15)) # from annualPlotFct.R
+  title (main = mTitle)
+  if(tempP) {
+    fAxis(c (0, 15)) # from annualPlotFct.R
+  }
   polygon(c(poD$jday, rev(poD$jday)), c(poD$SDlo, rev(poD$SDup)),
           col = "lightgray", border = FALSE)
   points(xvar~jday, poD)
@@ -487,12 +487,13 @@ for(i in seq_along(tVars)) {
   pasYa <- aggregate(xvar ~ jday, data = pasY, FUN = mean, na.rm = TRUE)
 
   if(exists ("compYear")){
-    lines(xvar~jday, data=subset (poSSA, Year == 2015), lwd = lwd, col = currentCol[2])
+    lines(xvar~jday, data=subset (poSSA, Year == compYear), lwd = lwd, col = currentCol[2])
   }else{
+    points(xvar~jday, pasYa, pch=19, col=currentCol[2], cex=1.2)
     lines(xvar ~ jday, data = pasYa, lwd = lwd, col = currentCol[2])
   }
+  points(xvar~jday, nowYa, pch=19, col=currentCol[3], cex=1.2) #XXX test
   lines(xvar ~ jday, data = nowYa, lwd = lwd, col = currentCol[3])
-
 
   legend("topleft", lwd=c(rep(lwd, 3), 10),
          col = c("darkgray", currentCol[2:3], "lightgray"),

@@ -121,6 +121,11 @@ if(0) {
   }
 
   # renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
+  # renv::install("~/src/oce_1.7-10.tar.gz")
+
+  ## Delete left-over lock files if package installation is stuck
+  # unlink(list.files(.libPaths(), pattern = "^00LOCK", full.names = TRUE), recursive = TRUE)
+
   renv::update()
   renv::clean()
   renv::snapshot()

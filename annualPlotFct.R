@@ -223,7 +223,7 @@ seasonalMA <- function(var, jday, width = maO) {  ## still not used -- abandone?
   }
   dfAng <- data.frame(jds = seq(-365, 2 * 365))
   dfAng$var <- dfA$var [dfA$jds, dfAng$jds]
-  sMA <- data.table::frollmean(dfAng$var, align = "center", hasNA = TRUE,
+  sMA <- data.table::frollmean(dfAng$var, align = "center", has.nf = TRUE,
     n = width, na.rm = TRUE, fill = NA)
   # sMA <- zoo::rollapply(dfAng$var, width = width, FUN = mean
   #   , fill = c(NA, NA, NA)
@@ -269,7 +269,7 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean(x, na.rm = TRUE)}
     , paste(dMeans$year, dMeans$jday, sep = "-"))]  ## XXXX things break here!! XXX
   dMeans <- dRef; rm(dRef)
   dMeans$MA <- data.table::frollmean(dMeans$xVar,align = "center", fill = NA,
-    n = maO, na.rm = FALSE, hasNA=TRUE)
+    n = maO, na.rm = FALSE, has.nf = TRUE)
   # dMeans$MA <- zoo::rollapply(dMeans$xVar, width = maO, partial = TRUE
   #   , align = "center"
   #   # , fill=c(NA,"extend",NA)

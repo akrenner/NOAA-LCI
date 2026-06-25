@@ -38,7 +38,7 @@
 # subject line in email: Kachemak Bay | December 2025 Oceanographic Survey
 ## 
 ## 1. wrap-up text
-## 2. replace graphs: long TS of temp/Salinity/Chlorophyl with SoB-style annual plot
+## 2. replace graphs: long TS of Salinity with SoB-style annual plot
 
 
 
@@ -223,19 +223,26 @@ cS <- file.copy(from = "~/tmp/LCI_noaa/media/CTDsections/time-sections/2-9_6-TSp
 ## State-of-the-bay
 cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-airTemp-LE.png", to=destR, overwrite=TRUE)
 #     cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-precip-AP.png", to=destR, overwrite=TRUE)
-cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-Temp-Deep-Homer.png"
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-Temp-Deep-Homer.png"
   , to = destR, overwrite = TRUE)
-cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/sa-salinity31-d.png"
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-salinity31-d.png"
   , to = destR, overwrite = TRUE)
 #    cS <- file.copy (from="~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-chlorophyll.png", to=destR, overwrite=TRUE)
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/CTD_AlongBay_5_dayChlorophyll41.png"
+  , to = destR, overwrite = TRUE)
 
-cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/CTD_AlongBay_5_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
+cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/CTD_AlongBay_5_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
 
-# cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay_monthly/CTD_9_6_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
+# cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/CTD_9_6_dayTempBottom41.png", to = destR, overwrite = TRUE)  ## used to use AlongBay_8 -- consider AlongBay_7 or AlongBay_5 because they are deeper
 
 cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
 cS <- file.copy(from = "~/tmp/LCI_noaa/media/StateOfTheBay/update/sa-waves.png", to = destR, overwrite = TRUE)
 
+
+## noaa SST
+# curl https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif
+# curl https://www.ospo.noaa.gov/products/ocean/sst/anomaly/
+#      https://www.ospo.noaa.gov/data/cb/ssta/ssta.daily.current.png
 
 rm(fl, flS, dest, destR, cS)
 
@@ -272,7 +279,7 @@ editor: visual
 
 ## Summary
 
-This spring was cold! While air temperatures oscillated between colder than the 10th percentile for the season and normal, deep water temperatures were well below normal since last December, making this the longest, most intense cold spell since the beginning of these routine oceanographic observations in 2012. Mid-bay chlorophyll concentrations were above the seasonal average in April, then dropped to unusually low levels in May.
+After an unusually cold spring, deep waters of Kachemak Bay were colder than normal in June 2026, continuing a marine cold spell that began in December 2025. Surface waters, however, had warmed up to and beyond the seasonal mean, resulting in a temperature difference of over 7 °C between surface and deep waters in the inner bay. Chlorophyll concentrations were higher than the extremely low values observed in May, and approached the seasonal mean.  The unusually low oxygen saturation levels recorded may have been due to sensor issues.
 
 <!-- `{r} dateAN` , -->
 A complete set of up-to-date graphs can be found on this Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link) (request access from martin.renner@noaa.gov).
@@ -282,9 +289,9 @@ A complete set of up-to-date graphs can be found on this Google Drive: [section 
 
 ## Conditions
 
-Air temperatures in Homer were mostly well below normal since the start of the year, with a brief warmup in late January/early February. Early March was extremely cold for the season. Temperatures warmed close to the long-term mean in April and May (@fig-Temp_Airport), yet there was snowfall in Homer on 20 May. After an unusually dry March, May 2026 was unseasonably wet. Snow pack in the Kachemak Bay area in the 2025/26 winter was low with a peak near the 10th percentile. At times in April-May, snowpack at the Anchor River Divide station was close to the record-low snow year 2015 (@fig-snowtel). 
+After a cold spring, temperatures were back to the seasonal mean in the weeks leading up to this June survey (@fig-Temp_Airport). After an unusually wet May, precipitation in June 2026 was close to the long-term mean (which is usually the driest time of the year). Since mid-May, no remaining snowpack has been reported at any of the SNOTEL stations around Kachemak Bay. 
 
-Kasitsna Bay Lab oceanographic surveys were conducted by Hans, Kris and Paul (March, April) and Hans, Kris, and Martin (May). 
+The June 22, 2026 Kasitsna Bay Lab oceanographic survey was conducted by Hans, Kris and Martin in calm conditions. 
 <!-- Beaufort 1 to 2. -->
 
 
@@ -294,38 +301,28 @@ Kasitsna Bay Lab oceanographic surveys were conducted by Hans, Kris and Paul (Ma
 <!-- `{r} crewT` -->
 
 
-![Snow pack height at the Anchor River Divide SNOTEL station in the 2025/26 winter compared to the long-term mean.](./media/sa-snowPack_anchorriverdivide){#fig-snowtel}
+<!-- ![Snow pack height at the Anchor River Divide SNOTEL station in the 2025/26 winter compared to the long-term mean.](./media/sa-snowPack_anchorriverdivide){#fig-snowtel} -->
 
 
 ## Physical oceanography
 
 ### Temperature
 
-Water temperatures during the most recent May survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the inner bay, to a maximum of `{r} tsal$temSalR[2]` °C at station T`{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) off the Homer Spit. In March the water column was mostly vertically mixed, with a transition zone near Homer Spit from warmer ocean to cooler bay waters (@fig-tSections_ABmarch, top-left panel). A shallow, fresher and warmer surface layer developed in the inner bay in April, with the inner bay and northern parts of the outer bay remaining relatively cooler than waters in the rest of the outer bay. In May, strong vertical stratification was observed, with a very fresh surface layer in the inner bay that had switched to be warmer than the outer bay. 
+Water temperatures during the June survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the inner bay, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay. Vertical stratification observed throughout the bay, with a 10-20 m layer of warmer, fresher surface water over cooler, more saline waters below (@fig-tSections_AB, top-left panel). Mid- depth outer bay waters were slightly warmer in the inner bay, but the distinct horizontal differences seen in May between inner and outer bay were no longer present. Satellite sea surface temperature data showed the larger patterns, with warmer waters found in the shallower areas of inner Kachemak Bay and upper Cook Inlet than in lower Cook Inlet and the Gulf of Alaska (@fig-SST_GOA).  
+<!-- , possibly indicating mixing of deep and surface waters.  -->
+
 
 <!-- T9 is situated around km 30 of the AlongBay transect, cross-sectioning the inner/outer bay transition zone. Sloping salinity and temperature contour lines showed influx of warmer, more saline water at depth, especially on the south side, and an outflow of colder, fresher water on the surface at the north side of T9 (@fig-tSections_T9). While the entire water column was colder than normal, the strong surface water cold anomalies found near the Spit were likely caused by melting pack ice from Mud Bay (also note the dip in salinity at the same location).  -->
 
 
 ::: {#fig-tSections}
-![AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right), March 2026.](./media/2026-03 T-AlongBay.png){#fig-tSections_ABmarch}
+![AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right).](./media/Section_T-AlongBay.png){#fig-tSections_AB}
 
-![T9 Transect, across bay from Homer Spit (left) to China Poot Bay (right), March 2026.](./media/2026-03 T-9.png){#fig-tSections_T9march}
-
-
-![AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right), April 2026.](./media/2026-04 T-AlongBay.png){#fig-tSections_ABapril}
-
-![T9 Transect, across bay from Homer Spit (left) to China Poot Bay (right), April 2026.](./media/2026-04 T-9.png){#fig-tSections_T9april}
-
-![T4 Transect, across-bay, Bluff Point (left) to Barabara Point (right), April 2026.](./media/2026-04 T-4.png){#fig-tSections_T4april}
-
-
-![AlongBay Transect from Kachemak Bay entrance (left) to Bear Cove (right), May 2026.](./media/2026-05 T-AlongBay.png){#fig-tSections_AB}
-
-![T9 Transect, across bay from Homer Spit (left) to China Poot Bay (right), May 2026.](./media/2026-05 T-9.png){#fig-tSections_T9}
+![T9 Transect, across bay from Homer Spit (left) to China Poot Bay (right).](./media/Section_T-9.png){#fig-tSections_T9}
 
 <!-- ![T4 Transect, across-bay, Bluff Point to Barabara Point](./media/Section_T-4.png){#fig-tSections_T4} -->
 
-Along-bay and cross-bay-sections of main parameters from the March, April, and May cruises (left column) and their respective anomalies (right column), i.e. the difference between measurements on this cruise and the long-term monthly mean (2012-2025) at the respective place and depth.
+Along-bay and cross-bay-sections of main parameters from the current cruise (left column) and their respective anomalies (right column), i.e. the difference between measurements on this cruise and the long-term monthly mean (2012-2025) at the respective place and depth.
 :::
 
 
@@ -335,7 +332,7 @@ Along-bay and cross-bay-sections of main parameters from the March, April, and M
 
 <!-- Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers, the latter typically reaching their annual peak in September.  -->
 
-![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing data](media-2026-05/alaska.fc.gif){#fig-SST_GOA}
+![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing data](media-2026-06/alaska.fc.gif){#fig-SST_GOA}
 
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
@@ -345,21 +342,15 @@ Along-bay and cross-bay-sections of main parameters from the March, April, and M
 ![Surface water temperatures (0-20 m) at station T9-6, off the Homer Spit, compared to the seasonal means](media/5-TempSurfaceTS.png){#fig-T96tempTS}
 
 
-<!-- https://www.ospo.noaa.gov/products/ocean/sst/anomaly/ -->
-![Global sea surface temperature anomaly, based on satellite remote sensing.](media-2026-05/ssta.daily.current.png){#fig-SSTA}
 
-May satellite sea surface temperature data showed that, in contrast to inner Kachemak Bay, upper Cook Inlet remained colder than the lower inlet and the Gulf of Alaska (@fig-SST_GOA). Almost all of Kachemak Bay was colder than normal throughout March to May (@fig-tSections), especially in April, when large parts of the bay were over 1.8 standard deviations colder than average. The cold snap that started in December 2025 was evident through the entire water column. No other time since the beginning of this study in February 2012, had bay waters been this cold for this long (@fig-T96tempTS, @fig-bottomTemp). Compared to bottom waters (@fig-bottomTemp), surface waters, as measured by the KBNERR SWMP station, followed air temperatures (@fig-Temp_Airport) closely, albeit with a few days delay (@fig-SWMP-homerdeep-temp). Surface waters of the Gulf of Alaska and Bering Sea also remained colder than normal in May 2026, as shown by satellite data, in contrast to warmer than normal conditions across much of the North Pacific (@fig-SSTA). 
+Throughout the bay, deep waters were still cooler than normal, by up to one standard deviation (@fig-tSections_AB, top-right panel, @fig-bottomTemp). In contrast, the surface waters were close to normal (@fig-tSections, @fig-T96tempTS, @fig-SWMP-homerdeep-temp), with some areas of the thin surface layer in the inner bay up to 7 °C warmer than bottom waters, and up to two standard deviations above the long-term mean for this month (@fig-tSections_AB, top-right panel). The large warm-up in surface temperatures, compared to May, reflects warmer air temperatures, strong vertical stratification and light wind conditions leading up to the survey. Surface waters of the Gulf of Alaska and Bering Sea also remained colder than normal in June 2026, as shown by satellite sea temperature anomaly data, in contrast to warmer than normal conditions in the central North Pacific (@fig-SSTA). 
 
 
+![Recent bottom water temperatures in outer Kachemak Bay (station AlongBay-5, 172 m depth) compared to the long-term mean at this location.](./media/CTD_AlongBay_5_dayTempBottom41.png){#fig-bottomTemp}
 
-<!-- Since the beginning of the year, water temperatures have been warmer than the seasonal mean, and this anomaly continued in August, but was diminished compared to previous months (@fig-TempDeepTS). The warm anomaly was also seen at the Homer SWMP station, operated by the KBNERR (@fig-SWMP-homerdeep-temp), and most pronounced above the pycnocline (@fig-TSprofile_T9). The anomaly about 1 °C above the long-term mean, and remained near the 90th percentile. -->
+![Water temperature at the Homer Harbor SWMP station, operated by the KBNERR, at approximately 7 m depth (This is the deeper of two sensors, but is still located in the surface layer).](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp}
 
-
-
-<!-- XXX resurrect this figure for the next edition -->
-<!-- ![Water temperature at the Homer Harbor SWMP station, operated by the KBNERR, at approximately 7 m depth (This is the deeper of two sensors, but is still located in the surface layer).](./media/sa-Temp-Deep-Homer.png){#fig-SWMP-homerdeep-temp} -->
-
-![Water temperature at the Seldovia Harbor surface SWMP station, operated by the KBNERR. Data collection in Homer was impacted by heavy ice conditions. ](./media/sa-Temp-SST-Seldovia){#fig-SWMP-homerdeep-temp}
+<!-- ![Water temperature at the Seldovia Harbor surface SWMP station, operated by the KBNERR. Data collection in Homer was impacted by heavy ice conditions. ](./media/sa-Temp-SST-Seldovia){#fig-SWMP-homerdeep-temp} -->
 
 
 <!-- ![Bottom-water temperature at mid-bay CTD station T9-6 (depth: 103 m) compared to the seasonal long-term mean.](./media/5-T9-6_TempDeepTS.png){#fig-TempDeepTS} -->
@@ -370,7 +361,10 @@ May satellite sea surface temperature data showed that, in contrast to inner Kac
 <!-- ![Bottom water temperature off Homer Spit (station T9-6).](./media/CTD_9_6_dayTempBottom41.png){#fig-bottomTemp} -->
 
 
-![Recent bottom water temperatures in outer Kachemak Bay (station AlongBay-5, 172 m depth) compared to the long-term mean at this location.](./media/CTD_AlongBay_5_dayTempBottom41.png){#fig-bottomTemp}
+
+<!-- https://www.ospo.noaa.gov/products/ocean/sst/anomaly/ -->
+![Global sea surface temperature anomaly, based on satellite remote sensing.](media-2026-06/ssta.daily.current.png){#fig-SSTA}
+
 
 
 ![Long-term temperature and salinity profiles at mid-bay (T9-6).](./media/2-9_6-TSprofile){#fig-TSprofile_T9}
@@ -384,32 +378,36 @@ May satellite sea surface temperature data showed that, in contrast to inner Kac
 
 ### Salinity
 
-Salinity values during the May survey ranged from `{r} tsal$temSalR[3]` PSU at station `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) near Homer Spit to `{r} tsal$temSalR[4]` PSU at station `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. 
-Inner bay waters were fresher than outer bay waters in all three months, with surface freshening of inner bay waters in April that built up to strong vertical stratification by May (@fig-tSections). An interesting feature observed in March was the downward mixing of relatively fresh, cold water near the end of the Homer Spit, related to melting sea ice in that area (@fig-tSections_ABmarch, @fig-tSections_T9march). 
+Salinity values during the May survey ranged from `{r} tsal$temSalR[3]` PSU at station `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) in the inner bay to `{r} tsal$temSalR[4]` PSU at station `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. The water column was strongly stratified throughout the bay, with fresher waters in a 10-20 m surface (@fig-tSections). Along the mid-bay transect, the fresher water was deeper on the north than on the south side of the bay, indicative of outflows of inner bay waters freshened by rain and snowpack melting (@fig-tSections_T9). 
 <!-- , as evident from the contour lines switching from vertical to horizontal.  
 Comment on fresh cold meltwater off Homer Spit?  XXX
 -->
 
-
-
 <!-- Along the inner bay, across mid-bay (T9) and into the eastern parts of the outer bay, a thin layer (~10-20 m) of cold, fresh water was seen over warmer, more salty water at depth, indicating that there had been enough freshwater input to maintain vertical stratification despite cold temperatures (@fig-tSections).  -->
 
-Compared to the long-term means, Kachemak Bay was more saline than seasonally expected in March and in upper parts of the water column also in April, reaching over one standard deviation in some places (@fig-tSections). In May, only inner bay surface waters were still more saline than normal, whereas outer bay and mid to deep waters were now fresher than normal (@fig-tSections, @fig-TSprofile_T9, @fig-SalDeep). These patterns are consistent with the prolonged winter cold, with spring increases in freshwater inputs to the bay coming later than normal.
+Compared to the long-term means,  Kachemak Bay waters below the surface layer were less saline than seasonally expected, by over 1.5 standard deviation in some places (@fig-tSections, @fig-TSprofile_T9). This deviation was more pronounced in deep waters than in shallow waters, some of which showed slightly positive anomalies (@fig-tSections). Kachemak Bay has been fresher than normal in spring/early summer for most of the past three years now (@fig-TSprofile_T9, @fig-SalDeep).
+<!-- Explanation = ? These patterns are consistent with the prolonged winter cold, with spring increases in freshwater inputs to the bay coming later than normal. -->
 
 ![Variability of deep-water salinity at station T9-6 off the Homer Spit, compared to the seasonal  means.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
 ### Turbidity
 
-Inner bay waters were more turbid than outer bay waters in all three months. In April and May, turbid waters extended from the inner bay into deep waters of the outer bay (@fig-tSections_ABapril, @fig-tSections_AB). Areas of higher surface turbidity were found in some areas of transient fresher surface water plumes, 
+Inner bay waters were more turbid than outer bay waters, with higher turbidity at depth in the outer bay (@fig-tSections_AB). Areas of higher surface turbidity were found in some areas of transient fresher surface water plumes, Compared to the seasonal mean, outer bay waters were slightly less turbid than expected. 
+
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Chlorophyll concentrations were low throughout Kachemak Bay in March and were also low compared to the long-term mean. By April, things had changed substantially, as concentrations had increased throughout the study area and water column. Highest concentrations were found at 10-20 m depth on the north end of Transect 4, in the outer bay off Bluff Point (@fig-tSections_ABapril). Some deep and mid waters had chlorophyll concentrations over two standard deviations above the long-term normal (@fig-tSections_T9april, @fig-tSections_T4april). At the mid-bay station T9-6, chlorophyll concentrations integrated across the water column were above the mean (@fig-chlorophyll). Surprisingly, chlorophyll concentrations were lower in all locations during the May survey, as compared to April. While chlorophyll concentrations in surface waters were higher than in deep waters, all stations had less chlorophyll than expected from the long-term mean, reaching two standard deviations below the mean in some cases (@fig-tSections_AB, @fig-tSections_T9). 
+Highest chlorophyll concentrations were found in the outer bay with elevated subsurface centrations near the bottom of the surface layer (pycnocline), in both the inner and outer bay (@fig-tSections_AB). Integrated over the entire water column, chlorophyll concentrations were higher than the extremely low concentrations in May, but approached the seasonal mean (@fig-chlorophyll-sa). Our partners from the Kachemak Bay National Estuarine Research Reserve detected potentially toxic *Pseudo-nitschia spp.* and *Alexandrium spp.* cells as "present" (on a scale of present, abundant and bloom) in samples from outer and inner bay (Kim Schuster, The Phyto Times, 25 June 2026). 
 
-![Trends and seasonal anomaly of chlorophyll concentrations at mid-bay station T9-6 (mean from surface to 85 m depth)](./media/3-9_6-chlorophyll-anomaly.png){#fig-chlorophyll}
 
+## Oxygen
+Oxygen values were substantially lower than seasonally expected (@fig-tSections_AB). Additional quality control will be conducted to determine if these unusual values are due to issues with the oxygen sensor. 
+
+<!-- ![Trends and seasonal anomaly of chlorophyll concentrations at mid-bay station T9-6 (mean from surface to 85 m depth)](./media/3-9_6-chlorophyll-anomaly.png){#fig-chlorophyll} -->
+
+![Seasonal patterns of chlorophyll concentrations at outer-bay station AlongBay-5 (integrated over the full water column).) ](./media/CTD_AlongBay_5_dayChlorophyll41.png){#fig-chlorophyll-sa}
 
 
 <!-- ![Time section of Chlorophyll concentrations at T9-6.](./media/3-9_6-chlorophyll-timesection.png){#fig-chlorophyllsection}  -->
@@ -423,7 +421,9 @@ Chlorophyll concentrations were low throughout Kachemak Bay in March and were al
 ### Wildlife
 
 <!-- Two harbor seals were seen off Bear Cove. About 65 Steller sea lions were seen on Flat Island. Birds of note included a yellow-billed loon off Bear Cove. Common murres and marbled murrelets started to return to the inner bay.  -->
-An ivory gull, a rare species from the high Arctic, was present in Homer Harbor during mid May.  Few marine mammals were observed during the March, April and May surveys this year. 
+
+No marine mammals, other than sea otters were observed. Common murres and tufted puffins had returned in numbers to Gull Island and surrounding waters.  
+ 
 
 ### Mailing list
 

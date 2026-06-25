@@ -432,6 +432,8 @@ if(1){
 
 ## plant stuff
 sAgg <- function(varN, data = physOc, FUN = sum, ...){
+  ## better to average values, then multiply by nominal depth (extrapolate to bottom?)
+
   aDF <- aggregate(formula(paste(varN, "File.Name", sep = "~"))
                     , data, FUN, ...)
   return(aDF [match(poSS$File.Name, aDF$File.Name),2])
