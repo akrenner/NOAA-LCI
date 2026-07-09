@@ -1,28 +1,27 @@
 #! /usr/bin/env Rscript
 
 ## To optain this and all other scripts and data for this project, paste the
-## code between the braces into R:
+## code between the braces into a R console:
 if(0) {
+  ## required software: R, RStudio, RTools, git, seabird data processing,
   ## set up folder for R SCRIPTS and pull scripts from github
-  rFolder <- "~/myDocs/R-scripts/" # or any other folder name you like
+  rFolder <- "~/myDocs/R-scripts" # or any other folder name you like
   dir.create(rFolder, recursive = TRUE)
   setwd(rFolder)
   system("git clone https://github.com/akrenner/NOAA-LCI.git")
-  setwd(paste0(rFolder, "NOAA-LCI"))
+  setwd(paste0(rFolder, "/NOAA-LCI"))
   source("runAll.R")  ## which will run this script and everything else.
   ## Be patient
 }
 
-## Execute all Kachemak Bay/Cook Inlet scripts, 2020-2026+
-## To run up-to-date analysis, connect to VPN in order to download latest SWMP
-## data from CDMO. Expect approximately 3+ hours for a full run, substantially
-## longer when running for the first time (2023-04 on Latitude 5420; 11th G
-## Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
+## Execute all Kachemak Bay/Cook Inlet scripts. In a new installation, it's
+## recommended to disconnect from VPN first, to avoid network timeouts. Expect
+## over 3 hours for the initial run, which needs to download many external files
+## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
+## To update to the latest SWMP data, be sure to be connected to VPN NCCOS-West.
 
 ## If you want to make your own changes to any of these scripts, learn about
-## git, and create a new fork. Then comment out the code below
-## "for collaborators". As-is, this script will overwrite any changes you may
-## have made by calling 'git pull --force'
+## git, and create a new fork.
 
 ## See the Recurrent_Oceanographic_Survey-Manual for more instructions.
 
@@ -32,8 +31,15 @@ rm(list = ls())
 
 if(length(grep("/NOAA-LCI$", getwd())) < 1) {
   stop("Please open the R Project in NOAA-LCI/")
+  if(.Platform$OS.type=="windows"){
+    setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+    # set environment variable to avoid "no such file or directory errors"
+    Sys.setenv(TMPDIR = "C:\tmp")
+    system ("git pull --force")
+  }else{ ## Linux or macOS platform
+    setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+  }
 }
-
 
 
 sT <- Sys.time()
@@ -48,19 +54,23 @@ ongoingY <- TRUE   # for quarterly update
 
 ## This will only run once, getting required data and packages
 if(!file.exists(".initialized.rds")){
+  #rJava issues? try
+  # Sys.setenv(JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-26.jdk/Contents/Home/")
+
   source("InitialSetup.R")
   saveRDS(Sys.Date(), file=".initialized.rds")
 }
 
 
-########################
-## for collaborators  ##
-## get latest updates ##
-########################
+#######################################################
+## For collaborators -- get the latest updates       ##
+## This will overwrite any changes you may have made ##
+#######################################################
 
 if(length(grep("[M|m]artin", getwd())) < 1) {
   ## for collaborators: pull latest versions from git and sync packages
   system("git pull --force")
+  system ("git checkout main")
   if(!renv::restore()$synchronized) {
     renv::restore(prompt=FALSE, clean= TRUE)
   }
@@ -71,7 +81,13 @@ if(length(grep("[M|m]artin", getwd())) < 1) {
 }
 
 
-## testing/updating packages
+
+
+###########################################
+## Test dependencies and update packages ##
+###########################################
+
+
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
   # require(usethis) ## for github rate limits
@@ -81,8 +97,7 @@ if(0) {
 
   ## set up AI helper claudeR
   # if(!require("claudeR")) {
-  #   # install.packages("devtools")
-  #   devtools::install_github("yrvelez/claudeR")
+  #   # renv::install("yrvelez/claudeR")
   #   require("claudeR")
   # }
   # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
@@ -99,8 +114,13 @@ if(0) {
   }
   rm(badP, deps)
 
+  ## temp until CRAN is updated
+  if(packageVersion("worldmet") != '1.1.0.9000') {
+    renv::install("openair-project/worldmet")
+    # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
+  }
+
   # renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
-  # renv::install("~/src/oce_1.7-10.tar.gz")
   renv::update()
   renv::clean()
   renv::snapshot()
@@ -110,13 +130,10 @@ if(0) {
 
 
 
-## temp until CRAN is updated
-## check that all packages are up to date
-if(packageVersion("worldmet") != '1.1.0.9000') {
-  renv::install("openair-project/worldmet")
-  # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
-}
 
+###########################
+## Process CTD HEX files ##
+###########################
 
 
 if(.Platform$OS.type != "unix") {
@@ -135,35 +152,37 @@ if(.Platform$OS.type != "unix") {
   cat("Need to upate aggregated CTD files from ResearchWorkSpace or GoogleDrive\n")
 }
 
-
 sink(file = "runAll.log", append = FALSE)
+
+
+
+########################################################
+## Analyse and plot oceanographic and biological data ##
+########################################################
+
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
-
 
 ## plot of seasonal-yearly matrix when samples were taken
 source("CTD_DataAvailability.R")
 
 
-## the Wall
-
+## Plot The Wall
 
 ## move CTDwall-setup.R forward, use some output in CTD_timeseries.R ?
 ## use CTDwall_normals.R in CTD_timeseries.R ?
 
 source("CTDwall-setup.R")
-source("CTDwall_normals.R")
+source("CTDwall_normals.R")  # climatologies
 source("CTD_anomaly-helpers.R")
 source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-source("CTDwall.R")
-# source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
-# source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
-
-## only for SoB? -- mv down?
-## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
+if(as.numeric(format(Sys.time(), "%H")) %in% c(0:6, 18:24)) {
+  quickPlot <- TRUE
+} else {quickPlot <- TRUE}
+source("CTDwall.R", local = TRUE); rm(quickPlot)
 sink()
 
 
@@ -211,16 +230,12 @@ if(0) {
   source("Currents/drifter.R")
   source("Currents/plotDrifter.R")
 }
-
-
-
-source("CTD_timeseries_freshwater.R")
-
-if (0){ ## one-off projects
+if (0){ ## more one-off projects
   source ("archive/CTDwall-reportFigure.R")
   source ("archive/OA-temps.R")
 }
 
+source("CTD_timeseries_freshwater.R")
 
 
 
@@ -228,7 +243,11 @@ if (0){ ## one-off projects
 source("metaDataCompilation.R")
 
 
-## push to Martin's GoogleDrive
+
+#############################################
+## Push new plots to Martin's GoogleDrive ##
+#############################################
+
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 if(length(grep("[M|m]artin", getwd())) > 0) {
@@ -240,7 +259,7 @@ if(length(grep("[M|m]artin", getwd())) > 0) {
 
 cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
 sink()
-write(as.character(Sys.time()), file = "finish_runAll.log", append = TRUE)
+write(as.character(Sys.time()), file = "runAll.log", append = TRUE)
 cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
 
 ## EOF

@@ -91,9 +91,9 @@ tColAn <- rev(RColorBrewer::brewer.pal(length(salCol), "RdBu"))
 
 
 ## nauseating rainbow
-kr <- TRUE
-kr <- FALSE
-if(kr) {
+jet <- TRUE
+jet <- FALSE
+if(jet) {
   tCol <- oceColorsTurbo(1000)
   salCol <- colorRampPalette(col = rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
     , bias = 0.3)(1000) ## ODV colors
@@ -946,13 +946,16 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdT96-dwt.RData")
 ## - raw time series
 ## - superimposed anomalies/seasonal mean
 ## - marking first day >= threshold temperature in spring
+## relevance: Herring spawning (surface), crab (bottom),
+## HABs (Alexandrium cysts).
 ## - timing of x degree C in spring
 ## move up to plot for each station?
 ## could also do this for Seldovia Air and water temperatures.
 
-T96 <- subset(poSS, Match_Name == "9_6")  ## migrate to sf
+
+T96 <- subset(poSS, Match_Name == "9_6")
 T96 <- T96 [order(T96$timeStamp), ]
-require("tidyr")
+# require("tidyr") -- still needed?
 
 tL <- c("Deep", "Max", "SalDeep", "TempSurface", "SalSurface")
 titleL <- c("Deep-Water Temperature", "Maximum Temperature", "Deep-Water Salinity"
@@ -962,17 +965,28 @@ for(iS in seq_along(tL)) {
   T96$TempS <- with(T96, list(TempDeep, TempMax, SalDeep, TempSurface, SalSurface))[[iS]]
   tempName <- tL [iS]
 
-  if(tempName == "Max") {
+  if(tempName == "Max") {  # for spawning fish, like herring
     thTempL <- c(8, 12) ## list of threshold temperatures
   } else if(tempName == "Deep") {
-    thTempL <- c(8, 8) ## seq(4, 8, by=0.5)   ## underlying question:
-    ## when is it warm enough for Alexandrium spp. cyst beds to hatch?
+
+    ###########################
+    ## set parameters for threshold plot
+
+    thTempL <- c(4, 7.7) ## seq(4, 8, by=0.5)   ## underlying question:
+    thTempL <- 8
+    thSeason <- 30:350   ## realistic time window to explore threshold temperatures
+                         ## skip January in case it's still warm from previous year
+    ###########################
+
+
+    ## at least some Alexandrium spp. do not grow below 7.7 degr C (inhibitive)
   }
   tbnorm <- longM(T96$TempS, T96$timeStamp)
   # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
   ## see annualPlotFct.R::fixGap -- all gaps, then interpolate NAs
   T96f <- data.frame(timeStamp = seq(min(T96$timeStamp), max(T96$timeStamp), by = 3600 * 24))
   T96f$Date <- as.character(as.Date(T96f$timeStamp))
+  T96f$Year <- as.numeric(format(T96f$timeStamp, "%Y"))
   T96f$jday <- as.numeric(format(T96f$timeStamp, "%j")) - 1
   T96f$TempS <- T96$TempS [match(T96f$Date, T96$Date)]
   T96f$TempSN <- na.approx(T96f$TempS, x = T96f$timeStamp, na.rm = FALSE)
@@ -1027,71 +1041,85 @@ for(iS in seq_along(tL)) {
 
   ## plot timing of 4 degrees C over year
   if(tempName == "Deep") {
-    T96f$Year <- as.numeric(format(T96f$timeStamp, "%Y"))
+      tDF <- subset (T96f, jday %in% thSeason)
+      springDay <- lapply(thTempL, function(tempN) {
+        yearSums <- sapply(seq_along(levels(factor(tDF$Year))),
+          function (y){
+            yDF <- subset(tDF, Year == levels(factor(tDF$Year))[y])
+            warmDy <- yDF$jday [which(yDF$TempSN >= tempN)]
+            # outDF <- data.frame(year=levels(factor(tDF$Year))[y])
+            # outDF$day1 <- suppressWarnings(min(warmDy, na.rm=TRUE))  ## suppress message!
+            # outDF$lastDay <- suppressWarnings(max(warmDy, na.rm=TRUE))
+            # outDF$nDays <- length(warmDy)
+            # outDF$degDay <- suppressWarnings(sum(sqrt(yDF$TempSN - tempN)^2, na.rm = TRUE))
+            year <- as.numeric(levels(factor(tDF$Year))[y])
+            day1 <- suppressWarnings(min(warmDy, na.rm=TRUE))  ## suppress message!
+            lastDay <- suppressWarnings(max(warmDy, na.rm=TRUE))
+            nDays <- length(warmDy)
+            degDays <- suppressWarnings(sum(sqrt(yDF$TempSN - tempN)^2, na.rm = TRUE))
 
-    springM <- sapply(thTempL, function(y) {
-      aggregate(TempSN ~ Year, data = T96f, function(x, thTemp = y) {
-        lD <- min((seq_along(x[1:(366 / 2)]))[x >= thTemp], na.rm = TRUE)
-        x <- c(-1, x)
-        #        if(tempName=="Max"){
-        #          x4 <- min((seq_along(x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
-        #        }else{
-        x4 <- max((seq_along(x[1:(366 / 2)]))[x <= thTemp], na.rm = TRUE)
-        #        }
-        lD <- ifelse(x4 == 1, NA, x4)   ## review this further!!  2024 isn't right XXX
-        # lD <- ifelse(x4>=364/2, NA, lD)
-        as.Date("2000-01-01") + lD
-        # last4
-      })$TempSN
-    })
+            outDF <- c(year, day1, lastDay, nDays, degDays)
+            outDF
+          })
+        yearSums <- as.data.frame (t(yearSums))
+        names(yearSums) <- c("year", "day1", "lastDay", "nDays", "degDays")
+        if(any(yearSums$nDays == 0)){
+          is.na(yearSums [which(yearSums$nDays == 0), 2:ncol(yearSums)]) <- TRUE
+        #  yearSums [which(yearSums$nDays == 0), 2:ncol(yearSums)] <- NA
+        }
+        yearSums
+      })
+      names(springDay) <- paste0("temp", thTempL)
 
-    springM [is.infinite((springM))] <- NA
-    rownames(springM) <- levels(factor(T96f$Year))
-    springM <- as.Date(springM) # this would turn matrix into vector if ncol=1
+#      plot(nDays~year, pch=19, col="darkgreen", data=springM[[1]])
+
+
     if(length(thTempL) > 1) {
       suppressWarnings(colr <- RColorBrewer::brewer.pal(length(thTempL), "Accent"))
     } else {colr <- "black"}
 
-    ## version 1 -- year on x-axis
-    if(!kr) {
-      yL <- as.numeric(rownames((springM)))
-      plot (seq(min(yL), max(yL) + 1, length.out = nrow(springM)), springM [, 1], type = "n", xlab = "", ylab = ""
+
+      springM <- springDay[[1]]
+      # springM$day1 <- as.Date("2000-01-01") + springM$day1
+
+      yL <- springM$year
+      yD <- springM$day1  # as.Date("2000-01-01") + springM$day1
+      yD2 <- c(springM$lastDay, yD)
+      yDday <- as.POSIXct("2000-01-01") + yD*3600*24
+      plot (yD~yL, type = "n", xlab = "", ylab = ""
         , main = paste("Earliest threshold", tempName, "temperature")
-        , ylim = range(springM, na.rm = TRUE)
+         , ylim = range(yD, na.rm = TRUE)
+#        , ylim=range(c(yD, yD2), na.rm=TRUE)
         , axes = FALSE)
-      yD <- pretty(springM)
-      axis(2, tick = TRUE, labels = format(yD, "%e %b"), at = yD) # "%m-%d")
-      rm(yD)
+      axis(2, tick = TRUE, labels = format(pretty(yDday), "%e %b"),
+        at = as.numeric(format(pretty(yDday), "%j")))
+      # yDap <- pretty(yD)
+      # yDa <- pretty(yD)
+      # axis(2, tick = TRUE, labels = format(as.POSIXct("2000-01-01") + yDa*3600*24, "%e %b"),
+      #   at = yDa) # "%m-%d")
       axis(1, tick = TRUE, labels = FALSE, at = yL)
       axis(1, tick = FALSE, labels = yL, at = yL + 0.5)
       box()
-      abline(h = as.Date(paste0("2000-0", 1:9, "-01")), lty = "dashed", col = "gray")
+      abline(h = as.numeric(format(as.POSIXct(paste0("2000-", 1:12, "-01")),
+        "%j")), lty = "dashed", col = "gray")
       if(tempName == "Max") {xi <- seq_along(thTempL)} else {xi <- 1}
-      #      if(as.numeric(format(Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
-      #       springM <- springM [1:(nrow(springM)-1),]
-      #      }
-      for(i in xi) {
-        points(springM [, i] ~ I(yL + 0.5), col = colr [i], pch = 19, cex = 2)
-        for(j in seq_len(nrow(springM))) {
-          lines(c(0.1, 0.9) + yL [j], springM [c(j, j), i], col = colr [i], lwd = 3)
-        }
-        # lines(springM [,i]~yL, col=colr [i], lwd=3, type="s")
-        # lines(springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
+      points(I(yL+0.5), yD, pch = 19, col="darkgreen",
+             cex = 4 * springM$degDays/(max(springM$degDays, na.rm=TRUE)))
+      # points(yD ~ I(yL + 0.5), col = colr [i], pch = 19, cex = 2)
+      for(j in seq_len(nrow(springM))) {
+        lines(c(0.1, 0.9) + yL [j], yD [c(j, j)], lwd = 3)
+          # lines(springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
+        # lines(0.5+yL[c(j,j)], c(yD[j], yD2[j])
+        #       , lwd=15*springM$degDays[j]/(max(springM$degDays, na.rm=TRUE))
+        #       , col="darkgreen")
       }
+
       legend("bottomright" ## needs to move below plot and needs to be smaller
         , lwd = 3, pch = 19, cex = 1
         , col = colr, legend = thTempL [xi]
         , title = "temperature [°C]" # expression(temperature~"["*degree~C*"]")
         , bty = "n", ncol = 3, pt.cex = 2, pt.lwd = 3)
-      rm(yL, xi)
-    } else {  ## version 2 -- year on y-axis
-      plot(springM [, 1], levels(factor(T96f$Year)), ylab = ""
-        , xlab = expression(First ~ day ~ with ~ temperature ~ at ~ 4^o ~ C)
-        , pch = 19, col = "black", cex = 3, lwd = 3
-      )
-      # paste0("First day with temperature at ", ))
-      abline(h = levels(factor(T96f$Year)), lty = "dashed")
-    }
+      rm(yL, xi, yD)
   }
   dev.off()
 

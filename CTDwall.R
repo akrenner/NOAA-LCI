@@ -3,8 +3,14 @@
 
 
 
+if(!exists("quickPlot")) {
+  rm(list = ls())
+  ## running everything can take hours! Don't do that on a routine basis.
+  quickPlot <- TRUE ## only plot key transects and variables to speed things up
+  quickPlot <- FALSE
+}
 
-rm(list = ls())
+
 ## get bathymetry, standard colors, and data ranges
 base::load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  # from CTDwall-setup.R -- only for stn?
 poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
@@ -25,15 +31,21 @@ base::load("~/tmp/LCI_noaa/cache/ctd_anomalies.RData")  # from CTD_anomaly-helpe
 ## 9-10 2012-5:  double cast?
 ## T-3 2012-winter: stations mislabled/out of order? 3_4 should be 3_7?
 
+## tune color-scale bias
 ## color scales: make custom breaks to show more details
+odv <- rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
+
+## ColorRamp bias: default=1, positive number. Higher values give more widely spaced colors at the high end.
+oCol3 [[2]] <- colorRampPalette(col = odv, bias = 0.25)
+
 
 
 ## decisions made:
 # if more than 1 survey per survey-window, plot the longest section
 
 
-stopatDate <- "2022-07-31"
 stopatDate <- Sys.Date()
+# stopatDate <- "2022-07-31"
 
 
 
@@ -45,34 +57,41 @@ levels(poAll$Transect) <- c(levels(poAll$Transect), "ABext")
 ## pick the variables to plot (only to save time, really). Disable to run
 ## everything under the sun
 ## code copied from CTDsections.R
-if(1){  ## running everything takes hours -- don't do that on a routine basis!
-  pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU", "Oxygen_umol_kg",
-                       "Chlorophyll_mg_m3", "turbidity")  #, "bvf")
-                     , c("", "an_", "anS_"))
-  ## for testing/speed-up
-  if(1){
-    pV <- expand.grid (c("Temperature_ITS90_DegC",
-                         "Salinity_PSU"# , "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity", "bvf"
-    )
-    , c("anS_", "" # , "an_", ""
-    ))
-  }
-  keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
-  oVarsF <- oVarsF [keepV]
-  oVars <- oVars [keepV]
-  oVarsDFname <- oVarsDFname [keepV]
-  oCol3 <- oCol3 [keepV]
-  oRange <- oRange [keepV,]
-  rm(keepV)
+
+
+## define variables to plot
+pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU", "Oxygen_umol_kg",
+                     "Chlorophyll_mg_m3", "turbidity", "bvf")
+                   , c("", "an_", "anS_")
+)
+
+if(quickPlot){
+  pV <- expand.grid (c("Temperature_ITS90_DegC", "Salinity_PSU"
+                       # , "Oxygen_umol_kg", "Chlorophyll_mg_m3", "turbidity", "bvf"
+  )
+  , c("anS_", "" # , "an_", ""
+  ))
 }
+keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
+oVarsF <- oVarsF [keepV]
+oVars <- oVars [keepV]
+oVarsDFname <- oVarsDFname [keepV]
+oCol3 <- oCol3 [keepV]
+oRange <- oRange [keepV,]
+rm(keepV, pV)
 
 oceanvarC <- seq_along(oVarsF)
-# oceanvarC <- rev(oceanvarC)                           # for testing
 transectC <- c(which(levels(poAll$Transect) == "9"),    # plot T9 first
                seq_along(levels(poAll$Transect))) |>
   unique()
 # transectC <- which(levels(poAll$Transect) == "9")
+if(quickPlot) {
+  transectC <- which(levels(poAll$Transect) %in% c("9", "AlongBay"))
+  oceanvarV <- rev (oceanvarC)
+}
 
+
+mnthly <- c("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
 
@@ -83,9 +102,6 @@ transectC <- c(which(levels(poAll$Transect) == "9"),    # plot T9 first
 if(class(stopatDate)[1] == "character") {stopatDate <- as.POSIXct(stopatDate)}
 source("CTDsectionFcts.R")
 dir.create("~/tmp/LCI_noaa/media/CTDsections/CTDwall/", showWarnings = FALSE, recursive = TRUE)
-
-if(!exists("useSF")) {useSF <- FALSE}  ## should have useSF from CTDwall-setup.R
-mnthly <- c("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
 if(0) { ## tests
@@ -102,6 +118,7 @@ if(0) { ## tests
 
 ## combine oceanvarC and transectC to run in parallel!
 pPage <- expand.grid(oceanvarC=oceanvarC, transectC=transectC)
+
 for(iV in seq_len(nrow(pPage))){
   ov <- pPage$oceanvarC[iV] # ov = OceanVariable(temp, salinity, etc)
   tn <- pPage$transectC[iV] # tn: transect
@@ -303,7 +320,10 @@ for(iV in seq_len(nrow(pPage))){
         if(length(grep("^anS_", oVarsF[ov])) > 0){
           zb <- seq(-3,3, by=0.5)
           # zb <- subset (zb, zb != 0)  ## include zero or not?? center a color around zero?
-        }else{
+        }else if(oVarsF [ov] == "salinity"){
+          ## only for salinity?
+          zb <- oBreaks[[ov]]
+        } else {
           zb <- NULL
         }
 
@@ -414,7 +434,7 @@ for(iV in seq_len(nrow(pPage))){
       # grid.picture(g)
     }
     if(.Platform$OS.type == "unix") {
-      system("convert pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
+      system("magick pictograms/eye.svg pictograms/eye.png") # requires ImageMagic to make PNG file
     }
     p <- png::readPNG("pictograms/eye.png")
     # require("OpenImageR")
@@ -534,5 +554,5 @@ if(0) {
   }
 }
 
-cat("\n# END CTDwall.R #\n")
+cat("\n#\n# END CTDwall.R\n#", as.character(Sys.time()), "\n#\n")
 # EOF

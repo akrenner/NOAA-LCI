@@ -180,7 +180,7 @@ odv <- rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "
 oCol3 <- list( ## fix versions?
   # colorRampPalette(oce::oceColorsTurbo(8), bias=0.5)
   temperature = oce::oceColorsTurbo  # colorRampPalette(cmocean("thermal")(10)
-  , salinity = colorRampPalette(col = odv, bias = 0.3) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
+  , salinity = colorRampPalette(col = odv, bias = 0.25) # , colorRampPalette(cmocean("haline")(5), bias=0.7)  # cmocean("haline")
   , density = colorRampPalette(cmocean::cmocean("dense")(5), bias = 0.3)
   , oxygenC = cmocean::cmocean("oxy")
   , oxygenP = cmocean::cmocean("oxy")
@@ -202,6 +202,11 @@ oRange <- t(sapply(oVarsDFname, FUN=function(vn) {
   # range(poAll [, which(names(poAll) == vn)], na.rm=TRUE)
   quantile(poAll[, which(names(poAll) == vn)], na.rm=TRUE, probs=(c(0.0001, 0.9999)))
 }))
+
+oBreaks <- lapply(oVarsDFname, FUN=function(vn) { ## great idea, but not sure how to scale color bar if using this
+  quantile(poAll[, which(names(poAll) == vn)], na.rm=TRUE, probs=seq(0, 1, length.out = 100))
+})
+
 ## better to do this with colormap(S, breaks=...)? See https://www.clarkrichards.org/2016/04/25/making-section-plots-with-oce-and-imagep/
 
 ## manually tune some of these ranges

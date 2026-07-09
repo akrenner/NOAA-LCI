@@ -443,13 +443,8 @@ corCalc <- function(wh, freshStn, ld = 0, k = 31, wVar = corVar, CI=FALSE){
     data.table::frollmean(algo = "fast", align = "center", has.nf = TRUE, n = k,
       na.rm = TRUE) |>
     dplyr::lead(n = ld)  ## it's lag or lead?
-<<<<<<< HEAD
   wh$YEARMODA <- as.Date(wh$date)
   wh$fresh <- freshStn$freshwater[match(wh$YEARMODA,
-=======
-  wther$YEARMODA <- as.Date(wther$date)
-  wther$fresh <- freshStn$freshwater[match(wther$YEARMODA,
->>>>>>> main
     freshStn$datetimestamp)]
   # wh <- subset(wh, !is.na(fresh))
   cor(wh$ma, wh$fresh, use = "pairwise.complete.obs")
