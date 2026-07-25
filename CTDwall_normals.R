@@ -20,6 +20,8 @@
 
 
 rm(list = ls())
+require("oce")  # for plotting sections?
+
 ## select reference interval for normal calculations: all, or restricted
 referenceInterval <- 2012:as.numeric(format(Sys.time(), "%Y"))     ## all
 referenceInterval <- 2012:2025                                     ## as given
@@ -27,7 +29,8 @@ referenceInterval <- 2012:(as.numeric(format(Sys.time(), "%Y"))-1) ## all but cu
 
 
 
-load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R
+load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")   # from CTDwallSetup.R -- load poAll
+
 
 
 normDir <- "~/tmp/LCI_noaa/media/CTDsections/CTDsection-normals/"
@@ -278,15 +281,13 @@ for (j in c("AlongBay", "9", "ABext")) {
       if(length (levels(factor(xCo$Match_Name))) > 2) {
         xCo <- sectionize(xCo)
         # keep long one for map
-        if (k == 7) {xCoM <- xCo} else if(!exists("xCom")) {xCom <- xCo}
+        if(k == 1) {
+          xCom <- xCo
+        } else if(length(xCo@metadata$time) > length(xCom@metadata$time)) {
+          xCom <- xCo
+        }
 
-        #         dplyr::filter(!is.na(colnames(oM)[ov])) |>  ## THAT's NEEDED, BUT NOT WORKING AS-IS!! -- now under ov=2
-        #|>
-        # sectionPad(transect=data.frame(station = unique(phT$Match_Name),
-        #   line = j, latitude = unique(phT$latitude_DD)
-        #   , longitude = unique(phT$longitude_DD)))
-
-        bathy_sec <- get_section_bathy(xCo)
+        bathy_sec <- get_section_bathy(xCo)  # this may not be robust, so call it for each
 
         pSec(xCo
              , N=oVarsF[ov]
@@ -306,14 +307,14 @@ for (j in c("AlongBay", "9", "ABext")) {
       }
       mtext(month.name[k], 3, line = 0.5)
     }
-    if(posterP) {
-
-      ## map
-      oce::plot(xCoM, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
-# XX      mtext(paste0("Transect: ", j), line = -2)
-      rm(xCoM)
-
-      ## NCCOS-KBL logo
+   if(posterP) {
+     if(exists("xCoM")) {
+       ## map
+       oce::plot(xCoM, which = 99, coastline = "best", grid = TRUE, showStations = TRUE)
+       # XX      mtext(paste0("Transect: ", j), line = -2)
+       rm(xCoM)
+     }
+     ## NCCOS-KBL logo
       im_h <- nrow(KBL); im_w <- ncol(KBL)
       # ppar <- par()
       par(mar=c(1,2,1,2.0))
