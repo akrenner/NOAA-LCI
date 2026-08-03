@@ -168,7 +168,7 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , turbidity = ifelse (is.na (Turbidity),
                                          Beam_attenuation, Turbidity)
                                      # , Beam_attenuation
-                                    #  , Beam_transmission  ## causing all sorts of issues -- abandon for now
+                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
 ))
 
 
