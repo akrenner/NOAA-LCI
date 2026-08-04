@@ -32,16 +32,16 @@ scAdvT <- 23 # max wind speed for small craft advisory (AK value) -- sustained o
 
 mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay/"
 
-require ("RColorBrewer")
+# require ("RColorBrewer")
 if (quarterly) {
   pastYear <- FALSE  ## for winter/spring publication
   ongoingY <- TRUE
-  currentCol <- c (brewer.pal (4, "Paired")[1:2], "black")[c(3, 1, 2)]
+  currentCol <- c (RColorBrewer::brewer.pal (4, "Paired")[1:2], "black")[c(3, 1, 2)]
   mediaD <- paste0 (mediaD, "update/")
 } else {
   pastYear <- FALSE  ## for fall publication  # plot currentYear-1 ?
   ongoingY <- TRUE
-  currentCol <- c ("black", brewer.pal (4, "Paired")[1:2])
+  currentCol <- c ("black", RColorBrewer::brewer.pal (4, "Paired")[1:2])
 }
 ## leave code below as-is
 ##########################################################
@@ -350,8 +350,8 @@ meanWind <- function(u, v) { # weatherclasses.com as above
 dMeans$wdir <- with (dMeans, meanWind (uw, vw))
 dMeans$windSpd <- with (dMeans, sqrt (uw^2 + vw^2))
 dMeans$wdir <- with (dMeans, ifelse (wdir < 0, wdir + 360, wdir)) # needed??
-require ("circular")
-circWind <- circular (hmr$wdir, type = "directions", units = "degrees", template = "geographics")
+# require ("circular")
+circWind <- circular::circular (hmr$wdir, type = "directions", units = "degrees", template = "geographics")
 wDir2 <- aggregate (circWind ~ jday + year, hmr, FUN = function(x) {
   as.numeric (mean (x, na.rm = TRUE)) ## this is NOT right -- need to apply weight by wind speed! XXX
 })

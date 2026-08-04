@@ -312,10 +312,11 @@ nb |>
 
 source("annualPlotFct.R")
 # for some reason no (longer) precipitation data from Ketchikan AP (or Ketchikan)
-stnL <- c("HOMER AP",  # "HOMER SPIT",
-          "SELDOVIA AP", "SITKA AP", "JUNEAU AP"
-          , "YAKUTAT AP", "BELLINGHAM INTL AP"
-          , "KETCHIKAN AP"
+stnL <- c(# "HOMER AP",  # "HOMER SPIT",  ## excluded stations Homer AP, Sitka AP, Yakutat AP and Bellingham Intl AP do not provide precipitation data as of 2026-08
+          "SELDOVIA AP", # "SITKA AP"
+          "JUNEAU AP",
+          # "YAKUTAT AP", "BELLINGHAM INTL AP",
+          "KETCHIKAN AP"
           )  # KETCHIKAN AP may be only daily?s
 
 weather <- list()

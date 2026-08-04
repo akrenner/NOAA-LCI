@@ -102,36 +102,32 @@ ctdAgg <- function(df = poAll, dM = oM, FUN=mean, ...) {
 }
 
 
-poNorm <- ctdAgg(df = poAll, dM = oM, FUN = mean, na.rm = TRUE)
-nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
-
-
-
-# pN <- ctdAgg(df = poAll, FUN = function(x) {sum(!is.na(x)) }) |>
-#   dplyr::select(-Match_Name, -month, -Depth.saltwater..m.) |>
-#   apply(MARGIN=1, FUN=sd)
-# if(!all.equal(pN, rep(0, nrow(poNorm)))) {stop("investigate discrepancy")}; rm(pN)
+## calculate N to drop values with N < nMin
 pN <- ctdAgg(df = poAll, dM = oM, FUN = function(x) {sum(!is.na(x)) }) |>
   dplyr::pull(Temperature_ITS90_DegC) # inefficient to compute, but easy to code
-# pN <- ctdAgg(df = poAll, FUN = function(x) {length(x)}) |> dplyr::pull(Temperature_ITS90_DegC)
 
-# drop values with N < nMin
+## normals
+poNorm <- ctdAgg(df = poAll, dM = oM, FUN = mean, na.rm = TRUE)
+nC <- which(names(poNorm) == colnames(oM)[1]):ncol(poNorm)
 poNorm[,nC]<-sapply(nC, function(i) {ifelse(pN < nMin, NA, poNorm [,i])} )
 # ## add stn data and Pressure for oce
 
-
-
-poSD <- ctdAgg(df = poAll, dM = oM, stats::sd, na.rm = TRUE)
+## standard deviations
+poSD <- ctdAgg(df = poAll, dM = oM, FUN = stats::sd, na.rm = TRUE)
 poSD[,nC] <- sapply(nC, function(i) {ifelse(pN < nMin, NA, poSD   [,i])} )
-
-
 names(poSD) <- paste0("SD_", names(poSD))
-poRA <- ctdAgg(df = poAll, dM = oM, function(x){diff(range(x, na.rm = TRUE))})
+
+## range
+poRA <- ctdAgg(df = poAll, dM = oM, FUN = function(x){diff(range(x, na.rm = TRUE))})
 names(poRA) <- paste0("Range_", names(poRA))
+
+## combine them all for easier plotting
 poNorm <- cbind (poNorm,
     poSD [,which(names(poNorm) == colnames(oM)[1]):ncol(poSD)]
   , poRA [,which(names(poNorm) == colnames(oM)[1]):ncol(poRA)]
   )
+
+
 
 if(0) { ## quarterly means -- not really enough data for these?
   season <- Seasonal(poAll$month)
@@ -220,7 +216,7 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdanomalies.RData")
 
 ## adapt to cbind of poNorm and poSD -- these are of no use for anomalies
 oVarsF <- c(oVarsF, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
-oVarsDFname <- c(oVarsDFname, paste0("SD-", oVarsDFname), paste0("Range-", oVarsDFname))
+oVarsDFname <- c(oVarsDFname, paste0("SD_", oVarsDFname), paste0("Range_", oVarsDFname))
 oVarsTitle <- c(oVarsTitle, paste0("SD-", oVarsTitle), paste0("Range-", oVarsTitle))
 oVars <- rep(oVars,2)
 # oCol3 <- c(oCol3, lapply(seq_along(oCol3), function(x) {viridis::plasma}))

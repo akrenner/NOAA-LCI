@@ -80,9 +80,8 @@ rerddap::cache_setup(full_path="~/tmp/LCI_noaa/cache/noaaBuoy/")
 ## ---------------- execute functions and get data ----------------------------
 sAir <- getSWMP(station = "kachomet", QAQC = TRUE)
 
-## weather from Homer Airport
+## weather from Homer Airport -- if this crashes RStudio, try: clearC = TRUE
 nAir <- getNOAAweather_airports(stationID = "PAHO", clearcache = clearC)  ## function in annualPlotFct
-nAiro <- try(getNOAA(buoyID="HMSA2"))
 ## ------------clean up weather data and move to metric units ----------------
 
 ## match noaa to swmp data -- move this into a annualPltFct.R function XX !
@@ -106,6 +105,7 @@ hmr <- with(nAir, data.frame(datetimestamp = valid
 rm(nAir)
 
 ## buoydata
+nAiro <- try(getNOAA(buoyID="HMSA2"))
 nWave <- try(getNOAA(buoyID = "46108"))  ## move this to gNOAAbuoy()?
 wave.46108 <- nWave
 weather.spit.buoy <- try(getNOAA(buoyID = "hmsa2"))   ## SWMP Homer Spit weather station
@@ -155,4 +155,6 @@ save(hmr = sAir, file = "~/tmp/LCI_noaa/cache/annual-SWMPAirWeather.RData")
 # save.image("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 # rm(list=ls()); load("~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
 save(nWave, hmr, sAir, weatherL, file = "~/tmp/LCI_noaa/cache/annual-AirWeather.RData")
+
+cat("\n\n##\n## Finished annual-fetchAirWeather.R\n##\n")
 ## EOF

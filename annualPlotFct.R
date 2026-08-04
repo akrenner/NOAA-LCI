@@ -803,7 +803,8 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
   }
   dir.create("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings = FALSE, recursive = TRUE)
   if(file.exists(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))) {
-    load(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    # load(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    rW <- readRDS(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".rds"))
     lastD <- max(rW$valid) # valid = date-time
     ## fudge to get 1 year overlap
     lastD <- as.Date(paste0(as.integer(substr(as.character(lastD), start = 1, stop = 4)) - 1, "-01-01"))
@@ -827,7 +828,8 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
     }
   }
   rm(rWn)
-  save(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+  saveRDS(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".rds"))
+  # save(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
 
   ## clean-up data/convert units, as appropriate, for compatibility with getNOAA
 

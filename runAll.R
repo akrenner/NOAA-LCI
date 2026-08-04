@@ -122,8 +122,17 @@ if(0) {
     # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
   }
 
-  renv::update(exclude = c("oce", "buoydata", "worldmet")) ## rerun for all/specific packages to update
+
+
+  renv::upgrade(version="1.2.3")  ## do NOT use renv@1.2.4 -- weird BioConductor interaction
+
+
+  packageVersion("oce")
+  # renv::update(exclude = c("oce", "buoydata", "worldmet", "renv")) ## rerun for all/specific packages to update
+  renv::update(exclude = c("oce", "renv")) ## rerun for all/specific packages to update
   # renv::install("~/src/oce_1.8-3.tar.gz")
+  # renv::install(c("oce@1.8-3", "renv@1.2.3"))
+
 
   ## Delete left-over lock files if package installation is stuck
   # unlink(list.files(.libPaths(), pattern = "^00LOCK", full.names = TRUE), recursive = TRUE)
@@ -151,7 +160,30 @@ if(.Platform$OS.type != "unix") {
   sink(file = "ctdprocessing.log", append = FALSE, split = FALSE)
   cat("Started CTD hex conversion at", format(Sys.time(), "%Y-%m-%d %H:%M"), "\n")
   source("FieldNotesDB.R") # first because it doesn't depend on anything else
-  source("ctd_workflow.R")              ## approx. 1:30 hours
+# source("ctd_workflow.R")              ## approx. 1:30 hours
+
+  ## itemize ctd_workflow.R here -- keep it in runAll.R for easier testing
+  print (Sys.time())
+  # CTD processing
+
+  if (length (grep ("NOAA-LCI", getwd())) < 1) {
+    stop("Need to set working directory to 'NOAA-LCI'")
+  }
+  cat ("\n\n## Starting ctdprocessing at", format (Sys.time(), "%Y-%m-%d %H:%M"), "\n\n")
+  hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
+  source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
+
+  source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
+  cat ("## Finished hex conversion of CTD files\n\n")
+
+
+  ## could run from here on downwards on any platform
+  source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
+  cat ("## Finished CNV import of CTD files\n\n")
+  source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
+  cat ("## Finished CTD_cleanup.R at ", as.character (Sys.time()), "\n\n")
+  # source ("CTD_notesQAQC.R")       ## unfinished; need to retune. Merge into CTD_cleanup.R??
+  cat ("\n\n## Finished ctd_workflow at ", format (Sys.time(),  "%Y-%m-%d %H:%M"), "\n")
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat("Finished CTD hex conversion and processing at: ", as.character(Sys.time()), "\n")
   sink()
