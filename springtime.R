@@ -10,12 +10,6 @@
 ## combine Seldovia&Homer?? -- later, keep it simple for now
 
 
-
-
-
-if (.Platform$OS.type != "unix") {setwd ("~/myDocs/amyfiles/NOAA-LCI/")} else {
-  setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-}
 rm (list = ls()); load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")  ## from SeldoviaTemp.R
 dir.create("~/tmp/LCI_noaa/media/spring/", recursive = TRUE, showWarnings = FALSE)
 require (zoo)

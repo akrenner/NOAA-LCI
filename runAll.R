@@ -1,66 +1,142 @@
 #! /usr/bin/env Rscript
 
-## Execute all Kachemak Bay/Cook Inlet scripts, 2020
-## If this is a new installation, it may be necessary to disconnect from VPN
-## to avoid timeouts. To run up-to-date analysis, connect to VPN in order to
-## download latest SWMP data from CDMO. Expect approximately 3 hours for a full
-## run (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
-
-
-# add to time series (signature data)
-# freshwater of first 30 m / bottom
-# salinity at T9-6 at 50 m (seasonal influence of ACC?)
-# boyyancy profile over time
-# max buoyancy over time
-# position of max buoyancy over time
-
-
-rm(list = ls())
-sT <- Sys.time()
-
-# pastYear <- FALSE  # plot currentYear-1 ?
-# ongoingY <- TRUE
-
-if(.Platform$OS.type == "windows") {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-} else { ## Linux or macOS platform
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+## To optain this and all other scripts and data for this project, paste the
+## code between the braces into a R console:
+if(0) {
+  ## required software: R, RStudio, RTools, git, seabird data processing,
+  ## set up folder for R SCRIPTS and pull scripts from github
+  rFolder <- "~/myDocs/R-scripts" # or any other folder name you like
+  dir.create(rFolder, recursive = TRUE)
+  setwd(rFolder)
+  system("git clone https://github.com/akrenner/NOAA-LCI.git")
+  setwd(paste0(rFolder, "/NOAA-LCI"))
+  source("runAll.R")  ## which will run this script and everything else.
+  ## Be patient
 }
 
 
+#######################################################
+## For collaborators -- get the latest updates       ##
+## This will overwrite any changes you may have made ##
+#######################################################
+
+if(length(grep("[M|m]artin", getwd())) < 1) {
+  ## for collaborators: pull latest versions from git and sync packages
+  system("git pull --force")
+  system ("git checkout main")
+  if(!renv::restore()$synchronized) {
+    renv::restore(prompt=FALSE, clean= TRUE)
+  }
+  hd <- getwd()
+  setwd("~/GISdata/LCI/")  ## fetch latest CTD data
+  system("git pull")
+  setwd(hd); rm (hd)
+}
+
+## Execute all Kachemak Bay/Cook Inlet scripts. In a new installation, it's
+## recommended to disconnect from VPN first, to avoid network timeouts. Expect
+## over 3 hours for the initial run, which needs to download many external files
+## (2023-04 on Latitude 5420; 11th G Intel Core i7 1185G7 @3.0 GHz/1.8 GHz).
+## To update to the latest SWMP data, be sure to be connected to VPN NCCOS-West.
+
+## If you want to make your own changes to any of these scripts, learn about
+## git, and create a new fork.
+
+## See the Recurrent_Oceanographic_Survey-Manual for more instructions.
+
+
+
+rm(list = ls())
+
+if(length(grep("/NOAA-LCI$", getwd())) < 1) {
+  stop("Please open the R Project in NOAA-LCI/")
+  if(.Platform$OS.type=="windows"){
+    setwd ("~/myDocs/amyfiles/NOAA-LCI/")
+    # set environment variable to avoid "no such file or directory errors"
+    Sys.setenv(TMPDIR = "C:\tmp")
+    system ("git pull --force")
+  }else{ ## Linux or macOS platform
+    setwd ("~/Documents/amyfiles/NOAA/NOAA-LCI/")
+  }
+}
+
+
+sT <- Sys.time()
+cat ("\nStarting runAll.R at: ", as.character (Sys.time()), "\n")
+## as of 2023-03-23 expect about 1:25 hours for CTD processing
+
+## for SOB report -- quarterly vs annual -- clarify XXX
+pastYear <- FALSE  # plot currentYear-1 ?
+ongoingY <- TRUE   # for quarterly update
+
+
+
+## This will only run once, getting required data and packages
 if(!file.exists(".initialized.rds")){
+  #rJava issues? try
+  # Sys.setenv(JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-26.jdk/Contents/Home/")
+
   source("InitialSetup.R")
   saveRDS(Sys.Date(), file=".initialized.rds")
 }
 
 
+
+
+
+
+###########################################
+## Test dependencies and update packages ##
+###########################################
+
+
 if(0) {
   ## to update packages: 0-- trouble on MacOS?
-  require(usethis) ## for github rate limits
+  # require(usethis) ## for github rate limits
   usethis::create_github_token()
   gitcreds::gitcreds_set()
   # usethis::edit_r_environ()
 
   ## set up AI helper claudeR
   # if(!require("claudeR")) {
-  #   # install.packages("devtools")
-  #   devtools::install_github("yrvelez/claudeR")
+  #   # renv::install("yrvelez/claudeR")
   #   require("claudeR")
   # }
   # Sys.setenv(ANTHROPIC_API_KEY = "MYAPI KEY")  ## consider at $5 to start
 
-
   ## troubleshoot dependencies used in the past:
   badP <- c("rgdal", "rgeos", "maptools", "rnoaa", "rtide", "SDraw")
+  badP <- c("GVI", "yaml", "randomForest", "stinepack")
   deps <- renv::dependencies()
   for(i in seq_along(badP)) {
-    cat("\n\n##", badP [i], "##\n")
-    print(deps [which(deps$Package == badP[i]), 1])
+    if(length(deps[which(deps$Package == badP[i]), 1]) > 0) {
+      cat("\n\n##", badP [i], "##\n")
+      print(deps [which(deps$Package == badP[i]), 1])
+    } else {cat("No dependencies found for: ", badP[i], "\n")}
   }
   rm(badP, deps)
 
-  # renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
-  # renv::install("~/src/oce_1.7-10.tar.gz")
+  ## temp until CRAN is updated
+  if(packageVersion("worldmet") != '1.1.0.9000') {
+    renv::install("openair-project/worldmet")
+    # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
+  }
+
+
+
+  renv::upgrade(version="1.2.3")  ## do NOT use renv@1.2.4 -- weird BioConductor interaction
+
+
+  packageVersion("oce")
+  # renv::update(exclude = c("oce", "buoydata", "worldmet", "renv")) ## rerun for all/specific packages to update
+  renv::update(exclude = c("oce", "renv")) ## rerun for all/specific packages to update
+  # renv::install("~/src/oce_1.8-3.tar.gz")
+  # renv::install(c("oce@1.8-3", "renv@1.2.3"))
+
+
+  ## Delete left-over lock files if package installation is stuck
+  # unlink(list.files(.libPaths(), pattern = "^00LOCK", full.names = TRUE), recursive = TRUE)
+
   renv::update()
   renv::clean()
   renv::snapshot()
@@ -69,45 +145,90 @@ if(0) {
 
 
 
-if(1) {
+
+
+###########################
+## Process CTD HEX files ##
+###########################
+
+
+if(.Platform$OS.type != "unix") {
   ## run the first script interactively! :
   # source("I-ctd_uneditedHexFiles.R")
 
   ## hex conversion and QAQC plots
   sink(file = "ctdprocessing.log", append = FALSE, split = FALSE)
-  cat("Started CTD hex conversion and processing at: ", Sys.time(), "\n")
+  cat("Started CTD hex conversion at", format(Sys.time(), "%Y-%m-%d %H:%M"), "\n")
   source("FieldNotesDB.R") # first because it doesn't depend on anything else
-  source("ctd_workflow.R")              ## approx. 1:30 hours
+# source("ctd_workflow.R")              ## approx. 1:30 hours
+
+  ## itemize ctd_workflow.R here -- keep it in runAll.R for easier testing
+  print (Sys.time())
+  # CTD processing
+
+  if (length (grep ("NOAA-LCI", getwd())) < 1) {
+    stop("Need to set working directory to 'NOAA-LCI'")
+  }
+  cat ("\n\n## Starting ctdprocessing at", format (Sys.time(), "%Y-%m-%d %H:%M"), "\n\n")
+  hexFileD <- "~/GISdata/LCI/CTD-processing/Workspace/"
+  source ("CTD_file_management.R") ## QCQA, match hex with con file -- some time error checking: name and meta
+
+  source ("CTD_hexconversion.R")   ## call SEABIRD to do hex to cnv conversion
+  cat ("## Finished hex conversion of CTD files\n\n")
+
+
+  ## could run from here on downwards on any platform
+  source ("CTD_cnv-Import.R")      ## still has QAQC in here; runs for 17 min
+  cat ("## Finished CNV import of CTD files\n\n")
+  source ("CTD_cleanup.R")         ## move error corrections into here. Produce aggregate CTD file (data product)
+  cat ("## Finished CTD_cleanup.R at ", as.character (Sys.time()), "\n\n")
+  # source ("CTD_notesQAQC.R")       ## unfinished; need to retune. Merge into CTD_cleanup.R??
+  cat ("\n\n## Finished ctd_workflow at ", format (Sys.time(),  "%Y-%m-%d %H:%M"), "\n")
   source("CTD_castQAQC.R")              ## CTD profiles keep QAQC separate from error correction
   cat("Finished CTD hex conversion and processing at: ", as.character(Sys.time()), "\n")
   sink()
+} else {
+  cat("Need to upate aggregated CTD files from ResearchWorkSpace or GoogleDrive\n")
 }
 
 
+
+
+########################################################
+## Analyse and plot oceanographic and biological data ##
+########################################################
+
+sink(file = "runAll.log", append = FALSE)
 ## pull together CTD and biological data.
 ## Also pull in external GIS data and produce data summaries
 source("datasetup.R")
-## separate out CTD-specific stuff??
-# ; bathymetry
-# ; coastline
-# ; CTD data
-
-## set up required work environment and external files/data (bathymetry)
-source("EnvironmentSetup.R")
 
 ## plot of seasonal-yearly matrix when samples were taken
-source("CTD_DataAvailability.R")
+source("CTDdataAvailability.R")
 
 
-## the Wall
-source("CTD_timeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+## Plot The Wall
+
+## move CTDwall-setup.R forward, use some output in CTD_timeseries.R ?
+## use CTDwall_normals.R in CTD_timeseries.R ?
+
 source("CTDwall-setup.R")
+source("CTDwall_normals.R")  # climatologies
+source("CTDanomaly-helpers.R")
+source("CTDtimeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-source("CTDwall_normals.R")
-source("CTDwall.R")
-# source("CTDwall-reportFigure.R")  ## not working, error when calling polygon (plot not called yet) -- XX fix later
-# source("CTD_climatologies.R")  # sections over time, formerly "ctd_T9-anomaly.R" -- also see Jim's
+quickPlot <- as.numeric(format(Sys.time(), "%H")) %in% 8:18
+source("CTDwall.R", local = TRUE); rm(quickPlot)
+sink()
+
+
+
+sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
+## State of the Bay Report
+source("AnnualStateOfTheBay.R")
+sink()
+
 
 
 ## 2017 contract
@@ -125,10 +246,7 @@ if(0) { ## 2017 contract
   source("ecoAn.R")
   source("plotMaps.R")
   source("commMap.R")
-
 }
-
-
 ## 2019 seasonality
 if(0) { # Dec 2019 seasonality
   source("zoopCommunity.R")
@@ -142,41 +260,35 @@ if(0) { # Dec 2019 seasonality
   source("consensusTree.R")
 }
 
-
-
-## only for SoB? -- mv down?
-## source("SeldoviaTemp.R") ## -- already called by AnnualStateofTheBay.R
-
-sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
-## State of the Bay Report
-source("AnnualStateOfTheBay.R")
-sink()
-
-
-## how to execute report?
-# source("MonthlyUpdates/MonthlyTemplate.qmd")
-
-
-## one-offs
+## one-offs -- drifters
 if(0) {
   source("Currents/bathymetry-merge.R")
   source("Currents/ciofs_maxCurrent.r")
   source("Currents/drifter.R")
   source("Currents/plotDrifter.R")
-
-  source("CTD_timeseries_freshwater.R")
 }
+if (0){ ## more one-off projects
+  source ("archive/CTDwall-reportFigure.R")
+  source ("archive/OA-temps.R")
+}
+
+source("CTD_timeseries_freshwater.R")
 
 
 
 ## update metadata
-source("metaDataCompilation.R")
+# source("metaDataCompilation.R")
 
 
-## push to GoogleDrive
+
+#############################################
+## Push new plots to Martin's GoogleDrive ##
+#############################################
+
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 if(length(grep("[M|m]artin", getwd())) > 0) {
+  ## sync all data to GoogleDrive -- better with GoogleDriveDesktop now?
   source("CTDsyncGDwall.R")
   ## send email that run is completed
   source("CTD_finishnotification.R")
@@ -184,7 +296,7 @@ if(length(grep("[M|m]artin", getwd())) > 0) {
 
 cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
 sink()
+write(as.character(Sys.time()), file = "runAll.log", append = TRUE)
 cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")
-write(as.character(Sys.time()), file = "finish_runAll.log", append = TRUE)
 
 ## EOF

@@ -8,16 +8,37 @@
 
 rm(list = ls())
 
+
+## fix time zone (forgot to change daylight savings time/standard time change)
+
+
+
 ## interactively find folder of new survey
 if(0) {
   unedDL <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/")
-  uneditedD <- unedDL [length(unedDL) - 1] ## skip "Troubleshooting"
-  uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/2023/2023-07"
+  uneditedD <- unedDL [length (unedDL)-1] ## skip "Troubleshooting"
+  uneditedD <- "~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited\ .hex\ files/2026/2026-05"
   # uneditedD <- unedDL [67] # 2024-01
 }
 
+
+## copy notebookTable.csv to most recent survey
+    ### remember this survey for the next step!
+
+#tempL <- "C:/Users/Martin.Renner/Desktop/notebookTable.csv"
+tempL <- "~/../Desktop/notebookTable.csv"  # works only on PCs
+if(file.exists(tempL)){
+  newD <- list.dirs("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited\ .hex\ files") |>
+    sort(decreasing = TRUE)
+  newN <- paste0(newD [1], "/notebookTable.csv")
+  if(file.exists(newN)) {file.remove(newN)}
+  file.rename(tempL, newN)
+  rm(newD)
+}
+rm(tempL)
+
 ## automatically find the most recent survey based on modification time of notebookTable.csv file
-notes <- list.files("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited .hex files/"
+notes <- list.files("~/GISdata/LCI/CTD-processing/Workspace/ctd-data_2017-ongoing/1_Unedited\ .hex files/"
   , pattern = ".csv", full.names = TRUE, recursive = TRUE)
 if(!exists('uneditedD')) {
   uneditedD <- dirname(notes [which.max(file.mtime(notes))])

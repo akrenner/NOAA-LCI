@@ -1,0 +1,2 @@
+[credential "https://api.github.com"]
+	provider = github

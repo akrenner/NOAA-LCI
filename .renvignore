@@ -1,0 +1,5 @@
+# Ignore entire directories from renv scanning
+MonthlyUpdates/
+
+## scan at least one monthly quarto file
+!MonthlyUpdates/202606_monthly.qrt

@@ -3,11 +3,6 @@
 ## watch out: delete cache if new data does not plot
 
 # rm(list = ls())
-if(.Platform$OS.type == "unix") {
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-} else {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
-}
 source("annualPlotFct.R")
 
 currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
@@ -25,7 +20,7 @@ pastYear = FALSE
 
 ## delete cache if it's too old
 # -- not yet implemented; do it manually
-flushCache <- FALSE
+flushCache <- TRUE
 
 #########################
 ## try interactive map:

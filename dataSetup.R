@@ -108,17 +108,47 @@ if(.Platform$OS.type != "unix"){
 ## this is done by scripts called in ctd_workflow.R
 
 # base::load(paste0(dirL[4], "/CNV1.RData")) # get physOc and stn from CTD_cleanup.R
-# require("tidyverse")
-require("dplyr")
 aD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"  ## annual data
 aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge data
                       # forcing physOct$Station to "character" would be convenient
                       #(trouble when some CSV files have only numeric, others also characters)
                       # only pick-up GulfWatch casts here(?)
-physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv$", full.name=TRUE) %>%
-  lapply(read.csv, skip=1, header=TRUE) %>%
-  bind_rows
+physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
+  lapply(read.csv, skip=1, header=TRUE) |>
+  dplyr::bind_rows()
 rm(aD)
+
+
+physOcT <- subset(physOcT, nchar(physOcT$Date) > 4)
+# for(i in seq_along(levels(factor(physOcT$Date)))) {
+#   cat(i, "\n")
+#   x <- as.POSIXct(paste(levels(factor(physOcT$Date))[i], physOcT$Time[i]))
+# }
+# levels(factor(physOcT$Date))
+
+
+## figure out what's going on with turbidity, attenuation, and transmission
+
+# summary(as.factor(subset(physOcT, !is.na(Beam_transmission))$CTD.serial)) ## all 4141 -- only 4141 has Beam_transmission
+# summary(as.factor(subset(physOcT, !is.na(Beam_attenuation))$CTD.serial))  ## all 4141
+# summary(as.factor(subset(physOcT, !is.na(Turbidity))$CTD.serial))         ## all 5028 and 8138 -- exals attenuation?!
+
+# tF <- 21:23
+# summary(physOcT[,tF])
+# summary(subset(physOcT, CTD.serial==4141)[,tF])
+# summary(subset(physOcT, CTD.serial==5028)[,tF])
+# summary(subset(physOcT, CTD.serial==8138)[,tF])
+
+
+
+
+## Beam_attenuation and Beam_transmission are distinct measures, even though
+## they are both measures of turbidity. Only the 4141 instrument has both.
+## Beam_attenuation appears to be the same as Turbidity, therefore the
+## substitution above. Could look into when/where attenuation differes from
+## transmission, but so far unclear why that should be of interest.
+
+
 physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , isoTime=as.POSIXct(paste(Date, Time))
                                      , latitude_DD=Latitude_DD
@@ -132,35 +162,19 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                      , Density_sigma.theta.kg.m.3
                                      , Oxygen_umol_kg=Oxygen_umol.kg
                                      , Oxygen_sat.perc.=Oxygen.Saturation_perc
-                                     # need SBE O2 concentration umol.kg in here
                                      , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                      , PAR.Irradiance
                                      , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                     , turbidity = Turbidity
-                                     , beamAttenuation = Beam_attenuation
-                                     , beamTransmission = Beam_transmission
+                                     , turbidity = ifelse (is.na (Turbidity),
+                                         Beam_attenuation, Turbidity)
+                                     # , Beam_attenuation
+                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
 ))
-rm(physOcT)
 
 
 
-## add new derived variable: slope of density gradient
-## best to do this here = ??
-## plan A: calculate slope for each step
-## plan B: fit smoothing spline and produce derivative
-# cast <- factor(paste0(physOc$Match_Name, physOc$isoTime))
-# physOc$densityGradient <- sapply(1:length(levels(cast))
-#                                   , function(i){
-#                                     cst <- subset(physOc, cast == levels(cast)[i])
-#                                     slp <-(stats::lag(cst$Density_sigma.theta.kg.m.3) - cst$Density_sigma.theta.kg.m.3) /
-#                                      (stats::lag(cst$Depth.saltwater..m.)- cst$Depth.saltwater..m.)
-#                                     #slp <- data.frame(gradient=slp)
-#                                     slp
-#                                   }) %>%
-#   unlist
-physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
+physOc$bvf <- sapply(seq_along(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
                                   , function(i){
-                                    require("oce")
                                     cast <- subset(physOc, File.Name == levels(physOc$File.Name)[i])
                                     bvf <- oce::swN2(pressure=cast$Pressure..Strain.Gauge..db.
                                                        , sigmaTheta=cast$Density_sigma.theta.kg.m.3
@@ -168,9 +182,11 @@ physOc$bvf <- sapply(1:length(levels(physOc$File.Name))  ## this is nearly ident
                                                        # , df="simple"
                                                        )
                                     bvf
-                                  }) %>%
-  unlist
+                                  }) |>
+  unlist()
 physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
+
+
 
 stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset(stn, !is.na(Lon_decDegree))
@@ -283,18 +299,13 @@ rm(tRange)
 ## tidal phase
 tPhase <- function(tstmp, lat, lon){  ## REVIEW THIS! XXX
   ## return radians degree of tidal phase during cast
-  require("suncalc")
-  poSS$sunAlt <- with(poSS, getSunlightPosition(data = data.frame(date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
-  ## require(oce)
-  ## poSS$sunAlt <- with(poSS, sunAngle(timeStamp, longitude = longitude_DD, latitude = latitude_DD, useRefraction = FALSE)
+  poSS$sunAlt <- with(poSS, suncalc::getSunlightPosition(data = data.frame(date = timeStamp, lat = latitude_DD, lon = longitude_DD)))$altitude # , keep = "altitude")) -- in radians
 }
-# POss$tidePhase <- unlist(mclapply(poSS$timeStamp, mc.cores=nCPUs))
 rm(tPhase)
 
 
 daylight <- function(dt){
-  require("suncalc")
-  sunAlt <- getSunlightPosition(date = dt
+  sunAlt <- suncalc::getSunlightPosition(date = dt
                                  , lat = 59.643, lon = -151.526)$altitude # in radians
   sunDeg <- sunAlt / pi * 180
   dayNight <- ifelse(sunDeg > -6, "day", "night")  # civil twighlight
@@ -383,18 +394,16 @@ poSS$pclDepth <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn
 }))
 ## freshwater content
 poSS$FreshWaterCont <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
+  # require("readr")
   fW <- subset(physOc,(File.Name==fn) &(Depth.saltwater..m. <= deepThd))  ## surface layer only  use deepThd XXX
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
   fW <- subset(physOc,(File.Name==fn) &(Depth.saltwater..m. > deepThd))
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 poSS$FreshWaterContDeep2 <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
-  require("readr")
-  fW <- subset(physOc, File.Name==fn) %>%
+  fW <- subset(physOc, File.Name==fn) |>
     subset(Depth.saltwater..m. > 40)
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
@@ -415,6 +424,8 @@ if(1){
 
 ## plant stuff
 sAgg <- function(varN, data = physOc, FUN = sum, ...){
+  ## better to average values, then multiply by nominal depth (extrapolate to bottom?)
+
   aDF <- aggregate(formula(paste(varN, "File.Name", sep = "~"))
                     , data, FUN, ...)
   return(aDF [match(poSS$File.Name, aDF$File.Name),2])
@@ -526,12 +537,8 @@ save.image("~/tmp/LCI_noaa/cache-t/troublesPO.RData")
 SCo <- stn[match(poSS$Match_Name, stn$Match_Name)
            , names(stn) %in% c("Lon_decDegree", "Lat_decDegree")]
 SCo <- as.matrix(cbind(SCo, cbind(poSS$longitude_DD, poSS$latitude_DD)))
-require("oce") ## reduce number of dependencies
-StDis <- geodDist(SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
-# require("fields")  ## use oce here instead?
-# StDis <- sapply(1:nrow(SCo), FUN = function(i){
-#     rdist.earth(matrix(SCo [i,1:2], nrow = 1), matrix(SCo [i,3:4], nrow = 1), miles = FALSE)
-# })
+StDis <- oce::geodDist(SCo [,1], SCo [,2], SCo [,3], SCo [,4], alongPath=FALSE)
+
 # The two are close but not as identical as they should be
 StDis <- ifelse(is.na(StDis), 0, StDis) # NAs are being weird, ignore them!
 StDisA <- data.frame(poSS$File.Name, StDis)[StDis > 1,]
@@ -648,11 +655,9 @@ phyp <- cbind(stn [match(phyp$Match_Name
 names(phyp)[1:2] <- c("lon", "lat")
 
 ## add: month, year, SampleID
-# require("tidyverse")
-require(magrittr) # for pipe!
-trnsct <- strsplit(phyp$Match_Name, "_", fixed = TRUE) %>%
-  unlist() %>%
-      matrix(ncol =2 , byrow = TRUE)
+trnsct <- strsplit(phyp$Match_Name, "_", fixed = TRUE) |>
+  unlist() |>
+  matrix(ncol =2 , byrow = TRUE)
 
 phyp <- cbind(SampleID = paste(phyp$Match_Name
                                  , format(phyp$timeStamp, format = "%Y-%m-%d", usetz = FALSE))
@@ -697,9 +702,6 @@ if(printSampleDates){
 #################
 
 zoop <- read.csv("~/GISdata/LCI/Kachemak\ Bay\ Zooplankton.csv", as.is = TRUE)
-
-## require("XLConnect")
-## stn <- readWorksheetFromFile("~/GISdata/LCI/MasterStationLocations.xlsx", sheet = 1)
 ## stn <- subset(stn, !is.na(Lon_decDegree))
 
 ## georeference zoop table
@@ -710,17 +712,24 @@ zoop <- cbind(Match_Name = paste(zoop$Transect, zoop$Station, sep = "_")
                                        , format = "%d-%b-%y %H:%M")
              , zoop)
 zoop$Match_Name <- as.character(zoop$Match_Name)
-zoop$Match_Name <- ifelse(zoop$Station == "Sadie C", "Sadie_C", zoop$Match_Name)
-zoop$Match_Name <- ifelse(zoop$Transect == "TKBay", "Tutka_A", zoop$Match_Name)
+
 zoop$Match_Name <- gsub("^KB_", "AlongBay_", zoop$Match_Name)
-zoop$Match_Name <- gsub("Peterson Bay_", "Peterson_", zoop$Match_Name, fixed = TRUE)
-zoop$Match_Name <- gsub("^_$", "Halibut_B", zoop$Match_Name) # or A,C?
-                                        # no matching CTD data on that date
-zoop$Match_Name <- gsub("^_", "", zoop$Match_Name)
+zoop$Match_Name <- gsub("^Bear_B", "Subbay_Bear-B", zoop$Match_Name)
+zoop$Match_Name <- gsub("^_Sadie\ C", "Subbay_Sadie-C", zoop$Match_Name)
+zoop$Match_Name <- gsub("^Peterson\ Bay_B", "Subbay_Peterson-B", zoop$Match_Name)
+zoop$Match_Name <- gsub("^TKBay_1", "Subbay_Tutka-A", zoop$Match_Name)
+zoop$Match_Name <- gsub("^TKBay_1", "Subbay_Tutka-A", zoop$Match_Name)
+zoop$Match_Name <- ifelse(zoop$SampleID=="KBBR_HalibutCove", "Subbay_Halibut-B",
+                          zoop$Match_Name)
+zoop <- subset(zoop, nchar(zoop$Date) > 4)
+
 refN <- match(zoop$Match_Name, stn$Match_Name)
-## zoop$Match_Name [is.na(refN)]    # bad zoop stations that don't match master list
+if(any(is.na(refN))) {
+  print (levels(factor(zoop$Match_Name [which(is.na(refN))])))
+
+  stop("zooplankton station does not match reference list")
+  }
 # add geographic coordinates from stn
-if(any(is.na(refN))){stop("zooplankton station does not match reference list")}
 zoop <- cbind(stn[refN, match(c("Lon_decDegree", "Lat_decDegree"), names(stn))]
                , isoDate = strptime(zoop$Date, format = "%d-%b-%y") # output with tz?
              , zoop)
@@ -745,15 +754,12 @@ if(length(grep("plastic", zoop$Species)) > 0){
 }
 # substring(zoop$Species, 1,1) <- toupper(substring(zoop$Species, 1,1)) # not working ?
 zoop$Species <- paste(toupper(substring(zoop$Species, 1,1)) , substring(zoop$Species, 2, 100), sep = "")
-print(sort(levels(factor(zoop$Species))))
+# print(sort(levels(factor(zoop$Species))))
 
 ## lookup depth from field notes
 base::load("~/tmp/LCI_noaa/cache/FieldNotes.RData") ## sam
 zoop$Depth <- sam$Depth [match(zoop$SampleID, sam$SampleID)]
 zoop$Depth <- ifelse(zoop$Depth > 60, 50, zoop$Depth)
-
-save.image("~/tmp/LCI_noaa/cache-t/fileDump.RData")
-# rm(list = ls()); load("~/tmp/LCI_noaa/cache-t/fileDump.RData")
 
 ## export zooplankton data to standardized file(matching first columns as in CTD aggregates)
 zoopOut <- with(zoop, data.frame(Station = Match_Name, Date = isoDate, Time
@@ -918,6 +924,9 @@ if(printSampleDates){
 ##############
 ## seabirds ##
 ##############
+LLprj <- 4326
+
+if(file.exists("~/tmp/NPPSDv2countW_-1.RData")) {
 
 stnB <- c(1,5,10,20,50)*1e3           # buffer -- at different scales
 stnB <- 10e3                           # buffer -- 10 km
@@ -925,7 +934,6 @@ stnB <- 10e3                           # buffer -- 10 km
 # require("sp")
 # pj4str <- "+proj=lcc +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +datum=WGS84 +units=m +no_defs +ellps=WGS84"
 # LLprj <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84")
-LLprj <- 4326
 
 
 ## bounding-box for LCI
@@ -934,13 +942,11 @@ latL <- c(58.8,60.6)
 
 
 # require("sp"); require("rgdal"); require("rgeos") # for gBuffer
-# require("sp")
 require("sf")
 
 
 spTran <- function(x, p4){
-  require("sf")
-  suppressWarnings(y <- st_transform(x, p4))
+  suppressWarnings(y <- sf::st_transform(x, p4))
   return(y)
 }
 
@@ -996,20 +1002,25 @@ NPPSD2 <- st_as_sf(NPPSD2, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
 # slot(zooCenv, "proj4string") <- LLprj
 # slot(NPPSD2, "proj4string") <- LLprj   ## Error from missing dependent file?
 
+} else {
+  stnP <- stn
+  stnP <- sf::st_as_sf(stnP, coords=c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)  ## add LLprj
+  poSS <- sf::st_as_sf(poSS, coords=c("longitude_DD", "latitude_DD"), crs=LLprj, remove=FALSE)
+  phyCenv <- sf::st_as_sf(phyCenv, coords=c("lon", "lat"), crs=LLprj, remove=FALSE)
+  zooCenv <- sf::st_as_sf(zooCenv, coords= c("Lon_decDegree", "Lat_decDegree"), crs=LLprj, remove=FALSE)
+}
 
 
 ## coastline from gshhs
 ## migrate from Rghhg to shape file for windows compatibility
-require("zip")
 tD <- tempdir()
 zip::unzip("~/GISdata/data/coastline/gshhg-shp-2.3.7.zip"
   , junkpaths = TRUE, exdir = tD)
-require("sf")
-require("dplyr")
 
-coast <- read_sf(dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
-  dplyr::filter(st_is_valid(.)) %>%  # there's a bad polygon
-  st_crop(c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
+require(magrittr) # for pipe!
+coast <- sf::read_sf(dsn = tD, layer = "GSHHS_f_L1") %>% ## select f, h, i, l, c
+  dplyr::filter(sf::st_is_valid(.)) |>  # there's a bad polygon
+  sf::st_crop(c(xmin=-160, xmax=-140, ymin=55, ymax=62)) ## crop to SC Alaska
 unlink(tD, TRUE); rm(tD)
 
 save.image("~/tmp/LCI_noaa/cache-t/mapPlot.RData")
@@ -1054,11 +1065,10 @@ if(0){ # migrate this to elsewhere -- compare stns to CTD locations -- somewhere
 
 ## bathymetry from AOOS, Zimmerman/KBL
 
-require("stars")
 ## use custom bathymetry layer, merged from Kachemak Bay DEM, Zimmermann files, and GMRT
 mar_bathy <- stars::read_stars("~/GISdata/LCI/bathymetry/KBL-bathymetry/KBL-bathymetry_GWA-area_50m_EPSG3338.tiff")
 names(mar_bathy) <- "topo"
-bathyZ <- st_as_stars(depth=ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
+bathyZ <- stars::st_as_stars(depth=ifelse(mar_bathy$topo > 0, NA, mar_bathy$topo * -1)
                       , dimensions = attr(mar_bathy, "dimensions"))
 rm(mar_bathy)
 #  bathCont <- stars::st_contour(bathyZ, contour_lines=TRUE, breaks=c(0, 50, 100, 200, 500)*-1) ## seems to plot only one level
@@ -1097,33 +1107,28 @@ rm(spTran, pr)
 ## AOOS model data:
 ## - Tidal current speed
 if(0){ ## not working?
-  require(ncdf4)
   url <- "http://thredds.aoos.org/thredds/dodsC/NOAA_CSDL_ROMS.nc?lon[0:1:787][0:1:145],lat[0:1:787][0:1:145],u[0:1:532][0][0:1:787][0:1:145],v[0:1:532][0][0:1:787][0:1:145],time[0:1:532]" # 500 MB? -- only need climatology; how to do that?
   ## or could actually look up individual pixels
-  con <- nc_open(url)
+  con <- ncdf4::nc_open(url)
   print(con)
-  lon <- ncvar_get(con, "lon")
-  lat <- ncvar_get(con, "lat")
-  u <- ncvar_get(con, "u")
-  v <- ncvar_get(con, "v")
+  lon <- ncdf4::ncvar_get(con, "lon")
+  lat <- ncdf4::ncvar_get(con, "lat")
+  u <- ncdf4::ncvar_get(con, "u")
+  v <- ncdf4::ncvar_get(con, "v")
 }
 
 ## match stnP and birds at different levels of buffer
 # for(i in length(stnB)){
 
-# require("rgeos")
 require("gdistance")
 require("parallel")
 bDist <- function(stnL){
-    ## stnL is SpatialPointsDataFrame
-    ## buffDist <- unlist(mclapply(1:nrow(stnL), FUN = function(i){
-    buffDist <- sapply(1:nrow(stnL), FUN = function(i){
-        sDis <- gdistance(stnL [i,], stnL, byid = TRUE)
-        bufD <- min(subset(sDis, sDis > 0)) / 2
-        return(bufD)
-    }
-    )
-    ## )
+  ## stnL is SpatialPointsDataFrame
+  buffDist <- sapply(1:nrow(stnL), FUN = function(i){
+    sDis <- gdistance::gdistance(stnL [i,], stnL, byid = TRUE)
+    bufD <- min(subset(sDis, sDis > 0)) / 2
+    return(bufD)
+  })
 }
 ## stnB <- mean(bDist(stn))
 ## stnB <- mean(bDist(subset(stn, stn$Plankton)))
@@ -1154,25 +1159,26 @@ require("dplyr")
 birds <- bind_rows(xo)                 # 10 s
 print(warnings())
 
-birds <- with(birds, cbind(SampleID = paste(Match_Name
-                                             , format(startTime, format = "%Y-%m-%d"
-                                                     , usetz = FALSE))
-                    #      , Match_Name
-                           , season = Seasonal(format(startTime, format = "%m"))
-                           , birds))
-birdS <- subset(birds, birds$SampleID %in% poSS$SampleID) # specific to sample time
-birdS <- birds []    ### what's this for??? FIX this XXX
+if(exists("birds")) {
+  birds <- with(birds, cbind(SampleID = paste(Match_Name
+                                              , format(startTime, format = "%Y-%m-%d"
+                                                       , usetz = FALSE))
+                             #      , Match_Name
+                             , season = Seasonal(format(startTime, format = "%m"))
+                             , birds))
+  birdS <- subset(birds, birds$SampleID %in% poSS$SampleID) # specific to sample time
+  birdS <- birds []    ### what's this for??? FIX this XXX
 
-## further trim species list in birdS
-bC <- birdS [,which(names(birdS) == "ALTE"):ncol(birdS)]
-bC <- bC [,which(colSums(bC) > 0)]
-birdS <- cbind(birdS [,1:which(names(birdS) == "jdate")]
-               , bC); rm(bC)
-## pro-rate unidentified spp  XXXX
+  ## further trim species list in birdS
+  bC <- birdS [,which(names(birdS) == "ALTE"):ncol(birdS)]
+  bC <- bC [,which(colSums(bC) > 0)]
+  birdS <- cbind(birdS [,1:which(names(birdS) == "jdate")]
+                 , bC); rm(bC)
+  ## pro-rate unidentified spp  XXXX
 
-rm(findBirds, lBuff, birds)
-rm(stnB)
-
+  rm(findBirds, lBuff, birds)
+  rm(stnB)
+}
 ## birdS:
 ## these are specific to samples! Samples may not be independent, i.e. may contain overlapping
 ## bird observations, if sample sites within buffer distance of each other!  Do NOT use this for

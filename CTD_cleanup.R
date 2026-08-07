@@ -266,6 +266,32 @@ physOc$Match_Name <- gsub ("_spgrm|_sptgm", "_PTGR", physOc$Match_Name)
 physOc$Match_Name <- gsub ("_spogi|_sptgm", "_POGI", physOc$Match_Name)
 physOc$Match_Name <- gsub ("tutkabay_intensive", "subbay_tutkabayIntensive", physOc$Match_Name)
 physOc$Match_Name <- gsub ("sadiecove_intensive", "subbay_sadiecoveIntensive", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_A$", "-A", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_B$", "-B", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_C$", "-C", physOc$Match_Name)
+physOc$Match_Name <- gsub ("_D$", "-D", physOc$Match_Name)
+
+
+## ensure that every station has a unique Match_Name, even those used in two
+## transects (9_6, 4_3, AlongBay_3, AlongBay_6)
+physOc$Match_Name <- ifelse (physOc$Match_Name == "4_3", "AlongBay_3", physOc$Match_Name)
+physOc$Match_Name <- ifelse (physOc$Match_Name == "AlongBay_6", "9_6", physOc$Match_Name)
+
+## track down remaining Match_Name miss-matches one-on-one
+physOc$Match_Name <- gsub("^Subbay_BEAR-", "Subbay_Bear-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_CHINAPOOT-", "Subbay_Chinapoot-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_HALIBUT-", "Subbay_Halibut-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_JAKOLOF-", "Subbay_Jakolof-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_KASITSNA-", "Subbay_Kasitsna-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_PETERSON-", "Subbay_Peterson-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_SADIE-", "Subbay_Sadie-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_SELDOVIA-", "Subbay_Seldovia-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_TUTKA-", "Subbay_Tutka-", physOc$Match_Name)
+## numbered stations
+physOc$Match_Name <- gsub("^Subbay_SADIE", "Subbay_Sadie-", physOc$Match_Name)
+physOc$Match_Name <- gsub("^Subbay_TUTKA", "Subbay_Tutka-", physOc$Match_Name)
+
+
 
 if (0) {
   # summary (stn)
@@ -310,8 +336,8 @@ if (0) {
   physOc$Match_Name <- gsub ("extra$", "", physOc$Match_Name)
 
   ## fixing a few individual stations
-  physOc$Match_Name <- gsub ("9_North", "9_1", physOc$Match_Name, fixed = TRUE)
-  physOc$Match_Name <- gsub ("9_South", "9_1", physOc$Match_Name)
+  physOc$Match_Name <- gsub ("9_NORTH", "9_1", toupper(physOc$Match_Name), fixed = TRUE) # XXX fix 2026-07-16 -- review
+  physOc$Match_Name <- gsub ("9_SOUTH", "9_1", toupper(physOc$Match_Name))
   ## could also match some of the Tutka_1-9, but probably little point in doing that
   print (badStn <- showBad (physOc))
   # print (stn$Match_Name)
@@ -324,11 +350,14 @@ if (0) {
 }
 
 ## fix up station and transect names from Match_Name
+
 trst <- strsplit(physOc$Match_Name, "_", fixed = TRUE)
+x <- sapply(seq_along(trst), function(i){length(trst[[i]])})
+if(any(x >= 3)) {stop("No station name should have more than one underscore _")}
 trst <- do.call ("rbind", trst)
 physOc$Transect <- trst [, 1]
 physOc$Station <- trst [, 2]
-rm (trst)
+rm (trst, x)
 
 
 
@@ -355,14 +384,24 @@ physOc$Bottom.Depth <- stn$Depth_m [match (physOc$Match_Name, stn$Match_Name)]
 
 ## print (sort (levels (factor (physOc$longitude_DD))))
 ## physOc [which (physOc$longitude_DD == "NA"),]
-if (max (physOc$longitude_DD, na.rm = TRUE) > 0) {stop ("some longites are positive")}
+if (max (physOc$longitude_DD, na.rm = TRUE) > 0) {stop ("some longitudees are positive")}
 
+
+save.image("~/tmp/LCI_noaa/cache-t/ctdcleanupPos.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/ctdcleanupPos.RData")
 
 ## write stations with missing positions to file
 noPos <- levels (factor (physOc$File.Name [which (is.na (physOc$longitude_DD))]))
 noPos <- levels (factor (physOc$Match_Name [which (is.na (physOc$longitude_DD))]))
 cat ("#\n#\n#\n# missing locations for these stations:\n\n")
 print (noPos)
+
+print(summary (factor(physOc$File.Name [physOc$Match_Name %in% noPos])) |>
+        sort(decreasing=TRUE))
+
+
+
+
 write (noPos, file = "~/tmp/LCI_noaa/data-products/missingLocations_CTD.txt")
 rm (noPos)
 # summary (physOc$longitude_DD)
@@ -370,8 +409,11 @@ rm (noPos)
 
 
 
+
+
+
 ## bad densities (some are not sigma theta, up to 1024)
-require ("oce")
+# require ("oce")
 # physOc$Density_sigma.theta.kg.m.3 <- with (physOc, swRho (Salinity_PSU, Temperature_ITS90_DegC
 #                                                           , Pressure..Strain.Gauge..db.
 #                                                           , eos = "unesco"))-1000
@@ -443,19 +485,19 @@ rm (bCntr, badDens)
 ## , mc.cores = nCPUs))
 ## summary (dPc)
 
-if (0) {
+if(0) {
   is.monotone <- function(ts) {
     tsd <- ts [2:length (ts)]
     difV <- ts [1:(length (ts) - 1)] - tsd
-    all (difV <= 0)
+    all(difV <= 0)
   }
-  badPAR <- sapply (levels (physOc$File.Name), FUN = function(fn) {
-    cast <- subset (physOc, File.Name == fn)
-    is.monotone (cast$PAR.Irradiance)
+  badPAR <- sapply(levels (physOc$File.Name), FUN = function(fn) {
+    cast <- subset(physOc, File.Name == fn)
+    is.monotone(cast$PAR.Irradiance)
   })
-  badDens <- sapply (levels (physOc$File.Name), FUN = function(fn) {
-    cast <- subset (physOc, File.Name == fn)
-    is.monotone (cast$Density_sigma.theta.kg.m.3)
+  badDens <- sapply(levels (physOc$File.Name), FUN = function(fn) {
+    cast <- subset(physOc, File.Name == fn)
+    is.monotone(cast$Density_sigma.theta.kg.m.3)
   })
 }
 
@@ -470,29 +512,23 @@ rm (gC)
 
 
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
-is.na (physOc$Fluorescence_mg_m3 [which (physOc$Fluorescence_mg_m3 <= 0)]) <- TRUE
-is.na (physOc$turbidity[which (physOc$turbidity <= 0)]) <- TRUE
-is.na (physOc$beamAttenuation[which (physOc$beamAttenuation <= 0)]) <- TRUE
-# is.na (physOc$attenuation)[which ((physOc$attenuation - 13.82)^2 < 0.1)] <- TRUE
-if (1) {  ## moved from CTDwall-setup.R
-  ## QAQC/Error correction of values -- do this before or after data export??  XXX
+## does this mean that callibration is off? Anything that can be done about this?
+## should these be treated differently? adjust calibration??
 
-  ## attenuation vs turbidy -- mix them here?!?
-  physOc$turbidity <- ifelse (is.na (physOc$turbidity), physOc$beamAttenuation, physOc$turbidity) ## is this wise or correct ? XXX
+## XXX move this into CTD_castQAQC.R ???
 
-
-  ## remove implausible values
-  physOc$Density_sigma.theta.kg.m.3 <- ifelse (physOc$Density_sigma.theta.kg.m.3 < 15, NA, physOc$Density_sigma.theta.kg.m.3)
-  physOc$Oxygen_umol_kg <- ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
-  physOc$Oxygen_umol_kg <-  ifelse (physOc$Oxygen_umol_kg <= 0, NA, physOc$Oxygen_umol_kg)
-  # physOc$Oxygen_SBE.43..mg.l. <- ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
-  # physOc$Oxygen_SBE.43..mg.l. <-  ifelse (physOc$Oxygen_SBE.43..mg.l. <= 0, NA, physOc$Oxygen_SBE.43..mg.l.)
-  physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <-  ifelse (physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg <= 0, NA, physOc$Oxygen.Saturation.Garcia.Gordon.umol_kg)
-  ## recalc other O2 values here?
-  physOc$Salinity_PSU <- ifelse (physOc$Salinity_PSU < 20, NA, physOc$Salinity_PSU)
-  ## end of plots from CTDwall-setup.R
-}
-
+for (badV in c("Fluorescence_mg_m3",
+               "turbidity",
+               "beamAttenuation",
+               "Density_sigma.theta.kg.m.3",
+               "Oxygen_umol_kg",
+               "Oxygen_SBE.43..mg.l.",
+               "Oxygen_sat.perc.",
+               "Oxygen.Saturation.Garcia.Gordon.umol_kg",
+               "Salinity_PSU")){
+  vX <- which(names(physOc) == badV)
+  is.na(physOc[which(physOc[,vX] <= 0),vX]) <- TRUE  ## XXX better to set these to the lowest observed value? impute them?
+}; rm (badV)
 
 
 
@@ -589,7 +625,7 @@ save.image ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")
 summary (is.na (physOc$latitude_DD))
 summary (is.na (physOc$longitude_DD))
 noLL <- which (is.na (physOc$latitude_DD))
-levels (factor (physOc$Match_Name[noLL]))
+summary (factor (physOc$Match_Name[noLL])) |> sort(decreasing=TRUE)
 ## AlongBay_3.5 -- bad position? Aborted because of high waves. Not in Database, but is in notebooks
 ## remove unresolved positions -- still too many!
 physOc <- subset (physOc, !is.na (latitude_DD))
@@ -687,29 +723,18 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
+  unlink(paste0(tF, ".gz"))
   write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
     , file = tF, append = FALSE, ncolumns = 1)
   suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE, sep = ","
     , na = "", row.names = FALSE, col.names = TRUE))
+  ## gzip compression
+  R.utils::gzip(tF)
   # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
   rm (tF)
   ctdB
 })
 
-
-if (0) {  # if (.Platform$OS.type=="windows"){
-  ## zip-up files -- about 100 MB
-  require ("zip")
-  wD <- getwd()
-  setwd (outD) ## zip blows up otherwise
-  unlink ("processedCTD_annual.zip", force = TRUE)
-  zFiles <- list.files ("~/tmp/LCI_noaa/data-products/CTD/", pattern = ".csv", full.names = FALSE)
-  zip::zip ("processedCTD_annuals.zip", files = zFiles, recurse = FALSE
-    , include_directories = FALSE)
-  unlink (zFiles, force = TRUE)
-  rm (zFiles)
-  setwd (wD); rm (wD)
-}
 rm (showBad, oldMatch, yr, i, j)
 # ls()
 

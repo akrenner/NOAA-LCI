@@ -3,7 +3,6 @@
 ## wave height from bouy data ##
 ################################
 
-# setwd("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 if (!exists ("quarterly")) {
@@ -79,13 +78,17 @@ if (0) {
 
 source ("annualPlotFct.R")
 # wDB <- getNOAA (buoyID = 46108)
-load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
-if (difftime (Sys.time(), max (nWave$datetimestamp), units = "days") > 40) {
-  cat ("\nFetching new buoy data from NOAA...\n")
-  source ("annual-fetchAirWeather.R")
-  load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
-}
-wDB <- nWave
+
+
+
+# load ("~/tmp/LCI_noaa/cache/annual-AirWeather.RData") # nWave from annual-fetchAirWeather.R
+load ("~/tmp/LCI_noaa/cache/annual-Wave.RData") # nWave from annual-fetchAirWeather.R
+## this already tried to update weather -- no need to do that again
+
+if(class(nWave)[1] == "try-error") {
+  stop ("Was unable to obtain buoy data. Try to re-run annual-fetchAirWeather.R")
+} else {wDB <- nWave}
+
 
 hmr <- weatherL$augustine
 ## is all the Augustine Island part obsolete? replicated elsewhere? XXX
@@ -141,11 +144,13 @@ if (0) {
 ## mean daily wave height -- for when do we have data
 
 ## field names translations -- rnoaa legacy
+names(wDB) <- toupper(names(wDB))
 wDB$wave_height <- ifelse (wDB$WVHT == 99, NA, wDB$WVHT)
 wDB$average_wpd <- ifelse (wDB$APD == 99, NA, wDB$APD)
 wDB$mean_wave_dir <- ifelse (wDB$MWD == 999, NA, wDB$MWD)
 wDB$dominant_wpd <- ifelse (wDB$DPD == 99, NA, wDB$DPD)
 wDB$air_temperature <- ifelse (wDB$ATMP == 999, NA, wDB$ATMP)
+wDB$datetimestamp <- wDB$TIMESTAMP
 
 dailyW <- aggregate (wave_height ~ format (datetimestamp
   , "%Y-%m-%d")
@@ -309,10 +314,10 @@ wDB$tideHght  <- tide_height(DateTime = wDB$datetimestamp)$TideHeight
 # timetable <- data.frame (Station = tStn, DateTime = wDB$datetimestamp)
 # wDB$tideHght <- tide_height_data (timetable)$TideHeight  # slow -- cache it?
 # rm (tStn, timetable)
-require ("lubridate") # time zone conversion
-wDB$localTime <- with_tz (wDB$datetimestamp, "America/Anchorage")
-require ("suncalc")
-wDB$sunAlt <- getSunlightPosition (date = wDB$localTime
+# require ("lubridate") # time zone conversion
+wDB$localTime <- lubridate::with_tz (wDB$datetimestamp, "America/Anchorage")
+# require ("suncalc")
+wDB$sunAlt <- suncalc::getSunlightPosition (date = wDB$localTime
   , lat = 59.643, lon = -151.526)$altitude # in radians
 wDB$sunDeg <- wDB$sunAlt / pi * 180
 ## interpolate home wind direction -- fail (why = ?)
@@ -485,12 +490,16 @@ cLegend ("top"
 ## find closest airport temperature for every reported wave buoy record
 ## see https://stackoverflow.com/questions/43472234/fastest-way-to-find-nearest-value-in-vector
 
-hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp), ]
-hap <- unique (hap, by = "datetimestamp") # remove duplicates
-b <- as.numeric (hap$datetimestamp)
-cuts <- c(-Inf, b[-1] - diff(b) / 2, Inf)
-idx <- cut (as.numeric (wDB$datetimestamp), cuts, labels = b)
-wDB$air_temperature <- hap$atemp [idx]
+if("datetimestamp" %in% names(weatherL$homer.airport)){
+  hap <- weatherL$homer.airport [order (weatherL$homer.airport$datetimestamp), ]
+  hap <- unique (hap, by = "datetimestamp") # remove duplicates
+  b <- as.numeric (hap$datetimestamp)
+  cuts <- c(-Inf, b[-1] - diff(b) / 2, Inf)
+  idx <- cut (as.numeric (wDB$datetimestamp), cuts, labels = b)
+  wDB$air_temperature <- hap$atemp [idx]
+}else{
+  stop ("annual-waves.R only works with hourly weather data")
+}
 
 hist (subset (wDB$air_temperature, wDB$surf > 1)
   , main = "Air temperature when surf is good"
@@ -710,7 +719,7 @@ as.data.frame (approx(wDB$datetimestamp, wDB$surf
   , xout = as.POSIXct ("2020-12-31 15:00")))
 
 
-getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
+# suncalc::getSunlightPosition(date = goodDays, lat = 59.6, lon = -151.5)
 
 
 

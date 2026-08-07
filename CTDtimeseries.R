@@ -8,9 +8,9 @@
 ## load data
 ## start with file from dataSetup.R
 rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R -- contains physOc -- raw CTD profiles
-require("oce")
-require("RColorBrewer")
-require("tidyverse")
+# load("~/tmp/LCI_noaa/cache/ctdwallSetup.RData")  ## ??
+
+
 # source("CTDsectionFcts.R")
 
 ## set-up plot and paper size
@@ -21,19 +21,17 @@ require("tidyverse")
 
 
 # - salinity at 50 m(ACC signature)
-# - freshwater contenst of first 30 m(local runoff, freshwater lens)
+# - freshwater content of first 30 m(local runoff, freshwater lens)
 # - sum of Chlorophyll over time -- see separate work on SWMP
 
 
 
-# x-axis is on shaking grounds. 7000 = eye-balled. Make that programatic
 # x add vertical lines to mark years?
 # x move years to be between tick-marks
 # x salinity-anomaly: all variability in surface-layer
-# x plot 'normal' seasonal profile
-# x anomalies: smooth vertically and/or seasonally
 # x set water depth for section
 # x center color scale on 0
+# use poAll-anomaly calculated in CTDwall_normals.R
 
 
 ## x salinity: 0-10 m  and 10 to 100 m
@@ -48,7 +46,7 @@ require("tidyverse")
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor(physOc$Match_Name)
 pickStn <- which(levels(physOc$Match_Name) %in%
-  c("9_6", "9_8", "9_2", "AlongBay_3", "AlongBay_10", "4_6", "4_8", "4_3"))
+  c("9_6", "9_8", "9_2", "AlongBay_3", "4_6", "4_3"))  # span is too small for many AlongBay transects
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- seq_along(levels(physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 # pickStn <- 87 # 9-6
@@ -73,8 +71,8 @@ tCol <- gray.colors(101)
 salCol <- gray.colors(101)
 
 ## modern colors -- overwrite
-tCol <- oceColorsTemperature(11)
-salCol <- oceColorsSalinity(11)
+tCol <- oce::oceColorsTemperature(11)
+salCol <- oce::oceColorsSalinity(11)
 
 # ## from https://www.esri.com/arcgis-blog/products/arcgis-pro/mapping/a-meaningful-temperature-palette/
 # tCol <- rgb(c(230, 157, 49, 62, 123, 177, 170, 155, 145, 64)
@@ -83,17 +81,17 @@ salCol <- oceColorsSalinity(11)
 #              , maxColorValue=255)
 # tCol <- rev(c("#de5842", "#fcd059", "#ededea"
 #                 , "#bfe1bf", "#a2d7d8"))
-tCol <- oceColorsTurbo(1000)
-tCol <- rev(brewer.pal(11, "Spectral"))
-tColAn <- rev(brewer.pal(length(salCol), "RdBu"))
+tCol <- oce::oceColorsTurbo(1000)
+tCol <- rev(RColorBrewer::brewer.pal(11, "Spectral"))
+tColAn <- rev(RColorBrewer::brewer.pal(length(salCol), "RdBu"))
 # tCol <- colorRampPalette(tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
 
 
 ## nauseating rainbow
-kr <- TRUE
-kr <- FALSE
-if(kr) {
-  tCol <- oceColorsTurbo(1000)
+jet <- TRUE
+jet <- FALSE
+if(jet) {
+  tCol <- oce::oceColorsTurbo(1000)
   salCol <- colorRampPalette(col = rev(c("#feb483", "#d31f2a", "#ffc000", "#27ab19", "#0db5e6", "#7139fe", "#d16cfa"))
     , bias = 0.3)(1000) ## ODV colors
   didntlikeit <- colorRampPalette(rev(c("#de5842", "#fcd059", "#ededea",
@@ -145,12 +143,11 @@ longM <- function(var, date, maO = 31) {  ## cyclical long-term mean -- move thi
   aD <- aggregate(var ~ jday, df, FUN = mean, na.rm = TRUE)
   aD2 <- data.frame(jday = -366:(366 * 2))
   aD2$var <- aD$var [match(aD2$jday, aD$jday)]
-  suppressPackageStartupMessages(require("zoo"))
   aD2$MA <- zoo::rollapply(aD2$var, width = maO, FUN = mean, na.rm = TRUE ## critical for monthly data!
     , fill = c(NA, "extend", NA)
     , partial = FALSE, align = "center")
-  # aD2$MA <- na.approx(aD2$MA, na.rm=FALSE, x=aD2$jday)   # order is important -- this last(or biased)
-  aD2$MA <- na.spline(aD2$MA, na.rm = FALSE, x = aD2$jday)   # order is important -- this last(or biased)
+  # aD2$MA <- zoo::na.approx(aD2$MA, na.rm=FALSE, x=aD2$jday)   # order is important -- this last(or biased)
+  aD2$MA <- zoo::na.spline(aD2$MA, na.rm = FALSE, x = aD2$jday)   # order is important -- this last(or biased)
   aD2$loss <- predict(loess(MA ~ jday, aD2))
   oD <- subset(aD2,(0 < jday)  &(jday < 367))
   oD
@@ -161,8 +158,8 @@ anomF <- function(var, date, longM) {
   df$anom <- df$var - longM$MA [match(df$jday, longM$jday)]
   df$anom
 }
-# require("mgcv")  ## patterns in residuals -- stick with loess
-# gam(Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
+## patterns in residuals -- stick with loess
+# mgcv::gam(Temperature_ITS90_DegC~s(monthI), data = sDF, subset = depthR == i)
 anoF <- function(varN, df = sDF) {
   vN <- which(names(df) == varN)
   sOut <- sapply(levels(df$depthR), FUN = function(i) {
@@ -188,7 +185,7 @@ dailyTS <- function(df, varN) {
   dfD$Date <- as.character(as.Date(dfD$timeStamp))
   dfD$jday <- as.numeric(format(dfD$timeStamp, "%j%"))  ## ok to have 2000-1-1 to be day 1, not 0
   dfD$varS <- var [match(dfD$Date, df$Date)]  ## keep those to indicate dates of measurements
-  dfD$varSN <- na.approx(dfD$varS, x = dfD$timeStamp, na.rm = FALSE) ## interpolated measurements
+  dfD$varSN <- zoo::na.approx(dfD$varS, x = dfD$timeStamp, na.rm = FALSE) ## interpolated measurements
   dfD$var_norm < varNorm$MA [match(dfD$jday, varNorm$jday)]
   names(dfD) <- gsub("^var", varN, names(dfD))
   dfD
@@ -204,7 +201,7 @@ mkSection <- function(xC) {
     , FUN = function(i) {
       sCTD <- subset(xC, xC$Date == levels(xC$Date)[i])
       ocOb <- with(sCTD,
-        as.ctd(salinity = Salinity_PSU
+        oce::as.ctd(salinity = Salinity_PSU
           , temperature = Temperature_ITS90_DegC
           , pressure = Pressure..Strain.Gauge..db.
           , longitude = as.numeric(longitude_DD)
@@ -216,23 +213,23 @@ mkSection <- function(xC) {
       ocOb@metadata$startTime <- sCTD$isoTime [1]
       ocOb@metadata$waterDepth <- 103
 
-      ocOb <- oceSetData(ocOb, "chlorophyll", sCTD$Chlorophyll_mg_m3)
-      ocOb <- oceSetData(ocOb, "turbidity", sCTD$turbidity)
-      ocOb <- oceSetData(ocOb, "O2perc", sCTD$O2perc)
-      ocOb <- oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
-      ocOb <- oceSetData(ocOb, "lChlorophyll", log(sCTD$Chlorophyll_mg_m3))
-      ocOb <- oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
-      ocOb <- oceSetData(ocOb, "Spice", sCTD$Spice)
-      ocOb <- oceSetData(ocOb, "bvf", sCTD$bvf)
-      ocOb <- oceSetData(ocOb, "anTem", sCTD$anTem)
-      ocOb <- oceSetData(ocOb, "anSal", sCTD$anSal)
-      ocOb <- oceSetData(ocOb, "anBvf", sCTD$anBvf)
+      ocOb <- oce::oceSetData(ocOb, "chlorophyll", sCTD$Chlorophyll_mg_m3)
+      ocOb <- oce::oceSetData(ocOb, "turbidity", sCTD$turbidity)
+      ocOb <- oce::oceSetData(ocOb, "O2perc", sCTD$O2perc)
+      ocOb <- oce::oceSetData(ocOb, "PAR", sCTD$PAR.Irradiance)
+      ocOb <- oce::oceSetData(ocOb, "lChlorophyll", log(sCTD$Chlorophyll_mg_m3))
+      ocOb <- oce::oceSetData(ocOb, "N2", sCTD$Nitrogen.saturation..mg.l.)
+      ocOb <- oce::oceSetData(ocOb, "Spice", sCTD$Spice)
+      ocOb <- oce::oceSetData(ocOb, "bvf", sCTD$bvf)
+      ocOb <- oce::oceSetData(ocOb, "anTem", sCTD$anTem)
+      ocOb <- oce::oceSetData(ocOb, "anSal", sCTD$anSal)
+      ocOb <- oce::oceSetData(ocOb, "anBvf", sCTD$anBvf)
 
       ocOb
     }
   )
-  cL <- as.section(cL)
-  cL <- sectionSort(cL, by = "time")
+  cL <- oce::as.section(cL)
+  cL <- oce::sectionSort(cL, by = "time")
   cL
 }
 
@@ -270,7 +267,7 @@ plot.station <- function(section, axes = TRUE, ...) {
 
 for(k in pickStn) {
   try({
-    #   k <- 87  ## 9-6
+    #   k <- 87  ## 9-6   # k <-
     stnK <- levels(physOc$Match_Name)[k]
     cat(stnK, "\n")
     xC <- subset(physOc, Match_Name == stnK)
@@ -323,9 +320,8 @@ for(k in pickStn) {
     #                 , as.POSIXct(paste0("2001-", format(xC$isoTime, "%m-%d")))
     #                 , as.POSIXct(paste0("2002-", format(xC$isoTime, "%m-%d")))
     # )
-    # require(mgcv)
     # sOut <- sapply(levels(mDF$depthR), FUN = function(i){
-    #   gam(Temperature_ITS90_DegC~s(yDate), data = mDF, subset = mDF$depthR == i)$fitted
+    #   mgcv::gam(Temperature_ITS90_DegC~s(yDate), data = mDF, subset = mDF$depthR == i)$fitted
     # })
 
     ## anomaly = observ-smoothed normal
@@ -397,7 +393,7 @@ for(k in pickStn) {
     if(length(zB) != length(tColAn) + 1) {stop("Fix zB for temp anomaly")}
     plot.station(xCS, which = "anTem"
       , zcol = tColAn
-      # , zcol = rev(brewer.pal(length(zB)-1, "RdBu"))
+      # , zcol = rev(RColorBrewer::brewer.pal(length(zB)-1, "RdBu"))
       , zbreaks = zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
     )
@@ -408,7 +404,7 @@ for(k in pickStn) {
     zB <- sF(subset(xC$anSal, xC$Depth.saltwater..m. <= deepThd))
     plot.station(mkSection(subset(xC, Depth.saltwater..m. <= deepThd))
       , which = "anSal"
-      , zcol = oceColors9B(length(zB) - 1)  # brewer.pal(11, "PiYG")
+      , zcol = oce::oceColors9B(length(zB) - 1)  # brewer.pal(11, "PiYG")
       , zbreaks = zB
       , axes = FALSE
       , xlab = ""
@@ -423,7 +419,7 @@ for(k in pickStn) {
     zB <- sF(subset(xC$anSal, xC$Depth.saltwater..m. > deepThd))
     plot.station(mkSection(subset(xC, Depth.saltwater..m. > deepThd))
       , which = "anSal"
-      , zcol = oceColors9B(length(zB) - 1)  # brewer.pal(11, "PiYG")
+      , zcol = oce::oceColors9B(length(zB) - 1)  # brewer.pal(11, "PiYG")
       , zbreaks = zB
       # , ylim=c(-10,-1*max(xC$Depth.saltwater..m.))
       # , ylim=c(deepThd, max(xC$Depth.saltwater..m.))  ## still places a zero -- report bug
@@ -459,17 +455,17 @@ for(k in pickStn) {
     ## clean up defining section -- or go back to section functions?
     cT9 <- lapply(0:13, function(i) { # from prev month to month after current year -- why not longer?
       sCTD <- subset(ctdAggD, monthI == i)
-      ocOb <- with(sCTD, as.ctd( # salinity = Salinity_PSU, temperature = Temperature_ITS90_DegC
+      ocOb <- with(sCTD, oce::as.ctd( # salinity = Salinity_PSU, temperature = Temperature_ITS90_DegC
         salinity = sloess, temperature = tloess
         , pressure = Pressure..Strain.Gauge..db.
         , longitude = rep(i, nrow(sCTD))
         , latitude = rep(0, nrow(sCTD))
       ))
       ocOb@metadata$waterDepth <- 103  ## needed? vary by station
-      ocOb <- oceSetData(ocOb, "sSal",  sCTD$sloess)
-      ocOb <- oceSetData(ocOb, "sTemp", sCTD$tloess)
-      ocOb <- oceSetData(ocOb, "sFluo", sCTD$floess)
-      ocOb <- oceSetData(ocOb, "sBvf",  sCTD$bvfloess)
+      ocOb <- oce::oceSetData(ocOb, "sSal",  sCTD$sloess)
+      ocOb <- oce::oceSetData(ocOb, "sTemp", sCTD$tloess)
+      ocOb <- oce::oceSetData(ocOb, "sFluo", sCTD$floess)
+      ocOb <- oce::oceSetData(ocOb, "sBvf",  sCTD$bvfloess)
       return(ocOb)
     })
     cT9 <- as.section(cT9)
@@ -478,7 +474,7 @@ for(k in pickStn) {
       , "2001-01-15"))
     cT9 [['station']] <- lapply(seq_along(cT9 [['station']])
       , function(i) {
-        oceSetMetadata(cT9 [['station']][[i]], 'startTime'
+        oce::oceSetMetadata(cT9 [['station']][[i]], 'startTime'
           , dTimes [i]
         )
       }); rm(dTimes)
@@ -492,7 +488,7 @@ for(k in pickStn) {
       axis(1, at = as.POSIXct(as.Date(paste0("2000-", 1:12, "-15"))), label = month.abb, tick = FALSE)
       axis(2, at = dAx)
     }
-    clPlot <- function(cT, which = "temperature", zcol = oceColorsTemperature(11), ...) {
+    clPlot <- function(cT, which = "temperature", zcol = oce::oceColorsTemperature(11), ...) {
       plot(cT, which = which, xtype = "time", ztype = "image", zcol = zcol
         , xlim = c(as.POSIXct(as.Date(c("2000-01-01", "2000-12-31"))))
         , axes = FALSE, xlab = ""
@@ -524,13 +520,13 @@ for(k in pickStn) {
     png(paste0(mediaD, "/3-", stnK, "-chlorophyll-climatology.png"), res = pngR
       , height = fDim[2] * pngR, width = fDim[1] * pngR)
     par(las = 1, mfrow = c(3, 1))
-    clPlot(cT9, which = "sFluo", zcol = oceColorsChlorophyll(4))
+    clPlot(cT9, which = "sFluo", zcol = oce::oceColorsChlorophyll(4))
     #  anAx(dAx = seq(0, 100, by = 20))
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR))))) ## XXX pretty(max-depth)
 
     ## add time series and anomaly
     plot.station(xCS, which = "chlorophyll"
-      , zcol = oceColorsChlorophyll(32)
+      , zcol = oce::oceColorsChlorophyll(32)
       # , zbreaks=zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
     )
@@ -547,7 +543,7 @@ for(k in pickStn) {
     T96f$Date <- as.Date(T96f$timeStamp)
     T96f$jday <- as.numeric(format(T96f$timeStamp, "%j")) - 1
     T96f$chl <- clf$Chlorophyll [match(T96f$Date, clf$Date)]
-    T96f$chlN <- na.approx(T96f$chl, x = T96f$timeStamp, na.rm = FALSE)
+    T96f$chlN <- zoo::na.approx(T96f$chl, x = T96f$timeStamp, na.rm = FALSE)
     T96f$chl_norm <- clfnorm$MA [match(T96f$jday, clfnorm$jday)]
     rm(clfnorm)
 
@@ -586,7 +582,7 @@ for(k in pickStn) {
     png(paste0(mediaD, "/3-", stnK, "-chlorophyll-timesection.png"), res = pngR
          , height = fDim[2] * pngR / 3, width = fDim[1] * pngR)
     plot.station(xCS, which = "chlorophyll"
-                  , zcol = oceColorsChlorophyll(32)
+                  , zcol = oce::oceColorsChlorophyll(32)
                   # , zbreaks=zB
                   , legend.loc = "" # legend.text="temperature anomaly [°C]"
     )
@@ -611,19 +607,19 @@ for(k in pickStn) {
 
     ## raw time-series profile
     # zB <- seq(0, ceiling(max(xC$bvf, na.rm=TRUE)), by=0.5)
-    require("cmocean")  ## for color ramp cmocean -- just use viridis
-    options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
+#    require("cmocean")  ## for color ramp cmocean -- just use viridis
+#    options('cmocean-version' = "2.0") # fix colors to cmocean 2.0
 
     ## seasonal climatology
     clPlot(cT9, which = "sBvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(32))))
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32))))
     )
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Brunt ~ Väisälä ~ Buoyancy ~ frequency - seasonal ~ climatology ~ "[" * s^-2 * "]"))
 
     ## raw time series of buoyancy
     plot.station(xCS, which = "bvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(32))))
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(32))))
       # , zbreaks=zB
       , legend.loc = "" # legend.text="temperature anomaly [°C]"
       , ylim = c(deepThd, 0)  ## new requirement of new oce version?
@@ -636,7 +632,7 @@ for(k in pickStn) {
       ## anomaly (too noisy?)
       zB <- sF(v = xC$anBvf, qR = 0.90)
       plot.station(xCS, which = "anBvf"
-        , zcol = brewer.pal(11, "RdBu")
+        , zcol = RColorBrewer::brewer.pal(11, "RdBu")
         , zbreaks = zB
         , legend.loc = "" # legend.text="temperature anomaly [°C]"
       )
@@ -657,7 +653,7 @@ for(k in pickStn) {
     T96f$Date <- as.character(as.Date(T96f$timeStamp))
     T96f$jday <- as.numeric(format(T96f$timeStamp, "%j")) - 1
     T96f$TempS <- bVar [match(T96f$Date, poSS$Date)]
-    T96f$TempSN <- na.approx(T96f$TempS, x = T96f$timeStamp, na.rm = FALSE)
+    T96f$TempSN <- zoo::na.approx(T96f$TempS, x = T96f$timeStamp, na.rm = FALSE)
     T96f$TempS_norm <- tbnorm$MA [match(T96f$jday, tbnorm$jday)]
 
     par(mar = c(5, 4, 4, 4.9) + 0.1)  ## to align last plot with plots above in same panel
@@ -682,15 +678,15 @@ for(k in pickStn) {
       , height = 6 * pngR, width = 8 * pngR)
     par(las = 1, mfrow = c(2, 1))
     ## chlorophyll
-    clPlot(cT9, which = "sFluo", zcol = oceColorsChlorophyll(12)
-      , ylim = c(0, 25)) ## add contour
+    clPlot(cT9, which = "sFluo", zcol = oce::oceColorsChlorophyll(12)
+      , ylim = c(25, 0)) ## add contour
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Chlorophyll ~ concentration ~ "[" * mg ~ m^-3 * "]"))
 
     ## buoyancy-frequency
     clPlot(cT9, which = "sBvf"
-      , zcol = colorRampPalette(c("white", rev(cmocean("haline")(8))))(12)
-      , ylim = c(0, 25)
+      , zcol = colorRampPalette(c("white", rev(cmocean::cmocean("haline")(8))))(12)
+      , ylim = c(25, 0)
     )
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR)))))
     title(main = expression(Brunt - Väisälä ~ buoyancy ~ frequency ~ "[" * s^-2 * "]"))
@@ -701,11 +697,11 @@ for(k in pickStn) {
 
 
 
-    ## --------- emulate Figure 4 from GWA report -- in ODV colors, because Kris want's it
+    ## --------- emulate Figure 4 from GWA report -- in ODV colors
     ## three panels, 1 page: Temperature, Salinity, Chlorophyll
 
     ODV_colours <- colorRampPalette(c("#feb483", "#d31f2a", "#ffc000", "#27ab19"
-      , "#0db5e6", "#7139fe", "#d16cfa"))(50) %>%
+      , "#0db5e6", "#7139fe", "#d16cfa"))(50) |>
       rev()
     dir.create("~/tmp/LCI_noaa/media/EVOS/", showWarnings = FALSE, recursive = TRUE)
     png("~/tmp/LCI_noaa/media/EVOS/Figure4-TSC-panel.png", width = 6.5 * 150, height = 8.0 * 150, res = 150)
@@ -745,8 +741,7 @@ for(k in pickStn) {
     )
     TSaxis(xC$isoTime)
 
-    require(latex2exp)
-    eX <- TeX("Chlorophyll [$mg~m^{-3}$]")
+    eX <- latex2exp::TeX("Chlorophyll [$mg~m^{-3}$]")
     #    eX <- expression("Chlorophyll ["~mg~m^-3~"]")
     #    plot(1:2, main=eX)
     title(main = eX)
@@ -797,8 +792,8 @@ fwS$sd <- aggregate(freshCont ~ month, fw, stats::sd)$freshCont
 lfw <- fwS; lfw$month <- lfw$month - 12
 ufw <- fwS; ufw$month <- ufw$month + 12
 fwS <- rbind(lfw, fwS, ufw); rm(lfw, ufw)
-require(mgcv)
-md <- gam(freshCont ~ s(month), data = fwS)
+
+md <- mgcv::gam(freshCont ~ s(month), data = fwS)
 lS <- loess(freshCont ~ month, data = fwS, span = 0.2)
 ## stick with monthly means for now, rather than smooth
 fw$fwA <- fw$freshCont - fwS$freshCont [match(fw$month, fwS$month)]
@@ -945,13 +940,15 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdT96-dwt.RData")
 ## - raw time series
 ## - superimposed anomalies/seasonal mean
 ## - marking first day >= threshold temperature in spring
+## relevance: Herring spawning (surface), crab (bottom),
+## HABs (Alexandrium cysts).
 ## - timing of x degree C in spring
 ## move up to plot for each station?
 ## could also do this for Seldovia Air and water temperatures.
 
-T96 <- subset(poSS, Match_Name == "9_6")  ## migrate to sf
+
+T96 <- subset(poSS, Match_Name == "9_6")
 T96 <- T96 [order(T96$timeStamp), ]
-require("tidyr")
 
 tL <- c("Deep", "Max", "SalDeep", "TempSurface", "SalSurface")
 titleL <- c("Deep-Water Temperature", "Maximum Temperature", "Deep-Water Salinity"
@@ -961,19 +958,32 @@ for(iS in seq_along(tL)) {
   T96$TempS <- with(T96, list(TempDeep, TempMax, SalDeep, TempSurface, SalSurface))[[iS]]
   tempName <- tL [iS]
 
-  if(tempName == "Max") {
+  if(tempName == "Max") {  # for spawning fish, like herring
     thTempL <- c(8, 12) ## list of threshold temperatures
   } else if(tempName == "Deep") {
-    thTempL <- c(4, 4) ## seq(4, 8, by=0.5)
+
+    ###########################
+    ## set parameters for threshold plot
+
+    thTempL <- c(4, 7.7) ## seq(4, 8, by=0.5)   ## underlying question:
+    thTempL <- 8
+    degDayC <- 1         ## scaling factor between degrees and days for HAB growth
+    thSeason <- 30:350   ## realistic time window to explore threshold temperatures
+                         ## skip January in case it's still warm from previous year
+    ###########################
+
+
+    ## at least some Alexandrium spp. do not grow below 7.7 degr C (inhibitive)
   }
   tbnorm <- longM(T96$TempS, T96$timeStamp)
   # T96$TempS_anom <- anomF(T96$TempS, T96$timeStamp, tbnorm)
   ## see annualPlotFct.R::fixGap -- all gaps, then interpolate NAs
   T96f <- data.frame(timeStamp = seq(min(T96$timeStamp), max(T96$timeStamp), by = 3600 * 24))
   T96f$Date <- as.character(as.Date(T96f$timeStamp))
+  T96f$Year <- as.numeric(format(T96f$timeStamp, "%Y"))
   T96f$jday <- as.numeric(format(T96f$timeStamp, "%j")) - 1
   T96f$TempS <- T96$TempS [match(T96f$Date, T96$Date)]
-  T96f$TempSN <- na.approx(T96f$TempS, x = T96f$timeStamp, na.rm = FALSE)
+  T96f$TempSN <- zoo::na.approx(T96f$TempS, x = T96f$timeStamp, na.rm = FALSE)
   T96f$TempS_norm <- tbnorm$MA [match(T96f$jday, tbnorm$jday)]
   rm(tbnorm)
 
@@ -981,7 +991,7 @@ for(iS in seq_along(tL)) {
     png(paste0(mediaD, "/5-T9-6_Temp", tempName, "TS.png"), res = pngR
       , height = fDim [2] * pngR / 2, width = fDim [1] * pngR * 1.5)
     anomCol <- c("red", "blue"); anomL <- c("warmer", "colder")
-    # par(mfrow=c(2,1)) ## do not plot thresholds for salinity
+    par(mfrow=c(2,1)) ## do not plot thresholds for salinity
     yLabt <- "Temperature [°C]"
   } else {
     png(paste0(mediaD, "/5-", tempName, "TS.png"), res = pngR
@@ -1024,73 +1034,83 @@ for(iS in seq_along(tL)) {
   rm(anomCol, anomL, yLabt)
 
   ## plot timing of 4 degrees C over year
-  if(0 & tempName == "Deep") {
-    T96f$Year <- as.numeric(format(T96f$timeStamp, "%Y"))
+  if(tempName == "Deep") {
+      tDF <- subset (T96f, jday %in% thSeason)
+      springDay <- lapply(thTempL, function(tempN) {
+        yearSums <- sapply(seq_along(levels(factor(tDF$Year))),
+          function (y){
+            yDF <- subset(tDF, Year == levels(factor(tDF$Year))[y])
+            warmDy <- yDF$jday [which(yDF$TempSN >= tempN)]
+            year <- as.numeric(levels(factor(tDF$Year))[y])
+            day1 <- suppressWarnings(min(warmDy, na.rm=TRUE))  ## suppress message!
+            lastDay <- suppressWarnings(max(warmDy, na.rm=TRUE))
+            nDays <- length(warmDy)
+            # sqrt to only use days above temp threshold (positive). Important to use scaling factor degDayC
+            degDays <- suppressWarnings(sum(degDayC*sqrt(yDF$TempSN - tempN)^2, na.rm = TRUE))
 
-    springM <- sapply(thTempL, function(y) {
-      aggregate(TempSN ~ Year, data = T96f, function(x, thTemp = y) {
-        lD <- min((seq_along(x[1:(366 / 2)]))[x >= thTemp], na.rm = TRUE)
-        x <- c(-1, x)
-        #        if(tempName=="Max"){
-        #          x4 <- min((seq_along(x[1:(300)]))[x>=thTemp], na.rm=TRUE)  ## give it to fall, not next winter
-        #        }else{
-        x4 <- max((seq_along(x[1:(366 / 2)]))[x <= thTemp], na.rm = TRUE)
-        #        }
-        lD <- ifelse(x4 == 1, NA, x4)   ## review this further!!  2024 isn't right XXX
-        # lD <- ifelse(x4>=364/2, NA, lD)
-        as.Date("2000-01-01") + lD
-        # last4
-      })$TempSN
-    })
+            outDF <- c(year, day1, lastDay, nDays, degDays)
+            outDF
+          })
+        yearSums <- as.data.frame (t(yearSums))
+        names(yearSums) <- c("year", "day1", "lastDay", "nDays", "degDays")
+        if(any(yearSums$nDays == 0)){
+          is.na(yearSums [which(yearSums$nDays == 0), 2:ncol(yearSums)]) <- TRUE
+        #  yearSums [which(yearSums$nDays == 0), 2:ncol(yearSums)] <- NA
+        }
+        yearSums
+      })
+      names(springDay) <- paste0("temp", thTempL)
 
-    springM [is.infinite((springM))] <- NA
-    rownames(springM) <- levels(factor(T96f$Year))
-    springM <- as.Date(springM) # this would turn matrix into vector if ncol=1
+#      plot(nDays~year, pch=19, col="darkgreen", data=springM[[1]])
+
+
     if(length(thTempL) > 1) {
-      suppressWarnings(colr <- brewer.pal(length(thTempL), "Accent"))
+      suppressWarnings(colr <- RColorBrewer::brewer.pal(length(thTempL), "Accent"))
     } else {colr <- "black"}
 
-    ## version 1 -- year on x-axis
-    if(!kr) {
-      yL <- as.numeric(rownames((springM)))
-      plot (seq(min(yL), max(yL) + 1, length.out = nrow(springM)), springM [, 1], type = "n", xlab = "", ylab = ""
-        , main = paste("Earliest threshold", tempName, "temperature")
-        , ylim = range(springM, na.rm = TRUE)
+
+      springM <- springDay[[1]]
+      bCol <- "lightgreen"
+
+      yL <- springM$year
+      yD <- -1 * springM$day1  # as.Date("2000-01-01") + springM$day1
+      ## for a pretty y-axis of convenient dates
+      prettyD <- as.POSIXct(paste0("2000-", c("06-10","06-20", "06-30", "07-10", "07-20")))
+
+      plot (yD~yL, type = "n", xlab = "", ylab = ""
+        , main = paste("Earliest threshold", tolower(tempName), "temperature")
+         , ylim = range(yD, na.rm = TRUE)*c(1.00, 0.99)
         , axes = FALSE)
-      yD <- pretty(springM)
-      axis(2, tick = TRUE, labels = format(yD, "%e %b"), at = yD) # "%m-%d")
-      rm(yD)
+      par(las=1)
+      axis(2, tick=TRUE, labels = format(prettyD, "%e %b"),
+           at=-1*as.numeric(format(prettyD, "%j")))
+      axis(2, at=-5*1:150+3, labels=FALSE, tck=0.02)
       axis(1, tick = TRUE, labels = FALSE, at = yL)
       axis(1, tick = FALSE, labels = yL, at = yL + 0.5)
       box()
-      abline(h = as.Date(paste0("2000-0", 1:8, "-01")), lty = "dashed", col = "gray")
+      abline(h = mean(yD, na.rm=TRUE), lwd=2)
       if(tempName == "Max") {xi <- seq_along(thTempL)} else {xi <- 1}
-      #      if(as.numeric(format(Sys.Date(), "%m")) < 6){ ## cut out current, incomplete year
-      #       springM <- springM [1:(nrow(springM)-1),]
-      #      }
-      for(i in xi) {
-        points(springM [, i] ~ I(yL + 0.5), col = colr [i], pch = 19, cex = 2)
-        for(j in seq_len(nrow(springM))) {
-          lines(c(0.1, 0.9) + yL [j], springM [c(j, j), i], col = colr [i], lwd = 3)
-        }
-        # lines(springM [,i]~yL, col=colr [i], lwd=3, type="s")
-        # lines(springM [,i]~I(yL+1), col=colr [i], lwd=3, type="S") ## to connect last dot in middle of year
+      for(j in seq_len(nrow(springM))) {
+        lines(c(0.1, 0.9) + yL [j], yD [c(j, j)], lwd = 3)
+        lines(rep(yL[j]+0.5, 2), c(yD[j], mean(yD, na.rm=TRUE)), lwd=2)
       }
-      legend("bottomright" ## needs to move below plot and needs to be smaller
-        , lwd = 3
-        , pch = 19, cex = 1
-        , col = colr, legend = thTempL [xi]
-        , title = "temperature [°C]" # expression(temperature~"["*degree~C*"]")
-        , bty = "o", ncol = 3, pt.cex = 2, pt.lwd = 3)
-      rm(yL, xi)
-    } else {  ## version 2 -- year on y-axis
-      plot(springM [, 1], levels(factor(T96f$Year)), ylab = ""
-        , xlab = expression(First ~ day ~ with ~ temperature ~ at ~ 4^o ~ C)
-        , pch = 19, col = "black", cex = 3, lwd = 3
-      )
-      # paste0("First day with temperature at ", ))
-      abline(h = levels(factor(T96f$Year)), lty = "dashed")
-    }
+      points(I(yL+0.5), yD, pch = 19, col=bCol,
+             cex = 4 * springM$degDays/max(springM$degDays, na.rm=TRUE))
+      lPretty <- pretty(springM$degDays, n=2)
+      lPretty <- c(100, 200, 300)
+      legend("topleft"
+        , legend=lPretty
+        , pt.cex=4*lPretty/max(springM$degDays, na.rm=TRUE)
+        , y.intersp=1.4, x.intersp=1.2
+#        , merge = FALSE
+        #, inset = 0.01
+        , pch=19, col = bCol, ncol = 1
+        , title = "degree-days"
+        , bty = "n"
+)
+
+      rm(yL, xi, yD, bCol, prettyD)
+
   }
   dev.off()
 
@@ -1107,9 +1127,7 @@ for(iS in seq_along(tL)) {
 
 
 
-# rm(springM)
-rm(thTempL, tempName, tL)
-rm(T96, T96f)
+rm(springM, springDay, thTempL, tempName, tL, T96, T96f)
 
 
 
@@ -1135,9 +1153,6 @@ if(0) {  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
 
 
   fl <- unzip(zL [1], list = TRUE)
-  require("tidyverse")
-  require("oce")
-  # tD <- tempdir()
   gak <- readr::read_csv(unzip(zL[1])) ## put unzip into temp dir!!
   names(gak) <- c("Station", "Type", "longitude"
     , "latitude", "bottomDepth", "DateTime"
@@ -1152,14 +1167,14 @@ if(0) {  ## need to look at gak-line, not gak1=mooring!  mooring is too far insh
   gakS <- lapply(seq_along(levels(gak$depthF))
     , function(i) {
       gax <- subset(gak, depthF == levels(gak$depthF)[i])
-      with(gax, as.ctd(salinity, temperature
+      with(gax, oce::as.ctd(salinity, temperature
         , pressure
         , time = DateTime
         , longitude = -149.5
         , latitude = 59.84
         , deploymentType = "moored"))
-    }) %>%
-    as.section   #(waterDepth=250)
+    }) |>
+    oce::as.section()   #(waterDepth=250)
 }
 
 # u <- "http://erddap.aoos.org/erddap/tabledap/org_gulfwatchalaska_gak1"
@@ -1237,8 +1252,9 @@ chlA$deep <- chlAd$Chlorophyll_mg_m3 [match(chlA$Match_Name, chlAd$Match_Name)]
 chlA$lat <- geoC$latitude_DD [match(chlA$Match_Name, geoC$Match_Name)]
 chlA <- chlA [order(chlA$lat), ]
 
+png(paste0(mediaD, "x-chlorophyl_AlongBay_2023.png"))
 par(ylog = TRUE)
-plot(Chlorophyll_mg_m3 ~ lat, chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
+plot(Chlorophyll_mg_m3 ~ lat, data=chlA, type = "l", log = "y", lwd = 2, col = "lightgreen"
   , main = "Chlorophyll in May 2023 on AlongBay transect")
 lines(chlA$lat, chlA$deep, col = "darkgreen", lwd = 2)
 legend("topright", lwd = 2, col = c("lightgreen", "darkgreen")

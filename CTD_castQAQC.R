@@ -186,17 +186,16 @@ if (.Platform$OS.type == "unix") {
     stopCluster(cl); rm (cl)
   } else {
     ## 2023-03-23: length (levels (physOc$File.Name)) == 4160. Consider running only recent casts
-    x <- lapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof)
+    # x <- lapply (seq_along (levels (physOc$File.Name)), FUN = plotCTDprof)
+    for (i in seq_along(levels(physOc$File.Name))) {plotCTDprof(i)}
   }
 }
 
 
 if (0) {
-  system (paste ("pdfunite", paste ("~/tmp/LCI_noaa/media/CTDprofiles/c_"
-    , levels (physOc$File.Name), ".pdf"
-    , sep = "", collapse = " ")
-  , "~/tmp/LCI_noaa/media/CTDprofiles.pdf"))
-}
+  system (paste0 ("pdfunite", paste (dirN, "c_", levels (physOc$File.Name),
+    ".pdf", collapse = " "), "~/tmp/LCI_noaa/media/CTDprofiles.pdf"))
+
 
 # require ("zip")
 # R-internal zip file generation -- still troubled
@@ -211,12 +210,13 @@ if (.Platform$OS.type != "unix") {
   # #    unlink (zFiles, force = TRUE)
   #     rm (zFiles)
 } else {
-  system ("zip -mjr ~/tmp/LCI_noaa/media/CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles")  ## XXX Error
+  system (paste0 ("zip -mjr ", dirN, "~/tmp/LCI_noaa/media/CTDcasts/CTDprofiles.zip"))  ## XXX Error
 }
 ## system ("zip -m -b ~/tmp/LCI_noaa/media/ --junk-paths CTDprofiles.zip CTDprofiles/*.pdf")
 ## system ("zip -m -b ~/tmp/LCI_noaa/media/ CTDprofiles.zip ~/tmp/LCI_noaa/media/CTDprofiles/*.pdf CTD.zip")
-unlink("~/tmp/LCI_noaa/media/CTDtests/CTDprofiles", recursive = TRUE, force = TRUE)
+unlink(dirN, recursive = TRUE, force = TRUE)
 rm (plotCTDprof)
+}
 cat ("\n\n")
 
 
@@ -224,7 +224,7 @@ cat ("\n\n")
 
 
 
-if (0) {                           # use oce -- not flexible enouth
+if (0) {                           # use oce -- not flexible enough
   require ("oce")
   ctd <- with (cT, as.ctd (salinity = Salinity_PSU
     , temperature = Temperature_ITS90_DegC

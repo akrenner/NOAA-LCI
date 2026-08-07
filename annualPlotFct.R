@@ -47,7 +47,7 @@ if(0) {
 
 plotSetup <- function(longMean, current, ylab = NULL # , xlim=c(5,355)
                       , ...) {
-  par(xaxs = "i")
+#  par(xaxs = "i")
   plot(1:365
     , seq(min(c(longMean, current), na.rm = TRUE)
       , max(c(longMean, current), na.rm = TRUE), length.out = 365)
@@ -215,16 +215,15 @@ saggregate <- function(x, data, FUN, ..., refDF) { ## account for missing factor
   nA
 }
 
-seasonalMA <- function(var, jday, width = maO) {
+seasonalMA <- function(var, jday, width = maO) {  ## still not used -- abandone?
   ## work in progress -- not yet functioning
   df <- cbind(var = rep(var, 3), jds = c(jday - 365, jday, jday + 365))
-  suppressPackageStartupMessages(require("zoo"))
   if(length(var) > 365) {
     df <- aggregate(var ~ jds + year, df, mean, na.rm = FALSE) # ## NAs are lost -- gap-fill?
   }
   dfAng <- data.frame(jds = seq(-365, 2 * 365))
   dfAng$var <- dfA$var [dfA$jds, dfAng$jds]
-  sMA <- data.table::frollmean(dfAng$var, align = "center", hasNA = TRUE,
+  sMA <- data.table::frollmean(dfAng$var, align = "center", has.nf = TRUE,
     n = width, na.rm = TRUE, fill = NA)
   # sMA <- zoo::rollapply(dfAng$var, width = width, FUN = mean
   #   , fill = c(NA, NA, NA)
@@ -259,7 +258,7 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean(x, na.rm = TRUE)}
   dat <- as.data.frame(dat) # error when using tibble/table
   dat$xVar <- dat [, which(names(dat) == varName)]
 
-  suppressPackageStartupMessages(require("zoo"))
+  # suppressPackageStartupMessages(require("zoo"))
   dat <- dat [order(dat$datetimestamp), ] # just to be sure
 
   ## necessary to use dMeans to pad missiing values as NA!
@@ -270,7 +269,7 @@ prepDF <- function(dat, varName, sumFct = function(x) {mean(x, na.rm = TRUE)}
     , paste(dMeans$year, dMeans$jday, sep = "-"))]  ## XXXX things break here!! XXX
   dMeans <- dRef; rm(dRef)
   dMeans$MA <- data.table::frollmean(dMeans$xVar,align = "center", fill = NA,
-    n = maO, na.rm = FALSE, hasNA=TRUE)
+    n = maO, na.rm = FALSE, has.nf = TRUE)
   # dMeans$MA <- zoo::rollapply(dMeans$xVar, width = maO, partial = TRUE
   #   , align = "center"
   #   # , fill=c(NA,"extend",NA)
@@ -370,9 +369,9 @@ addTimehelpers <- function(df) {
   ## assumes "datetimestamp" is present
   df$jday <- as.integer(strftime(df$datetimestamp, "%j"))
   df$year <- as.integer(strftime(df$datetimestamp, "%Y"))
-  suppressPackageStartupMessages(require(lubridate))
-  df$month <- month(df$datetimestamp)
-  df$week <- week(df$datetimestamp)
+  # suppressPackageStartupMessages(require(lubridate))
+  df$month <- lubridate::month(df$datetimestamp)
+  df$week <- lubridate::week(df$datetimestamp)
   return(df)
 }
 
@@ -421,27 +420,36 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
   ## an initial zip file from CDMO is required.
   ## It is recommended to update this zip file on occasion.
 #  require("SWMPr")
-  require("R.utils")
+  # require("R.utils")  # needed?
 
   cacheFolder <- "~/tmp/LCI_noaa/cache/SWMP/"
   dir.create(cacheFolder, showWarnings = FALSE)
-# cacheStation <- paste0(cacheFolder, station, ".RData")
   cacheStation <- paste0(cacheFolder, station, ".rds")
 
   zF <- list.files("~/GISdata/LCI/SWMP", ".zip", full.names = TRUE)
-  if(length(zF) < 1) {stop("Need to download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm")}
+  if(length(zF) < 1) {stop("Need SWMP data! Download SWMP data from https://cdmo.baruch.sc.edu/get/landing.cfm
+Select 'Advanced Query' and download all data from Kachemak Bay (2001-present) as a zip
+file. Place that zip file in '~/GISdata/LCI/SWMP/' (this folder should already exist). Add
+a freshly downloaded complete file at least once a year.")}
   SMPfile <- zF [which.max(file.info(zF)$ctime)] ## find most recent file
   rm(zF)
 
-  ## delete cacheFolder if zip file is newer
+  ## recommend new CDMO download if file is older than 6 month
+  if(difftime(Sys.time(), file.info(SMPfile)$ctime, units="days") > 180) {
+    warning("The latest file from CDMO is over 180 days old. It is recommended to
+download a fresh, complete zip-file from CDMO and add it to '~/GISdata/LCI/SWMP/'")
+    }
+
+  ## delete cacheStation if zip file is newer or file is corrupted
   if(file.exists(cacheStation)) {
-    if(file.info(cacheStation)$ctime < file.info(SMPfile)$ctime) {
+    if(file.info(cacheStation)$ctime < file.info(SMPfile)$ctime |
+      class(try(readRDS(cacheStation)))[1] == "try-error") {
       unlink(cacheStation)
     }
   }
 
+
   if(file.exists(cacheStation)) {
-    # base::load(cacheStation)
     smp <- readRDS(cacheStation)
   } else {
     smp <- SWMPr::import_local(SMPfile, station)
@@ -452,6 +460,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
   if(any(is.na(smp$datetimestamp))) {stop("NAs in timestamp")}
   #  ## not sure where the bad line is coming from, but it has to go
   # smp <- smp [!is.na(smp$datetimestamp),]
+
   fN <- difftime(Sys.time(), max(smp$datetimestamp), units = "days")
   ## catch for stations that are inactive?
   if((2 < fN) &&(fN < 5 * 365.25)) { # skip downloads for less than 2 day and legacy stations
@@ -461,7 +470,7 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
     , silent = FALSE)  # XXX needs registered(static?) IP address. NCCOS VPN ok
     if(class(smp2)[1] != "try-error") {
       if(QAQC) {
-        smp2 <- qaqc(smp2)
+        smp2 <- SWMPr::qaqc(smp2)
       }
 
       if(class(smp2)[1] == "swmpr") {
@@ -477,15 +486,16 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
         smp <- rbind(smp, smp3)
         if(any(is.na(smp$datetimestamp))) {stop("NAs in timestamp")}
 
-        rm(smp2, smp3, fN)
+        rm(smp3, fN)
       }
       smp <- smp [which(!duplicated(smp$datetimestamp)), ]
+      if (class(smp2)[1] != "try-error") {
+        saveRDS(smp, file = cacheStation)
+      }
     }
   }
   ## fixGap() here??
-  ## smp <- qaqc(smp, qaqc_keep = "0") ## here??
-  #save(smp, file = cacheStation)
-  saveRDS(smp, file = cacheStation)
+  ## smp <- SWMPr::qaqc(smp, qaqc_keep = "0") ## here??
   return(smp)
 }
 
@@ -504,8 +514,64 @@ getSWMP <- function(station = "kachdwq", QAQC = TRUE) {
 
 
 
-getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF = FALSE, showsites = FALSE) {
-  ## utilize worldmet::importNOAA adding caching function
+## try out openmeteo package as an alternative source of weather data
+## unfinished !
+## Need to translate field names, possibly units
+getDailyWeather <- function(station = "Homer Spit", start = "2000-01-01",
+  daily = c("temperature_2m_min", "temperature_2m_max", "rain_sum", "precipitation_sum",
+    "windspeed_10m_max", "wind_gusts_10m_max", "wind_direction_10m_dominant")){
+
+  # openmeteo -- archive only -- still active on github
+  # openmeteo::weather_history() -- only 2021 forward ???
+
+  ## daily_history_vars: temperature_2m_max, temperature_2m_min  (apparent_temperature?)
+  ##       rain_sum, windspeed_10m_max, windspeed_gusts_10min_max
+  ## hourly_history_vars: rain, precipitation, apparent_temperature, wave_height, wave_period, wave_direction
+
+
+  ## try with: East Amatuli, Augustine Island,
+  findAK <- function(site) {
+    openmeteo::geocode(site, n_results=99) |>
+      dplyr::filter(country_code=="US") |>
+      dplyr::filter(longitude < -140) |>
+      dplyr::filter(latitude < 61)
+  }
+
+  akStn <- c("Augustine Island","Flat Island",
+  "Homer Horbor", "Seldovia Airport", "Homer Airport")
+  akStn <- tolower(akStn)
+  for (i in seq_along(akStn)) {
+    try(findAK(akStn[i]))
+  }
+
+  site <- openmeteo::geocode("Flat Island", n_results=100) |>
+    dplyr::filter(country_code=="US")
+  site[order(site$latitude, decreasing = TRUE),][1:5,]
+
+  ## cache data
+
+  wD <- openmeteo::weather_history(location=station, start, end=Sys.Date(),
+    daily=daily, response_units = list(temperature_unites = "celsius",
+      windspeed_unit = "kmh", precipitation_unit = "mm"))
+
+  ## get mean temperature
+  wH <- openmeteo::weather_history(location=station, start, end=Sys.Date(),
+    hourly = c("temperature_2m"), response_units="celsius")
+
+  openmeteo::weather_history()
+
+}
+
+
+getGSOD_Weather <- function(station) {
+## use GSODR instead -- largely untested.
+  ## has East Amatuli,k Augustine, Flat Island, Homer Spit, Seldovia
+  # buoydata
+  seldoviat <- buoydata::get_buoy_data("OVIA2") # not useful for general weather
+  # GSODR -- using NCEI data, but awkward; has Temp, Windspeed, Gusts, Precipitation.
+  stn <- GSODR::nearest_stations(59, -151, 100)  # Only Seldovia and Homer airports
+  a <- GSODR::get_GSOD(2025:2026, station=stn$STNID)
+  a <- GSODR::get_GSOD()
 
   # ## try other options -- does not appear to be working. Even example(get_GSOD()) fails :(
   # require("GSODTools")
@@ -519,119 +585,172 @@ getNOAAweather <- function(station = "HOMER AIRPORT", clearcache = FALSE, cacheF
   # test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
   # test <- get_GSOD(years=2024,station = "994720-99999") ## flat island
 
-  if(0) {
-    # if(!require("GSODR")) {
-    #   renv::install("GSODR", repos="https://ropensci.r-universe.dev", dependencies="all")
-    # }
-    require("GSODR")
-    ## has good wind data, including GUSTS and MAXSPD,
-    test <- get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
-  }
+  #   renv::install("GSODR", repos="https://ropensci.r-universe.dev", dependencies="all")
+  require("GSODR")
+  ## has good wind data, including GUSTS and MAXSPD,
+  test <- GSODR::get_GSOD(years=2024,station = "703621-25516") ## seldovia airport
 
-
-
-  require("worldmet")
-  ## these are needed by worldmet
-  require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
-
-  ## catch errors
-  if(length(station) != 1L) stop("Can only process one station at a time")
-
-  ## cache data
-  if(class(cacheF) == "character") {
-    cacheFolder <- cacheF
-    dir.create(cacheFolder, showWarnings = FALSE, recursive = TRUE)
-  } else {
-    cacheFolder <- tempdir()
-  }
-
-  if(clearcache) {
-    unlink(cacheFolder, recursive = TRUE)
-  }
-
-
-  fetchMeta <- function() {
-    wrldSites <- worldmet::getMeta(plot = FALSE, returnMap = FALSE) ## download everything? country="US", state="AK",
-    saveRDS(wrldSites, paste0(cacheFolder, "meta.rds"))
-    wrldSites
-  }
-
-
-  ## load caches
-  if(file.exists(paste0(cacheFolder, "meta.rds"))) {
-    wrldSites <- readRDS(paste0(cacheFolder, "meta.rds"))
-  } else {
-    wrldSites <- fetchMeta()
-  }
-  station <- toupper(station)
-  if(!station %in% wrldSites$station) {
-    stop(paste("Station", station, "not found in worldmet meta data."))
-  }
-  if(difftime(Sys.Date(), as.Date(wrldSites$end [match(station, wrldSites$station)])
-    , units = "days") > 28) {
-    wrldSites <- fetchMeta()
-  }
-  if(showsites) {
-    AKpick <- wrldSites |>
-      dplyr::filter(55 < latitude & latitude < 61) |>
-      dplyr::filter(-154 < longitude & longitude < -148)
-    # print(AKpick)
-    cat("Nearby stations:\n\n", paste(AKpick$station, collapse = "\n "))
-  }
-  stn <- wrldSites [match(station, wrldSites$station), ]
-
-
-  ## cache inventory
-  cYears <- list.files(cacheFolder, pattern = stn$code) |>
-    substr(start = 14, 17) |>
-    as.numeric()
-
-  ## set-up years to fetch
-  yR <- as.numeric(format(stn$begin, "%Y")):
-  as.numeric(format(stn$end, "%Y"))                 # all available years
-  # yR <- 2022:as.numeric(format(Sys.Date(), "%Y"))   # minimal for testing
-  ## revise yR, use as many cached files, as possible
-  yR <- yR [which(!yR %in% cYears)]
-  yR <- unique(c(yR, as.numeric(format(Sys.Date(), "%Y")))) # always fetch last year again
-
-  weather <- importNOAA(code = stn$code
-    , year = yR
-    , hourly = TRUE
-    , path = cacheFolder
-  )
-
-
-  cWeather <- lapply(list.files(cacheFolder, pattern = stn$code), function(i) { # relist, in case of missing data
-    readRDS(paste0(cacheFolder, i))
-  }) |>   ## all years are cached and read again -- no need to combine them
-    dplyr::bind_rows() |>
-    dplyr::select(!year)
-
-  cWeather
-
-  # cWeather <- lapply(list.files(cacheFolder, pattern=stn$code), function(i){ # relist, in case of missing data
-  #   readRDS(paste0(cacheFolder, i))
-  # })
-  # # cWeather <- do.call("rbind", cWeather)
-  # # weather <- unique(rbind(cWeather, weather))
-  # weatherO <- do.call("rbind", cWeather) |>
-  #   dplyr::select(!(year))
-  # #   rbind(weather) |>
-  # #   dplyr::distinct()
-  # weatherO
-
-  # hmr <- importNOAA(code="703410-25507" # PAHO, Homer airport
-  #                    , year=2000:cYear  ## starts in 1973
-  #                    , hourly=FALSE
-  #                    , path=cacheFolder)
-  # hsp <- importNOAA(code="997176-99999"
-  #                    , hourly=FALSE
-  #                    , year=2012:cYear
-  #                    , cacheFolder)
 }
 
 
-gNOAAS <- function(station, clearcache, cacheF = FALSE, showsites = FALSE) {
+getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites = FALSE) {
+ # options: worldmet: has precipication, is way to go. Watch out for versions; broke in the past (2026-05)
+ # buoydata -- no precip?
+ # GSODR -- no precip?
+
+  if(0){
+    stn1 <- worldmet::import_ghcn_inventory(database="hourly", progress = FALSE) |>
+      dplyr::filter(country=="US")
+    stn1b <- worldmet::import_ghcn_inventory(database="daily", progress = FALSE) |>
+      dplyr::filter(country=="US")
+
+    stnL <- worldmet::import_ghcn_stations() |>
+      dplyr::filter(country=="US") |>
+      dplyr::filter(state=="AK") |>
+      dplyr::filter(lng < -148) |>
+      dplyr::filter(lng > -157) |>
+      dplyr::filter(lat < 59.8)
+    # [1] "AKHIOK"               "ALITAK"               "AUGUSTINE ISLAND"     "FLAT ISLAND LIGHT"
+    # [5] "KACHEMAK BAY RESERVE" "HOMER SPIT"           "KODIAK ISLAND"        "SELDOVIA"
+    # [9] "SITKINAK(USCG)"       "KODIAK AP"            "KING SALMON"          "ILIAMNA AP"
+    # [13] "HOMER AP"             "SELDOVIA AP"          "IGIUGIG AP"           "KING SALMON 42 SE"
+
+    stn1[which(stn1$id %in% stnL$id[grep("seldovia", stnL$name, ignore.case = TRUE, value=FALSE)]),] |>
+      #  dplyr::filter(id=="USL000OVIA2")  # network L, start: 2008
+      dplyr::filter(id=="USW00025516")   # network W, start: 1998
+
+    stn1b[which(stn1b$id %in% stnL$id[grep("seldovia", stnL$name, ignore.case = TRUE, value=FALSE)]),]
+
+    x <- worldmet::import_ghcn_daily(stn2$id[which(stn2$name == "HOMER SPIT")],)  # no data
+    y <- worldmet::import_ghcn_hourly(stn2$id[which(stn2$name == "HOMER SPIT")])  # now working, 131k records
+  }
+  if(0) { ## test GHCN!
+    renv::install("worldmet") # only this works with Homer AP
+    renv::install("~/src/worldmet_1.0.0.tar.gz") # error with Homer
+    renv::install("~/src/worldmet_0.10.2.tar.gz") # no import_ghcn_hourly
+    packageVersion("worldmet")
+    x <- worldmet::import_ghcn_hourly(station="USW00025507" #HOMER AP"
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    y <- worldmet::import_ghcn_hourly(station="USL000OVIA2" #SELDOVIA"
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+    z <- worldmet::import_ghcn_hourly(station="USL000FILA2" #Flat island
+                                      , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
+  }
+
+  # require("worldmet") ## worldmet is still under active depelopment, 2026-05-28
+  ## these are needed by worldmet
+  # require("carrier"); require("lobstr"); require("mirai"); require("nanonext")
+
+  ## multiple stations
+  # if(length(station) != 1L) mirai::daemons(4)  #stop("Can only process one station at a time")
+  if(length(station) != 1L) stop("Can only process one station at a time")  ## don't know how to cache multiple stations
+  station <- toupper(station)
+  cacheF <- "~/tmp/LCI_noaa/cache/noaaWeather/worldmet/" ## hard-code this
+  cacheMeta <- paste0(cacheF, "meta.rds")
+  cacheStation <- gsub(" ", "_", paste0(cacheF, station, ".rds"))
+
+  if(clearcache) {
+    try(file.remove(cacheMeta), silent = TRUE)
+    try(file.remove(cacheStation), silent = TRUE)
+    try(unlink(cacheF, recursive = TRUE))
+  }
+
+  ## cache data
+  if(class(cacheF) == "character") {
+    dir.create(cacheF, showWarnings = FALSE, recursive = TRUE)
+  } else {
+    cacheF <- tempdir()
+  }
+
+  # Warning message:
+  #   ! The integrated surface database has been deprecated by NOAA, and data is
+  #  now only available until 2025. Please consider using `worldmet::import_ghcn_stations()`
+  #  and `worldmet::import_ghcn_hourly()` to access data from the new Global Historical
+  #  Climatology Network.
+
+
+  if(file.exists(cacheMeta)) {
+    wrldSites <- readRDS(cacheMeta)
+  } else {
+    wrldSites <- worldmet::import_ghcn_stations(country = "US")
+    if(class(wrldSites)[1]=="tbl_df") {
+      saveRDS(wrldSites, file = cacheMeta)
+    }
+  }
+  AKpick <- wrldSites |>
+    dplyr::rename(latitude=lat) |>
+    dplyr::rename(longitude=lng) |>
+    dplyr::filter(55 < latitude & latitude < 61) |>
+    dplyr::filter(-154 < longitude & longitude < -148)
+
+  if (showsites){
+    cat("Nearby stations:\n\n", paste(AKpick$name, collapse = "\n "))
+  }
+
+   if(!any(station %in% wrldSites$name)) {
+     stop(paste("Station", station, "not found in worldmet meta data."))
+   }
+   stn <- wrldSites [match(station, wrldSites$name), ]
+
+
+   ## pick up previous years from cache
+   if(file.exists(cacheStation)) {
+     cWeather <- readRDS(cacheStation)
+     cY <- as.numeric(levels(factor(format(cWeather$date, "%Y"))))
+     yR <- max(cY):as.numeric(format(Sys.Date(), "%Y")) # update most recent data
+   } else {
+     yR <- NULL
+   }
+
+   if(0) {  ## daily -- this is working, 2026-05-28
+     ## better to use worldmet::import_ghcn_daily ??!?!
+     nWeather <- try(worldmet::import_ghcn_daily(station=stn$id, year=yR,
+       append_codes = FALSE, progress=FALSE, extra = TRUE))
+   }
+   ## should be working again, using github version, 2026-06-11
+   ## but: latest update on weather: 2026-02
+
+   nWeather <- try(worldmet::import_ghcn_hourly(station=stn$id, year=yR,
+       abbr_names = FALSE, append_codes = FALSE, hourly = TRUE, progress=FALSE,
+       extra = TRUE))
+   if("year" %in% names(nWeather)) {  ## to avoid rbind error below
+     nWeather <- nWeather |>
+       dplyr::select(!"year")
+   }
+
+   if (exists ("cWeather")){
+     if(class(nWeather)[1] != "try-error"){
+       colM <- !names(nWeather) %in% names(cWeather)
+       if(any(colM)) {
+         # cat("Column mismatch:", names(nWeather)[which(colM)], "\n\n") # only seen sky_cover so far
+         for(i in which(colM)) {
+           nWeather <- nWeather[,-i]
+         }
+       }
+
+       outWeather <- rbind(nWeather, cWeather) # to prioritize latest data
+       outWeather <- outWeather[!duplicated(outWeather$date),]
+       outWeather <- outWeather[order(outWeather$date),]
+       saveRDS(outWeather, file = cacheStation)
+     }else{
+       outWeather <- cWeather
+       warning(paste0("No new data from ", station))
+     }
+   } else if (class(nWeather)[1] != "try-error") {
+     outWeather <- nWeather
+     saveRDS(outWeather, file = cacheStation)
+   } else {
+     stop (paste ("No data for", station, stn [1]))
+   }
+   # mirai::daemons(0)  ## reset daemons to shut down background processes
+
+   outWeather
+}
+
+
+
+
+gNOAAS <- function(station, clearcache = FALSE, cacheF = NULL, showsites = FALSE) {
   NWeather2SWMP <- function(dat) {  ## convert to SWMP format
     fixF <- function(field) {
       if(field %in% names(dat)) {
@@ -644,13 +763,14 @@ gNOAAS <- function(station, clearcache, cacheF = FALSE, showsites = FALSE) {
       datetimestamp = date
       , jday = as.numeric(format(date, "%j"))
       , year = as.numeric(format(date, "%Y"))
-      , atemp = air_temp
-      , rh = RH
+      , atemp = temperature #air_temp
+      , rh = relative_humidity # RH
       , bp = rep(NA, nrow(dat))
-      , wspd = ws  # XXXXX conversion to wind speed to m/s??
-      , maxwspd = fixF("peak_wind_gust") # rep(NA, nrow(dat))
-      , wdir = wd
+      , wspd = wind_speed # ws  # XXXXX conversion to wind speed to m/s??
+      # , maxwspd = fixF("peak_wind_gust") # rep(NA, nrow(dat))
+      , wdir = wind_direction # wd
       , sdwdir = rep(NA, nrow(dat))
+      , precip = precipitation  ## total precipitation for the hour [mm]
       , totpar = fixF("precip_6") # total precipitation in 6 hours
       , toprcp = rep(NA, nrow(dat))  ## probability of precipitation
       , totsorad = rep(NA, nrow(dat))
@@ -678,22 +798,20 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
   ## see https://medium.com/@holtan.chase/retrieving-data-from-national-data-buoy-center-api-f94d262c7ea7
   ## https://www.ndbc.noaa.gov/faq/rt_data_access.shtml  -- at least some archived data available
 
-
-
-  require("riem")
   if(clearcache) {
     unlink(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
   }
   dir.create("~/tmp/LCI_noaa/cache/noaaWeather", showWarnings = FALSE, recursive = TRUE)
   if(file.exists(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))) {
-    load(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    # load(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+    rW <- readRDS(paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".rds"))
     lastD <- max(rW$valid) # valid = date-time
     ## fudge to get 1 year overlap
     lastD <- as.Date(paste0(as.integer(substr(as.character(lastD), start = 1, stop = 4)) - 1, "-01-01"))
   } else {
     lastD <- "2000-01-01"
   }
-  rWn <- try(riem_measures(station = stationID, date_start = lastD, date_end = as.character(Sys.Date()))
+  rWn <- try(riem::riem_measures(station = stationID, date_start = lastD, date_end = as.character(Sys.Date()))
     , silent = TRUE)
 
   if(class(rWn)[1] == "try-error") {
@@ -710,19 +828,12 @@ getNOAAweather_airports <- function(stationID = "PAHO", clearcache = FALSE) {
     }
   }
   rm(rWn)
-  save(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
+  saveRDS(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".rds"))
+  # save(rW, file = paste0("~/tmp/LCI_noaa/cache/noaaWeather/", stationID, ".RData"))
 
   ## clean-up data/convert units, as appropriate, for compatibility with getNOAA
 
-
   rW
-}
-
-
-
-## if missing, install buoydata
-if(!require("buoydata")) {
-  renv::install("NOAA-EDAB/buoydata", prompt = FALSE)
 }
 
 
@@ -747,175 +858,35 @@ getNOAA <- function(buoyID = "46108", set = "stdmet", clearcache = FALSE) {  # d
     nc_close(goes.nc)
   }
 
-  buoyID <- tolower(buoyID)
-  cacheF <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
+  # buoyID <- tolower(buoyID)
+  buoyID <- toupper(buoyID)
+  cacheRDS <- paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID, ".rds")
 
   if(clearcache) {
-    unlink(paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)
-    unlink(cacheF)
+    unlink(cacheRDS)
     # unlink("~/tmp/LCI_noaa/cache/noaaBuoy/", recursive=TRUE)
+    # unlink(paste0("~/tmp/LCI_noaa/cache/noaaBuoy/", buoyID), recursive = TRUE)  ## old structure
     # dir.create("~/tmp/LCI_noaa/cache/noaaBuoy/", showWarnings=FALSE, recursive=TRUE)
   }
 
-
-  require("buoydata")  # install with remotes::install_github("NOAA-EDAB/buoydata")
-  if(file.exists(cacheF)) {
-    wDB <- readRDS(cacheF)
-    startY <- max(wDB$datetimestamp) |>
-      format("%Y") |>
-      as.numeric() - 1
+  if(file.exists(cacheRDS)) {
+    wDB <- readRDS(cacheRDS)
+    if(difftime(Sys.time(), max(wDB$timestamp), units="days") > 30) {
+      wDBu <- try(buoydata::get_buoy_data(buoyid = buoyID))
+      if(class(wDBu)[1]=="try-error"){
+        warning("Unable to get buoydata updates")
+      }else{
+        wDB <- wDBu
+      }
+    }
   } else {
-    startY <- buoydata::buoyDataWorld |>
-      dplyr::filter(ID == buoyID) |>
-      dplyr::select(Y1) |>
-      as.numeric()
+    wDB <- buoydata::get_buoy_data(buoyid = buoyID)
   }
-  buoydata::get_buoy_data(buoyid = buoyID,
-    year = startY:as.integer(format(Sys.Date(), "%Y"))
-    , outDir = "~/tmp/LCI_noaa/cache/noaaWeather")
-  # wB <- combine_buoy_data(buoyID, variable="WVHT", inDir="~/tmp/LCI_noaa/cache/noaaWeather/")
-  wB <- list.files(path = paste0("~/tmp/LCI_noaa/cache/noaaWeather/",  ## should only read new files XXX
-    buoyID, "/"), patter = "\\.csv$",
-  full.names = TRUE) |>
-    readr::read_csv(id = "file_name", col_names = TRUE, comment = "#", na = "999")
-
-  wB$datetimestamp <- with(wB, as.POSIXct(paste0(X.YY, "-", MM, "-", DD, " "
-    , hh, ":", mm), tz = "UTC"))
-
-
-  if(exists("wDB")) {
-    wDB <- rbind(wDB, wB)
-  } else {
-    wDB <- wB
-  }
-  rm(wB)
-  # save(wDB, file = cacheF)
-  saveRDS(wDB, file = cacheF)
-
-
-  ## add real-time data -- check in buoydata; already fixed?
-  ## using erddap -- haven't figured this out
-  if(0) {
-    require("rerddap") ## another rnoaa alternative?? only for gridded data?
-    url <- 'https://coastwatch.pfeg.noaa.gov/erddap/'
-    # find all gridded datasets
-    griddedDatasets <- rerddap::ed_datasets(url = url, which = "tabledap")
-    # select chl daily 2km
-    buoy <- griddedDatasets |>
-      dplyr::filter(Dataset.ID == "cwwcNDBCMet")
-
-    # get info about dataset
-    info <- rerddap::info(buoy$Dataset.ID, url = url)
-    info
-
-
-    if(clearcache) {
-      rerddap::cache_delete_all()
-    }
-    cD <- rerddap::griddap(info, latitude = c(54, 60)
-      , longitude = c(-159, -150)
-      , fiels = c("wtmp", "wvht"))
-
-
-    ## straight from source -- AOOS erddap server for lower cook inlet wave buoy
-    test <- rerddap::tabledap(info, fields = c("time", "atmp"), url = url)
-    #                                "https://erddap.aoos.org/erddap/tabledap/aoos_204.html", fmt="csv")
-
-    # info(url="https://erddap.aoos.org/erddap/tabledap/aoos_204.html") ## missing datasetid
-
-
-
-
-
-    ## MR search
-    noaaS <- servers() |>
-      filter(grepl("NOAA", name)) |>
-      as.data.frame()
-
-    for(i in seq_len(nrow(noaaS))) {
-      cat("\n\n", i, noaaS$short_name [i], "\n")
-      print(try(ed_search(query = "buoy", url = noaaS$url [i])))
-    }
-
-
-    out <- ed_search(query = c("aoos"), which = 'table')
-
-
-    ## try IOOS Sensors ERDDAP
-    url <- "https://erddap.sensors.ioos.us/erddap/"
-    datasets <- rerddap::ed_datasets(url = url, which = "tabledap")
-    datasets <- rerddap::ed_search(query = "buoy", url = url)
-
-    datasets$info$title
-  }
-
-
-  ## add real-time data -- manual from http
-  ## from https://www.ndbc.noaa.gov/download_data.php?filename=4610812025.txt.gz&dir=data/adcp/Jan/
-
-  # tdy <- as.POSIXct("2025-05-18")
-  tdy <- Sys.Date()
-  ## set-up file structure
-  cMon <- month.abb [1:(as.numeric(format(tdy, "%m")) - 1)]
-  ## copy output of fwf_empty(noaaexamplefile.txt), as   clns <- fwf_empty("~/Desktop/4610812025.txt", skip=2)
-  clns <- list(begin = c(0L, 5L, 8L, 11L, 14L, 17L, 21L, 26L, 32L, 38L, 44L,
-    49L, 53L, 60L, 68L, 72L, 78L, 83L),
-  end = c(4L, 7L, 10L, 13L, 16L, 20L, 25L, 30L, 36L, 42L, 48L, 52L, 59L, 65L,
-    71L, 77L, 82L, NA)
-  , colNames = colnames(wDB)[2:ncol(wDB)]
-  )
-  rtB <- lapply(seq_along(cMon), function(i) {
-    ## form of https://www.ndbc.noaa.gov/data/adcp/Jan/4610812025.txt.gz
-    ## https://www.ndbc.noaa.gov/data/stdmet/Jan/4610812025.txt.gz
-    nD <- suppressWarnings(try(readr::read_fwf(file = paste0(
-      "https://www.ndbc.noaa.gov/data/stdmet/", cMon[i], "/", buoyID, i
-      , format(tdy, "%Y"), ".txt.gz")
-    , col_positions = clns, skip = 2 # , na=999.0
-    , id = "file_name"), silent = TRUE))
-    if(class(nD)[1] == "try-error") { # try again for last available month
-      nD <- try(readr::read_fwf(file = paste0("https://www.ndbc.noaa.gov/data/stdmet/",
-        cMon[i], "/", buoyID, ".txt")
-      , col_positions = clns, skip = 2 # , na=999.0
-      , id = "file_name"), silent = TRUE)
-    }
-    if(class(nD)[1] == "try-error") {nD <- wDB [0, ]}
-    nD
-  })
-  # https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T08%3A00%3A00Z&time%3C%3D2025-06-10T08%3A00%3A00Z
-  # rta <- read.csv("https://erddap.aoos.org/erddap/tabledap/aoos_204.csv?time%2Csea_surface_wave_significant_height%2Csea_surface_wave_from_direction%2Csea_surface_wave_significant_height_qc_agg%2Csea_surface_wave_from_direction_qc_agg%2Cz&time%3E%3D2025-05-31T07%3A30%3A00Z&time%3C%3D2025-06-10T07%3A30%3A00Z")
-  rtB <- do.call("rbind", rtB)
-
-  ## add the last 45 days of "real time" data
-  ## example:  https://www.ndbc.noaa.gov/data/realtime2/46108.txt
-  nD <- try(readr::read_fwf(file = paste0(
-    "https://www.ndbc.noaa.gov/data/realtime2/", topupper(buoyID), ".txt")
-  , col_positions = clns, skip = 2 # , na=999.0
-  , id = "file_name"), silent = TRUE)
-  if(class(nD)[1] != "try-error") {rtB <- rbind(rtB, nD)}
-
-  colnames(rtB) <- colnames(wDB)
-  rtB$datetimestamp <- with(rtB, as.POSIXct(paste0(X.YY, "-", MM, "-", DD, " "
-    , hh, ":", mm), tz = "UTC"))
-  wDB <- rbind(wDB, rtB); rm(rtB)
-
-
-  # ## QAQC
-  wDB <- wDB [!duplicated(wDB$datetimestamp), ]
-  # tm <- gsub("T", " ", wDB$datetimestamp)
-  # tm <- gsub("Z", "", tm)
-  # wDB$datetimestamp <- as.POSIXct(tm, format = "%F %T", tz = "UTC") # move this up?
-  # rm(tm)
-
-  # for(i in 1:length(meta)){  ## meta is a tibble...
-  #   mN <- which(names(wDB) == names(meta [i]))
-  #   is.na(wDB [,mN])[which(wDB [,mN] == meta [[i]]$missval)] <- TRUE  # set missing values to NA
-  # }
-  # ## ensure windspeed is m/s
-  # if(meta$wind_spd$units != "meters/second"){cat(meta$wind_spd$units); stop("Fix wspd units")}
-  #
-
+  wDB$timestamp <- wDB$time
+  saveRDS(wDB, cacheRDS)
   return(wDB)
 }
+
 
 gNOAAbuoy <- function(buoyID, clearcache = FALSE) {
   ## wrapper for getNOAA to fix units and field names to fit SWAMP data

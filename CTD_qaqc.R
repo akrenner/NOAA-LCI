@@ -34,7 +34,7 @@ dev.off()
 
 
 
-## run seldovia/homer data through the same loop
+## run seldovia/homer SWMP data through the same loop
 load ("~/tmp/LCI_noaa/cache/SeldTemp.RData")
 # sldvia$station <- "sldviaH"
 # sldviaS$station <- "sldviaL"

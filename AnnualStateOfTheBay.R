@@ -1,10 +1,8 @@
 #! /usr/bin/env Rscript
 
-## execute all Kachemak Bay/Cook Inlet scripts, 2020
-if(.Platform$OS.type == "unix") {
-  setwd("~/Documents/amyfiles/NOAA/NOAA-LCI/")
-} else {
-  setwd("~/myDocs/amyfiles/NOAA-LCI/")
+# ## execute all Kachemak Bay/Cook Inlet scripts
+if(length(grep("NOAA-LCI", getwd())) < 1) {
+  stop("Please open the R Project in NOAA-LCI/")
 }
 
 
@@ -19,7 +17,6 @@ print(sT <- Sys.time())
 quarterly <- TRUE
 # quarterly <- FALSE
 
-## State of the Bay Report 2019
 
 ## plot SWMP weather data for annual state of the bay report
 
@@ -28,13 +25,13 @@ source("annual-fetchAirWeather.R")
 source("SeldoviaTemp.R") ## fetch SWMP water data
 
 ## plot seasonal means and current/previous year
+source("annual-waterTempSal.R")
 source("annual-wind.R")  ## qaqc.swmpr: no qaqc columns in input data
 # source("precipSalinity.R")  # calls the scripts below and makes a combined multi-panel PDF
-source("annual-waterTempSal.R")
 source("annual-airTemp.R")  # lots of warnings (min returning Inf -- fix this)
 source("annual-rainy.R")
 source("annual-snowpack.R")
-source("annual-waves.R")
+try(source("annual-waves.R"))  # issues with access to bouy data again
 # source("annual-nutrients.R") # not working -- data is too sparce to fit into existing framework
 
 

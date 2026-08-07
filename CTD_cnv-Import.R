@@ -128,27 +128,39 @@ fNf <- list.files ("~/tmp/LCI_noaa/CTD-cache/CNV", full.names = TRUE, ignore.cas
 # fNf <- list.files ("~/GISdata/LCI/CTD-processing/", ".hex", full.names=TRUE, ignore.case=TRUE, recursive=TRUE)
 
 
-## cut-out bad files for now -- fix this later -- why bad?
-badF <- c ("2012_10-28_t6_s22_cast007_4141"  ## casts that are empty/but don't cause major trouble
-  , "2012_10-29_t4_s07b_cast065_4141"
-  , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
-  , "2013-04-19-cookinlet-tran6-cast076-s05b_5028"
-  , "2013_04-19_t6_s05b_cast076_5028"  ## same as above?!
-  , "2013_04-20_t3_s05_cast117_5028"
-  , "2015_06-26_t9_s01b_cast117_5028"
-  , "2015_06-26_t9_s06b_cast111_5028"
-  , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"
-)
-## casts that crash readCNV()
-badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
-  , "2012_10-28_t6_s23_cast006_4141", badF)
+## better to attempt reading every file, but skip those that cannot be read!
 
-for (i in seq_along(badF)) {
-  if (length (grep(badF [i], fNf)) > 0) {
-    fNf <- fNf [-grep (badF [i], fNf)]
-  }
-}
-rm(badF)
+## cut-out bad files for now -- fix this later -- why bad?
+# badF <- c (NULL  ## casts that are empty/but don't cause major trouble
+#   # , "2012_10-28_t6_s22_cast007_4141"
+#    , "2012_10-29_t4_s07b_cast065_4141"  ## empty, only header, no data. Causing error.
+#   # , "2013-04-19-cookinlet-tran6-cast059-s27_5028"
+#   , "2013-04-19-cookinlet-tran6-cast076-s05b_5028" # empty
+#   # , "2013_04-19_t6_s05b_cast076_5028"  ## same as above
+#   # , "2013_04-20_t3_s05_cast117_5028"
+#   # , "2015_06-26_t9_s01b_cast117_5028"
+#   # , "2015_06-26_t9_s06b_cast111_5028"
+#   # , "2021_05-01_ab_s06_surface-duplicate_cast036_5028"  # bad cast
+# )
+# ## casts that crash readCNV()
+# badF <- c ("2012_10-28_t6_s23_cast006_4141"  ## error in "upoly" %in% names (ctdF@data)
+#   , badF)
+#
+# badF <- c(badF, "2021_05-01_ab_s06_surface-duplicate_cast036_5028"  # bad cast
+# )
+# badF <- unique(badF)
+#
+# # for(i in seq_along(badF)) {cat(badF[i], "\n   ")
+# #   print(grep(badF[i], fNf, value = TRUE))
+# # }
+#
+#
+# for(i in seq_along(badF)) {
+#   if (length (grep(badF [i], fNf)) > 0) {
+#     fNf <- fNf [-grep (badF [i], fNf)]
+#   }
+# }
+# rm(badF)
 fN <- gsub ("^.*/", "", fNf)
 
 
@@ -159,7 +171,7 @@ fN <- gsub ("^.*/", "", fNf)
 ## match time-stamps to closest timestamps in notebooks and hope for the best
 getMeta <- function(i) {  # slow and inefficient to read files twice, once just for metadata -- still cleaner?
   require ("oce")
-  ctdF <- suppressWarnings (try (read.ctd (fNf[i]))) ## still warning for missing values and NAs introduced by coercion
+  ctdF <- suppressWarnings (try (oce::read.ctd (fNf[i]), silent = TRUE)) ## still warning for missing values and NAs introduced by coercion
   if (class (ctdF) == "try-error") {
     print (i)
     print (fNf[i])
@@ -183,26 +195,33 @@ getMeta <- function(i) {  # slow and inefficient to read files twice, once just 
 
 
 
+## profiled getMeta: parLapply is 20% slower
+runParallel <- FALSE
+cat("\n\n##\n## These files could not be read (e.g. containing no data):\n")
 if (runParallel) {
   require ("parallel") ## revert to require ("parallel")
   cl <- makeCluster (detectCores() - 1, type = "PSOCK")
   # registerDoParallel (cl)
   clusterExport (cl = cl, list ("getMeta", "fNf", "read.ctd", "fN"))
-  fileDB <- parLapply (cl = cl, seq_along (fNf), fun = getMeta)
+  fileDB <- parLapply (cl = cl, seq_along (fNf), fun = getMeta) # 3.48 min for first 500
   ## shut down cluster farther down
 } else {
-  fileDB <- lapply (seq_along(fNf), FUN = getMeta)
+  fileDB <- lapply (seq_along(fNf), FUN = getMeta) # 2.84 min for first 500 files
 }
 
 rm (getMeta)
 fileDB <- as.data.frame (do.call (rbind, fileDB)) # CTD metadata database
-fileDB <- subset (fileDB, !is.na (time))
+fileDB <- subset (fileDB, !(is.na (time) | is.na(instSerNo))) ## remove empty casts
 ## ok to ignore warnings regarding NAs introduced by coersion
 
 
-save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx0.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/CNVx0.RData")
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNVx0.RData")
 
+
+
+## fix warnings -- 2026-07-13
+# fNf <- fNf[3000:3500] #XXXX test
 
 
 ## read CTD data from CNV file and apply basic processing:
@@ -213,12 +232,19 @@ save.image ("~/tmp/LCI_noaa/cache/CNVx0.RData")
 unlink ("~/tmp/LCI_noaa/cache/badCTDfile.txt")
 readCNV <- function(i) {
   require (oce)
-  ctdF <- try (read.ctd (fNf [i]
+
+  ## define columns, possibly one for each CTD?
+  ## this is why par is not recognized on new CTD
+
+  ctdF <- try (oce::read.ctd (fNf [i]
     # , columns = "define name of dV/dT"
     , deploymentType = "profile"
-  ))
+  ), silent = TRUE)
+
   if (class (ctdF) == "try-error") {
-  } # else{
+    cDF <- NULL
+  } else {
+
   ## more CTD import processing steps
   ## zero-depth
   ## cut-out surface, up-cast?
@@ -232,6 +258,11 @@ readCNV <- function(i) {
   ## fix-up missing fields
   meta <- function(x) {rep (x, length (ctdF@data$temperature))}
   if ("upoly" %in% names (ctdF@data)) {
+    # cat ("has upoly", fNf[i], "\n")
+    # print(names(ctdF@data))
+    # print(summary(ctdF@data))
+    # cat("\n##\n################################\n\n")
+    ## confirmed: upoly only reported from 5028 in 2012
     names (ctdF@data)[which (names (ctdF@data) == "upoly")] <- "turbidity"
   }
   if (!"beamAttenuation" %in% names (ctdF@data)) {
@@ -240,6 +271,9 @@ readCNV <- function(i) {
   }
   if (!"turbidity" %in% names (ctdF@data)) {
     ctdF@data$turbidity <- meta (NA)
+  }
+  if ("par/sat/log" %in% names(ctdF@data)){
+    names(ctdF@data)[which(names(ctdF@data) == "par/sat/log")] <- "par"
   }
   ## temporary fix for 8138 until par translation is working XXXX
   if (!"par" %in% names (ctdF@data)) {
@@ -268,14 +302,17 @@ readCNV <- function(i) {
     , beamAttenuation = ctdF@data$beamAttenuation
     , beamTransmission = ctdF@data$beamTransmission
   )
+  if(any(cDFo$density <= 0)){stop(paste(fN[i], "contains invalid densities"))}
   cDF <- subset (cDFo, density > 0) ## still necessary?
+  cDF <- cDFo
   if (0) {
     ## depth bins
     cDo <- subset (cDF, density > 0)
     depthBin <- factor (floor (cDFo$depth))
     cDF <- aggregate (. ~ File.Name + depthBin, cDFo, fun = mean, na.rm = TRUE)
   }
-  return (cDF)
+  }
+  cDF
 }
 
 
@@ -286,6 +323,7 @@ rCNV <- function(i) {
   } else {return (x)}
 }
 
+
 if (runParallel) {
   clusterExport(cl = cl, list ("rCNV", "fNf", "readCNV"))
   CTDx <- parLapply (cl = cl, seq_along (fNf), rCNV)
@@ -293,12 +331,22 @@ if (runParallel) {
   rm (cl)
 } else {
   CTDx <- lapply (seq_along (fNf), rCNV)
+
+  # options(warn = 1)
+  # ## trouble shooting
+  # for (i in seq_along(fNf)) {
+  #   if(i == 1) {CTDx <- list()}
+  #   print(fNf[i])
+  #   CTDx[[i]] <- rCNV(i)
+  # }
+  # options(warn = 0)
+
 }
 CTD1 <- as.data.frame (do.call (rbind, CTDx))
 rm (rCNV, readCNV, CTDx)
 rm (fN, fNf)
-save.image ("~/tmp/LCI_noaa/cache/CNVx.RData")  ## this to be read by dataSetup.R -- not yet!
-# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache/CNVx.RData")
+save.image ("~/tmp/LCI_noaa/cache-t/CNVx.RData")  ## this to be read by dataSetup.R -- not yet!
+# rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNVx.RData")
 
 
 
@@ -345,11 +393,11 @@ fileDB$FN_station <- fileDB$file %>%
 sbbStns <- c ("bear", "chinapoot", "halibut", "jakolof", "kasitsna", "peterson"
   , "sadie", "seldovia", "tutka")
 for (i in seq_along(sbbStns)) {
-  fileDB$FN_transect [grep (toupper(sbbStns [i])
+  fileDB$FN_transect [grep(toupper(sbbStns [i])
     , toupper (fileDB$FN_station))] <- "Subbay" # some are "AlongBay"
-  fileDB$FN_station <- str_replace_all (toupper (fileDB$FN_station)
-    , paste0 ("(", toupper (sbbStns [i]), ")([A-D])")
-    , paste0 (tools::toTitleCase (sbbStns [i]), "_\\2"))
+  fileDB$FN_station <- str_replace_all(toupper(fileDB$FN_station)
+    , paste0 ("(", toupper(sbbStns [i]), ")([A-D]$)")
+    , paste0 (tools::toTitleCase(sbbStns [i]), "-\\2"))
 }
 rm (sbbStns, i)
 # summary (factor (fileDB$FN_transect))
@@ -369,15 +417,17 @@ fileDB$FN_cast <- fileDB$file %>%
 
 ## main station list
 stnMaster <- read.csv ("~/GISdata/LCI/MasterStationLocations.csv")
-fileDB$FN_matchname <- with (fileDB, paste (FN_transect, FN_station, sep = "_")) %>%
-  str_replace_all("Subbay_", "")
-fileDB$match <- match (toupper (fileDB$FN_matchname), toupper (stnMaster$Match_Name))
+fileDB$FN_matchname <- with (fileDB, paste (FN_transect, FN_station, sep = "_")) # %>%
+#  str_replace_all("Subbay_", "")
+fileDB$match <- match(toupper(fileDB$FN_matchname), toupper(stnMaster$Match_Name))
+
 ## alert if there are any new mismatches
 badM <- which (is.na (fileDB$match))
 if (length (badM) != 59) {
   cat ("\n\n##\n## The following casts don't have a match in main station table:\n")
-  print (fileDB [badM, which (names (fileDB) %in% c("file", "FN_matchname"))])
-  stop ("The number of non-matched CTD casts has changed from 59\n\n")
+  print (fileDB [badM, which (names (fileDB)%in% c("file", "FN_matchname"))])
+  stop (paste0 ("The number of non-matched CTD casts has changed from 59 to ",
+                length (badM), "\n\n"))
 }
 rm (badM)
 ## as of 2022-08-11, these are 59 files (1.3%)
@@ -385,7 +435,7 @@ rm (badM)
 ## -> fix filenames accordingly
 
 
-# save.image ("~/tmp/LCI_noaa/cache/CNVx2.RData")
+# save.image ("~/tmp/LCI_noaa/cache-t/CNVx2.RData")
 
 
 
@@ -462,9 +512,9 @@ nNames <- c ("isoTime"
   , "Pressure..Strain.Gauge..db."
   , "Nitrogen.saturation..mg.l."
   , "Fluorescence_mg_m3"
-  , "turbidity"
-  , "beamAttenuation"
-  , "beamTransmission"
+  , "turbidity"        ## find units for metadata
+  , "beamAttenuation"  ## find units for metadata
+  , "beamTransmission" ## find units for metadata
 )
 if (length (nNames) == ncol (physOc)) {
   names (physOc) <- nNames

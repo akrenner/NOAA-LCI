@@ -4,7 +4,6 @@ if (!exists("quarterly")) {
   rm(list = ls())
   quarterly <- TRUE
 }
-# setwd ("~/myDocs/amyfiles/NOAA-LCI/")
 
 
 
@@ -15,7 +14,7 @@ qntl <- c(0.9) # , 0.8)
 currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
 require("RColorBrewer")
 # currentCol <- brewer.pal (3, "Paired")
-currentCol <- brewer.pal(6, "Paired")[c(7, 6, 5)]
+currentCol <- brewer.pal(6, "Paired")[c(1, 5, 6)]
 SWMP <- TRUE
 # SWMP <- FALSE  ## for 2021, but maybe permanent from now on
 
@@ -30,7 +29,7 @@ mediaDex <- "~/tmp/LCI_noaa/media/StateOfTheBay-experimental/"
 if (quarterly) {
   pastYear <- FALSE  # plot currentYear-1 ?
   ongoingY <- TRUE
-  currentCol <- currentCol [c(3, 1, 2)]
+  # currentCol <- currentCol [c(3, 1, 2)]
   mediaD <- paste0(mediaD, "update/")
   # mediaD <- "~/tmp/LCI_noaa/media/StateOfTheBay-quarterly"
 } else {
@@ -80,6 +79,15 @@ if (0) {  ## plot all years -- rainbow spaghetti
   }
 }
 
+
+## test plot
+if(0){
+plot(atemp~datetimestamp, hmr, type="l")
+with(hmr, datetimestamp[which.min(atemp)])
+with(hmr, datetimestamp[which.max(atemp)])
+}
+
+
 ## aggregate data
 tDay <- prepDF(varName = "atemp", dat = hmr, maO = maO, qntl = qntl
                , currentYear = currentYear)
@@ -116,7 +124,7 @@ cLegend( # "bottom"# , inset=0.07
   105, 2
   , currentYear = currentYear, mRange = c(min(hmr$year), currentYear - 1)
   , cYcol = currentCol
-  , title = paste(maO, "day moving average")
+  , title = paste(maO, "day moving averages")
   , qntl = qntl
   , pastYear = pastYear, ongoingYear = ongoingY
 )
