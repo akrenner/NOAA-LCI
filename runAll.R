@@ -121,21 +121,24 @@ if(0) {
     renv::install("openair-project/worldmet")
     # stop("Package worldmet needs a different verion. Try \n renv::restore('worldmet')")
   }
-
-
-
-  renv::upgrade(version="1.2.3")  ## do NOT use renv@1.2.4 -- weird BioConductor interaction
-
+  # renv::upgrade(version="1.2.3")  ## do NOT use renv@1.2.4 -- weird BioConductor interaction
 
   packageVersion("oce")
   # renv::update(exclude = c("oce", "buoydata", "worldmet", "renv")) ## rerun for all/specific packages to update
-  renv::update(exclude = c("oce", "renv")) ## rerun for all/specific packages to update
+  renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
   # renv::install("~/src/oce_1.8-3.tar.gz")
   # renv::install(c("oce@1.8-3", "renv@1.2.3"))
 
 
   ## Delete left-over lock files if package installation is stuck
   # unlink(list.files(.libPaths(), pattern = "^00LOCK", full.names = TRUE), recursive = TRUE)
+
+  # ## fix bioconductor
+  # renv::settings$bioconductor.version("3.23")
+  # options(repos=BiocManager::repositories(version = "3.23"))
+  # options(repos=BiocManager::repositories(version = "1.30.27"))
+  # renv::install("bioc::xxxxx")
+
 
   renv::update()
   renv::clean()
