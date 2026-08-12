@@ -11,7 +11,7 @@ if (!require("renv")) {
 }
 if(!dir.exists("renv")){
  renv::init(bioconductor = TRUE) # done only once, also for ConsensusClusterPlus
-  # renv::init(bioconductor = "3.21")
+  # renv::init(bioconductor = "3.23")
 }
 
 ## sync all packages
@@ -31,10 +31,8 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
   ## install critical infrastructure first
 #  if(!require('pak')) {renv::install('pak', prompt = FALSE)} # renv does it all?
   if(!require('Rcpp')) {renv::install('Rcpp', prompt = FALSE)}
-  if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
   if(!require('sf')) {renv::install('sf', prompt = FALSE)}
   if(!require("openmeteo")) {renv::install("tpisel/openmeteo")}
-  if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
   if(!require("buoydata")) {renv::install("NOAA-EDAB/buoydata", prompt = FALSE)}
   if(!require("remotes")) {renv::install("remotes", prompt = FALSE)}
   if(!require("terra")) {renv::install("terra", prompt = FALSE)}
@@ -44,6 +42,14 @@ if(.Platform$OS.type == "windows" && !pkgbuild::has_rtools()){
     renv::install("STBrinkmann/GVI")
     unloadNamespace("terra")
   }  ## no longer working -- find replacement
+  #  if(!require('ConsensusClusterPlus')) {BiocManager::install(pkgs="ConsensusClusterPlus", ask = FALSE, update = TRUE)}
+
+  if(!require('BiocManager')) {renv::install('BiocManager', prompt = FALSE)}
+  options(repos = BiocManager::repositories())
+  if(!require('ConsensusClusterPlus')) {renv::install("ConsensusClusterPlus")}
+  # if(!require('BiocVersion')) {renv::install("bioc::BiocVersion", ask = FALSE, update = TRUE)}
+  # if(!require('ConsensusClusterPlus')) {renv::install("bioc::ConsensusClusterPlus", ask = FALSE, update = TRUE)}
+
   exP <- NULL
 }
 
