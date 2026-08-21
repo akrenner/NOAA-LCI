@@ -12,7 +12,7 @@ if(!exists("indivPlots")) {
   plotAll <- TRUE
 }else{
   anomalies <- TRUE
-  plotAll <- FALSE
+  plotAll <- !quickPlot
 }
 
 

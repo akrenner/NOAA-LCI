@@ -246,8 +246,9 @@ pdf("~/tmp/LCI_noaa/media/HAB/TS_TempBottom_days.pdf", height=5, width=7)
 stN <- c("AlongBay_7", "9_6", "AlongBay_5")
 cols <- RColorBrewer::brewer.pal(length(stN), "Set2")
 
-plot(TempBottom~Year, data = CTD, ylim=c(25,165), type="n",
-     xlim=c(min(kphyto$year), max(kphyto$year)),
+plot(TempBottom~Year, data = CTD, type="n",
+     ylim=c(00,165),
+     # xlim=c(min(kphyto$year), max(kphyto$year)),
      xlab="Year", ylab="Time with bottom temperature > 8 °C [days]"
      , main="Temperature")
 for(i in seq_along(stN)) {
@@ -262,7 +263,7 @@ for(i in seq_along(stN)) {
   rm(spl, nData, splInt)
 
   sY <- c(2016, 2012, 2016)[i]
-  sDF <- subset(sDF, (sY < Year) & (Year < 2026))
+  sDF <- subset(sDF, (sY < Year) & (Year < 2027))
 
   # plot (aggregate(TempBottom~Year, data = sDF, function(x){sum(x > 8)})
   #        , type = "b", col = i
@@ -289,7 +290,7 @@ cols <- RColorBrewer::brewer.pal(length(stN), "Set2")
 yR <- c(175, 247)
 
 plot(TempBottom~Year, data = CTD, ylim=yR, type="n",
-     xlim=c(min(kphyto$year), max(kphyto$year)),
+     # xlim=c(min(kphyto$year), max(kphyto$year)),
      xlab="Year", ylab="First day with bottom temperature > 8 °C",
      main="Timing of warming", axes = FALSE)
 axis(1)
@@ -303,21 +304,29 @@ for(i in seq_along(stN)) {
   ## fit spline for interpolating threshold day
   spl <- with(cStn, smooth.spline(x=timeStamp, y=TempBottom, cv = TRUE))
   ## lFit <- loess(TempBottom~timeStamp, data = cStn)
-  nData <- seq(from=as.POSIXct("2012-02-01 12:00"), to=Sys.time(), by="1 day")
+  nData <- seq(from=as.POSIXct("2012-02-01 12:00")
+               , to= as.POSIXct(paste0(format(Sys.time(), "%Y"), "-10-15"))  # Sys.time()
+               , by="1 day")
   splInt <- predict(spl, x = as.numeric(nData))
   sDF <- data.frame(timeStamp=as.POSIXct(splInt$x), TempBottom=splInt$y)
   sDF$Year <- as.numeric(format(sDF$timeStamp, "%Y"))
   rm(spl, nData, splInt)
 
-  sY <- c(2016, 2012, 2016)[i]
-  sDF <- subset(sDF, (sY < Year) & (Year < 2026))
+  sY <- c(2016, 2012, 2016)[i]  ## start year -- need to exclude partials at the beginning
+  sDF <- subset(sDF, (sY < Year) & (Year <= 2026))
+  timingDF <- aggregate(TempBottom~Year, data=sDF, function(x){min(which(x > 8))})
 
-  # plot (aggregate(TempBottom~Year, data = sDF, function(x){min(which(x > 8))})
-  #        , type = "b", col = i
-  # )
-  lines (aggregate(TempBottom~Year, data = sDF, function(x){min(which(x > 8))})
-         , type = "b", col = cols[i], lwd=3
-  )
+  if (as.numeric(format(max(CTD$timeStamp), "%j")) <
+      timingDF$TempBottom[nrow(timingDF)]) {
+    nL <- nrow(timingDF)
+    lines (timingDF [1:(nL-1),],
+           type="b", col=cols[i], lwd=3)
+    points (timingDF [1:(nL-1),], pch = 19, col=cols[i])
+    lines(timingDF [(nL-1):nL,], lwd=3, lty="dotted", col=cols[i])
+    points(timingDF[nL,], pch=1, col=cols[i])
+  } else {
+    lines (timingDF, type = "b", col = cols[i], lwd=3)
+  }
 }
 legend("topleft", legend=c("AlongBay-7", "T9-6", "AlongBay-5"),
   lwd=3, col=cols[1:i], bty="n")

@@ -127,7 +127,7 @@ if(0) {
   # renv::update(exclude = c("oce", "buoydata", "worldmet", "renv")) ## rerun for all/specific packages to update
   renv::update(exclude = c("oce")) ## rerun for all/specific packages to update
   # renv::install("~/src/oce_1.8-3.tar.gz")
-  # renv::install(c("oce@1.8-3", "renv@1.2.3"))
+  # renv::install(c("oce@1.8-3"))
 
 
   ## Delete left-over lock files if package installation is stuck
@@ -219,9 +219,9 @@ source("CTDwall-setup.R")
 source("CTDwall_normals.R")  # climatologies
 source("CTDanomaly-helpers.R")
 source("CTDtimeseries.R")   # sections and univariate summaries over time and anomalies. -- Signature Datasets
+quickPlot <- as.numeric(format(Sys.time(), "%H")) %in% 8:18; cat ("Wall quickplots:", quickPlot, "\n")
 indivPlots <- FALSE; source("CTDsections.R", local = TRUE)
 indivPlots <- TRUE;  source("CTDsections.R", local = TRUE); rm(indivPlots)
-quickPlot <- as.numeric(format(Sys.time(), "%H")) %in% 8:18
 source("CTDwall.R", local = TRUE); rm(quickPlot)
 sink()
 
@@ -230,7 +230,6 @@ sink()
 sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
 ## State of the Bay Report
 source("AnnualStateOfTheBay.R")
-sink()
 
 
 
@@ -275,7 +274,7 @@ if (0){ ## more one-off projects
   source ("archive/OA-temps.R")
 }
 
-source("CTD_timeseries_freshwater.R")
+source("CTDtimeseries_freshwater.R")
 
 
 

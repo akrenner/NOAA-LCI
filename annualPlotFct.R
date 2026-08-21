@@ -636,6 +636,33 @@ getNOAAweather <- function(station = "HOMER AP", clearcache = FALSE, showsites =
     z <- worldmet::import_ghcn_hourly(station="USL000FILA2" #Flat island
                                       , year = 2024:2026, progress = TRUE, append_codes=FALSE, extra = TRUE)
   }
+  if(0) { ## use new readnoaa package, 2026-08
+    readnoaa::clear_cache()
+    readnoaa::list_datasets()
+    readnoaa::noaa_daily
+    readnoaa::noaa_get()
+    readnoaa::noaa_normals()
+    station <- readnoaa::noaa_nearby(lat=59, lon=-151, radius_km = 100)
+
+    mW <- readnoaa::noaa_daily(station$station, start_date="2020-01-01", end_date="2020-12-01")
+
+
+    mdL <- lapply(seq_len(nrow(station)), FUN = function(i) {
+      mW <- try(readnoaa::noaa_daily(station$station[i], start_date = "2000-01-01",
+       end_date = format(Sys.time(), "%Y-%m-%d"), units = "metric"))
+      mW
+    })
+    for(i in seq_len(length(mdL))) {
+      # print(class(mdL[[i]]))
+      if(class(mdL[[i]]) == "data.frame") {print(paste(station$name[i], i))}
+    }
+
+
+    mW <- readnoaa::noaa_daily("HOMER AP", start_date = "2000-01-01",
+      end_date = format(Sys.time(), "%Y-%m-%d"), units = "metric")
+
+
+  }
 
   # require("worldmet") ## worldmet is still under active depelopment, 2026-05-28
   ## these are needed by worldmet
