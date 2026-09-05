@@ -188,6 +188,24 @@ physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
 
+
+
+
+## internal QAQC -- move up to global??
+
+## bad Oxygen values in 2026
+badT <- (physOc$isoTime > as.POSIXct("2026-02-28")) &
+  (physOc$isoTime < as.POSIXct("2026-10-01"))
+is.na (physOc$Oxygen_umol_kg [badT]) <- TRUE
+is.na (physOc$Oxygen_sat.perc. [badT]) <- TRUE
+rm(badT)
+
+
+
+
+
+
+
 stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 stn <- subset(stn, !is.na(Lon_decDegree))
 stn <- subset(stn, !is.na(Lat_decDegree))

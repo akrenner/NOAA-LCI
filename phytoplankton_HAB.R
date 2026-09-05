@@ -283,7 +283,8 @@ rm(stN, cols, sDF, cStn)
 ## timing of temperature #
 ##########################
 
-pdf("~/tmp/LCI_noaa/media/HAB/TS_TempTiming.pdf", height=5, width=7)
+# pdf("~/tmp/LCI_noaa/media/HAB/TS_TempTiming.pdf", height=5, width=7)
+png("~/tmp/LCI_noaa/media/HAB/TS_TempTiming.png",res = 300, height=5*300, width=7*300)
 
 stN <- c("AlongBay_7", "9_6", "AlongBay_5")
 cols <- RColorBrewer::brewer.pal(length(stN), "Set2")
