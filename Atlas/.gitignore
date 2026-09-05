@@ -1,0 +1,6 @@
+## exclude everything
+*
+
+# exempt qmd source files
+!*.qmd
+!.gitignore

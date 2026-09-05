@@ -1,0 +1,101 @@
+```{r}
+# Start this in quarto
+# Consider moving to MS Word
+# Also considering Overleaf
+# Avoid GoogleDoc:  lack of auto-numbering or references
+
+```
+
+
+---
+title: "Oceanographic Atlas of Kachemak Bay and Lower Cook Inlet"
+author:
+  - name: "Martin Renner"
+    email: martin.renner@noaa.gov
+    affiliation:
+      - name: RPI, under contract to NOAA/NCCOS Kasitsna Bay Lab
+  - name: "Kris Holderied"
+    affiliation:
+       - name: NOAA/NCCOS Kasitsna Bay Lab
+format: html
+# toc: true  -- would look great on a web page, but not in email
+# format: pdf
+# format: email
+# format: docx
+editor: visual
+# title-block-style: none
+# in terminal: quarto render --to html
+# options: html, pdf or docx, email
+
+
+## 
+
+
+---
+
+
+
+# Introduction
+
+## Kachemak Bay Bathymetry and Topography
+
+## Currents
+
+
+
+# Results
+
+
+## Salinity
+(include stratification here?)
+
+## Temperature
+
+
+## Stratification
+
+
+## Chlorophyll
+
+
+## Phytoplankton? 
+
+
+## Zooplankton? 
+
+
+## Currents? -- from modeloutput and drifters
+
+
+## Trends??
+
+
+
+# Discussion
+
+
+# Methods
+
+
+# References
+
+
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

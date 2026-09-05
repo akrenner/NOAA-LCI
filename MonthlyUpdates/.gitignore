@@ -1,6 +1,20 @@
-media-lk.lnk
-media/
-*.tex
-*.Rmd
-*.log
-202409_monthly.zip
+# media-lk.lnk
+# media/
+# *.tex
+# *.Rmd
+# *.log
+# 202409_monthly.zip
+
+## exclude everything
+*
+
+# exempt qmd source files
+!*.qmd
+!.gitignore
+
+
+# Ignore all but qmd files in monthly updates
+# MonthlyUpdates/*_monthly_files
+# MonthlyUpdates/*_monthly.html
+# MonthlyUpdates/media-*
+# MonthlyUpdates/rsconnect
