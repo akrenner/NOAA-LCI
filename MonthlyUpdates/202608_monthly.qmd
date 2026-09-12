@@ -283,10 +283,9 @@ editor: visual
 
 ## Summary
 
-August 2026 had the highest average global sea surface temperatures on record. Bucking this situation, most Kachemak Bay waters remained colder than normal, by over 3 standard deviations in some places. Surface salinity was below, but the remaining of the water column had above normal salinity values, resulting in a water column that was substantially more stratified than normal for the season. 
-<!-- 10 standard deviations -->
+August 2026 had the highest average global sea surface temperatures on record, as well as El Niño-related warming in the Pacific Ocean. By contrast, most Kachemak Bay waters below the surface remained colder than normal, by over 3 standard deviations in some places, with close to average air and surface water temperatures. 
 Chlorophyll concentrations were highest in the outer bay, but were below normal at most stations. 
-
+This is the first month in 2026 that bottom waters were above 8 °C, a nominal threshold temperature for *Alexandrium* spp. cyst germination.
 <!-- `{r} dateAN` , -->
 A complete set of up-to-date graphs can be found on this Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link) (request access from martin.renner@noaa.gov).
 
@@ -295,7 +294,7 @@ A complete set of up-to-date graphs can be found on this Google Drive: [section 
 
 ## Conditions
 
-After a cold June-July, air temperatures leading up to this survey had returned to normal (@fig-Temp_Airport). After a wet July, precipitation amounts were close to normal in the weeks before this survey. Results are shown for the Kasitsna Bay Lab oceanographic survey conducted on 26 August 2026 by Hans, Kris and Paul in calm conditions.
+After a cold June-July, air temperatures leading up to this survey had returned to normal (@fig-Temp_Airport). After a wet July, precipitation amounts were close to normal in the weeks before this survey. Results are shown for the Kasitsna Bay Lab oceanographic survey conducted on 26 August 2026 by Hans, Kris and Paul in low sea conditions. The oxygen sensor on the instrument was not working properly.
 <!-- Beaufort 1 to 2. -->
 
 
@@ -312,10 +311,10 @@ After a cold June-July, air temperatures leading up to this survey had returned 
 
 ### Temperature
 
-Water temperatures during the August survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the outer bay, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay. Strong vertical stratification was observed throughout the bay, with a shallow layer of warmer, fresher surface water over cooler, more saline waters below (@fig-tSections_AB, top-left panel).
+Water temperatures during the August survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the outer bay, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay. Strong vertical stratification was observed throughout the bay, with a shallower (~10 m)  than normal (~20 m) layer of warmer, fresher surface water over cooler, more saline waters below (@fig-tSections_AB, top-left panel).
 
 Surface waters remained warmer in the inner than in the outer bay, however subsurface layers beyond 20 m were warmer in the outer than in the inner bay. Satellite sea surface temperature data  
-showed  with a cooler pool of 8-9 °C waters remaining off the head of the bay in lower Cook Inlet (@fig-SST_GOA).
+showed  with a cooler pool of 8-10 °C waters remaining from southeast Cook Inlet to near Kodiak Island (@fig-SST_GOA).
 
 
 <!-- , possibly indicating mixing of deep and surface waters.  -->
@@ -347,9 +346,11 @@ Along-bay and cross-bay-sections of main parameters from the current cruise (lef
 ![Surface water temperatures (0-20 m) at station T9-6, off the Homer Spit, compared to the seasonal means](media/5-TempSurfaceTS.png){#fig-T96tempTS}
 
 
-Throughout the bay, subsurface temperatures were colder than normal, in some areas by a remarkable 3 standard deviations (@fig-tSections), a pattern that has persisted since last December (@fig-bottomTemp). Surface waters down to about 5 m, however were warmer than normal in many places, especially in the inner bay, reaching 2 standard deviations in the most extreme case (@fig-tSections_AB, top-right panel). Homer harbor and mid-bay station T9-6 registered below-normal temperatures (@fig-bottomTemp, @fig-TSprofile_T9).
+Throughout the bay, subsurface temperatures were colder than normal, in some areas by a remarkable 3 standard deviations (@fig-tSections), a pattern that has persisted since last December (@fig-bottomTemp). However, surface waters down to about 5 m, were warmer than normal in many places, especially in the inner bay, by 2 standard deviations in the most extreme case (@fig-tSections_AB, top-right panel). Homer harbor and bottom waters at mid-bay station T9-6 registered below-normal temperatures (@fig-bottomTemp, @fig-TSprofile_T9).
+<!-- The largest colder temperature and fresher salinity anomalies were observed in the inner bay, just below the surface layer, a result of this month’s shallower than normal surface layer.  -->
 
-For the first half of this year, surface waters of the Gulf of Alaska were colder than normal. This was no longer the case, with only small pockets of water with negative temperature anomaly remaining in Cook Inlet and surrounding waters, whereas most of the North Pacific was, in some areas dramatically, warmer than normal, as shown by satellite sea surface temperature data  (@fig-SSTA). Incidentally, global sea surface temperatures in August 2026 were the [highest ever recorded](https://climate.copernicus.eu/copernicus-daily-global-sea-surface-temperature-breaks-2024-record). 
+
+For the first half of this year, surface waters of the Gulf of Alaska were colder than normal but , as shown by satellite sea surface temperature data  (@fig-SSTA). Most of the North Pacific was warmer than normal, dramatically so in some areas. Incidentally, global sea surface temperatures in August 2026 were also the [highest ever recorded](https://climate.copernicus.eu/copernicus-daily-global-sea-surface-temperature-breaks-2024-record). Cooler Kachemak Bay temperatures reflect both cooler air temperatures and the time it takes for ocean waters to warm after a cold winter. 
 <!-- https://climate-adapt.eea.europa.eu/en/news-archive/copernicus-daily-global-sea-surface-temperature-breaks-2024-record -->
 
 <!-- , deep waters were still cooler than normal, by up to one standard deviation (@fig-tSections_AB, top-right panel, @fig-bottomTemp). In contrast, the surface waters were close to normal (@fig-tSections, @fig-T96tempTS, @fig-SWMP-homerdeep-temp), with some areas of the thin surface layer in the inner bay up to 7 °C warmer than bottom waters, and up to two standard deviations above the long-term mean for this month (@fig-tSections_AB, top-right panel). The large warm-up in surface temperatures, compared to May, reflects warmer air temperatures, strong vertical stratification and light wind conditions leading up to the survey.   -->
@@ -406,15 +407,14 @@ Almost the entire water body of Kachemak Bay was saltier than normal, the except
 
 ### Turbidity
 
-Most of the bay was less turbid than normal, but no consistent gradients were apparent (@fig-tSections).
+Most of the bay was less turbid than normal, with more turbid waters found near the surface, in the inner bay and in bottom waters (@fig-tSections).
 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Elevated chlorophyll concentrations were found in the upper 20 meters throughout Kachemak Bay, with the highest values at station `{r} tsal$stn[6]` (`{r} tsal$depth[6]`m depth) close to the Homer Spit (@fig-tSections_AB). Integrated over the entire water column, chlorophyll concentrations were slightly higher in August than in July, as expected. Concentrations were still below the long-term mean, however (@fig-chlorophyll-sa). Our partners from the Kachemak Bay National Estuarine Research Reserve detected a bloom of potentially harmful *Dinophysis* spp. off Gull Island in the inner bay, *Pseudo-nitzschia* spp. at "abundant" levels in several outer bay samples, and *Alexandrium* spp. as "present" throughout the bay (Kim Schuster, Kachemak Bay NERR, The Phyto Times, 27 August 2026). Last year, *Alexandrium* spp. bloomed in Kachemak Bay. A trigger for this may have been the much earlier onset of warm bottom waters (@fig-HABdate). If there are cyst beds of *Alexandrium* in Kachemak Bay, these would have had several weeks of time to germinate and grow in 2025. By contract, in 2026, the a threshold temperature of 8 °C was reached a month later, for T9-6 the latest date we ever recorded. 
-
+Elevated chlorophyll concentrations were found in the upper 20 meters throughout Kachemak Bay, with the highest values at station `{r} tsal$stn[6]` (`{r} tsal$depth[6]`m depth) close to the Homer Spit (@fig-tSections_AB). Integrated over the entire water column, chlorophyll concentrations were slightly higher in August than in July, as expected. Concentrations were still below the long-term mean, however (@fig-chlorophyll-sa). Our partners from the Kachemak Bay National Estuarine Research Reserve detected a bloom of potentially harmful *Dinophysis* spp. off Gull Island in the inner bay, *Pseudo-nitzschia* spp. at "abundant" levels in several outer bay samples, and *Alexandrium* spp. as "present" throughout the bay (Kim Schuster, Kachemak Bay NERR, The Phyto Times, 27 August 2026). Last year, *Alexandrium* spp. bloomed in Kachemak Bay. A trigger for this bloom, depending on the presence of cyst beds in Kachemak Bay, may have been the much earlier onset of warm bottom water temperatures last year. In 2025, bottom waters exceeded the cyst germination temperature of 8 °C in July, while it took a month later for this to happen in 2026 (@fig-HABdate). 
 
 <!-- ![Trends and seasonal anomaly of chlorophyll concentrations at mid-bay station T9-6 (mean from surface to 85 m depth)](./media/3-9_6-chlorophyll-anomaly.png){#fig-chlorophyll} -->
 
@@ -429,7 +429,7 @@ Elevated chlorophyll concentrations were found in the upper 20 meters throughout
 <!-- Oxygen values measured substantially lower than expected (@fig-tSections_AB). -->
 
 
-![Interpolated date when a threshold temperature of 8 °C was reached in bottom waters at outer bay station AlongBay-5, midbay station T9-6, and inner bay station AlongBay-7. Before this temperature is reached, local germination of *Alexandrium* spp. cysts is unlikely.](./media/TS_TempTiming.png){#fig-HABdate}
+![Interpolated date when a nominal threshold temperature of 8 °C was reached in bottom waters at outer bay station AlongBay-5, midbay station T9-6, and inner bay station AlongBay-7. Before this temperature is reached, local germination of *Alexandrium* spp. cysts is unlikely.](./media/TS_TempTiming.png){#fig-HABdate}
 
 
 
