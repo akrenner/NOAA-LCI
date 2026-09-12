@@ -42,6 +42,7 @@ editor: visual
 ## Currents
 
 
+Here we present long-term means from a long-term study, running from 2012 to 2026. 
 
 # Results
 
@@ -76,6 +77,11 @@ editor: visual
 
 # Methods
 
+## Acknowlegedments
+
+Initial funding came from Gulf Watch Alaska (2012-2017 and 2017-2021). Subsequent funding was provided by NOAA-NCCOS. 
+We would like to thank the many individuals who worked on this project. We heavily relied on the seamanship of Mike Gagel and Hans Pedersen. A special thank-you goes to the skilled help of Paul Cziko, Chris Guo, James Schloemer, and Kim Schuster. 
+<!-- Angela Doroff, Steve Baird -->
 
 # References
 
