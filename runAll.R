@@ -230,7 +230,7 @@ sink()
 sink(file = "StateOfBay-run.log", append = FALSE, split = FALSE)
 ## State of the Bay Report
 source("AnnualStateOfTheBay.R")
-
+sink()
 
 
 ## 2017 contract
@@ -290,10 +290,12 @@ source("CTDtimeseries_freshwater.R")
 ## requires rclone
 ## move aggregated CTD files to GISdata/LCI/ and WorkSpace manually
 if(length(grep("[M|m]artin", getwd())) > 0) {
+  sink(file="GDsync.log", append = FALSE, split = FALSE)
   ## sync all data to GoogleDrive -- better with GoogleDriveDesktop now?
   source("CTDsyncGDwall.R")
   ## send email that run is completed
   source("CTD_finishnotification.R")
+  sink()
 }
 
 cat("Finished runAll.R at ", as.character(Sys.time()), "\n\n")

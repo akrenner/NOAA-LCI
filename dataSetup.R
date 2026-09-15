@@ -169,6 +169,7 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                          Beam_attenuation, Turbidity)
                                      # , Beam_attenuation
                                     #  , Beam_transmission  ## causing all sorts of issues XXX revisit
+                                     , flags
 ))
 
 
@@ -188,17 +189,23 @@ physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
 
-
-
-
 ## internal QAQC -- move up to global??
+flags <- strsplit(physOs$flags, "; ", fixed=TRUE)
+flagsDF <- do.call(rbind, flags)
+for (i in seq_len(ncol(flagsDF))) {
+  fl <- as.factor(flagsDF[,i])
+  for (j in seq_along(levels(fl))) {
+    is.na(physOc[,names(physOc) == levels(fl)[j] , fl==levels(fl)[j]]) <- TRUE
+  }
+}
 
-## bad Oxygen values in 2026
-badT <- (physOc$isoTime > as.POSIXct("2026-02-28")) &
-  (physOc$isoTime < as.POSIXct("2026-10-01"))
-is.na (physOc$Oxygen_umol_kg [badT]) <- TRUE
-is.na (physOc$Oxygen_sat.perc. [badT]) <- TRUE
-rm(badT)
+
+# ## apply quality flags, e.g. bad Oxygen values in 2026
+# badT <- (physOc$isoTime > as.POSIXct("2026-02-28")) &
+#   (physOc$isoTime < as.POSIXct("2026-10-01"))
+# is.na (physOc$Oxygen_umol_kg [badT]) <- TRUE
+# is.na (physOc$Oxygen_sat.perc. [badT]) <- TRUE
+# rm(badT)
 
 
 

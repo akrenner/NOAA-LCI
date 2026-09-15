@@ -684,20 +684,36 @@ rm (x)
 # phy <- subset (phy, )
 
 
+########################################
+## QAQC flags for questionable values ##
+## bad oxygen ranges
+badO <- rbind(c("2017-01-01", "2017-12-31"),
+              c("2020-09-01", "2020-10-30"),
+              c("2026-03-01", "2026-10-30")
+) |> as.data.frame()
+names(badO) <- c("start", "end")
+badO$start <- as.POSIXct(badO$start); badO$end <- as.POSIXct(badO$end)
+badO$interv <- lubridate::interval(as.POSIXct(badO$start), as.POSIXct(badO$end))
+
+phy$flags <- character(nrow(phy))
+for(i in seq_along(nrow(badO))){
+  # phy$flags[which(phy$isoTime %within% badO$interv[i])] <-
+  phy$flags[which(lubridate::`%within%`(phy$isoTime, badO$interv[i]))] <-
+    "Oxygen_umol.kg; Oxygen.Saturation_prec"  ## field names, separated by a comma (, )
+}
+
+
+
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
 # outD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"
 # manually update files in ~/GISdata/LCI/CTD-processing/ !
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
 yr <- factor (format (phy$isoTime, "%Y"))
-phyE <- subset (phy, Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
-phy2 <- subset (phy, !Transect %in% c("AlongBay", "3", "4", "6", "7", "9"))
-if (nrow (phy2) > 0) {
-  write.csv (phy2, file = paste0 (outD, "/extraCTD.csv"), row.names = FALSE, quote = FALSE)
-}
+yr <- factor(ifelse(phy$Transect == "Subbay", "Subbays_extras", as.character(yr)))
 
 ctdX <- sapply (seq_along(levels (yr)), function(i) {
-  ctdA <- subset (phyE, yr == levels (yr)[i])
+  ctdA <- subset (phy, yr == levels (yr)[i])
   ctdB <- with (ctdA, data.frame (Station = Match_Name
     , Date
     , Time = format (isoTime, "%H:%M", usetz = TRUE)
@@ -719,12 +735,13 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
     , Turbidity = turbidity
     , Beam_attenuation = beamAttenuation
     , Beam_transmission = beamTransmission
+    , flags
   ))
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
   unlink(paste0(tF, ".gz"))
-  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2022 and beyond.")
+  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2026.")
     , file = tF, append = FALSE, ncolumns = 1)
   suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE, sep = ","
     , na = "", row.names = FALSE, col.names = TRUE))
