@@ -686,6 +686,8 @@ rm (x)
 
 ########################################
 ## QAQC flags for questionable values ##
+phy$flags <- character(nrow(phy))
+
 ## bad oxygen ranges
 badO <- rbind(c("2017-01-01", "2017-12-31"),
               c("2020-09-01", "2020-10-30"),
@@ -695,11 +697,10 @@ names(badO) <- c("start", "end")
 badO$start <- as.POSIXct(badO$start); badO$end <- as.POSIXct(badO$end)
 badO$interv <- lubridate::interval(as.POSIXct(badO$start), as.POSIXct(badO$end))
 
-phy$flags <- character(nrow(phy))
 for(i in seq_along(nrow(badO))){
   # phy$flags[which(phy$isoTime %within% badO$interv[i])] <-
   phy$flags[which(lubridate::`%within%`(phy$isoTime, badO$interv[i]))] <-
-    "Oxygen_umol.kg; Oxygen.Saturation_prec"  ## field names, separated by a comma (, )
+    "Oxygen_umol_kg; Oxygen_sat.perc." ## fields, separated by a semicolon (; )
 }
 
 

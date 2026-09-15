@@ -189,25 +189,28 @@ physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
 
-## internal QAQC -- move up to global??
-flags <- strsplit(physOs$flags, "; ", fixed=TRUE)
-flagsDF <- do.call(rbind, flags)
+
+######################
+## apply QAQC flags ##
+######################
+
+flags <- strsplit(physOc$flags, "; ", fixed=TRUE)
+mL <- max(lengths(flags))
+flagsDF <- data.frame(lapply(flags, function(x) {  ## this is slow and awkward, but avoids length problem with do.call(rbind... )
+  x <- unlist(x)
+  length(x) <- mL
+  x
+})) |> t() |> as.data.frame()
+
 for (i in seq_len(ncol(flagsDF))) {
   fl <- as.factor(flagsDF[,i])
-  for (j in seq_along(levels(fl))) {
-    is.na(physOc[,names(physOc) == levels(fl)[j] , fl==levels(fl)[j]]) <- TRUE
+  for (j in seq_along(levels(fl))) {  ## not guaranteed that each flag has its own field
+    is.na(physOc[ which(fl==levels(fl)[j]),
+                  which(names(physOc) == levels(fl)[j])
+                  ] ) <- TRUE
   }
 }
-
-
-# ## apply quality flags, e.g. bad Oxygen values in 2026
-# badT <- (physOc$isoTime > as.POSIXct("2026-02-28")) &
-#   (physOc$isoTime < as.POSIXct("2026-10-01"))
-# is.na (physOc$Oxygen_umol_kg [badT]) <- TRUE
-# is.na (physOc$Oxygen_sat.perc. [badT]) <- TRUE
-# rm(badT)
-
-
+rm(flags, mL, flagsDF, i, fl, j)
 
 
 
