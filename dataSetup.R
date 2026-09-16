@@ -115,7 +115,8 @@ aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge dat
                       # only pick-up GulfWatch casts here(?)
 physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
   lapply(read.csv, skip=1, header=TRUE) |>
-  dplyr::bind_rows()
+  dplyr::bind_rows() |>
+  dplyr::arrange(isoTime)   # to avoid having subbays at the end
 rm(aD)
 
 
@@ -211,7 +212,7 @@ for (i in seq_len(ncol(flagsDF))) {
   }
 }
 rm(flags, mL, flagsDF, i, fl, j)
-
+physOc <- physOc |> dplyr::select(-flags)  ## avoid trouble downstream
 
 
 
@@ -420,6 +421,59 @@ poSS$pclDepth <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn
   cast <- subset(physOc, File.Name==fn)
   cast$Depth.saltwater..m. [which.max(cast$bvf)]
 }))
+
+
+## lower boundary of pycnocline:
+## locate position of max of 2nd derivative of density (constraint to the first 30 m?)
+poSS$pclBottom <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name == fn)
+  fit <- try(smooth.spline (x=cast$Depth.saltwater..m.,
+                            y=cast$Density_sigma.theta.kg.m.3), silent = TRUE)
+  if(class(fit)[1] == "smooth.spline") {
+    newD <- data.frame(x=seq(0, 100, by=0.1))
+    d2 <- predict(fit, newD, deriv = 2)
+    out <- d2$x[which.max(d2$y[,1]),1]
+  } else
+  {out <- NA}
+  out
+}))
+
+
+if(0) {
+### testing 2nd derivative
+  set.seed(13)
+x1 <- subset(physOc, File.Name == physOc$File.Name[nrow(physOc)])
+x1 <- subset(physOc, File.Name == physOc$File.Name[runif(1,1,nrow(physOc))])
+fit <- smooth.spline (x=x1$Depth.saltwater..m., y=x1$Density_sigma.theta.kg.m.3)
+newD <- data.frame(x=seq(0, 100, by=0.1))
+d2 <- predict(fit, newD, deriv = 2)
+d2$x[which.max(d2$y[,1]),1]
+}
+
+
+poSS$maxDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name==fn)
+  cast$Depth.saltwater..m.[which.max(cast$Density_sigma.theta.kg.m.3)]
+}))
+
+## badly layered densities -- breaking wave, bad instrument, turbulence --?? XXX
+poSS$badDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name==fn)
+  dDens <- c(NA, diff(cast$Density_sigma.theta.kg.m.3))
+  # sum(dDens < 0)
+  # sum(dDens < -0.05)
+  # cast$Depth.saltwater..m.[which(dDens < -0.05)]
+  if(any(dDens < -0.03)) {
+    out <- cast$Depth.saltwater..m.[which.min(dDens)]
+  }
+  else {
+    out <- NA
+  }
+}))
+
+
+
+
 ## freshwater content
 poSS$FreshWaterCont <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=function(fn){
   # require("readr")

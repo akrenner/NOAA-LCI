@@ -46,17 +46,32 @@ Here we present long-term means from a long-term study, running from 2012 to 202
 
 # Results
 
+## Section normals
 
-## Salinity
+### Salinity
 (include stratification here?)
 
-## Temperature
+### Temperature
 
+### Chlorophyll
+
+### Oxygen
+
+### Turbidity
+
+
+
+## Seasonality of cast summaries
 
 ## Stratification
+Bottom vs surface
+BVF
 
+## Bottom Temperature
+Timing of 8 degrees C
 
-## Chlorophyll
+## Surface Temperature
+
 
 
 ## Phytoplankton? 
@@ -76,6 +91,10 @@ Here we present long-term means from a long-term study, running from 2012 to 202
 
 
 # Methods
+
+QAQC
+callibrations
+
 
 ## Acknowlegedments
 
