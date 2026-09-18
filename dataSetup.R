@@ -115,8 +115,7 @@ aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge dat
                       # only pick-up GulfWatch casts here(?)
 physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
   lapply(read.csv, skip=1, header=TRUE) |>
-  dplyr::bind_rows() |>
-  dplyr::arrange(isoTime)   # to avoid having subbays at the end
+  dplyr::bind_rows()
 rm(aD)
 
 
@@ -151,27 +150,27 @@ physOcT <- subset(physOcT, nchar(physOcT$Date) > 4)
 
 
 physOc <- with(physOcT, data.frame(Match_Name=Station
-                                     , isoTime=as.POSIXct(paste(Date, Time))
-                                     , latitude_DD=Latitude_DD
-                                     , longitude_DD=Longitude_DD
-                                     , Transect
-                                     , File.Name=factor(File.Name), CTD.serial
-                                     , Bottom.Depth
-                                     , Pressure..Strain.Gauge..db. = pressure_db
-                                     , Depth.saltwater..m.= Depth
-                                     , Temperature_ITS90_DegC, Salinity_PSU
-                                     , Density_sigma.theta.kg.m.3
-                                     , Oxygen_umol_kg=Oxygen_umol.kg
-                                     , Oxygen_sat.perc.=Oxygen.Saturation_perc
-                                     , Nitrogen.saturation..mg.l.  ## make it umol.kg
-                                     , PAR.Irradiance
-                                     , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                     , turbidity = ifelse (is.na (Turbidity),
-                                         Beam_attenuation, Turbidity)
-                                     # , Beam_attenuation
-                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
-                                     , flags
-))
+                                   , isoTime=as.POSIXct(paste(Date, Time))
+                                   , latitude_DD=Latitude_DD
+                                   , longitude_DD=Longitude_DD
+                                   , Transect
+                                   , File.Name=factor(File.Name), CTD.serial
+                                   , Bottom.Depth
+                                   , Pressure..Strain.Gauge..db. = pressure_db
+                                   , Depth.saltwater..m.= Depth
+                                   , Temperature_ITS90_DegC, Salinity_PSU
+                                   , Density_sigma.theta.kg.m.3
+                                   , Oxygen_umol_kg=Oxygen_umol.kg
+                                   , Oxygen_sat.perc.=Oxygen.Saturation_perc
+                                   , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                   , PAR.Irradiance
+                                   , Chlorophyll_mg_m3 = Fluorescence_mg_m3
+                                   , turbidity = ifelse (is.na (Turbidity),
+                                                         Beam_attenuation, Turbidity)
+                                   # , Beam_attenuation
+                                   #  , Beam_transmission  ## causing all sorts of issues XXX revisit
+                                   , flags
+)) |> dplyr::arrange(isoTime, Depth.saltwater..m.)   # to avoid having subbays at the end
 
 
 
@@ -192,7 +191,7 @@ physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
 ######################
-## apply QAQC flags ##
+## apply QAQC flags ##  ----   need to move up QAQC flags here and down in CTD_cleanup to have clean output files
 ######################
 
 flags <- strsplit(physOc$flags, "; ", fixed=TRUE)
@@ -227,6 +226,7 @@ stn$Plankton <- stn$Plankton == "Y"
 ## Kris:
 ## - persistence of mixing across seasons and tides
 ## Chlorophyll in total water column?
+
 
 
 ############################################
@@ -451,6 +451,7 @@ d2$x[which.max(d2$y[,1]),1]
 }
 
 
+## density trouble-shooting. maxDens.m should be at the bottom -- trouble when it's not
 poSS$maxDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
   cast <- subset(physOc, File.Name==fn)
   cast$Depth.saltwater..m.[which.max(cast$Density_sigma.theta.kg.m.3)]
@@ -460,16 +461,37 @@ poSS$maxDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function
 poSS$badDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
   cast <- subset(physOc, File.Name==fn)
   dDens <- c(NA, diff(cast$Density_sigma.theta.kg.m.3))
-  # sum(dDens < 0)
-  # sum(dDens < -0.05)
-  # cast$Depth.saltwater..m.[which(dDens < -0.05)]
-  if(any(dDens < -0.03)) {
+  if(any(dDens < -0.02, na.rm=TRUE)) {
     out <- cast$Depth.saltwater..m.[which.min(dDens)]
   }
   else {
     out <- NA
   }
 }))
+poSS$badDensMin <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name==fn)
+  dDens <- c(NA, diff(cast$Density_sigma.theta.kg.m.3))
+  min(dDens, na.rm=TRUE)
+}))
+## badly layered densities -- breaking wave, bad instrument, turbulence --?? XXX
+poSS$badDens.m <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name==fn)
+  dDens <- c(NA, diff(cast$Density_sigma.theta.kg.m.3))
+  out <- min(dDens, na.rm=TRUE)
+}))
+poSS$badDensN <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(fn) {
+  cast <- subset(physOc, File.Name==fn)
+  dDens <- c(NA, diff(cast$Density_sigma.theta.kg.m.3))
+    out <- sum(dDens < -0.02, na.rm=TRUE)
+}))
+
+
+
+fn <- poSS$File.Name[which.min(poSS$badDensMin)]
+fn <- poSS$File.Name[which.max(poSS$badDensN)]
+
+cast <- subset(physOc, File.Name==fn)
+plot(-1*Depth.saltwater..m.~Density_sigma.theta.kg.m.3, cast, type="l", main=fn)
 
 
 

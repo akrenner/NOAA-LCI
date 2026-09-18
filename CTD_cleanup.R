@@ -684,8 +684,11 @@ rm (x)
 # phy <- subset (phy, )
 
 
+
 ########################################
 ## QAQC flags for questionable values ##
+########################################
+
 phy$flags <- character(nrow(phy))
 
 ## bad oxygen ranges
@@ -700,9 +703,18 @@ badO$interv <- lubridate::interval(as.POSIXct(badO$start), as.POSIXct(badO$end))
 for(i in seq_along(nrow(badO))){
   # phy$flags[which(phy$isoTime %within% badO$interv[i])] <-
   phy$flags[which(lubridate::`%within%`(phy$isoTime, badO$interv[i]))] <-
+    paste(grep("Oxygen", names(phy), value = TRUE), collapse = "; ")
     "Oxygen_umol_kg; Oxygen_sat.perc." ## fields, separated by a semicolon (; )
 }
 
+## bad density, salinity, O2, PAR, fluorescence
+# x <- subset(phy, File.Name=="2012_10-28_t6_s22_cast007_4141")
+badT <- c("2012-10-28 10:32:39", "1")    ## XXX sensitive to binning interval!
+phy$flags[which((phy$isoTime==badT[1]) & (phy$Depth.saltwater..m.==badT[2]))] <-
+  paste(names(phy)[c(13,15:21,23:27)], collapse="; ")
+
+## End of QAQC flags                  ##
+########################################
 
 
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
