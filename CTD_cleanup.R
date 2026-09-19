@@ -511,24 +511,6 @@ rm (gC)
 
 
 
-## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
-## does this mean that callibration is off? Anything that can be done about this?
-## should these be treated differently? adjust calibration??
-
-## XXX move this into CTD_castQAQC.R ???
-
-for (badV in c("Fluorescence_mg_m3",
-               "turbidity",
-               "beamAttenuation",
-               "Density_sigma.theta.kg.m.3",
-               "Oxygen_umol_kg",
-               "Oxygen_SBE.43..mg.l.",
-               "Oxygen_sat.perc.",
-               "Oxygen.Saturation.Garcia.Gordon.umol_kg",
-               "Salinity_PSU")){
-  vX <- which(names(physOc) == badV)
-  is.na(physOc[which(physOc[,vX] <= 0),vX]) <- TRUE  ## XXX better to set these to the lowest observed value? impute them?
-}; rm (badV)
 
 
 
@@ -601,24 +583,6 @@ rm (i, year)
 
 
 
-
-
-if (0) {  # currently fails -- fix later XXX
-  ## plot cast-profiles
-  require ("oce")
-  cCast <- levels (factor (physOc$File.Name))
-  outF <- "~/tmp/LCI_noaa/media/CTDtests/profilePlots/"
-  dir.create(outF, recursive = TRUE, showWarnings = FALSE)
-  for (i in seq_along(cCast)) {
-    ## make oce-ctd 0bject
-    pdf (paste0 (outF, cCast [i], ".pdf"))
-    ## plot profile
-    plot (ctdP, which = c("TS", "salinity+temperature", "N2", "text"))
-    dev.off()
-  }
-}
-
-
 save.image ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")
 # rm (list = ls()); base::load ("~/tmp/LCI_noaa/cache-t/CNV_cache9.RData")  ## this to be read by dataSetup.R
 
@@ -630,6 +594,26 @@ summary (factor (physOc$Match_Name[noLL])) |> sort(decreasing=TRUE)
 ## remove unresolved positions -- still too many!
 physOc <- subset (physOc, !is.na (latitude_DD))
 physOc <- subset (physOc, !is.na (longitude_DD))
+
+
+
+if (0) {  # currently fails -- fix later XXX
+  ## plot cast-profiles
+  require ("oce")
+  cCast <- levels (factor (physOc$File.Name))
+  outF <- "~/tmp/LCI_noaa/media/CTDtests/profilePlots/"
+  dir.create(outF, recursive = TRUE, showWarnings = FALSE)
+  for (i in seq_along(cCast)) {
+    ## make oce-ctd 0bject
+    ctdP <- subset(physOc, File.Name==cCast[i]) |>
+      oce::as.ctd()
+    pdf (paste0 (outF, cCast [i], ".pdf"))
+    ## plot profile
+    oce::plot (ctdP, which = c("TS", "salinity+temperature", "N2", "text"))
+    dev.off()
+  }
+}
+
 
 
 ## QAQC: plot each day, station in order
@@ -684,12 +668,39 @@ rm (x)
 # phy <- subset (phy, )
 
 
+## adjust field names for export
+phyB <- with (phy, data.frame (Station = Match_Name
+                                , Date
+                                , Time = format (isoTime, "%H:%M", usetz = TRUE)
+                                , Latitude_DD = latitude_DD
+                                , Longitude_DD = longitude_DD
+                                , Transect
+                                , StationN = ifelse (Station %in% 1:100, paste0 ("S_", Station), Station)
+                                , File.Name, CTD.serial
+                                , Bottom.Depth, pressure_db = Pressure..Strain.Gauge..db.
+                                , Depth_m = Depth.saltwater..m.
+                                , Temperature_ITS90_DegC, Salinity_PSU
+                                , Density_sigma.theta.kg.m.3
+                                , Oxygen_umol.kg = Oxygen_umol_kg
+                                , Oxygen.Saturation_perc = Oxygen_sat.perc.
+                                # need SBE O2 concentration umol.kg in here
+                                , PAR.Irradiance
+                                , Fluorescence_mg.m3=Fluorescence_mg_m3
+                                , Turbidity = turbidity
+                                , Beam.attenuation = beamAttenuation
+                                , Beam.transmission = beamTransmission
+))
+rm(phy)
 
-########################################
-## QAQC flags for questionable values ##
-########################################
 
-phy$flags <- character(nrow(phy))
+
+
+############################################
+## set QAQC flags for questionable values ##
+############################################
+
+phyB$flags <- character(nrow(phyB))
+isoT <- as.POSIXct(paste(phyB$Date, phyB$Time))
 
 ## bad oxygen ranges
 badO <- rbind(c("2017-01-01", "2017-12-31"),
@@ -702,19 +713,47 @@ badO$interv <- lubridate::interval(as.POSIXct(badO$start), as.POSIXct(badO$end))
 
 for(i in seq_along(nrow(badO))){
   # phy$flags[which(phy$isoTime %within% badO$interv[i])] <-
-  phy$flags[which(lubridate::`%within%`(phy$isoTime, badO$interv[i]))] <-
-    paste(grep("Oxygen", names(phy), value = TRUE), collapse = "; ")
-    "Oxygen_umol_kg; Oxygen_sat.perc." ## fields, separated by a semicolon (; )
+  phyB$flags[which(lubridate::`%within%` (isoT, badO$interv[i]))] <-
+    paste(grep("Oxygen", names(phyB), value = TRUE), collapse = "; ")
 }
 
-## bad density, salinity, O2, PAR, fluorescence
-# x <- subset(phy, File.Name=="2012_10-28_t6_s22_cast007_4141")
-badT <- c("2012-10-28 10:32:39", "1")    ## XXX sensitive to binning interval!
-phy$flags[which((phy$isoTime==badT[1]) & (phy$Depth.saltwater..m.==badT[2]))] <-
-  paste(names(phy)[c(13,15:21,23:27)], collapse="; ")
+## bad density, (and others)
+badF <- c("2012_10-28_t6_s22_cast007_4141", "1")    ## XXX sensitive to binning interval!
+bD <- sort(phyB$Depth_m[which(phyB$File.Name==badF[1])])[as.numeric(badF[2])]
+if(0) {
+  x <- subset(phyB, File.Name=="2012_10-28_t6_s22_cast007_4141")
+  plot(x$Density_sigma.theta.kg.m.3, -1 * x$Depth_m, type="l")
+  i <- 0
+  plot(x[,13+i], -1 * x$Depth_m, type="l"); i <- i+1
+}
+phyB$flags[which((phyB$File.Name==badF[1]) & (phyB$Depth_m==bD))] <-
+  paste(names(phyB)[which(names(phyB)=="Temperature_ITS90_DegC"):(ncol(phyB)-1)]
+  , collapse="; ", sep="")
+rm(isoT, badO, badF, bD)
+
+
+
+## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
+## does this mean that callibration is off? Anything that can be done about this?
+## should these be treated differently? adjust calibration??
+
+if(0) {  ## check whether there still are any!
+for (badV in names(phyB)[which(names(phyB)=="Salinity_PSU"):(ncol(phyB)-1)]) {
+  vx <- which(names(phyB) == badV)
+  phyB$flags <- ifelse(phyB[,vx] < 0,
+     paste(phyB$flags, names(phyB)[vx], sep="; "),
+     phyB$flags)
+  #  is.na(physOc[which(physOc[,vX] <= 0),vX]) <- TRUE  ## XXX better to set these to the lowest observed value? impute them?
+}; rm (badV, vx)
+phyB$flags <- gsub("NA; ", "", phyB$flags)
+}
+# summary(factor(phyB$flags))
 
 ## End of QAQC flags                  ##
 ########################################
+
+
+
 
 
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
@@ -722,34 +761,12 @@ outD <- "~/tmp/LCI_noaa/data-products/CTD"
 # manually update files in ~/GISdata/LCI/CTD-processing/ !
 dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
-yr <- factor (format (phy$isoTime, "%Y"))
-yr <- factor(ifelse(phy$Transect == "Subbay", "Subbays_extras", as.character(yr)))
+yr <- factor (format (phyB$isoTime, "%Y"))
+yr <- factor(ifelse(phyB$Transect == "Subbay", "Subbays_extras", as.character(yr)))
 
 ctdX <- sapply (seq_along(levels (yr)), function(i) {
-  ctdA <- subset (phy, yr == levels (yr)[i])
-  ctdB <- with (ctdA, data.frame (Station = Match_Name
-    , Date
-    , Time = format (isoTime, "%H:%M", usetz = TRUE)
-    , Latitude_DD = latitude_DD
-    , Longitude_DD = longitude_DD
-    , Transect
-    , StationN = ifelse (Station %in% 1:100, paste0 ("S_", Station), Station)
-    , File.Name, CTD.serial
-    , Bottom.Depth, pressure_db = Pressure..Strain.Gauge..db.
-    , Depth = Depth.saltwater..m.
-    , Temperature_ITS90_DegC, Salinity_PSU
-    , Density_sigma.theta.kg.m.3
-    , Oxygen_umol.kg = Oxygen_umol_kg
-    , Oxygen.Saturation_perc = Oxygen_sat.perc.
-    # need SBE O2 concentration umol.kg in here
-    , Nitrogen.saturation..mg.l.  ## make it umol.kg
-    , PAR.Irradiance
-    , Fluorescence_mg_m3
-    , Turbidity = turbidity
-    , Beam_attenuation = beamAttenuation
-    , Beam_transmission = beamTransmission
-    , flags
-  ))
+  ctdB <- subset (phyB, yr == levels (yr)[i])
+
   # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
   # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
@@ -770,7 +787,7 @@ rm (showBad, oldMatch, yr, i, j)
 
 
 ## no longer save RData dump here -- datasetup.R to read from aggregated files
-save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by CTD_DataAvailability.R
+save (physOc=phyB, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by CTD_DataAvailability.R
 
 cat ("\n# END CTD_cleanup.R #\n")
 

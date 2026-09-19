@@ -139,14 +139,41 @@ physOcT <- subset(physOcT, nchar(physOcT$Date) > 4)
 # summary(subset(physOcT, CTD.serial==5028)[,tF])
 # summary(subset(physOcT, CTD.serial==8138)[,tF])
 
-
-
-
 ## Beam_attenuation and Beam_transmission are distinct measures, even though
 ## they are both measures of turbidity. Only the 4141 instrument has both.
 ## Beam_attenuation appears to be the same as Turbidity, therefore the
 ## substitution above. Could look into when/where attenuation differes from
 ## transmission, but so far unclear why that should be of interest.
+
+
+
+
+######################
+## apply QAQC flags ##  ----   need to move up QAQC flags here and down in CTD_cleanup to have clean output files
+######################
+
+flags <- strsplit(physOcT$flags, "; ", fixed=TRUE)
+mL <- max(lengths(flags))
+flagsDF <- data.frame(lapply(flags, function(x) {  ## this is slow and awkward, but avoids length problem with do.call(rbind... )
+  x <- unlist(x)
+  length(x) <- mL
+  x
+})) |> t() |> as.data.frame()
+
+for (i in seq_len(ncol(flagsDF))) {
+  fl <- as.factor(flagsDF[,i])
+  for (j in seq_along(levels(fl))) {  ## not guaranteed that each flag has its own field
+    is.na(physOcT[ which(fl==levels(fl)[j]),
+                  which(names(physOcT) == levels(fl)[j])
+    ] ) <- TRUE
+  }
+}
+rm(flags, mL, flagsDF, i, fl, j)
+physOcT <- physOcT |> dplyr::select(-flags)  ## avoid trouble downstream
+
+
+
+
 
 
 physOc <- with(physOcT, data.frame(Match_Name=Station
@@ -159,7 +186,7 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                    , Pressure..Strain.Gauge..db. = pressure_db
                                    , Depth.saltwater..m.= Depth
                                    , Temperature_ITS90_DegC, Salinity_PSU
-                                   , Density_sigma.theta.kg.m.3
+                                   , Density.sigma.theta_kg.m.3
                                    , Oxygen_umol_kg=Oxygen_umol.kg
                                    , Oxygen_sat.perc.=Oxygen.Saturation_perc
                                    , Nitrogen.saturation..mg.l.  ## make it umol.kg
@@ -169,9 +196,8 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                                          Beam_attenuation, Turbidity)
                                    # , Beam_attenuation
                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
-                                   , flags
 )) |> dplyr::arrange(isoTime, Depth.saltwater..m.)   # to avoid having subbays at the end
-
+rm(physOcT)
 
 
 physOc$bvf <- sapply(seq_along(levels(physOc$File.Name))  ## this is nearly identical to d-dens/d-sigma
@@ -188,30 +214,6 @@ physOc$bvf <- sapply(seq_along(levels(physOc$File.Name))  ## this is nearly iden
 physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
-
-
-######################
-## apply QAQC flags ##  ----   need to move up QAQC flags here and down in CTD_cleanup to have clean output files
-######################
-
-flags <- strsplit(physOc$flags, "; ", fixed=TRUE)
-mL <- max(lengths(flags))
-flagsDF <- data.frame(lapply(flags, function(x) {  ## this is slow and awkward, but avoids length problem with do.call(rbind... )
-  x <- unlist(x)
-  length(x) <- mL
-  x
-})) |> t() |> as.data.frame()
-
-for (i in seq_len(ncol(flagsDF))) {
-  fl <- as.factor(flagsDF[,i])
-  for (j in seq_along(levels(fl))) {  ## not guaranteed that each flag has its own field
-    is.na(physOc[ which(fl==levels(fl)[j]),
-                  which(names(physOc) == levels(fl)[j])
-                  ] ) <- TRUE
-  }
-}
-rm(flags, mL, flagsDF, i, fl, j)
-physOc <- physOc |> dplyr::select(-flags)  ## avoid trouble downstream
 
 
 
