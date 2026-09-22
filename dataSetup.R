@@ -192,8 +192,7 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                    # , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                    , PAR.Irradiance
                                    , Chlorophyll_mg_m3 = Fluorescence_mg.m3
-                                   , turbidity = Turbidity
-                                   # , Beam_attenuation
+                                   , turbidity = Beam.attenuation # merged attenuation and 'turbidity'
                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
 )) |> dplyr::arrange(isoTime, Depth.saltwater..m.) |>   # to avoid having subbays at the end
   dplyr::filter(!is.na(Density_sigma.theta.kg.m.3))
@@ -487,14 +486,18 @@ poSS$badDensN <- unlist(mclapply(poSS$File.Name, mc.cores = nCPUs, FUN=function(
     out <- sum(dDens < -0.02, na.rm=TRUE)
 }))
 
-
-
-fn <- poSS$File.Name[which.min(poSS$badDensMin)]
-fn <- poSS$File.Name[which.max(poSS$badDensN)]
-
-cast <- subset(physOc, File.Name==fn)
-plot(-1*Depth.saltwater..m.~Density_sigma.theta.kg.m.3, cast, type="l", main=fn)
-
+save.image("~/tmp/LCI_noaa/cache-t/dataSetup3.RData")
+# rm(list=ls()); load("~/tmp/LCI_noaa/cache-t/dataSetup3.RData")
+if(0) {  ## find bad data points
+  fn <- poSS$File.Name[which.min(poSS$badDensMin)]
+  fn <- poSS$File.Name[order(poSS$badDensMin)[1]] ## examined the first 65 worse
+  # offenders. By 50, most offending casts had offending measurements below the
+  # surface and at a magnitude less than the variation within the remaining datapoints.
+  cast <- subset(physOc, File.Name==fn)
+  plot(-1*Depth.saltwater..m.~Density_sigma.theta.kg.m.3, cast, type="l", main=fn)
+  clipr::write_clip(paste0("\"", fn,"\"",","))
+  fn
+}
 
 
 
@@ -514,8 +517,6 @@ poSS$FreshWaterContDeep2 <- unlist(mclapply(poSS$File.Name, mc.cores=nCPUs, FUN=
   sum(33 - fW$Salinity_PSU, na.rm=TRUE) ## max recorded = 32.75
 }))
 
-
-
 ## which depth-cutoff?
 if(1){
   png("~/tmp/LCI_noaa/media/FreshWate20-40.png", height=11*200, width=8*200, res=200)
@@ -528,6 +529,8 @@ if(1){
   dev.off()
 }
 
+
+
 ## plant stuff
 sAgg <- function(varN, data = physOc, FUN = sum, ...){
   ## better to average values, then multiply by nominal depth (extrapolate to bottom?)
@@ -537,17 +540,15 @@ sAgg <- function(varN, data = physOc, FUN = sum, ...){
   return(aDF [match(poSS$File.Name, aDF$File.Name),2])
 }
 
-poSS$Chlorophyll <- sAgg("Chlorophyll_mg_m3")
+poSS$Chlorophyll <- sAgg("Chlorophyll_mg_m3", FUN=sum)
 poSS$minO2 <- sAgg("Oxygen_umol_kg", FUN=min)
 poSS$O2perc <- sAgg("Oxygen_sat.perc.", FUN=mean)
-if("turbidity" %in% names(physOc)){
-    ## poSS$turbidity <- sAgg("turbidity", FUN = mean)
-    ## print(summary(poSS$turbidity))
-    poSS$logTurb <- sAgg("turbidity", FUN = function(x){mean(log10(x))}
-                        , subset = physOc$Depth.saltwater..m. < 20)
-}else{
-    cat("\nno turbidity here\n")
-}
+
+poSS$turbidity <- sAgg("turbidity", FUN = mean)
+## print(summary(poSS$turbidity))
+poSS$logTurb <- sAgg("turbidity", FUN = function(x){mean(log10(x))}
+                     , subset = physOc$Depth.saltwater..m. < 20)
+
 rm(sAgg)
 ## PAR going nowhere?
 minPAR <- function(fn){
@@ -596,8 +597,8 @@ if(printSampleDates){
       subset(pT, Transect==levels(pT$Transect)[i])$timeStamp
     ))))
   }
-  rm(pT)
 }
+rm(pT)
 
 
 ## QAQC --- should go elsewhere!!!

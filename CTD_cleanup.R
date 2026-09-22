@@ -447,31 +447,32 @@ summary (physOc)
 #####################################################
 
 ## a fair number of casts have highest density/salinity at the surface. Remove those impossible data points.
-badDens <- function(i) {
-  ctd <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
-  cntx <- subset (seq_len (nrow (physOc)), physOc$File.Name == levels (physOc$File.Name)[i])
-  if (!is.na (sum (ctd$Density_sigma.theta.kg.m.3[c(1, 2)]))) { # bad/missing values Density_sigma.theta.kg.m.3
-    if (ctd$Density_sigma.theta.kg.m.3 [1] >
-      ctd$Density_sigma.theta.kg.m.3 [2]) {
-      bCntr <- cntx [1]
-    } else {
-      bCntr <- numeric()
-    }
-  } else {bCntr <- numeric()
-  }
-  return (bCntr)
-}
-# bCntr <- unlist (mclapply (1:length (levels (physOc$File.Name)), FUN = badDens
-#                          , mc.cores = nCPUs))
-bCntr <- unlist (lapply (seq_along(levels (physOc$File.Name)), FUN = badDens))
-
-physOc$File.Name <- factor (physOc$File.Name)
-cat ("\n\nRemoved first data point from ", length (bCntr), " out of ",
-  length (levels (physOc$File.Name)), "CTD casts ("
-  , round (length (bCntr) / length (levels (physOc$File.Name)) * 100)
-  , "%) because surface density \nwas higher than in subsequent samples.\n\n")
-physOc <- subset (physOc, !(seq_len (nrow (physOc))) %in% bCntr)
-rm (bCntr, badDens)
+## flag these measurements, don't remove them
+# badDens <- function(i) {
+#   ctd <- subset (physOc, File.Name == levels (physOc$File.Name)[i])
+#   cntx <- subset (seq_len (nrow (physOc)), physOc$File.Name == levels (physOc$File.Name)[i])
+#   if (!is.na (sum (ctd$Density_sigma.theta.kg.m.3[c(1, 2)]))) { # bad/missing values Density_sigma.theta.kg.m.3
+#     if (ctd$Density_sigma.theta.kg.m.3 [1] >
+#       ctd$Density_sigma.theta.kg.m.3 [2]) {
+#       bCntr <- cntx [1]
+#     } else {
+#       bCntr <- numeric()
+#     }
+#   } else {bCntr <- numeric()
+#   }
+#   return (bCntr)
+# }
+# # bCntr <- unlist (mclapply (1:length (levels (physOc$File.Name)), FUN = badDens
+# #                          , mc.cores = nCPUs))
+# bCntr <- unlist (lapply (seq_along(levels (physOc$File.Name)), FUN = badDens))
+#
+# physOc$File.Name <- factor (physOc$File.Name)
+# cat ("\n\nRemoved first data point from ", length (bCntr), " out of ",
+#   length (levels (physOc$File.Name)), "CTD casts ("
+#   , round (length (bCntr) / length (levels (physOc$File.Name)) * 100)
+#   , "%) because surface density \nwas higher than in subsequent samples.\n\n")
+# physOc <- subset (physOc, !(seq_len (nrow (physOc))) %in% bCntr)
+# rm (bCntr, badDens)
 
 
 
@@ -671,8 +672,8 @@ rm (x)
 
 
 ## plot above shows that turbidity is equivalent to bean attenuation
-phy$turbidity <- ifelse (is.na (phy$turbidity), phy$beamAttenuation, phy$turbidity)
-phy <- phy [,-which (names (phy) == "beamAttenuation")]
+phy$beamAttenuation <- ifelse (is.na (phy$turbidity), phy$beamAttenuation, phy$turbidity)
+phy <- phy [,-which (names (phy) == "turbidity")]
 
 
 
@@ -695,8 +696,8 @@ phyB <- with (phy, data.frame (Station = Match_Name
                                 # , Nitrogen.saturation..mg.l.
                                 , PAR.Irradiance
                                 , Fluorescence_mg.m3=Fluorescence_mg_m3
-                                , Turbidity = turbidity
-                                # , Beam.attenuation = beamAttenuation ## equals turbidity
+                                # , Turbidity = turbidity
+                                , Beam.attenuation = beamAttenuation ## equals turbidity
                                 , Beam.transmission = beamTransmission
 ))
 rm(phy)
@@ -711,7 +712,7 @@ rm(phy)
 phyB$flags <- character(nrow(phyB))
 isoT <- as.POSIXct(paste(phyB$Date, phyB$Time))
 
-## bad oxygen ranges
+## bad oxygen ranges -- sensor gone bad?
 badO <- rbind(c("2017-01-01", "2017-12-31"),
               c("2020-09-01", "2020-10-30"),
               c("2026-03-01", "2026-10-30")
@@ -726,7 +727,61 @@ for(i in seq_along(nrow(badO))){
     paste(grep("Oxygen", names(phyB), value = TRUE), collapse = "; ")
 }
 
-## bad density, (and others)
+## bad density, (and others): as determined by dataSetup.R, looking for sub-
+## stantially higher density above lower density water (usually at the surface)
+badMPt <- data.frame(fn=c("2012_10-28_t6_s22_cast007_4141",
+                          "2012_10-29_t3_s12_cast057_4141",
+                          "2015_02-24_t7_s09_cast258_4141",
+                          "2015_02-24_t7_s17_cast253_4141",
+                          "2012_10-29_t3_s15_cast060_4141",
+                          "2012_10-29_t3_s15_cast060_4141",
+                          "2015_02-23_t6_s03_cast245_4141",
+                          "2025_11-18_ab_s04_cast058_8138",
+                          "2025_11-18_ab_s04_cast058_8138",
+                          "2015_02-24_t7_s15_cast254_4141",
+                          "2012_10-29_t3_s07_cast052_4141",
+                          "2012_10-28_t6_s09_cast020_4141",
+                          "2017_11-07_alongbay_skb11_cast094_4141",
+                          "2012_10-28_t7_s22_cast030_4141",
+                          "2012_10-28_t7_s22_cast030_4141",
+                          "2022_01-31_ab_s09_cast045_4141",
+                          "2020_10-15_t9_s01_cast060_4141",
+                          "2020_10-15_alongbay_skb02_cast048_4141",
+                          "2015_02-23_t6_s06_cast242_4141",
+                          "2020_10-15_alongbay_skb05_cast051_4141",
+                          "2017_11-07_alongbay_skb12_cast093_4141",
+                          "2017_11-07_alongbay_skb12_cast093_4141",
+                          "2012_10-29_t4_s04_cast069_4141",
+                          "2012_10-28_t6_s05_cast024_4141",
+                          "2017_01-11_alongbay_skb06_cast025_4141",
+                          "2012_10-28_t6_s18_cast011_4141",
+                          "2020_10-15_alongbay_skb04_cast050_4141",
+                          "2012_10-29_t3_s08_cast053_4141",
+                          "2017_04-19_t7_s01_cast099_4141",
+                          "2017_11-07_t9_s01_cast106_4141",
+                          "2012_10-28_t7_s13_cast036_4141",
+                          "2017_11-07_t9_s07_cast112_4141",
+                          "2012_10-29_t9_s03_cast075_4141",
+                          "2012_10-29_t3_s11_cast056_4141",
+                          "2022_01-31_ab_s03_cast051_4141",
+                          "2015_02-24_t7_s19_cast252_4141",
+                          "2015_02-23_t6_s20_cast227_4141",
+                          "2012_10-29_t9_s01_cast073_4141",
+                          "2022_01-31_ab_s06_cast048_4141",
+                          "2017_11-02_t7_s22_cast082_4141",
+                          "2012_10-28_t6_s19_cast010_4141"
+                           ),
+                       N=c(1,1,1,1,1:2,1,1:2,1,1,1,1,1:2,1,1,1,1,1,1:2,1,1,1,1,
+                           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+)
+for(i in seq_len(nrow(badMPt))) {
+  bD <- sort(phyB$Depth_m[which(phyB$File.Name==badMPt$fn[i])])[badMPt$N[i]]
+  phyB$flags[which((phyB$File.Name==badMPt$fn[i]) & (phyB$Depth_m==bD))] <-
+    paste(names(phyB)[which(names(phyB)=="Temperature_ITS90_DegC"):(ncol(phyB)-1)]
+          , collapse="; ", sep="")
+}
+
+
 badF <- c("2012_10-28_t6_s22_cast007_4141", "1")    ## XXX sensitive to binning interval!
 bD <- sort(phyB$Depth_m[which(phyB$File.Name==badF[1])])[as.numeric(badF[2])]
 if(0) {
