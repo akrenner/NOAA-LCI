@@ -5,4 +5,4 @@
 .DS_Store
 .initialized.rds
 .positai
-*.log
+# *.log

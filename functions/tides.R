@@ -56,7 +56,7 @@ tRange <- function(tstmp, station = 9455500) {
     unique() |>
     sort()
   tide <- fetchNOAAtideData (yrs, station)
-  tide <- subset (tide, format (tide$Date.Time, "%Y") == yrs)
+  tide <- subset (tide, format (tide$Date.Time, "%Y") %in% yrs) # just for speed?
 
   ## faster alternative?
   if (0) {
