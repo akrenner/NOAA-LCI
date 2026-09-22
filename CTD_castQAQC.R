@@ -118,9 +118,10 @@ plotCTDprof <- function(i) {
     try ({
       ctdF <- with (ctd, as.ctd (salinity = Salinity_PSU
         , temperature = Temperature_ITS90_DegC
-        , pressure = Pressure..Strain.Gauge..db.
-        , longitude = longitude_DD
-        , latitude = latitude_DD
+        , pressure = pressure_db
+        # , pressure = Pressure..Strain.Gauge..db.
+        , longitude = Longitude_DD
+        , latitude = Latitude_DD
       ))
       ## add line, marking pycnocline -- if we can?
 

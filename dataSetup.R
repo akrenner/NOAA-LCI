@@ -184,19 +184,19 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                    , File.Name=factor(File.Name), CTD.serial
                                    , Bottom.Depth
                                    , Pressure..Strain.Gauge..db. = pressure_db
-                                   , Depth.saltwater..m.= Depth
+                                   , Depth.saltwater..m.= Depth_m
                                    , Temperature_ITS90_DegC, Salinity_PSU
-                                   , Density.sigma.theta_kg.m.3
+                                   , Density_sigma.theta.kg.m.3 = Density.sigma.theta_kg.m.3
                                    , Oxygen_umol_kg=Oxygen_umol.kg
                                    , Oxygen_sat.perc.=Oxygen.Saturation_perc
-                                   , Nitrogen.saturation..mg.l.  ## make it umol.kg
+                                   # , Nitrogen.saturation..mg.l.  ## make it umol.kg
                                    , PAR.Irradiance
-                                   , Chlorophyll_mg_m3 = Fluorescence_mg_m3
-                                   , turbidity = ifelse (is.na (Turbidity),
-                                                         Beam_attenuation, Turbidity)
+                                   , Chlorophyll_mg_m3 = Fluorescence_mg.m3
+                                   , turbidity = Turbidity
                                    # , Beam_attenuation
                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
-)) |> dplyr::arrange(isoTime, Depth.saltwater..m.)   # to avoid having subbays at the end
+)) |> dplyr::arrange(isoTime, Depth.saltwater..m.) |>   # to avoid having subbays at the end
+  dplyr::filter(!is.na(Density_sigma.theta.kg.m.3))
 rm(physOcT)
 
 

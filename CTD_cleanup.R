@@ -547,8 +547,10 @@ summary (physOc$turbidity)
 summary (physOc$beamAttenuation)
 pdf ("~/tmp/LCI_noaa/media/CTDtests/atten-turb.pdf")
 par (mfrow = c (2, 1))
+suppressWarnings({
 hist (log (physOc$beamAttenuation), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
 hist (log (physOc$turbidity), xlim = range (log (c (physOc$beamAttenuation, physOc$turbidity)), na.rm = TRUE))
+})
 dev.off()
 
 
@@ -617,7 +619,7 @@ if (0) {  # currently fails -- fix later XXX
 
 
 ## QAQC: plot each day, station in order
-pdf ("~/tmp/LCI_noaa/media/CTDstationTest.pdf")
+pdf ("~/tmp/LCI_noaa/media/CTDtests/CTDstationTest.pdf")
 dayF <- factor (physOc$Date)
 for (i in seq_along(levels (dayF))) {
   crs <- subset (physOc, dayF == levels (dayF)[i])
@@ -665,7 +667,13 @@ cat ("\n##\n##\n## stations with multiple casts per day\n")
 dim (x)
 x
 rm (x)
-# phy <- subset (phy, )
+
+
+
+## plot above shows that turbidity is equivalent to bean attenuation
+phy$turbidity <- ifelse (is.na (phy$turbidity), phy$beamAttenuation, phy$turbidity)
+phy <- phy [,-which (names (phy) == "beamAttenuation")]
+
 
 
 ## adjust field names for export
@@ -680,14 +688,14 @@ phyB <- with (phy, data.frame (Station = Match_Name
                                 , Bottom.Depth, pressure_db = Pressure..Strain.Gauge..db.
                                 , Depth_m = Depth.saltwater..m.
                                 , Temperature_ITS90_DegC, Salinity_PSU
-                                , Density_sigma.theta.kg.m.3
+                                , Density.sigma.theta_kg.m.3 = Density_sigma.theta.kg.m.3
                                 , Oxygen_umol.kg = Oxygen_umol_kg
                                 , Oxygen.Saturation_perc = Oxygen_sat.perc.
                                 # need SBE O2 concentration umol.kg in here
                                 , PAR.Irradiance
                                 , Fluorescence_mg.m3=Fluorescence_mg_m3
                                 , Turbidity = turbidity
-                                , Beam.attenuation = beamAttenuation
+                                # , Beam.attenuation = beamAttenuation ## equals turbidity
                                 , Beam.transmission = beamTransmission
 ))
 rm(phy)
@@ -759,18 +767,17 @@ phyB$flags <- gsub("NA; ", "", phyB$flags)
 outD <- "~/tmp/LCI_noaa/data-products/CTD"
 # outD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"
 # manually update files in ~/GISdata/LCI/CTD-processing/ !
-dir.create(outD, recursive = TRUE, showWarnings = FALSE)
+unlink(outD, recursive = TRUE, force = TRUE)  ## make sure that no old versions remain
+dir.create(outD, recursive = TRUE)
 
-yr <- factor (format (phyB$isoTime, "%Y"))
-yr <- factor(ifelse(phyB$Transect == "Subbay", "Subbays_extras", as.character(yr)))
+yr <- format (as.Date(phyB$Date), "%Y")
+yr <- factor(ifelse(phyB$Transect == "Subbay", "Subbays_extras", yr))
+
 
 ctdX <- sapply (seq_along(levels (yr)), function(i) {
   ctdB <- subset (phyB, yr == levels (yr)[i])
 
-  # ctdA$turbidity <- ifelse (is.na (ctdA$turbidity), ctdA$attenuation, ctdA$turbidity)
-  # ctdA <- ctdA [,-which (names (ctdA) == "attenuation")]
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
-  unlink(paste0(tF, ".gz"))
   write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2026.")
     , file = tF, append = FALSE, ncolumns = 1)
   suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE, sep = ","
@@ -782,12 +789,13 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
   ctdB
 })
 
-rm (showBad, oldMatch, yr, i, j)
+physOc <- phyB
+rm (showBad, oldMatch, yr, i, j, phyB)
 # ls()
 
 
 ## no longer save RData dump here -- datasetup.R to read from aggregated files
-save (physOc=phyB, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by CTD_DataAvailability.R
+save (physOc, stn, file = "~/tmp/LCI_noaa/cache/CNV1.RData")  ## this to be read by CTD_DataAvailability.R
 
 cat ("\n# END CTD_cleanup.R #\n")
 
