@@ -99,9 +99,10 @@ for(h in 2:length(levels(surveyW))) {
 }
 surveyW <- factor(format(poAll$isoTime, "%Y-%m"))  ## KISS -- no more fudging of partial transects into the previous month; at least not for now
 
-poAll <- data.frame(survey = surveyW, poAll) |> # keep tail end for CTD data. Need to reset factor levels after combining days
-  # dplyr::select(-Oxygen_sat.perc.) |>
-  dplyr::select(-Nitrogen.saturation..mg.l.)    # eliminate these here to make oVarsDFname easier
+poAll <- data.frame(survey = surveyW, poAll)
+# |> # keep tail end for CTD data. Need to reset factor levels after combining days
+#   # dplyr::select(-Oxygen_sat.perc.) |>
+#   dplyr::select(-Nitrogen.saturation..mg.l.)    # eliminate these here to make oVarsDFname easier
 rm(surveyW, h)
 
 ## migrate code over from CTDwall.R:

@@ -692,6 +692,7 @@ phyB <- with (phy, data.frame (Station = Match_Name
                                 , Oxygen_umol.kg = Oxygen_umol_kg
                                 , Oxygen.Saturation_perc = Oxygen_sat.perc.
                                 # need SBE O2 concentration umol.kg in here
+                                # , Nitrogen.saturation..mg.l.
                                 , PAR.Irradiance
                                 , Fluorescence_mg.m3=Fluorescence_mg_m3
                                 , Turbidity = turbidity
