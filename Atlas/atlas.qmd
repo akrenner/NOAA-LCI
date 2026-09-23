@@ -4,6 +4,10 @@
 # Also considering Overleaf
 # Avoid GoogleDoc:  lack of auto-numbering or references
 
+
+## Move plot files into the relevant place.
+
+
 ```
 
 
@@ -37,19 +41,27 @@ editor: visual
 
 # Introduction
 
+Kachemak Bay is a side bay of Cook Inlet in South Central Alaska, famed for its scenic beautify and rich wildlife. The south side of Kachemak Bay is mountainous, including several glaciers that feed streams flowing into the bay and spruce forest at lower elevations. The north shore of the bay features hills and a mixture of forests and open landscapes. Annual temperatures range between XX and YY degrees in most years with an annual average of ZZ mm precipitation. 
+
+
 ## Kachemak Bay Bathymetry and Topography
+
+Kachemak Bay is XX km long and at its mouth YY km wide. The Homer Spit bisects the bay at about XX km from the head into an outer and inner bay. Underwater bathymetry is shallow along the northern shore and steep on the south. A deeper channel runs through the middle of the bay, reaching up to XX m in depth, marking the deepest spot in Cook Inlet. Cook Inlet has famously big tides. Spring/mean XXX tide range at Seldovia Harbor is XX m. 
+
 
 ## Currents
 
+The near-shore Gulf of Alaska is characterized by the Alaska Coastal Current, running east to west from South-East Alaska to the Alaska Peninsula. Driven by freshwater input from heavy precipitation in South-East Alaska, this is a surface current. The Corriolis effect pushes part of this current into Cook Inlet through Kennedy Entrance, resulting in ocean water entering Kachemak Bay on the south side and circulating through the bay in an anti-clockwise fashion. This results in a predominantly eastward current on the south side of the bay and a westward current on the north side. These general motions interact with substantial tidal currents and currents driven by estuarine circulations. 
 
 Here we present long-term means from a long-term study, running from 2012 to 2026. 
 
+
 # Results
 
-## Section normals
+## Section normals and variation
 
 ### Salinity
-(include stratification here?)
+(include density, stratification here?)
 
 ### Temperature
 
@@ -58,6 +70,7 @@ Here we present long-term means from a long-term study, running from 2012 to 202
 ### Oxygen
 
 ### Turbidity
+
 
 
 
@@ -74,16 +87,15 @@ Timing of 8 degrees C
 
 
 
-## Phytoplankton? 
+<!-- ## Phytoplankton?  -->
+
+<!-- ## Zooplankton?  -->
 
 
-## Zooplankton? 
+<!-- ## Currents? -- from modeloutput and drifters -->
 
 
-## Currents? -- from modeloutput and drifters
-
-
-## Trends??
+<!-- ## Trends?? -->
 
 
 
@@ -92,8 +104,12 @@ Timing of 8 degrees C
 
 # Methods
 
+Monthly measurements of water temperature, salinity, turbidity, chlorophyll concentration, and derived variables were taken along pre-determined transects. 
+
+
 QAQC
-callibrations
+calibrations
+
 
 
 ## Acknowlegedments
@@ -106,21 +122,21 @@ We would like to thank the many individuals who worked on this project. We heavi
 
 
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+<!-- Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>. -->
 
-## Running Code
+<!-- ## Running Code -->
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+<!-- When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this: -->
 
-```{r}
-1 + 1
-```
+<!-- ```{r} -->
+<!-- 1 + 1 -->
+<!-- ``` -->
 
-You can add options to executable code like this
+<!-- You can add options to executable code like this -->
 
-```{r}
-#| echo: false
-2 * 2
-```
+<!-- ```{r} -->
+<!-- #| echo: false -->
+<!-- 2 * 2 -->
+<!-- ``` -->
 
-The `echo: false` option disables the printing of code (only output is displayed).
+<!-- The `echo: false` option disables the printing of code (only output is displayed). -->
