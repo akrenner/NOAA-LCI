@@ -87,7 +87,7 @@ tColAn <- rev(RColorBrewer::brewer.pal(length(salCol), "RdBu"))
 # tCol <- colorRampPalette(tCol, alpha=FALSE)(1000)  ## interpolate colors, or make them continuous
 
 
-## nauseating rainbow
+## antiquated rainbow
 jet <- TRUE
 jet <- FALSE
 if(jet) {

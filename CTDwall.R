@@ -72,7 +72,7 @@ if(quickPlot){
   , c("anS_", "" # , "an_", ""
   ))
 }
-keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1])); rm (pV)
+keepV <- which (oVarsDFname %in% paste0(pV[,2], pV[,1]))
 oVarsF <- oVarsF [keepV]
 oVars <- oVars [keepV]
 oVarsDFname <- oVarsDFname [keepV]
