@@ -846,6 +846,8 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
 })
 
 physOc <- phyB
+physOc$isoTime <- as.POSIXct(paste(physOc$Date, physOc$Time))
+physOc$Match_Name <- paste(physOc$Transect, physOc$Station, sep="-")
 rm (showBad, oldMatch, yr, i, j, phyB)
 # ls()
 

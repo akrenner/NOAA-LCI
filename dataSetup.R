@@ -215,15 +215,6 @@ physOc$bvf <- ifelse(is.na(physOc$bvf), 0, physOc$bvf)
 
 
 
-
-
-stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
-stn <- subset(stn, !is.na(Lon_decDegree))
-stn <- subset(stn, !is.na(Lat_decDegree))
-stn$Plankton <- stn$Plankton == "Y"
-
-
-
 ## Kris:
 ## - persistence of mixing across seasons and tides
 ## Chlorophyll in total water column?
@@ -601,20 +592,21 @@ if(printSampleDates){
 rm(pT)
 
 
+
+
 ## QAQC --- should go elsewhere!!!
 
 #######################
 ## troubleshoot poSS ##
 #######################
 
-# if(1){
-    ## troubleshoot densities!
-    badDens <- physOc$File.Name [which(physOc$Density_sigma.theta.kg.m.3 > 100)]
-    badDens <- physOc$File.Name [which(physOc$Density_sigma.theta.kg.m.3 < 0)]
-    badStrat <- poSS$File.Name [which(poSS$stability < -500)]
-    # 2012_02-14_T9_S10_cast273
-    # 2016_02-14_T3_S07_cast106
-    rm(badDens, badStrat)
+    # ## troubleshoot densities!
+    # badDens <- physOc$File.Name [which(physOc$Density_sigma.theta.kg.m.3 > 100)]
+    # badDens <- physOc$File.Name [which(physOc$Density_sigma.theta.kg.m.3 < 0)]
+    # badStrat <- poSS$File.Name [which(poSS$stability < -500)]
+    # # 2012_02-14_T9_S10_cast273
+    # # 2016_02-14_T3_S07_cast106
+    # rm(badDens, badStrat)
 
 
 ## test tracer for deep-water origin:
@@ -632,6 +624,20 @@ rm(pT)
 ## 2013_07-21_T6_S23_cast055
 ## " -> testF
 ## read.csv(testF)
+
+
+##########################
+##  Station Master list ##
+##########################
+
+stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
+stn <- subset(stn, !is.na(Lon_decDegree))
+stn <- subset(stn, !is.na(Lat_decDegree))
+stn$Plankton <- stn$Plankton == "Y"
+
+
+
+
 
 
 
@@ -706,17 +712,17 @@ write.csv(poSS, file = "~/tmp/LCI_noaa/media/castTable.csv"
 ##  write meta-data separately
 
 if(0){## aggregate poSS to SampleID file(one cast per day) -- necessary = ??
-poID <- poSS [!duplicated(poSS$SampleID),1:8]
-# poID <- subset(poID, !is.na(poID$SampleID)) # needed??
-poAg <- aggregate(as.formula(paste("cbind("
-                                    , paste(names(poSS)[10:ncol(poSS)], collapse = ",")
-                                    , ")~SampleID"))
-                   , FUN = mean, na.rm = TRUE, data = poSS)
-poID <- cbind(poID, poAg [match(poID$SampleID, poAg$SampleID),2:ncol(poAg)]) # avoid duplication of SampleID
-## cut out tidal-range here
-poID <- poID [,-which(names(poID) == "tideRange")]
-rm(poAg, poSS)
-poSS <- poID
+  poID <- poSS [!duplicated(poSS$SampleID),1:8]
+  # poID <- subset(poID, !is.na(poID$SampleID)) # needed??
+  poAg <- aggregate(as.formula(paste("cbind("
+                                     , paste(names(poSS)[10:ncol(poSS)], collapse = ",")
+                                     , ")~SampleID"))
+                    , FUN = mean, na.rm = TRUE, data = poSS)
+  poID <- cbind(poID, poAg [match(poID$SampleID, poAg$SampleID),2:ncol(poAg)]) # avoid duplication of SampleID
+  ## cut out tidal-range here
+  poID <- poID [,-which(names(poID) == "tideRange")]
+  rm(poAg, poSS)
+  poSS <- poID
 }
 
 save.image("~/tmp/LCI_noaa/cache-t/sampleTable.RData")
