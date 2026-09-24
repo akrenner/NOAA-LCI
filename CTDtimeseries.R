@@ -50,6 +50,7 @@ pickStn <- which(levels(physOc$Match_Name) %in%
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- seq_along(levels(physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
 # pickStn <- 87 # 9-6
+# pickStn <- which(levels(physOc$Match_Name)=="AlongBay_12") # for one-off news piece
 
 
 deepThd <- 20   ## deep vs surface layer

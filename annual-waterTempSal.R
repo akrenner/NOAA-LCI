@@ -404,6 +404,7 @@ Stn2p <- "AlongBay_8"                       # XXX currently hardcoded labels bel
 
 # currentCol <- paletteer::paletteer_d("pals::coolwarm")[c(1,2)]
 Stn2p <- "AlongBay_5"
+# Stn2p <- "AlongBay_10"
 
 
 if(0) {  ## for AMSS 2026

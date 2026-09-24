@@ -23,6 +23,7 @@ require("conflicted")
 deepThd <- 15 ## bottom threshold -- everything above considered surface,
               ## everything below bottom water
               ## use 30 m as cut-off for deep-water, sure to be below pycnocline
+# deepThd <- 2
 
 ## for GWA report
 printSampleDates <- TRUE
