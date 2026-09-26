@@ -279,9 +279,8 @@ editor: visual
 
 ## Summary
 
-Most of the North Pacific has been unusually warm and the 
-
-It has been cold. Throughout the water column, temperatures were colder than normal, by over 2.5 standard deviations in some places. Chlorophyll concentrations were high in some locations near the surface, but were below normal overall.High levels of surface turbidity were encountered at several inner bay sites, reflecting heavy rainfall during the week of the survey. However near-surface, inner-bay salinities were still close to the seasonal mean, indicating that recent rain runoff had not yet mixed deeper than 1 meter in the water column.
+While almost all of the North Pacific is experiencing unusually warm conditions, all of Kachemak Bay was much colder than normal, by over 2.5 standard deviations in some places. Salinity values were higher than normal. 
+Chlorophyll concentrations were high in some locations near the surface, but were below normal overall.High levels of surface turbidity were encountered at several inner bay sites, reflecting heavy rainfall during the week of the survey. However near-surface, inner-bay salinities were still close to the seasonal mean, indicating that recent rain runoff had not yet mixed deeper than 1 meter in the water column.
 
 <!-- `{r} dateAN` , -->
 A complete set of up-to-date graphs can be found on this Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link) (request access from martin.renner@noaa.gov).
@@ -334,7 +333,7 @@ Along-bay and cross-bay-sections of main parameters from the current cruise (lef
 
 <!-- Interesting temperature patterns were apparent along T9 and T4 (@fig-tSections). While the bottom half of the water column was still layered from cool bottom waters to warmer mid-waters, surface waters on T9 and the south end of T4 had cooled to be already colder than mid-water layers, the latter typically reaching their annual peak in September.  -->
 
-![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing data](media-2026-07/alaska.fc.gif){#fig-SST_GOA}
+![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing data](media-2026-09/alaska.fc.gif){#fig-SST_GOA}
 
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
@@ -370,7 +369,7 @@ Throughout the bay, and at all depth, waters were colder than normal, in some ar
 
 
 <!-- https://www.ospo.noaa.gov/products/ocean/sst/anomaly/ -->
-![Global sea surface temperature anomaly, based on satellite remote sensing.](media-2026-07/ssta.daily.current.png){#fig-SSTA}
+![Global sea surface temperature anomaly, based on satellite remote sensing.](media-2026-09/ssta.daily.current.png){#fig-SSTA}
 
 
 
@@ -438,12 +437,8 @@ Elevated chlorophyll concentrations were found in the upper 20 meters throughout
 
 <!-- Two harbor seals were seen off Bear Cove. About 65 Steller sea lions were seen on Flat Island. Birds of note included a yellow-billed loon off Bear Cove. Common murres and marbled murrelets started to return to the inner bay.  -->
 
-Two orcas
-no shearwaters
-one late red-necked phalaropes. 
-3 ancient murrelets
+Two orcas were seen off the Homer Spit at T9-6. A red-necked phalarope in the outer bay was late for the season. Notably, no shearwaters were seen, usually common in the bay at this time of year. 3 ancient murrelets in the outer bay were uncommon, but not unexpected for this month. 
 
-![Two of seven orcas in outer Kachemak Bay (photo: M. Renner).](./media-2026-07/191A8812s.jpg){#fig-orca} 
 
 ### Mailing list
 
