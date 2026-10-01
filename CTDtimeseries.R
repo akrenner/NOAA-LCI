@@ -46,11 +46,12 @@ rm(list = ls()); load("~/tmp/LCI_noaa/cache/CTDcasts.RData")  # from dataSetup.R
 ## select which stations to plot -- all or only named stations
 physOc$Match_Name <- as.factor(physOc$Match_Name)
 pickStn <- which(levels(physOc$Match_Name) %in%
-  c("9_6", "9_8", "9_2", "AlongBay_3", "4_6", "4_3"))  # span is too small for many AlongBay transects
+  c("9_6", "9_8", "9_2", "AlongBay_4", "4_6", "4_3"))  # span is too small for many AlongBay transects
 #                     c("9_6", "AlongBay_3", "3_14", "3_13", "3_12", "3_11"))
 # pickStn <- seq_along(levels(physOc$Match_Name)) ## some fail as-is: simpleLoess span too small
-# pickStn <- 87 # 9-6
+pickStn <- which(levels(physOc$Match_Name) %in% c("9-6", "AlongBay_8", "AlongBay_3"))
 # pickStn <- which(levels(physOc$Match_Name)=="AlongBay_12") # for one-off news piece
+# pickStn <- which(levels(physOc$Match_Name) %in% c("AlongBay_13", "AlongBay_2", "AlongBay_3"))
 
 
 deepThd <- 20   ## deep vs surface layer
@@ -133,6 +134,17 @@ save.image("~/tmp/LCI_noaa/cache-t/ctdAnomalies.RData")
 longM <- function(var, date, maO = 31) {  ## cyclical long-term mean -- move this to annualPlotFct.R ?
   ## calculate long term mean of var for use in anomaly calculation
   ## smooth using zoo moving average smoother
+
+  if(class(date)[1] != "Date") {
+    date <- as.Date(date)
+  }
+
+  # ## restrict years to a set baseline
+  # timeR <- as.Date(c("2012-01-01", "2025-31-12"))
+  # var <- subset (var, (timeR[1] < date) & (date < timeR[2]))
+  # date <- subset (date, (timeR[1] < date) & (date < timeR[2]))
+
+
   if(length(var) != length(date)) {stop("var and date have to be of equal length")}
   # df <- data.frame(var, date)
   # df <- df [order(df$date),]
@@ -191,6 +203,10 @@ dailyTS <- function(df, varN) {
   names(dfD) <- gsub("^var", varN, names(dfD))
   dfD
 }
+
+
+
+
 
 
 ## this is a section over time, CTDsectionFcts.R::mkSection is a space section

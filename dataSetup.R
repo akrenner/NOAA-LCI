@@ -116,11 +116,11 @@ aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge dat
                       # only pick-up GulfWatch casts here(?)
 physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
   lapply(read.csv, skip=1, header=TRUE) |>
-  dplyr::bind_rows()
+  dplyr::bind_rows() |>
+  dplyr::filter(nchar(Date)>4)
 rm(aD)
 
 
-physOcT <- subset(physOcT, nchar(physOcT$Date) > 4)
 # for(i in seq_along(levels(factor(physOcT$Date)))) {
 #   cat(i, "\n")
 #   x <- as.POSIXct(paste(levels(factor(physOcT$Date))[i], physOcT$Time[i]))
