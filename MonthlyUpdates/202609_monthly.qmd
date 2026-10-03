@@ -19,6 +19,7 @@
 ## re-render. Print to PDF
 ## publish this quatro
 ## copy published website and paste into gmail
+## subject line in email: Kachemak Bay | December 2025 Oceanographic Survey
 ## attach pdf version
 ## mail-merge with distribution list
 ## delete unsubscribe button
@@ -279,8 +280,7 @@ editor: visual
 
 ## Summary
 
-While almost all of the North Pacific is experiencing unusually warm conditions, all of Kachemak Bay was much colder than normal, by over 2.5 standard deviations in some places. Salinity values were higher than normal. 
-Chlorophyll concentrations were high in some locations near the surface, but were below normal overall.High levels of surface turbidity were encountered at several inner bay sites, reflecting heavy rainfall during the week of the survey. However near-surface, inner-bay salinities were still close to the seasonal mean, indicating that recent rain runoff had not yet mixed deeper than 1 meter in the water column.
+While almost all of the North Pacific is experiencing unusually warm surface conditions, Kachemak Bay was colder than normal, by over 2.5 standard deviations in some places. The water colum remained well stratified, with a fresher surface layer reaching to about 25 m depth. Deep water salinity was about two standard deviations higher than normal. Chlorophyll concentrations were highest near the surface in the far outer bay and near the head of the bay. Those concentrations were high for the season. 
 
 <!-- `{r} dateAN` , -->
 A complete set of up-to-date graphs can be found on this Google Drive: [section plots](https://drive.google.com/drive/folders/1PCXyrK7tJ897bqqUPFcmGnjLAkGfi5So?usp=drive_link) and [time sections](https://drive.google.com/drive/folders/1bkBPSBfvKjcgkOtikhIfLPOMwjgziJ8t?usp=drive_link) (request access from martin.renner@noaa.gov).
@@ -290,11 +290,7 @@ A complete set of up-to-date graphs can be found on this Google Drive: [section 
 
 ## Conditions
 
-Air temperatures leading up to this survey cooler than normal, but within one standard deviation of the long-term mean (@fig-Temp_Airport). After a dry June, mid July was wet, with major precipitation falling between the first and last day of this survey. 
-
-Two sunny days leading up to this survey. 
-
-Results are shown for the Kasitsna Bay Lab oceanographic survey conducted on 24 September 2026 by Jen, Kris and Martin in calm conditions.
+Air temperatures leading up to this survey were close normal for the season (@fig-Temp_Airport). Precipitation amounts were slightly below-average in the month leading up to this survey. The mountains near the head of the bay had some fresh snow near the peaks. Results are shown for the Kasitsna Bay Lab oceanographic survey conducted on 24 September 2026 by Jen, Kris and Martin in calm conditions.
 <!-- Beaufort 1 to 2. -->
 
 
@@ -311,7 +307,10 @@ Results are shown for the Kasitsna Bay Lab oceanographic survey conducted on 24 
 
 ### Temperature
 
-Water temperatures during the August survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the inner bay, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay. Strong vertical stratification was observed throughout the bay, with a shallow layer of warmer, fresher surface water over cooler, more saline waters below (@fig-tSections_AB, top-left panel). Stratification was less pronounced in the outer bay. Surface waters were warmer and bottom waters were colder in the inner than in the outer bay. Satellite sea surface temperature data with a cooler pool of 8-9 °C waters in lower Cook Inlet (@fig-SST_GOA).  
+Water temperatures during the September survey ranged from a minimum of `{r} tsal$temSalR[1]` °C at station `{r} tsal$stn[1]` (`{r} tsal$depth[1]` m depth), in the outer bay, to a maximum of `{r} tsal$temSalR[2]` °C at station `{r} tsal$stn[2]` (`{r} tsal$depth[2]` m depth) in the inner bay. Vertical stratification was observed throughout the bay, with a deepened, over 25 m layer of warmer, fresher surface water over cooler, more saline waters below (@fig-tSections_AB, top-left panel). In contrast to the rapid verticle changes seen earlier in the summer, the thermocline had a more gradual cooling with depth, which is typical for September. 
+<!-- Unusually, the much shorter cross-bay transect T9 showed more horizontal pattern this month than the AlongBay transect. The temperature patterns of the cross-bay transect T9 had cooler fresher surface waters on the north side and warmer, more saline surface waters on the south side, which is consistent with water fresher colder water from the inner bay exiting the bay at the surface along the north side.  -->
+
+Satellite sea surface temperature data showed 9-10 °C waters in Kachemak Bay and southeast Cook Inlet (as well as around Kodiak) surrounded by warmer waters in the rest of the inlet and upstream in the Gulf of Alaska (@fig-SST_GOA).  
 
 
 <!-- , possibly indicating mixing of deep and surface waters.  -->
@@ -337,15 +336,11 @@ Along-bay and cross-bay-sections of main parameters from the current cruise (lef
 
 <!-- ![Sea surface temperature in the Gulf of Alaska, based on satellite remote sensing](https://www.ospo.noaa.gov/data/sst/contour/alaska.fc.gif){#fig-SST_GOA} -->
 
-
-
-
 ![Surface water temperatures (0-20 m) at station T9-6, off the Homer Spit, compared to the seasonal means](media/5-TempSurfaceTS.png){#fig-T96tempTS}
 
 
 
-Throughout the bay, and at all depth, waters were colder than normal, in some areas by over 2.5 standard deviations (@fig-tSections, top-right panel, @fig-bottomTemp, @fig-TSprofile_T9). Most of Kachemak Bay was about 1 °C colder than normal. Surface waters  in mid-bay of Homer Spit and in Homer Harbor were near or slightly cooler than normal (@fig-T96tempTS, @fig-SWMP-homerdeep-temp). Deep waters, however, remained substantially colder than normal (one standard deviation and more), a pattern that has persisted since last December (@fig-bottomTemp). Surface waters of the Gulf of Alaska and Bering Sea also remained colder than normal in July 2026, as shown by satellite sea temperature anomaly data, in contrast to the extremely warm conditions in the central North Pacific (@fig-SSTA).
-
+The bay was colder than normal at all depths and locations other than near the surface on the south side of the bay. Deep waters were up to a remarkable 2.5 standard deviations colder than normal (@fig-tSections, top-right panel, @fig-bottomTemp, @fig-TSprofile_T9). Most of Kachemak Bay was about 1 °C colder than normal. This cold spell, driven by a cold winter, has persisted since December 2025 (@fig-T96tempTS, @fig-SWMP-homerdeep-temp, @fig-bottomTemp). Surface waters of the Gulf of Alaska, and almost anywhere else in the North Pacific, were warmer than normal in September 2026, as shown by satellite sea temperature anomaly data, making Kachemak Bay a rare exception to the larger scale situation (@fig-SSTA). This reservoir of colder water could help Kachemak Bay buffer some of the effects of expected warming from the developing El Niño. 
 
 <!-- , deep waters were still cooler than normal, by up to one standard deviation (@fig-tSections_AB, top-right panel, @fig-bottomTemp). In contrast, the surface waters were close to normal (@fig-tSections, @fig-T96tempTS, @fig-SWMP-homerdeep-temp), with some areas of the thin surface layer in the inner bay up to 7 °C warmer than bottom waters, and up to two standard deviations above the long-term mean for this month (@fig-tSections_AB, top-right panel). The large warm-up in surface temperatures, compared to May, reflects warmer air temperatures, strong vertical stratification and light wind conditions leading up to the survey.   -->
 
@@ -382,14 +377,10 @@ Throughout the bay, and at all depth, waters were colder than normal, in some ar
 
 
 
-![Long-term temperature and salinity profiles at mid-bay (T9-6).](./media/2-9_6-TSprofile.png){#fig-TSprofile_T9}
-
-
-
 
 ### Salinity
 
-Salinity values during the July survey ranged from `{r} tsal$temSalR[3]` PSU at station `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) in the inner bay to `{r} tsal$temSalR[4]` PSU at station `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. The water column was strongly stratified, especially in the inner bay, with fresher waters in a 10-20 m surface layer (@fig-tSections). 
+Salinity values during the September survey ranged from `{r} tsal$temSalR[3]` PSU at station `{r} tsal$stn[3]` (`{r} tsal$depth[3]`m depth) off the Homer Spit to `{r} tsal$temSalR[4]` PSU at station `{r} tsal$stn[4]` (`{r} tsal$depth[4]`m depth) in the outer bay. The north side of the T9 cross-bay transect had a noticeably thicker layer of fresher, colder surface water, indicative of freshwater outflow from glaciers and streams in inner Kachemak Bay (@fig-tSections_T9). 
 <!-- Along the mid-bay transect, the fresher water was deeper on the north than on the south side of the bay, indicative of outflows of inner bay waters freshened by rain and glacial melting (@fig-tSections_T9).  -->
 <!-- , as evident from the contour lines switching from vertical to horizontal.  
 Comment on fresh cold meltwater off Homer Spit?  XXX
@@ -397,24 +388,26 @@ Comment on fresh cold meltwater off Homer Spit?  XXX
 
 <!-- Along the inner bay, across mid-bay (T9) and into the eastern parts of the outer bay, a thin layer (~10-20 m) of cold, fresh water was seen over warmer, more salty water at depth, indicating that there had been enough freshwater input to maintain vertical stratification despite cold temperatures (@fig-tSections).  -->
 
-Most Kachemak Bay near-surface waters were close to or slightly saltier than normal (@fig-tSections, @fig-TSprofile_T9). We could see the effects of heavy rainfall runoff in the high surface turbidity in the inner bay (@turb). However, since the CTD sensors only start measuring at 1 meter depth and seas were calm, we likely did not capture the freshest inner bay surface water during this survey. At depth, outer bay waters were near the long-term mean and continued to be fresher than normal in the inner bay (@fig-tSections, @fig-TSprofile_T9, @fig-SalDeep). 
+All the deep- and mid-waters of Kachemak Bay were substantially saltier than normal, at depth by as much as two standard deviations (@fig-tSections, @fig-TSprofile_T9). Surface waters in the outer bay were slightly fresher than normal (@fig-tSections_AB). 
+
 
 <!-- Explanation = ? These patterns are consistent with the prolonged winter cold, with spring increases in freshwater inputs to the bay coming later than normal. -->
 
 ![Variability of deep-water salinity at station T9-6 off the Homer Spit, compared to the seasonal  means.](./media/5-SalDeepTS.png){#fig-SalDeep}
 
-### Turbidity
+<!-- ### Turbidity -->
 
-High surface turbidity was encountered at several stations from mid-bay to Bear Cove (@fig-turbid). Inner bay waters were more turbid than outer bay waters, with highest levels found in the thin rain-driven fresher surface layer of the inner bay (@fig-tSections_AB). In contrast, outer bay waters were unusually clear for this time of year. 
+<!-- High surface turbidity was encountered at several stations from mid-bay to Bear Cove (@fig-turbid). Inner bay waters were more turbid than outer bay waters, with highest levels found in the thin rain-driven fresher surface layer of the inner bay (@fig-tSections_AB). In contrast, outer bay waters were unusually clear for this time of year.  -->
 
-![Example of high surface turbidity, illustrated by how little of the CTD cage is visible below the surface. (photo: K. Holderied).](./media-2026-07/IMG_2350.jpeg){#fig-turbid} 
 
 
 ## Biological conditions
 
 ### Phytoplankton
 
-Elevated chlorophyll concentrations were found in the upper 20 meters throughout Kachemak Bay, with the highest values near the seaward extent of the fresher surface layer in the outer bay (@fig-tSections_AB). Integrated over the entire water column, chlorophyll concentrations were expected to drop slightly from June to July, but decreased from near the long-term mean in June to almost a full standard deviation below the mean in July (@fig-chlorophyll-sa). Our partners from the Kachemak Bay National Estuarine Research Reserve detected potentially toxic *Pseudo-nitschia spp.* as "present" in most samples, apart from T9-6 in the mid-bay, which was recorded as "bloom" and AlongBay-10, where it was "abundant". Also potentially toxic *Alexandrium spp.* cells were detected as "present" in mid-bay, at the head of the bay, and near the mouth of the bay (Kim Schuster, Kachemak Bay NERR, The Phyto Times, 23 July 2026). 
+Chlorophyll concentrations were highest in the outer bay and near the head of the bay as well as off the Homer Spit (@fig-tSections). Concentrations in these hotspots were substantially above normal, in places by over two standard deviations (@fig-tSections_AB). Surface net tow plankton samples in the outer and inner bay were also extremely dense. By contrast, integrated over the entire water column, chlorophyll concentrations were lower than last month, and also low compared to previous years (@fig-chlorophyll-sa). Our partners from the Kachemak Bay National Estuarine Research Reserve detected *Chaetoceros* spp. as the dominant species in all our samples. Potentially harmful taxa *Alexandrium* spp. and *Pseudo-nitschia spp.* were detected as "present" in all three samples. 
+<!-- Also potentially toxic *Alexandrium spp.* cells were detected as "present" in mid-bay, at the head of the bay, and near the mouth of the bay  -->
+(Kim Schuster, Kachemak Bay NERR, The Phyto Times, 1 October 2026). 
 
 
 <!-- ## Oxygen -->
@@ -422,7 +415,7 @@ Elevated chlorophyll concentrations were found in the upper 20 meters throughout
 
 <!-- ![Trends and seasonal anomaly of chlorophyll concentrations at mid-bay station T9-6 (mean from surface to 85 m depth)](./media/3-9_6-chlorophyll-anomaly.png){#fig-chlorophyll} -->
 
-![Seasonal patterns of chlorophyll concentrations at outer-bay station AlongBay-5 (integrated over the full water column).) ](./media/CTD_AlongBay_5_dayChlorophyll41.png){#fig-chlorophyll-sa}
+![Seasonal patterns of chlorophyll concentrations at outer-bay station AlongBay-5 (integrated over the full water column). ](./media/CTD_AlongBay_5_dayChlorophyll41.png){#fig-chlorophyll-sa}
 
 
 <!-- ![Time section of Chlorophyll concentrations at T9-6.](./media/3-9_6-chlorophyll-timesection.png){#fig-chlorophyllsection}  -->

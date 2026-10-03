@@ -719,13 +719,12 @@ badO <- rbind(c("2017-01-01", "2017-12-31"),
 ) |> as.data.frame()
 names(badO) <- c("start", "end")
 badO$start <- as.POSIXct(badO$start); badO$end <- as.POSIXct(badO$end)
-badO$interv <- lubridate::interval(as.POSIXct(badO$start), as.POSIXct(badO$end))
 
-for(i in seq_along(nrow(badO))){
-  # phy$flags[which(phy$isoTime %within% badO$interv[i])] <-
-  phyB$flags[which(lubridate::`%within%` (isoT, badO$interv[i]))] <-
+for(i in seq_len(nrow(badO))){
+  phyB$flags[which((badO$start[i] < isoT) & (isoT < badO$end[i]))] <-
     paste(grep("Oxygen", names(phyB), value = TRUE), collapse = "; ")
 }
+
 
 ## bad density, (and others): as determined by dataSetup.R, looking for sub-
 ## stantially higher density above lower density water (usually at the surface)
@@ -782,36 +781,22 @@ for(i in seq_len(nrow(badMPt))) {
 }
 
 
-badF <- c("2012_10-28_t6_s22_cast007_4141", "1")    ## XXX sensitive to binning interval!
-bD <- sort(phyB$Depth_m[which(phyB$File.Name==badF[1])])[as.numeric(badF[2])]
-if(0) {
-  x <- subset(phyB, File.Name=="2012_10-28_t6_s22_cast007_4141")
-  plot(x$Density_sigma.theta.kg.m.3, -1 * x$Depth_m, type="l")
-  i <- 0
-  plot(x[,13+i], -1 * x$Depth_m, type="l"); i <- i+1
-}
-phyB$flags[which((phyB$File.Name==badF[1]) & (phyB$Depth_m==bD))] <-
-  paste(names(phyB)[which(names(phyB)=="Temperature_ITS90_DegC"):(ncol(phyB)-1)]
-  , collapse="; ", sep="")
-rm(isoT, badO, badF, bD)
-
-
-
 ## fluorescence and turbidity-- have to be always positive!  -- about 150 readings
 ## does this mean that callibration is off? Anything that can be done about this?
 ## should these be treated differently? adjust calibration??
 
-if(0) {  ## check whether there still are any!
+## check whether there still are any!
 for (badV in names(phyB)[which(names(phyB)=="Salinity_PSU"):(ncol(phyB)-1)]) {
   vx <- which(names(phyB) == badV)
   phyB$flags <- ifelse(phyB[,vx] < 0,
-     paste(phyB$flags, names(phyB)[vx], sep="; "),
-     phyB$flags)
+                       paste(phyB$flags, names(phyB)[vx], sep="; "),
+                       phyB$flags)
   #  is.na(physOc[which(physOc[,vX] <= 0),vX]) <- TRUE  ## XXX better to set these to the lowest observed value? impute them?
 }; rm (badV, vx)
 phyB$flags <- gsub("NA; ", "", phyB$flags)
-}
-# summary(factor(phyB$flags))
+phyB$flags <- gsub("^; ", "", phyB$flags)
+phyB$flags <- gsub("NA", "", phyB$flags)
+# summary(as.factor(phyB$flags))
 
 ## End of QAQC flags                  ##
 ########################################

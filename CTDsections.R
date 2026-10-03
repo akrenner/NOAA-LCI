@@ -4,6 +4,8 @@
 ## option to run this for any one and only section
 
 
+if(!exists("quickPlot")) {quickPlot <- TRUE}
+
 if(!exists("indivPlots")) {
   rm(list = ls())
   # indivPlots <- TRUE  # one section plot per page, instead of cluster of panels
@@ -22,6 +24,12 @@ poAll <- readRDS("~/tmp/LCI_noaa/cache/ctd_castAnomalies.rds")
 base::load("~/tmp/LCI_noaa/cache/ctd_anomalies.RData")  # from CTD_anomaly-helpers.R
 stn <- read.csv("~/GISdata/LCI/MasterStationLocations.csv")
 stn$Line <- factor(stn$Line)
+
+
+# ## temp to blank-out O2 -- should happen already in datasetup.R XXX
+# is.na(poAll$Oxygen_sat.perc.) <- TRUE
+# is.na(poAll$anS_Oxygen_sat.perc.) <- TRUE
+
 
 
 if(!indivPlots){

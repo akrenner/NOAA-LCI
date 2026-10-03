@@ -87,11 +87,14 @@ transectC <- c(which(levels(poAll$Transect) == "9"),    # plot T9 first
 # transectC <- which(levels(poAll$Transect) == "9")
 if(quickPlot) {
   transectC <- which(levels(poAll$Transect) %in% c("9", "AlongBay"))
-  oceanvarV <- rev (oceanvarC)
+  transectC <- which(levels(poAll$Transect) %in% c("9"))
+
+#  oceanvarV <- rev (oceanvarC)
 }
 
 
 mnthly <- c("9", "4", "AlongBay")  ## for which transects to produce 12x n-year plots
+mnthly <- c("9", "AlongBay")  ## for which transects to produce 12x n-year plots
 
 
 

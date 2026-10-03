@@ -117,7 +117,8 @@ aD <- "~/tmp/LCI_noaa/data-products/CTD/"             ## latest cutting-edge dat
 physOcT <- list.files(aD, pattern="Cook[a-zA-Z0-9_]*.csv.gz$", full.name=TRUE) |>
   lapply(read.csv, skip=1, header=TRUE) |>
   dplyr::bind_rows() |>
-  dplyr::filter(nchar(Date)>4)
+  dplyr::filter(nchar(Date)>4) |>
+  dplyr::arrange(Date, Time, Depth_m)  # avoid having subbays at the end
 rm(aD)
 
 
@@ -153,25 +154,20 @@ rm(aD)
 ## apply QAQC flags ##  ----   need to move up QAQC flags here and down in CTD_cleanup to have clean output files
 ######################
 
+# x <- physOcT
+# physOcT <- x
 flags <- strsplit(physOcT$flags, "; ", fixed=TRUE)
-mL <- max(lengths(flags))
-flagsDF <- data.frame(lapply(flags, function(x) {  ## this is slow and awkward, but avoids length problem with do.call(rbind... )
-  x <- unlist(x)
-  length(x) <- mL
-  x
-})) |> t() |> as.data.frame()
-
-for (i in seq_len(ncol(flagsDF))) {
-  fl <- as.factor(flagsDF[,i])
-  for (j in seq_along(levels(fl))) {  ## not guaranteed that each flag has its own field
-    is.na(physOcT[ which(fl==levels(fl)[j]),
-                  which(names(physOcT) == levels(fl)[j])
-    ] ) <- TRUE
+flagL <- lengths(flags)
+for(i in which(flagL > 0)) {
+  ## slow code, but working
+  for (j in seq_len(length(flags[[i]]))) {
+    if(!is.na(flags[[i]][j])){
+      physOcT[i,which(names(physOcT)==flags[[i]][j])] <- NA
+      is.na(physOcT[i,which(names(physOcT)==flags[[i]][j])]) <- TRUE
+    }
   }
 }
-rm(flags, mL, flagsDF, i, fl, j)
-physOcT <- physOcT |> dplyr::select(-flags)  ## avoid trouble downstream
-
+rm(flags, flagL, i, j)
 
 
 
@@ -195,8 +191,8 @@ physOc <- with(physOcT, data.frame(Match_Name=Station
                                    , Chlorophyll_mg_m3 = Fluorescence_mg.m3
                                    , turbidity = Beam.attenuation # merged attenuation and 'turbidity'
                                    #  , Beam_transmission  ## causing all sorts of issues XXX revisit
-)) |> dplyr::arrange(isoTime, Depth.saltwater..m.) |>   # to avoid having subbays at the end
-  dplyr::filter(!is.na(Density_sigma.theta.kg.m.3))
+)) |>
+  dplyr::filter(!is.na(Density_sigma.theta.kg.m.3))     # avoid bvf and other calculations from blowing up
 rm(physOcT)
 
 
@@ -385,9 +381,11 @@ wcStab <- function(fn){
     lLay <- c(-5, 0) + max(cast$Depth.saltwater..m.) # lowest 5 m instead of fixed depth
                                         # some casts only 2 or 5 m deep -- then what?
     uDens <- mean(subset(cast,(uLay [1] < Depth.saltwater..m.) &
-                                (Depth.saltwater..m. < uLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
+               (Depth.saltwater..m. < uLay [2]))$Density_sigma.theta.kg.m.3
+                , na.rm = TRUE)
     lDens <- mean(subset(cast,(lLay [1] < Depth.saltwater..m.) &
-                                (Depth.saltwater..m. < lLay [2]), na.rm = TRUE)$Density_sigma.theta.kg.m.3)
+                (Depth.saltwater..m. < lLay [2]))$Density_sigma.theta.kg.m.3
+                , na.rm = TRUE)
     stabIdx <-(lDens - uDens) -(mean(lLay) - mean(uLay))
     stabIdx <- ifelse(is.infinite(stabIdx), NA, stabIdx)
     return(stabIdx)
