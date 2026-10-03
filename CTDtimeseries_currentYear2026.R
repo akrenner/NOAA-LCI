@@ -295,10 +295,16 @@ for(k in pickStn) {
     ## aggregate useing oce function -- skip aggregation in pre-processing by SBprocessing
     ## calculate normals
 
-    ctdAgg <- aggregate(Temperature_ITS90_DegC ~ depthR + month, xC, FUN = mean, na.rm = TRUE)
-    ctdAgg$Salinity_PSU <- aggregate(Salinity_PSU ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Salinity_PSU
-    ctdAgg$Pressure..Strain.Gauge..db. <- aggregate(Pressure..Strain.Gauge..db. ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Pressure..Strain.Gauge..db.
-    ctdAgg$Chlorophyll_mg_m3 <- aggregate(Chlorophyll_mg_m3 ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$Chlorophyll_mg_m3
+    maxY <- 2025
+
+    ctdAgg <- aggregate(Temperature_ITS90_DegC ~ depthR + month, xC, FUN = mean
+                        , na.rm = TRUE, subset=year <= maxY)
+    ctdAgg$Salinity_PSU <- aggregate(Salinity_PSU ~ depthR + month, xC
+                  , FUN = mean, na.rm = TRUE, subset=year <= maxY)$Salinity_PSU
+    ctdAgg$Pressure..Strain.Gauge..db. <- aggregate(Pressure..Strain.Gauge..db. ~ depthR + month, xC
+                  , FUN = mean, na.rm = TRUE, subset=year <= maxY)$Pressure..Strain.Gauge..db.
+    ctdAgg$Chlorophyll_mg_m3 <- aggregate(Chlorophyll_mg_m3 ~ depthR + month, xC
+                  , FUN = mean, na.rm = TRUE, subset=year <= maxY)$Chlorophyll_mg_m3
     ctdAgg$bvf <- aggregate(bvf ~ depthR + month, xC, FUN = mean, na.rm = TRUE)$bvf
 
     ## smooth normals
@@ -395,7 +401,8 @@ for(k in pickStn) {
 #     , zbreaks = seq(min(ctdAgg$Temperature_ITS90_DegC), max(ctdAgg$Temperature_ITS90_DegC), length.out = length(tCol) + 1)
       , zbreaks = tBreak
     )
-    title(main = expression(Temperature ~ Climatology ~ '['^o * C * ']'))
+#   title(main = expression(Temperature ~ Climatology ~ '['^o * C * ']'))
+    title(main = paste0("Temperature Climatology [°C], ", min(physOc$year), " - ", maxY))
     anAx(pretty(range(as.numeric(levels(ctdAgg$depthR))))) ## XXX pretty(max-depth)
 
 
