@@ -840,15 +840,16 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
 })
 
 
-### export with flags applied
-phyB2
+### export with flags applied -- unfinished feature
+if(0){
+phyB2 <- phyB
 flags <- strsplit(phyB$flags, "; ", fixed=TRUE)
 flagL <- lengths(flags)
 for(i in which(flagL > 0)) {
   ## slow code, but working
   for (j in seq_len(length(flags[[i]]))) {
     if(!is.na(flags[[i]][j])){
-      phyB2[i,which(names(phyB)==flags[[i]][j])] <- NA
+      phyB2[i,which(names(phyB2)==flags[[i]][j])] <- NA
       is.na(phyB2[i,which(names(phyB2)==flags[[i]][j])]) <- TRUE
     }
   }
@@ -869,6 +870,7 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
   ctdB
 })
 rm(phyB2)
+}
 ## end of exports
 
 
