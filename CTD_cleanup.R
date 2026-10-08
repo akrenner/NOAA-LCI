@@ -721,9 +721,11 @@ names(badO) <- c("start", "end")
 badO$start <- as.POSIXct(badO$start); badO$end <- as.POSIXct(badO$end)
 
 for(i in seq_len(nrow(badO))){
-  phyB$flags[which((badO$start[i] < isoT) & (isoT < badO$end[i]))] <-
+  phyB$flags[which((badO$start[i] <= isoT) & (isoT < badO$end[i]))] <-
     paste(grep("Oxygen", names(phyB), value = TRUE), collapse = "; ")
 }
+rm(isoT, i, badO)
+
 
 
 ## bad density, (and others): as determined by dataSetup.R, looking for sub-
@@ -774,10 +776,12 @@ badMPt <- data.frame(fn=c("2012_10-28_t6_s22_cast007_4141",
                            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
 )
 for(i in seq_len(nrow(badMPt))) {
-  bD <- sort(phyB$Depth_m[which(phyB$File.Name==badMPt$fn[i])])[badMPt$N[i]]
-  phyB$flags[which((phyB$File.Name==badMPt$fn[i]) & (phyB$Depth_m==bD))] <-
-    paste(names(phyB)[which(names(phyB)=="Temperature_ITS90_DegC"):(ncol(phyB)-1)]
-          , collapse="; ", sep="")
+  bD <- sort(phyB$Depth_m[which(phyB$File.Name==badMPt$fn[i])])[badMPt$N[i]] # relevant point in cast
+  phyIdx <- which((phyB$File.Name==badMPt$fn[i]) & (phyB$Depth_m==bD))
+                        # don't overwrite existing flags
+  phyB$flags[phyIdx] <- paste(phyB$flags[phyIdx],
+                              paste(names(phyB)[which(names(phyB)==
+          "Temperature_ITS90_DegC"):(ncol(phyB)-1)], collapse="; "), sep="; ")
 }
 
 
@@ -785,18 +789,24 @@ for(i in seq_len(nrow(badMPt))) {
 ## does this mean that callibration is off? Anything that can be done about this?
 ## should these be treated differently? adjust calibration??
 
-## check whether there still are any!
-for (badV in names(phyB)[which(names(phyB)=="Salinity_PSU"):(ncol(phyB)-1)]) {
-  vx <- which(names(phyB) == badV)
-  phyB$flags <- ifelse(phyB[,vx] < 0,
-                       paste(phyB$flags, names(phyB)[vx], sep="; "),
-                       phyB$flags)
-  #  is.na(physOc[which(physOc[,vX] <= 0),vX]) <- TRUE  ## XXX better to set these to the lowest observed value? impute them?
-}; rm (badV, vx)
-phyB$flags <- gsub("NA; ", "", phyB$flags)
-phyB$flags <- gsub("^; ", "", phyB$flags)
+## is this doing anything??
+for (i in which(names(phyB)=="Salinity_PSU"):(ncol(phyB)-1)) {
+  phyB$flags <- ifelse(is.na(phyB[,i]), phyB$flags,  # NAs
+                   ifelse(phyB[,i] > 0,  phyB$flags,   # positive value
+                      #ifelse(grep(names(phyB)[i], phyB$flags) > 0, # already flagged -- not working!
+                      #           phyB$flags,
+                      paste(names(phyB)[i], phyB$flags, sep="; ") ## add flag
+                   ))
+  # )
+}
+
 phyB$flags <- gsub("NA", "", phyB$flags)
+phyB$flags <- gsub("^; ", "", phyB$flags)  # remove leading semicolon
+phyB$flags <- gsub("; $", "", phyB$flags)  # remove leading semicolon
+phyB$flags <- trimws(phyB$flags)
+phyB$flags <- ifelse(is.na(phyB$flags), "", phyB$flags)
 # summary(as.factor(phyB$flags))
+rm(i, bD, phyIdx)
 
 ## End of QAQC flags                  ##
 ########################################
@@ -809,7 +819,7 @@ outD <- "~/tmp/LCI_noaa/data-products/CTD"
 # outD <- "~/GISdata/LCI/CTD-processing/aggregatedFiles"
 # manually update files in ~/GISdata/LCI/CTD-processing/ !
 unlink(outD, recursive = TRUE, force = TRUE)  ## make sure that no old versions remain
-dir.create(outD, recursive = TRUE)
+dir.create(outD, recursive = TRUE, showWarnings = FALSE)
 
 yr <- format (as.Date(phyB$Date), "%Y")
 yr <- factor(ifelse(phyB$Transect == "Subbay", "Subbays_extras", yr))
@@ -821,19 +831,55 @@ ctdX <- sapply (seq_along(levels (yr)), function(i) {
   tF <- paste0 (outD, "/CookInletKachemakBay_CTD_", levels (yr)[i], ".csv")
   write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2026.")
     , file = tF, append = FALSE, ncolumns = 1)
-  suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE, sep = ","
-    , na = "", row.names = FALSE, col.names = TRUE))
+  suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE
+    , sep = ",", na = "", row.names = FALSE, col.names = TRUE))
   ## gzip compression
   R.utils::gzip(tF)
-  # write.csv (ctdA, file = tF, row.names = FALSE, quote = FALSE)
   rm (tF)
   ctdB
 })
 
+
+### export with flags applied
+phyB2
+flags <- strsplit(phyB$flags, "; ", fixed=TRUE)
+flagL <- lengths(flags)
+for(i in which(flagL > 0)) {
+  ## slow code, but working
+  for (j in seq_len(length(flags[[i]]))) {
+    if(!is.na(flags[[i]][j])){
+      phyB2[i,which(names(phyB)==flags[[i]][j])] <- NA
+      is.na(phyB2[i,which(names(phyB2)==flags[[i]][j])]) <- TRUE
+    }
+  }
+}
+rm(flags, flagL, i, j)
+dir.create(paste0(outD, "-flagsApplied"))
+ctdX <- sapply (seq_along(levels (yr)), function(i) {
+  ctdB <- subset (phyB2, yr == levels (yr)[i])
+
+  tF <- paste0 (outD, "-flagsApplied/CookInletKachemakBay_CTD_cleaned", levels (yr)[i], ".csv")
+  write (paste0 ("## Collected as part of GulfWatch on predefined stations in Kachemak Bay/lower Cook Inlet. CTD sampled on every station. Concurrent zoo- and phytoplankton on select stations. 2012-2026.")
+    , file = tF, append = FALSE, ncolumns = 1)
+  suppressWarnings(write.table(ctdB, file = tF, append = TRUE, quote = FALSE
+    , sep = ",", na = "", row.names = FALSE, col.names = TRUE))
+  ## gzip compression
+  R.utils::gzip(tF)
+  rm (tF)
+  ctdB
+})
+rm(phyB2)
+## end of exports
+
+
+
+
+
+
 physOc <- phyB
 physOc$isoTime <- as.POSIXct(paste(physOc$Date, physOc$Time))
 physOc$Match_Name <- paste(physOc$Transect, physOc$Station, sep="-")
-rm (showBad, oldMatch, yr, i, j, phyB)
+rm (showBad, oldMatch, yr, phyB)
 # ls()
 
 
