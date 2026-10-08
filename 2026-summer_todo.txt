@@ -1,0 +1,34 @@
+Summer 2026 tasks
+
+
+
+x add data quality flag -- simply flag bad ranges (oxygen)
+- merge FM and Access databases
+- submit data for archiving
+- clean up stations: sidebays!
+- rename turbidity out of shared data: figure out whether upoly is beam attenuation or beam_transmission
+- PAR of 81xx CTD
+- fix SoB plots: all within "State of the Bay". Within that: monthly, experimental, annual
+x fix weather imports with worldmet
+x fix freshwater script; add timing/steepness/volumne of snowmelt
+
+
+oce issue report:
+
+Going from 1.8-3 to 1.8-4, (from CRAN) broke my plotting code. I am using plot.section() extensively on ctd objects with many custom data fields.
+
+tasks:
+- data submission to NCEI
+- freshwater paper
+- oceanographic atlas
+- summary report
+
+missing data pieces:
+- intensive subbay
+- PAR for new CTD. It's in the data (FATHOM: ok!), but currently batch-export is delivering zeros.
+First export step (data conversion) fails in current batch processing
+
+
+## clean-up
+
+move require() to dplyr::  (in CTD_cnv.R?). Also require(cli) and require(tools)
