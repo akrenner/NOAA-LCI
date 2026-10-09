@@ -34,7 +34,6 @@ system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/data-products/ ", G
 ## clone cache for convenience (e.g. SWMP and noaar  downloads)?
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/SWMP/ remote:NOAA-laptop/cache/SWMP/ -P"))
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/ remote:NOAA-laptop/cache -P"))
-system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/cache/ remote:NOAA-laptop/cache -P"))
 system (paste0 (rcloneDir, "rclone sync ", hm, "tmp/LCI_noaa/CTD-cache/ remote:NOAA-laptop/CTD-cache -P"))
 
 
